@@ -111,10 +111,6 @@ function colorBalanced(pool: readonly CubeCard[], size: number): CubeCard[] {
   return picked.slice(0, size);
 }
 
-function powerWeighted(_pool: readonly CubeCard[], _size: number): CubeCard[] {
-  throw new Error("Power-Weighted mode requires tier tagging — not yet implemented.");
-}
-
 export function generatePack(
   pool: readonly CubeCard[],
   mode: GenerationMode,
@@ -135,7 +131,5 @@ export function generatePack(
       return { cards: pureRandom(pool, effectiveSize), warning };
     case "color-balanced":
       return { cards: colorBalanced(pool, effectiveSize), warning };
-    case "power-weighted":
-      return { cards: powerWeighted(pool, effectiveSize), warning };
   }
 }

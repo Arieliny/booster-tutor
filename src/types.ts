@@ -49,7 +49,7 @@ export interface BundledCubeData {
   cards: CubeCard[];
 }
 
-export type GenerationMode = "random" | "color-balanced" | "power-weighted";
+export type GenerationMode = "random" | "color-balanced";
 
 export type EnrichmentStatus =
   | { kind: "idle" }

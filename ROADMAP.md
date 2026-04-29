@@ -112,9 +112,16 @@ opening a pack.
 
 ---
 
+## Future ideas
+
+- **Per-cube power tagging.** Power-Weighted mode is removed from the UI for
+  now. The likely future direction is to make tier data a per-cube property
+  set during cube upload (e.g. an optional column in the cube list or a
+  dedicated tagging step), and only expose Power-Weighted as a generation mode
+  for cubes that have tier data.
+
 ## Out of scope (still)
 
-- Power-Weighted mode (still needs tier tagging — separate sub-project).
 - Multi-user / shared sessions.
 - Draft mode.
 - Statistics / analytics.

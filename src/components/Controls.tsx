@@ -16,10 +16,9 @@ interface Props {
 const MODE_LABELS: Record<GenerationMode, string> = {
   random: "Pure Random",
   "color-balanced": "Color-Balanced",
-  "power-weighted": "Power-Weighted",
 };
 
-const MODES: GenerationMode[] = ["random", "color-balanced", "power-weighted"];
+const MODES: GenerationMode[] = ["random", "color-balanced"];
 
 const NEW_MATCH_TOOLTIP =
   "Booster Tutor only removes cards from your cube for the rest of the current match. Use \"new match\" when you start a fresh game against a different opponent (or a new round) and want the full cube available again.";
@@ -46,7 +45,6 @@ export function Controls({
           className="inline-flex overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg-elev)"
         >
           {MODES.map((m) => {
-            const disabled = m === "power-weighted";
             const active = mode === m;
             return (
               <button
@@ -54,21 +52,13 @@ export function Controls({
                 type="button"
                 role="radio"
                 aria-checked={active}
-                disabled={disabled}
                 onClick={() => onModeChange(m)}
-                title={
-                  disabled
-                    ? "Coming soon - requires power tier tagging"
-                    : MODE_LABELS[m]
-                }
+                title={MODE_LABELS[m]}
                 className={
                   "px-3 py-2 text-sm transition-colors " +
                   (active
                     ? "bg-(--color-accent) text-black font-medium"
-                    : "text-(--color-text-dim) hover:bg-white/5") +
-                  (disabled
-                    ? " cursor-not-allowed opacity-40 hover:bg-transparent"
-                    : "")
+                    : "text-(--color-text-dim) hover:bg-white/5")
                 }
               >
                 {MODE_LABELS[m]}

@@ -28,7 +28,7 @@ function App() {
   const [selectedCubeId, setSelectedCubeId] = useState<string>("");
   const [pickedIds, setPickedIds] = useState<Set<string>>(new Set());
 
-  const [mode, setMode] = useState<GenerationMode>("color-balanced");
+  const [mode, setMode] = useState<GenerationMode>("random");
   const [packSize, setPackSize] = useState<number>(DEFAULT_PACK_SIZE);
 
   const [pack, setPack] = useState<CubeCard[] | null>(null);
@@ -210,6 +210,8 @@ function App() {
             pack={pack}
             warning={packWarning}
             onSpotlight={setSpotlightIndex}
+            onOpenPack={handleOpenSameMatch}
+            emptyDisabled={pool.length === 0}
           />
         )}
 
