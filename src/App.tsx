@@ -1,213 +1,291 @@
 import { useEffect, useMemo, useState } from "react";
-import cubeJson from "./data/cube.json";
-import type { CubeCard, CubeData, GenerationMode } from "./types";
-import { generatePack } from "./lib/pack-generator";
-import { clearState, loadState, saveState } from "./lib/storage";
+import type { Cube, CubeCard, GenerationMode } from "./types";
+import { DEFAULT_PACK_SIZE, generatePack } from "./lib/pack-generator";
+import {
+  bootstrap,
+  loadSession,
+  resetSession,
+  saveSession,
+  selectCube,
+} from "./lib/cube-store";
 import { Controls } from "./components/Controls";
+import { CubeManager } from "./components/CubeManager";
+import { CubeSelector } from "./components/CubeSelector";
+import { Footer } from "./components/Footer";
+import { Modal } from "./components/Modal";
 import { PackDisplay } from "./components/PackDisplay";
 import { PoolStatus } from "./components/PoolStatus";
+import { Spotlight } from "./components/Spotlight";
 
-const CUBE = cubeJson as CubeData;
+type View =
+  | { kind: "loading" }
+  | { kind: "ready" }
+  | { kind: "error"; message: string };
 
 function App() {
+  const [view, setView] = useState<View>({ kind: "loading" });
+  const [cubes, setCubes] = useState<Cube[]>([]);
+  const [selectedCubeId, setSelectedCubeId] = useState<string>("");
   const [pickedIds, setPickedIds] = useState<Set<string>>(new Set());
+
   const [mode, setMode] = useState<GenerationMode>("color-balanced");
+  const [packSize, setPackSize] = useState<number>(DEFAULT_PACK_SIZE);
+
   const [pack, setPack] = useState<CubeCard[] | null>(null);
   const [packWarning, setPackWarning] = useState<string | undefined>();
-  const [pendingPick, setPendingPick] = useState<CubeCard | null>(null);
-  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const [spotlightIndex, setSpotlightIndex] = useState<number | null>(null);
+
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showCubeManager, setShowCubeManager] = useState(false);
   const [showPickedLog, setShowPickedLog] = useState(false);
 
-  // Load persisted state on mount
+  // Bootstrap on mount.
   useEffect(() => {
-    const persisted = loadState();
-    setPickedIds(new Set(persisted.pickedCardIds));
+    (async () => {
+      try {
+        const { cubes, selectedCubeId } = await bootstrap();
+        setCubes(cubes);
+        setSelectedCubeId(selectedCubeId);
+        const session = await loadSession(selectedCubeId);
+        setPickedIds(new Set(session.pickedCardIds));
+        setView({ kind: "ready" });
+      } catch (err) {
+        setView({
+          kind: "error",
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    })();
   }, []);
 
+  const selectedCube = useMemo(
+    () => cubes.find((c) => c.id === selectedCubeId),
+    [cubes, selectedCubeId],
+  );
+
   const pool = useMemo(() => {
-    return CUBE.cards.filter((c) => !pickedIds.has(c.scryfall_id));
-  }, [pickedIds]);
+    if (!selectedCube) return [];
+    return selectedCube.cards.filter((c) => !pickedIds.has(c.scryfall_id));
+  }, [selectedCube, pickedIds]);
 
   const pickedCards = useMemo(() => {
-    return CUBE.cards.filter((c) => pickedIds.has(c.scryfall_id));
-  }, [pickedIds]);
+    if (!selectedCube) return [];
+    return selectedCube.cards.filter((c) => pickedIds.has(c.scryfall_id));
+  }, [selectedCube, pickedIds]);
 
-  const handleGenerate = () => {
+  const handleSelectCube = async (id: string) => {
+    setSelectedCubeId(id);
+    await selectCube(id);
+    const session = await loadSession(id);
+    setPickedIds(new Set(session.pickedCardIds));
+    setPack(null);
+    setSpotlightIndex(null);
+    setPackWarning(undefined);
+  };
+
+  const tryGenerate = (poolToUse: readonly CubeCard[]) => {
     try {
-      const result = generatePack(pool, mode);
+      const result = generatePack(poolToUse, mode, packSize);
       setPack(result.cards);
       setPackWarning(result.warning);
-      setHighlightId(null);
+      setSpotlightIndex(null);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setPackWarning(msg);
+      setPackWarning(err instanceof Error ? err.message : String(err));
     }
   };
 
-  const handlePickClick = (card: CubeCard) => {
-    setPendingPick(card);
+  const handleOpenSameMatch = () => {
+    tryGenerate(pool);
   };
 
-  const confirmPick = () => {
-    if (!pendingPick) return;
-    const id = pendingPick.scryfall_id;
+  const handleOpenNewMatch = async () => {
+    if (!selectedCubeId) return;
+    setPickedIds(new Set());
+    await resetSession(selectedCubeId);
+    if (selectedCube) tryGenerate(selectedCube.cards);
+  };
+
+  const handleConfirmPick = async () => {
+    if (spotlightIndex === null || !pack) return;
+    const card = pack[spotlightIndex];
+    if (!card) return;
     const next = new Set(pickedIds);
-    next.add(id);
+    next.add(card.scryfall_id);
     setPickedIds(next);
-    saveState({
-      pickedCardIds: Array.from(next),
-      lastUpdated: new Date().toISOString(),
-    });
-    setHighlightId(id);
-    setPendingPick(null);
-    // Clear the pack after a brief highlight
+    await saveSession(selectedCubeId, Array.from(next));
+    // Brief pause then clear the pack.
+    setSpotlightIndex(null);
     setTimeout(() => {
       setPack(null);
-      setHighlightId(null);
       setPackWarning(undefined);
-    }, 600);
+    }, 400);
   };
 
-  const cancelPick = () => setPendingPick(null);
-
-  const handleReset = () => {
+  const handleReset = async () => {
+    if (!selectedCubeId) return;
     setPickedIds(new Set());
-    clearState();
+    await resetSession(selectedCubeId);
     setPack(null);
+    setSpotlightIndex(null);
     setPackWarning(undefined);
     setShowResetConfirm(false);
   };
 
-  return (
-    <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
-      <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-(--color-text) sm:text-3xl">
-            Booster Tutor
-          </h1>
-          <p className="text-xs text-(--color-text-dim)">Cube pack simulator</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <PoolStatus remaining={pool.length} total={CUBE.card_count} />
-          <button
-            type="button"
-            onClick={() => setShowResetConfirm(true)}
-            disabled={pickedIds.size === 0}
-            className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Reset
-          </button>
-        </div>
-      </header>
-
-      <div className="mb-6">
-        <Controls
-          mode={mode}
-          onModeChange={setMode}
-          onGenerate={handleGenerate}
-          poolEmpty={pool.length === 0}
-        />
+  if (view.kind === "loading") {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-(--color-text-dim)">
+        Loading…
       </div>
+    );
+  }
 
-      <PackDisplay
-        pack={pack}
-        warning={packWarning}
-        onPick={handlePickClick}
-        highlightedId={highlightId}
-      />
+  if (view.kind === "error") {
+    return (
+      <div className="mx-auto max-w-2xl p-8 text-(--color-text)">
+        <h1 className="mb-4 text-2xl">Something went wrong</h1>
+        <p className="text-(--color-text-dim)">{view.message}</p>
+      </div>
+    );
+  }
 
-      {pickedCards.length > 0 && (
-        <div className="mt-8 border-t border-(--color-border) pt-4">
-          <button
-            type="button"
-            onClick={() => setShowPickedLog((s) => !s)}
-            className="text-sm text-(--color-text-dim) hover:text-(--color-text)"
-          >
-            {showPickedLog ? "Hide" : "Show"} picked cards ({pickedCards.length})
-          </button>
-          {showPickedLog && (
-            <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">
-              {pickedCards.map((c) => (
-                <li key={c.scryfall_id} className="truncate text-(--color-text-dim)">
-                  {c.name}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+  const inSpotlight = pack !== null && spotlightIndex !== null;
 
-      {pendingPick && (
-        <Modal onClose={cancelPick}>
-          <h2 className="mb-2 text-lg font-medium text-(--color-text)">
-            Add to your hand?
-          </h2>
-          <p className="mb-4 text-(--color-text-dim)">
-            <span className="text-(--color-text)">{pendingPick.name}</span> will
-            be removed from the pool for the rest of this session.
-          </p>
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={cancelPick}
-              className="rounded border border-(--color-border) px-4 py-2 text-sm text-(--color-text-dim) hover:bg-white/5"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={confirmPick}
-              className="rounded bg-(--color-accent) px-4 py-2 text-sm font-medium text-black hover:bg-(--color-accent-bright)"
-            >
-              Confirm
-            </button>
+  return (
+    <div className="flex min-h-screen flex-col">
+      <div className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 lg:p-8">
+        <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-(--color-text) sm:text-3xl">
+              Booster Tutor
+            </h1>
+            <p className="text-xs text-(--color-text-dim)">Cube pack simulator</p>
           </div>
-        </Modal>
-      )}
-
-      {showResetConfirm && (
-        <Modal onClose={() => setShowResetConfirm(false)}>
-          <h2 className="mb-2 text-lg font-medium text-(--color-text)">
-            Reset session?
-          </h2>
-          <p className="mb-4 text-(--color-text-dim)">
-            This will return all {pickedIds.size} picked cards to the pool.
-          </p>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <CubeSelector
+              cubes={cubes}
+              selectedId={selectedCubeId}
+              onSelect={handleSelectCube}
+              onManage={() => setShowCubeManager(true)}
+            />
+            <PoolStatus
+              remaining={pool.length}
+              total={selectedCube?.cards.length ?? 0}
+            />
             <button
               type="button"
-              onClick={() => setShowResetConfirm(false)}
-              className="rounded border border-(--color-border) px-4 py-2 text-sm text-(--color-text-dim) hover:bg-white/5"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="rounded bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-400"
+              onClick={() => setShowResetConfirm(true)}
+              disabled={pickedIds.size === 0}
+              className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Reset
             </button>
           </div>
-        </Modal>
-      )}
-    </div>
-  );
-}
+        </header>
 
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-md rounded-xl border border-(--color-border) bg-(--color-bg-elev) p-6 shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
+        {!inSpotlight && (
+          <div className="mb-6">
+            <Controls
+              mode={mode}
+              onModeChange={setMode}
+              packSize={packSize}
+              onPackSizeChange={setPackSize}
+              onOpenSameMatch={handleOpenSameMatch}
+              onOpenNewMatch={handleOpenNewMatch}
+              poolEmpty={pool.length === 0}
+              hasPickedCards={pickedIds.size > 0}
+            />
+          </div>
+        )}
+
+        {inSpotlight && pack ? (
+          <Spotlight
+            pack={pack}
+            initialIndex={spotlightIndex!}
+            onSelectIndex={setSpotlightIndex}
+            onConfirm={handleConfirmPick}
+            onBack={() => setSpotlightIndex(null)}
+          />
+        ) : (
+          <PackDisplay
+            pack={pack}
+            warning={packWarning}
+            onSpotlight={setSpotlightIndex}
+          />
+        )}
+
+        {pickedCards.length > 0 && !inSpotlight && (
+          <div className="mt-8 border-t border-(--color-border) pt-4">
+            <button
+              type="button"
+              onClick={() => setShowPickedLog((s) => !s)}
+              className="text-sm text-(--color-text-dim) hover:text-(--color-text)"
+            >
+              {showPickedLog ? "Hide" : "Show"} picked cards ({pickedCards.length})
+            </button>
+            {showPickedLog && (
+              <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">
+                {pickedCards.map((c) => (
+                  <li
+                    key={c.scryfall_id}
+                    className="truncate text-(--color-text-dim)"
+                  >
+                    {c.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {showCubeManager && (
+          <CubeManager
+            cubes={cubes}
+            selectedId={selectedCubeId}
+            onClose={() => setShowCubeManager(false)}
+            onCubesChanged={async ({ cubes: nextCubes, selectedId }) => {
+              setCubes(nextCubes);
+              if (selectedId !== selectedCubeId) {
+                setSelectedCubeId(selectedId);
+                await selectCube(selectedId);
+                const session = await loadSession(selectedId);
+                setPickedIds(new Set(session.pickedCardIds));
+                setPack(null);
+                setSpotlightIndex(null);
+              }
+            }}
+          />
+        )}
+
+        {showResetConfirm && (
+          <Modal onClose={() => setShowResetConfirm(false)}>
+            <h2 className="mb-2 text-lg font-medium text-(--color-text)">
+              Reset session?
+            </h2>
+            <p className="mb-4 text-(--color-text-dim)">
+              This will return all {pickedIds.size} picked cards in{" "}
+              <span className="text-(--color-text)">{selectedCube?.name}</span> to
+              the pool.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="rounded border border-(--color-border) px-4 py-2 text-sm text-(--color-text-dim) hover:bg-white/5"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="rounded bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-400"
+              >
+                Reset
+              </button>
+            </div>
+          </Modal>
+        )}
       </div>
+      <Footer />
     </div>
   );
 }

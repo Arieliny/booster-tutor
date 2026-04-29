@@ -4,15 +4,15 @@ import { Card } from "./Card";
 interface Props {
   pack: CubeCard[] | null;
   warning?: string;
-  onPick: (card: CubeCard) => void;
-  highlightedId?: string | null;
+  onSpotlight: (index: number) => void;
 }
 
-export function PackDisplay({ pack, warning, onPick, highlightedId }: Props) {
+export function PackDisplay({ pack, warning, onSpotlight }: Props) {
   if (!pack) {
     return (
       <div className="flex min-h-[300px] items-center justify-center rounded-xl border border-dashed border-(--color-border) p-8 text-center text-(--color-text-dim)">
-        Click <span className="mx-1 font-medium text-(--color-text)">Open Pack</span> to draw 15 cards.
+        Click <span className="mx-1 font-medium text-(--color-text)">Open pack</span>{" "}
+        to draw cards.
       </div>
     );
   }
@@ -25,12 +25,11 @@ export function PackDisplay({ pack, warning, onPick, highlightedId }: Props) {
         </div>
       )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {pack.map((card) => (
+        {pack.map((card, i) => (
           <Card
             key={card.scryfall_id}
             card={card}
-            onClick={() => onPick(card)}
-            highlighted={card.scryfall_id === highlightedId}
+            onClick={() => onSpotlight(i)}
           />
         ))}
       </div>
