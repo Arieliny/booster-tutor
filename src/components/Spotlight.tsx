@@ -62,7 +62,7 @@ export function Spotlight({
             <button
               type="button"
               onClick={() => setShowBack((s) => !s)}
-              className="absolute right-2 top-[9%] rounded bg-black/70 px-3 py-1.5 text-xs font-medium text-white hover:bg-black/90"
+              className="absolute right-2 top-[14%] rounded bg-black/70 px-3 py-1.5 text-xs font-medium text-white hover:bg-black/90"
             >
               Flip
             </button>

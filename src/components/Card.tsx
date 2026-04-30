@@ -46,7 +46,7 @@ export function Card({ card, onClick, highlighted }: Props) {
         {hasBack && (
           <button
             type="button"
-            className="absolute right-1 top-[9%] rounded bg-black/70 px-2 py-1 text-xs text-white hover:bg-black/90"
+            className="absolute right-1 top-[14%] rounded bg-black/70 px-2 py-1 text-xs text-white hover:bg-black/90"
             onClick={(e) => {
               e.stopPropagation();
               setShowBack((s) => !s);
