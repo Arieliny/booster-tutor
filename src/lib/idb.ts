@@ -8,11 +8,12 @@
 import type { Cube, CubeSession } from "../types";
 
 const DB_NAME = "booster-tutor";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 const STORE_CUBES = "cubes";
 const STORE_SESSIONS = "sessions";
 const STORE_META = "meta";
+const STORE_INVENTORIES = "inventories";
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -30,6 +31,9 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_META)) {
         db.createObjectStore(STORE_META);
+      }
+      if (!db.objectStoreNames.contains(STORE_INVENTORIES)) {
+        db.createObjectStore(STORE_INVENTORIES);
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -75,8 +79,9 @@ export async function putCube(cube: Cube): Promise<void> {
 
 export async function deleteCube(id: string): Promise<void> {
   await tx(STORE_CUBES, "readwrite", (s) => s.delete(id) as IDBRequest<undefined>);
-  // Also drop any session for that cube.
+  // Also drop any session and inventory for that cube.
   await tx(STORE_SESSIONS, "readwrite", (s) => s.delete(id) as IDBRequest<undefined>);
+  await tx(STORE_INVENTORIES, "readwrite", (s) => s.delete(id) as IDBRequest<undefined>);
 }
 
 // ---------- sessions ----------
@@ -106,5 +111,25 @@ export async function getMeta<T = unknown>(key: string): Promise<T | undefined> 
 export async function setMeta<T>(key: string, value: T): Promise<void> {
   await tx(STORE_META, "readwrite", (s) =>
     s.put(value as unknown, key) as IDBRequest<IDBValidKey>,
+  );
+}
+
+// ---------- inventories ----------
+
+export async function getInventory(cubeId: string): Promise<string[] | undefined> {
+  return tx(STORE_INVENTORIES, "readonly", (s) =>
+    s.get(cubeId) as IDBRequest<string[] | undefined>,
+  );
+}
+
+export async function putInventory(cubeId: string, ids: string[]): Promise<void> {
+  await tx(STORE_INVENTORIES, "readwrite", (s) =>
+    s.put(ids, cubeId) as IDBRequest<IDBValidKey>,
+  );
+}
+
+export async function clearInventory(cubeId: string): Promise<void> {
+  await tx(STORE_INVENTORIES, "readwrite", (s) =>
+    s.delete(cubeId) as IDBRequest<undefined>,
   );
 }

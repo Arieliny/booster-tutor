@@ -9,9 +9,11 @@ import {
   deleteCube as idbDeleteCube,
   getAllCubes,
   getCube,
+  getInventory,
   getMeta,
   getSession,
   putCube,
+  putInventory,
   putSession,
   setMeta,
 } from "./idb";
@@ -104,6 +106,15 @@ export async function saveSession(
 
 export async function resetSession(cubeId: string): Promise<void> {
   await idbClearSession(cubeId);
+}
+
+export async function loadInventory(cubeId: string): Promise<string[]> {
+  const existing = await getInventory(cubeId);
+  return existing ?? [];
+}
+
+export async function saveInventory(cubeId: string, ids: string[]): Promise<void> {
+  await putInventory(cubeId, ids);
 }
 
 export function makeCubeId(name: string): string {

@@ -12,6 +12,7 @@ import { Controls } from "./components/Controls";
 import { CubeManager } from "./components/CubeManager";
 import { CubeSelector } from "./components/CubeSelector";
 import { Footer } from "./components/Footer";
+import { Inventory } from "./components/Inventory";
 import { Modal } from "./components/Modal";
 import { PackDisplay } from "./components/PackDisplay";
 import { PoolStatus } from "./components/PoolStatus";
@@ -21,6 +22,8 @@ type View =
   | { kind: "loading" }
   | { kind: "ready" }
   | { kind: "error"; message: string };
+
+type Tab = "packs" | "inventory";
 
 function App() {
   const [view, setView] = useState<View>({ kind: "loading" });
@@ -38,6 +41,7 @@ function App() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCubeManager, setShowCubeManager] = useState(false);
   const [showPickedLog, setShowPickedLog] = useState(false);
+  const [tab, setTab] = useState<Tab>("packs");
 
   // Bootstrap on mount.
   useEffect(() => {
@@ -149,11 +153,12 @@ function App() {
   }
 
   const inSpotlight = pack !== null && spotlightIndex !== null;
+  const onPacksTab = tab === "packs";
 
   return (
     <div className="flex min-h-screen flex-col">
       <div className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 lg:p-8">
-        <header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4">
           <div>
             <h1 className="text-2xl font-semibold text-(--color-text) sm:text-3xl">
               Booster Tutor
@@ -167,76 +172,113 @@ function App() {
               onSelect={handleSelectCube}
               onManage={() => setShowCubeManager(true)}
             />
-            <PoolStatus
-              remaining={pool.length}
-              total={selectedCube?.cards.length ?? 0}
-            />
-            <button
-              type="button"
-              onClick={() => setShowResetConfirm(true)}
-              disabled={pickedIds.size === 0}
-              className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Reset
-            </button>
+            {onPacksTab && (
+              <>
+                <PoolStatus
+                  remaining={pool.length}
+                  total={selectedCube?.cards.length ?? 0}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowResetConfirm(true)}
+                  disabled={pickedIds.size === 0}
+                  className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Reset
+                </button>
+              </>
+            )}
           </div>
         </header>
 
-        {!inSpotlight && (
-          <div className="mb-6">
-            <Controls
-              mode={mode}
-              onModeChange={setMode}
-              packSize={packSize}
-              onPackSizeChange={setPackSize}
-              onOpenSameMatch={handleOpenSameMatch}
-              onOpenNewMatch={handleOpenNewMatch}
-              poolEmpty={pool.length === 0}
-              hasPickedCards={pickedIds.size > 0}
-            />
-          </div>
-        )}
-
-        {inSpotlight && pack ? (
-          <Spotlight
-            pack={pack}
-            initialIndex={spotlightIndex!}
-            onSelectIndex={setSpotlightIndex}
-            onConfirm={handleConfirmPick}
-            onBack={() => setSpotlightIndex(null)}
-          />
-        ) : (
-          <PackDisplay
-            pack={pack}
-            warning={packWarning}
-            onSpotlight={setSpotlightIndex}
-            onOpenPack={handleOpenSameMatch}
-            emptyDisabled={pool.length === 0}
-          />
-        )}
-
-        {pickedCards.length > 0 && !inSpotlight && (
-          <div className="mt-8 border-t border-(--color-border) pt-4">
+        <nav
+          role="tablist"
+          aria-label="View"
+          className="mb-6 inline-flex overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg-elev)"
+        >
+          {([
+            { id: "packs", label: "Open packs" },
+            { id: "inventory", label: "Inventory" },
+          ] as { id: Tab; label: string }[]).map((t) => (
             <button
+              key={t.id}
               type="button"
-              onClick={() => setShowPickedLog((s) => !s)}
-              className="text-sm text-(--color-text-dim) hover:text-(--color-text)"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={
+                "px-4 py-2 text-sm transition-colors " +
+                (tab === t.id
+                  ? "bg-(--color-accent) text-black font-medium"
+                  : "text-(--color-text-dim) hover:bg-white/5")
+              }
             >
-              {showPickedLog ? "Hide" : "Show"} picked cards ({pickedCards.length})
+              {t.label}
             </button>
-            {showPickedLog && (
-              <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">
-                {pickedCards.map((c) => (
-                  <li
-                    key={c.scryfall_id}
-                    className="truncate text-(--color-text-dim)"
-                  >
-                    {c.name}
-                  </li>
-                ))}
-              </ul>
+          ))}
+        </nav>
+
+        {onPacksTab ? (
+          <>
+            {!inSpotlight && (
+              <div className="mb-6">
+                <Controls
+                  mode={mode}
+                  onModeChange={setMode}
+                  packSize={packSize}
+                  onPackSizeChange={setPackSize}
+                  onOpenSameMatch={handleOpenSameMatch}
+                  onOpenNewMatch={handleOpenNewMatch}
+                  poolEmpty={pool.length === 0}
+                  hasPickedCards={pickedIds.size > 0}
+                />
+              </div>
             )}
-          </div>
+
+            {inSpotlight && pack ? (
+              <Spotlight
+                pack={pack}
+                initialIndex={spotlightIndex!}
+                onSelectIndex={setSpotlightIndex}
+                onConfirm={handleConfirmPick}
+                onBack={() => setSpotlightIndex(null)}
+              />
+            ) : (
+              <PackDisplay
+                pack={pack}
+                warning={packWarning}
+                onSpotlight={setSpotlightIndex}
+                onOpenPack={handleOpenSameMatch}
+                emptyDisabled={pool.length === 0}
+              />
+            )}
+
+            {pickedCards.length > 0 && !inSpotlight && (
+              <div className="mt-8 border-t border-(--color-border) pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPickedLog((s) => !s)}
+                  className="text-sm text-(--color-text-dim) hover:text-(--color-text)"
+                >
+                  {showPickedLog ? "Hide" : "Show"} picked cards ({pickedCards.length})
+                </button>
+                {showPickedLog && (
+                  <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">
+                    {pickedCards.map((c) => (
+                      <li
+                        key={c.scryfall_id}
+                        className="truncate text-(--color-text-dim)"
+                      >
+                        {c.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </>
+        ) : (
+          selectedCube && <Inventory cube={selectedCube} />
         )}
 
         {showCubeManager && (
