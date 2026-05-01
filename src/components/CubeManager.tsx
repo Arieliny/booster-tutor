@@ -3,7 +3,14 @@ import type { Cube, EnrichmentStatus } from "../types";
 import { Modal } from "./Modal";
 import { parseCubeList } from "../lib/cube-parser";
 import { enrichCube } from "../lib/scryfall-enrich";
-import { makeCubeId, saveCube, removeCube, uniqueCubeName } from "../lib/cube-store";
+import {
+  archiveCube,
+  makeCubeId,
+  restoreCube,
+  saveCube,
+  uniqueCubeName,
+} from "../lib/cube-store";
+import { SyncSettings } from "./SyncSettings";
 
 interface Props {
   cubes: Cube[];
@@ -15,8 +22,13 @@ interface Props {
 export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Props) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
+
+  const activeCubes = cubes.filter((c) => !c.archived);
+  const archivedCubes = cubes.filter((c) => c.archived);
 
   const handleRename = async (cube: Cube, newName: string) => {
     const trimmed = newName.trim();
@@ -34,13 +46,24 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
     setRenamingId(null);
   };
 
-  const handleDelete = async (id: string) => {
-    if (cubes.length <= 1) return;
-    await removeCube(id);
-    const next = cubes.filter((c) => c.id !== id);
-    const nextSelected = selectedId === id ? next[0].id : selectedId;
+  const handleArchive = async (id: string) => {
+    if (activeCubes.length <= 1) return; // Need at least one active cube.
+    await archiveCube(id);
+    const next = cubes.map((c) => (c.id === id ? { ...c, archived: true } : c));
+    const nextSelected =
+      selectedId === id
+        ? next.find((c) => !c.archived)?.id ?? selectedId
+        : selectedId;
     onCubesChanged({ cubes: next, selectedId: nextSelected });
-    setConfirmDeleteId(null);
+    setConfirmArchiveId(null);
+  };
+
+  const handleRestore = async (id: string) => {
+    await restoreCube(id);
+    onCubesChanged({
+      cubes: cubes.map((c) => (c.id === id ? { ...c, archived: false } : c)),
+      selectedId,
+    });
   };
 
   if (uploadOpen) {
@@ -58,29 +81,35 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
     );
   }
 
-  if (confirmDeleteId) {
-    const cube = cubes.find((c) => c.id === confirmDeleteId);
+  if (syncOpen) {
+    return <SyncSettings onClose={() => setSyncOpen(false)} />;
+  }
+
+  if (confirmArchiveId) {
+    const cube = cubes.find((c) => c.id === confirmArchiveId);
     return (
-      <Modal onClose={() => setConfirmDeleteId(null)}>
-        <h2 className="mb-2 text-lg font-medium text-(--color-text)">Delete cube?</h2>
+      <Modal onClose={() => setConfirmArchiveId(null)}>
+        <h2 className="mb-2 text-lg font-medium text-(--color-text)">Archive cube?</h2>
         <p className="mb-4 text-(--color-text-dim)">
-          <span className="text-(--color-text)">{cube?.name}</span> and its picked-cards
-          history will be removed from this browser. This cannot be undone.
+          <span className="text-(--color-text)">{cube?.name}</span> will be hidden
+          from the cube selector. Its inventory and card data are kept; you can
+          restore it later from the archived list. (Permanent deletion isn't
+          available in the UI by design.)
         </p>
         <div className="flex justify-end gap-2">
           <button
             type="button"
-            onClick={() => setConfirmDeleteId(null)}
+            onClick={() => setConfirmArchiveId(null)}
             className="rounded border border-(--color-border) px-4 py-2 text-sm text-(--color-text-dim) hover:bg-white/5"
           >
             Cancel
           </button>
           <button
             type="button"
-            onClick={() => handleDelete(confirmDeleteId)}
-            className="rounded bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-400"
+            onClick={() => handleArchive(confirmArchiveId)}
+            className="rounded bg-red-500/80 px-4 py-2 text-sm font-medium text-white hover:bg-red-500"
           >
-            Delete
+            Archive
           </button>
         </div>
       </Modal>
@@ -89,62 +118,84 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
 
   return (
     <Modal onClose={onClose}>
-      <div className="mb-3 flex items-start justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <h2 className="text-lg font-medium text-(--color-text)">Manage cubes</h2>
-        <button
-          type="button"
-          onClick={() => setUploadOpen(true)}
-          className="rounded bg-(--color-accent) px-3 py-1.5 text-sm font-medium text-black hover:bg-(--color-accent-bright)"
-        >
-          + Upload
-        </button>
-      </div>
-      <ul className="space-y-2">
-        {cubes.map((cube) => (
-          <li
-            key={cube.id}
-            className="flex items-center justify-between gap-2 rounded border border-(--color-border) bg-black/30 p-3"
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setSyncOpen(true)}
+            className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
           >
-            {renamingId === cube.id ? (
-              <input
-                autoFocus
-                value={renameValue}
-                onChange={(e) => setRenameValue(e.target.value)}
-                onBlur={() => handleRename(cube, renameValue)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleRename(cube, renameValue);
-                  if (e.key === "Escape") setRenamingId(null);
-                }}
-                className="flex-1 rounded bg-(--color-bg) px-2 py-1 text-sm text-(--color-text)"
-              />
-            ) : (
-              <button
-                type="button"
-                className="flex-1 truncate text-left text-sm text-(--color-text) hover:text-(--color-accent)"
-                onClick={() => {
-                  setRenamingId(cube.id);
-                  setRenameValue(cube.name);
-                }}
-                title="Click to rename"
-              >
-                <span className="truncate">{cube.name}</span>
-                <span className="ml-2 text-xs text-(--color-text-dim)">
-                  {cube.cards.length} cards
-                </span>
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setConfirmDeleteId(cube.id)}
-              disabled={cubes.length <= 1}
-              title={cubes.length <= 1 ? "Can't delete the only cube" : "Delete"}
-              className="rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              Delete
-            </button>
-          </li>
+            Sync…
+          </button>
+          <button
+            type="button"
+            onClick={() => setUploadOpen(true)}
+            className="rounded bg-(--color-accent) px-3 py-1.5 text-sm font-medium text-black hover:bg-(--color-accent-bright)"
+          >
+            + Upload
+          </button>
+        </div>
+      </div>
+
+      <ul className="space-y-2">
+        {activeCubes.map((cube) => (
+          <CubeRow
+            key={cube.id}
+            cube={cube}
+            renamingId={renamingId}
+            renameValue={renameValue}
+            setRenameValue={setRenameValue}
+            onStartRename={() => {
+              setRenamingId(cube.id);
+              setRenameValue(cube.name);
+            }}
+            onCommitRename={(v) => handleRename(cube, v)}
+            onCancelRename={() => setRenamingId(null)}
+            onArchive={() => setConfirmArchiveId(cube.id)}
+            archiveDisabled={activeCubes.length <= 1}
+          />
         ))}
       </ul>
+
+      {archivedCubes.length > 0 && (
+        <div className="mt-4 border-t border-(--color-border) pt-3">
+          <button
+            type="button"
+            onClick={() => setShowArchived((s) => !s)}
+            className="text-xs text-(--color-text-dim) hover:text-(--color-text)"
+          >
+            {showArchived ? "Hide" : "Show"} archived ({archivedCubes.length})
+          </button>
+          {showArchived && (
+            <ul className="mt-3 space-y-2">
+              {archivedCubes.map((cube) => (
+                <li
+                  key={cube.id}
+                  className="flex items-center justify-between gap-2 rounded border border-(--color-border) bg-black/20 p-3 opacity-70"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm text-(--color-text)">
+                      {cube.name}
+                    </div>
+                    <div className="text-xs text-(--color-text-dim)">
+                      {cube.cards.length} cards · archived
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(cube.id)}
+                    className="rounded px-2 py-1 text-xs text-(--color-accent) hover:bg-(--color-accent)/10"
+                  >
+                    Restore
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
       <div className="mt-4 flex justify-end">
         <button
           type="button"
@@ -155,6 +206,69 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
         </button>
       </div>
     </Modal>
+  );
+}
+
+interface CubeRowProps {
+  cube: Cube;
+  renamingId: string | null;
+  renameValue: string;
+  setRenameValue: (v: string) => void;
+  onStartRename: () => void;
+  onCommitRename: (v: string) => void;
+  onCancelRename: () => void;
+  onArchive: () => void;
+  archiveDisabled: boolean;
+}
+
+function CubeRow({
+  cube,
+  renamingId,
+  renameValue,
+  setRenameValue,
+  onStartRename,
+  onCommitRename,
+  onCancelRename,
+  onArchive,
+  archiveDisabled,
+}: CubeRowProps) {
+  return (
+    <li className="flex items-center justify-between gap-2 rounded border border-(--color-border) bg-black/30 p-3">
+      {renamingId === cube.id ? (
+        <input
+          autoFocus
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onBlur={() => onCommitRename(renameValue)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onCommitRename(renameValue);
+            if (e.key === "Escape") onCancelRename();
+          }}
+          className="flex-1 rounded bg-(--color-bg) px-2 py-1 text-sm text-(--color-text)"
+        />
+      ) : (
+        <button
+          type="button"
+          className="flex-1 truncate text-left text-sm text-(--color-text) hover:text-(--color-accent)"
+          onClick={onStartRename}
+          title="Click to rename"
+        >
+          <span className="truncate">{cube.name}</span>
+          <span className="ml-2 text-xs text-(--color-text-dim)">
+            {cube.cards.length} cards
+          </span>
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onArchive}
+        disabled={archiveDisabled}
+        title={archiveDisabled ? "Need at least one active cube" : "Archive (soft-delete)"}
+        className="rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+      >
+        Archive
+      </button>
+    </li>
   );
 }
 

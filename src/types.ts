@@ -23,6 +23,20 @@ export interface Cube {
   failures?: ParseFailure[];
   /** True for the bundled cube we ship with the app. */
   isDefault?: boolean;
+  /**
+   * Soft-delete marker. Archived cubes are hidden from the main UI by
+   * default. There is no UI for permanent deletion — that's intentional.
+   */
+  archived?: boolean;
+}
+
+/** Compact cube info returned by /api/sync GET — enough to render the list. */
+export interface CubeMetaEntry {
+  id: string;
+  name: string;
+  cardCount: number;
+  archived: boolean;
+  lastModified: string;
 }
 
 export interface ParseFailure {

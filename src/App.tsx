@@ -50,8 +50,10 @@ function App() {
         const { cubes, selectedCubeId } = await bootstrap();
         setCubes(cubes);
         setSelectedCubeId(selectedCubeId);
-        const session = await loadSession(selectedCubeId);
-        setPickedIds(new Set(session.pickedCardIds));
+        if (selectedCubeId) {
+          const session = await loadSession(selectedCubeId);
+          setPickedIds(new Set(session.pickedCardIds));
+        }
         setView({ kind: "ready" });
       } catch (err) {
         setView({
@@ -61,6 +63,11 @@ function App() {
       }
     })();
   }, []);
+
+  const visibleCubes = useMemo(
+    () => cubes.filter((c) => !c.archived),
+    [cubes],
+  );
 
   const selectedCube = useMemo(
     () => cubes.find((c) => c.id === selectedCubeId),
@@ -167,7 +174,7 @@ function App() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <CubeSelector
-              cubes={cubes}
+              cubes={visibleCubes}
               selectedId={selectedCubeId}
               onSelect={handleSelectCube}
               onManage={() => setShowCubeManager(true)}
