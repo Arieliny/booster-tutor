@@ -18,7 +18,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   let pingOk = false;
   let pingErr: string | null = null;
   try {
-    const { redis } = await import("./_redis");
+    const { redis } = await import("./_redis.js");
     importOk = true;
     try {
       const out = await redis.ping();

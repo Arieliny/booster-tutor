@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { cubeKey, redis, validateSyncCode } from "./_redis";
+import { cubeKey, redis, validateSyncCode } from "./_redis.js";
 
 /**
  * GET /api/cube?code=<code>&id=<id>

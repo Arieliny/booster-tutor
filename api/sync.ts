@@ -7,7 +7,7 @@ import {
   saveMeta,
   validateSyncCode,
   type CubeMetaEntry,
-} from "./_redis";
+} from "./_redis.js";
 
 /**
  * Sync endpoint.
