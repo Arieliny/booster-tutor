@@ -1,128 +1,82 @@
 # Booster Tutor — Roadmap
 
-Captured 2026-04-29. Order is rough priority; not strict dependency.
+Original roadmap captured 2026-04-29. Reviewed 2026-07-31: **all 5 numbered items
+below shipped** — kept here as a changelog. Live planning is now the
+"Future / under consideration" section.
 
 ---
 
-## 1. Legal / fan-site disclaimer
+## ✅ Shipped (was the 2026-04-29 roadmap)
 
-Add a footer (and probably an `/about` link) with a Wizards Fan Content Policy
-disclaimer + Scryfall image attribution.
+1. **Legal / fan-site disclaimer** — `Footer.tsx`: WotC Fan Content Policy link,
+   IP disclaimer, Scryfall attribution. (No separate `/about`; footer covers it.)
+2. **Configurable pack size** — `Controls.tsx` numeric input; `pack-generator.ts`
+   default 15, bounds 1–40, proportional Color-Balanced scaling.
+3. **Multiple cubes / user uploads** — `CubeManager.tsx` upload + paste,
+   `CubeSelector.tsx` dropdown, in-browser Scryfall enrichment with progress bar
+   (`scryfall-enrich.ts`), per-cube sessions, IndexedDB (`cubes`/`sessions`/
+   `meta`/`inventories`), legacy localStorage migration.
+4. **Mobile-first picking UX** — `Spotlight.tsx` enlarged view + card strip +
+   Back/Pick + DFC flip; old confirmation modal removed.
+5. **Pack-open flow: "this game" vs "new match"** — two buttons in `Controls.tsx`
+   + `HelpTip.tsx` tooltip; explicit Reset kept.
 
-**To research before drafting final wording:**
-- Current Wizards of the Coast **Fan Content Policy** (as of 2026) — confirm
-  what claims must be made and the exact phrasing they expect.
-- **Scryfall API & image-use terms** — confirm attribution requirements.
-
-**Likely shape (pending verification of current policies):**
-- Footer note: "Booster Tutor is an unofficial fan-made tool for resolving the
-  *Booster Tutor* card. Magic: The Gathering, its names, mana symbols, set
-  symbols, and card images are property of Wizards of the Coast LLC. This site
-  is not produced, endorsed, supported, or affiliated with Wizards of the
-  Coast. Card data and images via [Scryfall](https://scryfall.com)."
-- No revenue, no ads, no donations — keep it firmly non-commercial to stay
-  within the fan-content carve-out.
-- If we ever add accounts or paid features, this section needs a re-review.
+Also shipped beyond the original list: **Inventory** (received/missing per cube),
+**cloud sync** (`sync.ts` + `api/`), **cube archive / soft-delete**.
 
 ---
 
-## 2. Configurable pack size
+## Future / under consideration
 
-- UI: numeric input or stepper next to the mode selector. Default 15.
-- Sensible bounds: 1–40 (or 1–pool size).
-- For Color-Balanced mode: scale the per-color targets proportionally
-  (round to int, distribute remainders to multicolor + colorless), or fall
-  back to "fill from largest bucket" logic that already exists.
+### A. Rotisserie draft mode  *(new — biggest idea)*
 
----
+A multiplayer, full-information draft from the whole cube: no packs, one card per
+turn, snake order, every pick public. See **`docs/ROTISSERIE_DESIGN.md`** for the
+full design. Summary:
 
-## 3. Multiple cubes / user uploads
+- **Server-authoritative** state (unlike the rest of the app, where local IDB is
+  the source of truth) — the shared pool + turn order can't live on one client.
+- Reuses the existing **sync-code / Upstash Redis** backbone as the draft's
+  join mechanism.
+- Requires **atomic pick-claim** (a Redis Lua script: verify it's your turn →
+  verify card unclaimed → claim → advance the snake pointer, all in one op) so
+  two players can't grab the same card.
+- Phased: **✅ Phase 1 = local hotseat** (pass-and-play, no server — SHIPPED
+  2026-07-31) → **Phase 2 = networked async** (join by code, poll for state — not
+  yet built).
+- Explicitly reverses the old "multi-user / draft mode = out of scope" call.
 
-The biggest architectural shift. Today the cube is bundled at build time
-(`src/data/cube.json`). Move to a model where the bundled cube is the default,
-and users can upload their own.
+**Phase 1 (shipped):** a "Rotisserie" tab. `src/lib/rotisserie.ts` (snake-order
+logic + localStorage persistence per cube), `RotisserieLobby.tsx` (players 2–8,
+names, cards-per-player), `RotisserieBoard.tsx` (turn banner, per-seat piles,
+full-cube grid with claimed cards greyed + owner badge, search/hide-drafted
+filters, claim-confirm modal, undo, new-draft), `Rotisserie.tsx` (container).
+Wired into `App.tsx` as a third tab. Draft survives page reload.
 
-**UX:**
-- Cube selector dropdown in header ("Default Cube" / "<Custom name>").
-- "Upload cube" button → file picker → text file (one card per line, same
-  format as `scripts/cube-list.txt`).
-- After upload: name the cube, then enrichment progress bar
-  ("Fetching 412 of 540 from Scryfall…"). Card draws unlock when done.
-- Per-cube session state (picked cards) — switching cubes preserves each
-  cube's pool independently.
+**Phase 1 review pass (also shipped):** drafted cards brighten to full opacity
+on hover (name shows as a tooltip); clicking any seat pile "focuses" that
+player — the grid filters to just their drafted cards for easy async review,
+with a "Show whole cube" reset.
 
-**Format parsing:**
-- If a line includes `(SET) collector_number`, fetch that exact printing.
-- If only the card name is given, use Scryfall's `/cards/named?fuzzy=` and
-  take the default English non-art-variant printing.
-- Always English (`lang=en`), default frame, no art variants.
+### Phase 2 follow-on: export deck lists
 
-**Storage:**
-- localStorage is too small (~5 MB) for many enriched cubes. Use **IndexedDB**.
-  Schema: `cubes` store keyed by ID, each holding the enriched card list +
-  metadata (name, source, generated_at). `sessions` store keyed by cube ID
-  holding `pickedCardIds`.
-- Migrate the current `booster-tutor-state` localStorage key into the new
-  per-cube session model, mapped to the bundled default cube.
+Once players are on separate machines (Phase 2), each person needs to export
+their picked cards for a client. Support **MTGO / Cockatrice** plain-text `.txt`
+format (lines like `1 Ancestral Recall`) — a per-seat "Export" button that
+downloads or copies the list. (Trivial to add for local hotseat too; deferred
+per Ari's sequencing — do it with/after Phase 2.)
 
-**Scryfall calls from the browser:**
-- Scryfall supports CORS, so direct fetches work (no backend needed).
-- Same 50–100 ms rate limit applies. Throttle in a queue.
-- Send a `User-Agent`-equivalent identifier in `Accept` / via documented
-  Scryfall headers, per their guidance.
-- Handle failures gracefully: a "review failed cards" step that lets the user
-  manually pick a printing or skip. Cube can still be used with the cards
-  that resolved.
+### B. Per-cube power tagging
 
----
-
-## 4. Mobile-first picking UX
-
-When the user taps a card from the open pack, instead of a confirmation modal:
-
-- The tapped card scales up to a "spotlight" view that takes most of the
-  viewport (rotated to fit if needed).
-- The remaining 14 cards collapse to a smaller strip below the spotlight.
-- Spotlight has two action buttons:
-  - **Confirm pick** — adds to picked log, closes pack.
-  - **Back** — deselects, returns to grid view.
-- Tapping a different card in the strip swaps the spotlight.
-
-This replaces the current modal, which is awkward on phones.
+Power-Weighted generation mode is removed from the UI (`GenerationMode` is only
+`"random" | "color-balanced"`). Likely future direction: make tier data a
+per-cube property set during upload (optional column or a tagging step), and only
+expose Power-Weighted for cubes that carry tier data.
 
 ---
-
-## 5. Pack-open flow: "this game" vs "new match"
-
-Replace the single **Open Pack** button with two:
-
-- **Open new pack in this game** — current behavior. Picked cards stay out of
-  the pool. Resolves another Booster Tutor in the same game.
-- **Open new pack in a new match** — clears the picked-cards log + session
-  state for the active cube before opening the pack. (Equivalent to the
-  current Reset → Open Pack sequence, but in one tap.)
-
-Add a **help tooltip / icon** next to "new match" explaining: *"Booster Tutor
-removes cards from your cube for the rest of the **match**, not forever. Use
-this when you're starting a fresh match against a different opponent (or the
-next round) and want the full cube available again."*
-
-Keep the explicit **Reset** button for power-users who want to clear without
-opening a pack.
-
----
-
-## Future ideas
-
-- **Per-cube power tagging.** Power-Weighted mode is removed from the UI for
-  now. The likely future direction is to make tier data a per-cube property
-  set during cube upload (e.g. an optional column in the cube list or a
-  dedicated tagging step), and only expose Power-Weighted as a generation mode
-  for cubes that have tier data.
 
 ## Out of scope (still)
 
-- Multi-user / shared sessions.
-- Draft mode.
 - Statistics / analytics.
 - Authentication.
+- ~~Multi-user / shared sessions~~ and ~~draft mode~~ — reconsidered; see item A.

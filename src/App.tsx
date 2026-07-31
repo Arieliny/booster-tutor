@@ -16,6 +16,7 @@ import { Inventory } from "./components/Inventory";
 import { Modal } from "./components/Modal";
 import { PackDisplay } from "./components/PackDisplay";
 import { PoolStatus } from "./components/PoolStatus";
+import { Rotisserie } from "./components/Rotisserie";
 import { Spotlight } from "./components/Spotlight";
 
 type View =
@@ -23,7 +24,7 @@ type View =
   | { kind: "ready" }
   | { kind: "error"; message: string };
 
-type Tab = "packs" | "inventory";
+type Tab = "packs" | "rotisserie" | "inventory";
 
 function App() {
   const [view, setView] = useState<View>({ kind: "loading" });
@@ -205,6 +206,7 @@ function App() {
         >
           {([
             { id: "packs", label: "Open packs" },
+            { id: "rotisserie", label: "Rotisserie" },
             { id: "inventory", label: "Inventory" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
@@ -284,6 +286,8 @@ function App() {
               </div>
             )}
           </>
+        ) : tab === "rotisserie" ? (
+          selectedCube && <Rotisserie key={selectedCube.id} cube={selectedCube} />
         ) : (
           selectedCube && <Inventory cube={selectedCube} />
         )}
