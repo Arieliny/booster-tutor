@@ -38,6 +38,25 @@ export const MIN_SEATS = 2;
 export const MAX_SEATS = 8;
 export const DEFAULT_CARDS_PER_SEAT = 45;
 
+/** Distinct badge colors per seat, cycled if there are more seats than colors. */
+export const SEAT_COLORS = [
+  "#ef4444",
+  "#3b82f6",
+  "#22c55e",
+  "#eab308",
+  "#a855f7",
+  "#ec4899",
+  "#14b8a6",
+  "#f97316",
+];
+
+/** Stable color for a seat, by its position in the seat list. */
+export function seatColor(seats: RotisserieSeat[], seatId: string): string {
+  const idx = seats.findIndex((s) => s.id === seatId);
+  const i = idx < 0 ? 0 : idx;
+  return SEAT_COLORS[i % SEAT_COLORS.length];
+}
+
 /**
  * Snake seat index for a given 0-indexed pick number.
  * Even rounds go 0→N-1, odd rounds reverse N-1→0.

@@ -42,9 +42,21 @@ full design. Summary:
   verify card unclaimed → claim → advance the snake pointer, all in one op) so
   two players can't grab the same card.
 - Phased: **✅ Phase 1 = local hotseat** (pass-and-play, no server — SHIPPED
-  2026-07-31) → **Phase 2 = networked async** (join by code, poll for state — not
-  yet built).
+  2026-07-31) → **✅ Phase 2 = networked async** (join by code, poll for state —
+  BUILT 2026-07-31, pending a deploy smoke-test on Vercel + Upstash; the
+  networked path can't run under local `npm run dev`).
 - Explicitly reverses the old "multi-user / draft mode = out of scope" call.
+
+**Phase 2 (built):** a "Pass & play" / "Online" toggle in the Rotisserie tab.
+Server-authoritative: `api/draft.ts` (create / poll-state / cube / pick / undo)
+with an **atomic Lua pick-claim** (verify turn → verify unclaimed → claim →
+advance cursor) + Lua undo; `api/_redis.ts` draft keys/meta. Client:
+`src/lib/rotisserie-net.ts` (draft API + per-code "my seat" / resume storage),
+`RotisserieOnline.tsx` (create / join-by-code / seat-pick / resume),
+`RotisserieOnlineBoard.tsx` (2.5s polling, turn identity, pick/undo). The local
+and online boards share the extracted presentational `DraftBoardView.tsx`.
+Trust model: no auth; seat identity is local (localStorage), snake order is
+enforced server-side by the Lua script.
 
 **Phase 1 (shipped):** a "Rotisserie" tab. `src/lib/rotisserie.ts` (snake-order
 logic + localStorage persistence per cube), `RotisserieLobby.tsx` (players 2–8,
