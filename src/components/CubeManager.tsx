@@ -13,7 +13,7 @@ import {
 import { EditAccess } from "./EditAccess";
 import { CubeCobraImport, type CubeCobraMode } from "./CubeCobraImport";
 import { isCubeCobraCube } from "../lib/cubecobra";
-import { hasEditPassword } from "../lib/sync";
+import { hasEditPin } from "../lib/sync";
 
 interface Props {
   cubes: Cube[];
@@ -30,7 +30,7 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
   const [uploadOpen, setUploadOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [cobraMode, setCobraMode] = useState<CubeCobraMode | null>(null);
-  const [canEdit, setCanEdit] = useState(hasEditPassword());
+  const [canEdit, setCanEdit] = useState(hasEditPin());
 
   const activeCubes = cubes.filter((c) => !c.archived);
   const archivedCubes = cubes.filter((c) => c.archived);
@@ -90,7 +90,7 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
     return (
       <EditAccess
         onClose={() => setSyncOpen(false)}
-        onChanged={() => setCanEdit(hasEditPassword())}
+        onChanged={() => setCanEdit(hasEditPin())}
       />
     );
   }

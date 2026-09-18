@@ -30,14 +30,34 @@ import {
  * fully remove a cube is via direct KV access by the project owner.
  *
  * ACCESS MODEL: this is one shared library. GET is open to anyone. Every POST
- * (write) must carry the edit password in the `x-edit-key` header, matched
- * against the EDIT_PASSWORD env var. If that env var isn't set we fail CLOSED
- * (503) rather than leaving the library world-writable.
+ * (write) must carry the edit PIN in the `x-edit-key` header, matched against
+ * the EDIT_PIN env var. If that env var isn't set we fail CLOSED (503) rather
+ * than leaving the library world-writable.
+ *
+ * A short numeric PIN is only a handful of guesses wide, so wrong attempts are
+ * rate-limited per IP in Redis: after MAX_FAILED_ATTEMPTS the caller is locked
+ * out for LOCKOUT_SECONDS. That's what makes a memorable PIN safe here — the
+ * secret is weak, so the guessing budget has to be small. A correct PIN clears
+ * the counter. Limiting per IP (rather than globally) means a stranger
+ * hammering the endpoint can't lock the owner out.
  */
 
 const EDIT_HEADER = "x-edit-key";
+const MAX_FAILED_ATTEMPTS = 10;
+const LOCKOUT_SECONDS = 15 * 60;
 
 type AuthResult = { ok: true } | { ok: false; status: number; error: string };
+
+function clientIp(req: VercelRequest): string {
+  const fwd = req.headers["x-forwarded-for"];
+  const raw = Array.isArray(fwd) ? fwd[0] : fwd;
+  const first = typeof raw === "string" ? raw.split(",")[0].trim() : "";
+  return first || "unknown";
+}
+
+function attemptsKey(ip: string): string {
+  return `editauth:fails:${ip}`;
+}
 
 /** Constant-time compare that doesn't leak length via early return. */
 function secretsMatch(provided: string, expected: string): boolean {
@@ -51,21 +71,42 @@ function secretsMatch(provided: string, expected: string): boolean {
   return timingSafeEqual(a, b);
 }
 
-function authorizeWrite(req: VercelRequest): AuthResult {
-  const expected = process.env.EDIT_PASSWORD;
+async function authorizeWrite(req: VercelRequest): Promise<AuthResult> {
+  const expected = process.env.EDIT_PIN;
   if (!expected) {
     return {
       ok: false,
       status: 503,
-      error:
-        "Editing is not configured on the server (EDIT_PASSWORD is unset).",
+      error: "Editing is not configured on the server (EDIT_PIN is unset).",
     };
   }
+
+  const key = attemptsKey(clientIp(req));
+  const fails = Number((await redis.get<number | string>(key)) ?? 0);
+  if (fails >= MAX_FAILED_ATTEMPTS) {
+    return {
+      ok: false,
+      status: 429,
+      error: `Too many incorrect PIN attempts. Try again in ${Math.round(
+        LOCKOUT_SECONDS / 60,
+      )} minutes.`,
+    };
+  }
+
   const raw = req.headers[EDIT_HEADER];
   const provided = Array.isArray(raw) ? raw[0] : raw;
   if (typeof provided !== "string" || !secretsMatch(provided, expected)) {
-    return { ok: false, status: 401, error: "Invalid edit password" };
+    const next = await redis.incr(key);
+    // Start the window on the first failure so lockouts actually expire.
+    if (next === 1) await redis.expire(key, LOCKOUT_SECONDS);
+    return {
+      ok: false,
+      status: 401,
+      error: "Invalid PIN",
+    };
   }
+
+  await redis.del(key);
   return { ok: true };
 }
 
@@ -110,7 +151,7 @@ async function handlePost(
   req: VercelRequest,
   res: VercelResponse,
 ) {
-  const auth = authorizeWrite(req);
+  const auth = await authorizeWrite(req);
   if (!auth.ok) {
     res.status(auth.status).json({ error: auth.error });
     return;

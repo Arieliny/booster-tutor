@@ -1,10 +1,6 @@
 import { useState } from "react";
 import { Modal } from "./Modal";
-import {
-  clearEditPassword,
-  hasEditPassword,
-  verifyEditPassword,
-} from "../lib/sync";
+import { clearEditPin, hasEditPin, verifyEditPin } from "../lib/sync";
 
 interface Props {
   onClose: () => void;
@@ -16,24 +12,24 @@ interface Props {
  * changing it needs the edit password (checked server-side).
  */
 export function EditAccess({ onClose, onChanged }: Props) {
-  const [unlocked, setUnlocked] = useState(hasEditPassword());
+  const [unlocked, setUnlocked] = useState(hasEditPin());
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [justUnlocked, setJustUnlocked] = useState(false);
 
   const handleUnlock = async () => {
-    const pw = input.trim();
-    if (!pw) {
-      setError("Enter the edit password.");
+    const pin = input.trim();
+    if (!pin) {
+      setError("Enter the edit PIN.");
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      const ok = await verifyEditPassword(pw);
+      const ok = await verifyEditPin(pin);
       if (!ok) {
-        setError("That password wasn't accepted.");
+        setError("That PIN wasn't accepted.");
         return;
       }
       setUnlocked(true);
@@ -48,7 +44,7 @@ export function EditAccess({ onClose, onChanged }: Props) {
   };
 
   const handleLock = () => {
-    clearEditPassword();
+    clearEditPin();
     setUnlocked(false);
     setJustUnlocked(false);
     onChanged();
@@ -63,7 +59,7 @@ export function EditAccess({ onClose, onChanged }: Props) {
         Everyone who opens Booster Tutor sees the same cubes, and they're stored
         in the cloud — so they survive clearing your browser. Opening packs and
         drafting are always available to anyone and stay on their own device.
-        Changing the library needs the edit password.
+        Changing the library needs the edit PIN.
       </p>
 
       {unlocked ? (
@@ -104,18 +100,23 @@ export function EditAccess({ onClose, onChanged }: Props) {
       ) : (
         <div className="rounded-lg border border-(--color-border) bg-black/30 p-4">
           <div className="mb-2 text-xs uppercase tracking-wide text-(--color-text-dim)">
-            Edit password
+            Edit PIN
           </div>
           <div className="flex gap-2">
             <input
               type="password"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              // Digits only, so phones show the number pad.
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={12}
+              autoComplete="off"
+              onChange={(e) => setInput(e.target.value.replace(/\D/g, ""))}
               onKeyDown={(e) => {
                 if (e.key === "Enter") void handleUnlock();
               }}
-              placeholder="••••••••"
-              className="flex-1 rounded border border-(--color-border) bg-(--color-bg) px-3 py-1.5 text-sm text-(--color-text)"
+              placeholder="••••"
+              className="flex-1 rounded border border-(--color-border) bg-(--color-bg) px-3 py-1.5 font-mono tracking-[0.3em] text-sm text-(--color-text)"
               autoCapitalize="off"
               autoCorrect="off"
               spellCheck={false}
@@ -132,7 +133,8 @@ export function EditAccess({ onClose, onChanged }: Props) {
           {error && <p className="mt-2 text-xs text-red-300">{error}</p>}
           <p className="mt-3 text-xs text-(--color-text-dim)">
             Stored on this device so you stay unlocked. Not an account — it's one
-            shared password that guards the cube list.
+            shared PIN that guards the cube list. Wrong attempts are rate-limited
+            by the server.
           </p>
         </div>
       )}
