@@ -10,9 +10,10 @@ import {
   saveCube,
   uniqueCubeName,
 } from "../lib/cube-store";
-import { SyncSettings } from "./SyncSettings";
+import { EditAccess } from "./EditAccess";
 import { CubeCobraImport, type CubeCobraMode } from "./CubeCobraImport";
 import { isCubeCobraCube } from "../lib/cubecobra";
+import { hasEditPassword } from "../lib/sync";
 
 interface Props {
   cubes: Cube[];
@@ -29,6 +30,7 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
   const [uploadOpen, setUploadOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [cobraMode, setCobraMode] = useState<CubeCobraMode | null>(null);
+  const [canEdit, setCanEdit] = useState(hasEditPassword());
 
   const activeCubes = cubes.filter((c) => !c.archived);
   const archivedCubes = cubes.filter((c) => c.archived);
@@ -85,7 +87,12 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
   }
 
   if (syncOpen) {
-    return <SyncSettings onClose={() => setSyncOpen(false)} />;
+    return (
+      <EditAccess
+        onClose={() => setSyncOpen(false)}
+        onChanged={() => setCanEdit(hasEditPassword())}
+      />
+    );
   }
 
   if (cobraMode) {
@@ -148,22 +155,26 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
             onClick={() => setSyncOpen(true)}
             className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
           >
-            Sync…
+            {canEdit ? "🔓 Editing" : "🔒 Locked"}
           </button>
-          <button
-            type="button"
-            onClick={() => setUploadOpen(true)}
-            className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
-          >
-            + Upload list
-          </button>
-          <button
-            type="button"
-            onClick={() => setCobraMode({ kind: "create" })}
-            className="rounded bg-(--color-accent) px-3 py-1.5 text-sm font-medium text-black hover:bg-(--color-accent-bright)"
-          >
-            + CubeCobra
-          </button>
+          {canEdit && (
+            <>
+              <button
+                type="button"
+                onClick={() => setUploadOpen(true)}
+                className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
+              >
+                + Upload list
+              </button>
+              <button
+                type="button"
+                onClick={() => setCobraMode({ kind: "create" })}
+                className="rounded bg-(--color-accent) px-3 py-1.5 text-sm font-medium text-black hover:bg-(--color-accent-bright)"
+              >
+                + CubeCobra
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -185,9 +196,17 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
             archiveDisabled={activeCubes.length <= 1}
             canRefresh={isCubeCobraCube(cube)}
             onRefresh={() => setCobraMode({ kind: "refresh", cube })}
+            canEdit={canEdit}
           />
         ))}
       </ul>
+
+      {!canEdit && (
+        <p className="mt-3 rounded border border-(--color-border) bg-black/30 p-2 text-xs text-(--color-text-dim)">
+          This shared library is read-only. Opening packs and drafting work
+          normally — unlock editing to change the cubes.
+        </p>
+      )}
 
       {archivedCubes.length > 0 && (
         <div className="mt-4 border-t border-(--color-border) pt-3">
@@ -213,13 +232,15 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
                       {cube.cards.length} cards · archived
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRestore(cube.id)}
-                    className="rounded px-2 py-1 text-xs text-(--color-accent) hover:bg-(--color-accent)/10"
-                  >
-                    Restore
-                  </button>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => handleRestore(cube.id)}
+                      className="rounded px-2 py-1 text-xs text-(--color-accent) hover:bg-(--color-accent)/10"
+                    >
+                      Restore
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
@@ -252,6 +273,7 @@ interface CubeRowProps {
   archiveDisabled: boolean;
   canRefresh: boolean;
   onRefresh: () => void;
+  canEdit: boolean;
 }
 
 function CubeRow({
@@ -266,6 +288,7 @@ function CubeRow({
   archiveDisabled,
   canRefresh,
   onRefresh,
+  canEdit,
 }: CubeRowProps) {
   return (
     <li className="flex items-center justify-between gap-2 rounded border border-(--color-border) bg-black/30 p-3">
@@ -284,9 +307,10 @@ function CubeRow({
       ) : (
         <button
           type="button"
-          className="flex-1 truncate text-left text-sm text-(--color-text) hover:text-(--color-accent)"
+          disabled={!canEdit}
+          className="flex-1 truncate text-left text-sm text-(--color-text) enabled:hover:text-(--color-accent) disabled:cursor-default"
           onClick={onStartRename}
-          title="Click to rename"
+          title={canEdit ? "Click to rename" : "Unlock editing to rename"}
         >
           <span className="truncate">{cube.name}</span>
           <span className="ml-2 text-xs text-(--color-text-dim)">
@@ -302,7 +326,7 @@ function CubeRow({
           )}
         </button>
       )}
-      {canRefresh && (
+      {canRefresh && canEdit && (
         <button
           type="button"
           onClick={onRefresh}
@@ -312,15 +336,17 @@ function CubeRow({
           Refresh
         </button>
       )}
-      <button
-        type="button"
-        onClick={onArchive}
-        disabled={archiveDisabled}
-        title={archiveDisabled ? "Need at least one active cube" : "Archive (soft-delete)"}
-        className="rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
-      >
-        Archive
-      </button>
+      {canEdit && (
+        <button
+          type="button"
+          onClick={onArchive}
+          disabled={archiveDisabled}
+          title={archiveDisabled ? "Need at least one active cube" : "Archive (soft-delete)"}
+          className="rounded px-2 py-1 text-xs text-red-400 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          Archive
+        </button>
+      )}
     </li>
   );
 }

@@ -25,6 +25,26 @@ Also shipped beyond the original list: **Inventory** (received/missing per cube)
 **cloud sync** (`sync.ts` + `api/`), **cube archive / soft-delete**,
 **CubeCobra import** (below).
 
+## ✅ Shared public library + edit password (2026-09-18)
+
+Replaced per-user sync codes with **one shared library** everyone can read.
+
+- `src/lib/sync.ts` uses a fixed namespace (`boostertutor`) — no code to enter,
+  no setup, and cubes survive a cleared browser because they live in Upstash.
+- **Writes are gated server-side**: `POST /api/sync` requires the `x-edit-key`
+  header to match the **`EDIT_PASSWORD`** env var (constant-time compare). GET
+  is open to anyone. A client-only gate would have been decorative — anyone
+  could POST directly — so the check lives in the API.
+- **Fails closed**: with `EDIT_PASSWORD` unset the API returns 503 instead of
+  leaving the library world-writable. **Set `EDIT_PASSWORD` in Vercel or
+  editing is impossible.**
+- `EditAccess.tsx` (replaces `SyncSettings.tsx`) is the unlock panel; the cube
+  manager hides add/rename/archive/refresh while locked.
+- Drafting and pack-opening are never synced, so visitors can use the tool
+  freely without touching the library.
+- Deliberately not an account system. If the tool ever gets real users, that's
+  the point to revisit multi-user.
+
 ## ✅ CubeCobra import (2026-09-18)
 
 Import a cube straight from CubeCobra instead of uploading a list every time —

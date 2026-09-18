@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   cubeKey,
@@ -27,7 +28,46 @@ import {
  *
  * Note: there is no permanent-delete action by design. The only way to
  * fully remove a cube is via direct KV access by the project owner.
+ *
+ * ACCESS MODEL: this is one shared library. GET is open to anyone. Every POST
+ * (write) must carry the edit password in the `x-edit-key` header, matched
+ * against the EDIT_PASSWORD env var. If that env var isn't set we fail CLOSED
+ * (503) rather than leaving the library world-writable.
  */
+
+const EDIT_HEADER = "x-edit-key";
+
+type AuthResult = { ok: true } | { ok: false; status: number; error: string };
+
+/** Constant-time compare that doesn't leak length via early return. */
+function secretsMatch(provided: string, expected: string): boolean {
+  const a = Buffer.from(provided, "utf8");
+  const b = Buffer.from(expected, "utf8");
+  if (a.length !== b.length) {
+    // Still burn a comparison so timing doesn't trivially reveal length.
+    timingSafeEqual(a, a);
+    return false;
+  }
+  return timingSafeEqual(a, b);
+}
+
+function authorizeWrite(req: VercelRequest): AuthResult {
+  const expected = process.env.EDIT_PASSWORD;
+  if (!expected) {
+    return {
+      ok: false,
+      status: 503,
+      error:
+        "Editing is not configured on the server (EDIT_PASSWORD is unset).",
+    };
+  }
+  const raw = req.headers[EDIT_HEADER];
+  const provided = Array.isArray(raw) ? raw[0] : raw;
+  if (typeof provided !== "string" || !secretsMatch(provided, expected)) {
+    return { ok: false, status: 401, error: "Invalid edit password" };
+  }
+  return { ok: true };
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const code = validateSyncCode(req.query.code);
@@ -70,8 +110,21 @@ async function handlePost(
   req: VercelRequest,
   res: VercelResponse,
 ) {
+  const auth = authorizeWrite(req);
+  if (!auth.ok) {
+    res.status(auth.status).json({ error: auth.error });
+    return;
+  }
+
   const body = (req.body ?? {}) as Record<string, unknown>;
   const action = body.action;
+
+  // Password-only probe used by the client's unlock flow. Reaching here means
+  // authorizeWrite already passed.
+  if (action === "verify") {
+    res.status(200).json({ ok: true });
+    return;
+  }
 
   if (action === "putCube") return await putCube(code, body, res);
   if (action === "archiveCube") return await setArchived(code, body, res, true);
