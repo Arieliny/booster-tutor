@@ -22,7 +22,27 @@ below shipped** — kept here as a changelog. Live planning is now the
    + `HelpTip.tsx` tooltip; explicit Reset kept.
 
 Also shipped beyond the original list: **Inventory** (received/missing per cube),
-**cloud sync** (`sync.ts` + `api/`), **cube archive / soft-delete**.
+**cloud sync** (`sync.ts` + `api/`), **cube archive / soft-delete**,
+**CubeCobra import** (below).
+
+## ✅ CubeCobra import (2026-09-18)
+
+Import a cube straight from CubeCobra instead of uploading a list every time —
+and re-pull it later in place.
+
+- `src/lib/cubecobra.ts`: paste a cube URL or bare id → `/cube/api/cubeJSON/{id}`.
+- Both CubeCobra API endpoints (`cubeJSON`, `cubelist`) send
+  `access-control-allow-origin: *`, so this runs **entirely client-side — no
+  serverless proxy**. (The `/cube/download/*` exports are NOT CORS-enabled.)
+- Every CubeCobra card carries its `scryfall_id`, so the import skips the
+  one-request-per-card enrichment and batches through Scryfall's
+  `/cards/collection` (75 per request, CORS preflight verified). A 559-card cube
+  costs ~8 requests instead of 559 — seconds instead of ~2 minutes, with exact
+  printings.
+- Cubes remember their `cubecobraId`; the cube list shows a **CubeCobra** badge
+  and a **Refresh** button that re-pulls in place and reports `+added / −removed`.
+- Duplicate printings are skipped (the app keys cards by `scryfall_id`), and
+  unresolvable cards (CubeCobra custom cards) are reported as failures.
 
 ---
 

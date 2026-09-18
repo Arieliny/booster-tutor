@@ -24,6 +24,11 @@ export interface Cube {
   /** True for the bundled cube we ship with the app. */
   isDefault?: boolean;
   /**
+   * CubeCobra cube id this cube was imported from, if any. Present means the
+   * cube can be re-pulled in place ("Refresh") instead of re-uploading a list.
+   */
+  cubecobraId?: string;
+  /**
    * Soft-delete marker. Archived cubes are hidden from the main UI by
    * default. There is no UI for permanent deletion — that's intentional.
    */

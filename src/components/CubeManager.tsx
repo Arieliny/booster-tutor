@@ -11,6 +11,8 @@ import {
   uniqueCubeName,
 } from "../lib/cube-store";
 import { SyncSettings } from "./SyncSettings";
+import { CubeCobraImport, type CubeCobraMode } from "./CubeCobraImport";
+import { isCubeCobraCube } from "../lib/cubecobra";
 
 interface Props {
   cubes: Cube[];
@@ -26,6 +28,7 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
   const [showArchived, setShowArchived] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
+  const [cobraMode, setCobraMode] = useState<CubeCobraMode | null>(null);
 
   const activeCubes = cubes.filter((c) => !c.archived);
   const archivedCubes = cubes.filter((c) => c.archived);
@@ -85,6 +88,25 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
     return <SyncSettings onClose={() => setSyncOpen(false)} />;
   }
 
+  if (cobraMode) {
+    return (
+      <CubeCobraImport
+        mode={cobraMode}
+        onClose={() => setCobraMode(null)}
+        onDone={(cube) => {
+          const exists = cubes.some((c) => c.id === cube.id);
+          onCubesChanged({
+            cubes: exists
+              ? cubes.map((c) => (c.id === cube.id ? cube : c))
+              : [...cubes, cube],
+            selectedId: exists ? selectedId : cube.id,
+          });
+          setCobraMode(null);
+        }}
+      />
+    );
+  }
+
   if (confirmArchiveId) {
     const cube = cubes.find((c) => c.id === confirmArchiveId);
     return (
@@ -131,9 +153,16 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
           <button
             type="button"
             onClick={() => setUploadOpen(true)}
+            className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
+          >
+            + Upload list
+          </button>
+          <button
+            type="button"
+            onClick={() => setCobraMode({ kind: "create" })}
             className="rounded bg-(--color-accent) px-3 py-1.5 text-sm font-medium text-black hover:bg-(--color-accent-bright)"
           >
-            + Upload
+            + CubeCobra
           </button>
         </div>
       </div>
@@ -154,6 +183,8 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
             onCancelRename={() => setRenamingId(null)}
             onArchive={() => setConfirmArchiveId(cube.id)}
             archiveDisabled={activeCubes.length <= 1}
+            canRefresh={isCubeCobraCube(cube)}
+            onRefresh={() => setCobraMode({ kind: "refresh", cube })}
           />
         ))}
       </ul>
@@ -219,6 +250,8 @@ interface CubeRowProps {
   onCancelRename: () => void;
   onArchive: () => void;
   archiveDisabled: boolean;
+  canRefresh: boolean;
+  onRefresh: () => void;
 }
 
 function CubeRow({
@@ -231,6 +264,8 @@ function CubeRow({
   onCancelRename,
   onArchive,
   archiveDisabled,
+  canRefresh,
+  onRefresh,
 }: CubeRowProps) {
   return (
     <li className="flex items-center justify-between gap-2 rounded border border-(--color-border) bg-black/30 p-3">
@@ -257,6 +292,24 @@ function CubeRow({
           <span className="ml-2 text-xs text-(--color-text-dim)">
             {cube.cards.length} cards
           </span>
+          {canRefresh && (
+            <span
+              className="ml-2 rounded bg-(--color-accent)/15 px-1.5 py-0.5 text-[10px] text-(--color-accent)"
+              title={`Linked to CubeCobra cube ${cube.cubecobraId}`}
+            >
+              CubeCobra
+            </span>
+          )}
+        </button>
+      )}
+      {canRefresh && (
+        <button
+          type="button"
+          onClick={onRefresh}
+          title="Re-pull this cube's list from CubeCobra"
+          className="rounded px-2 py-1 text-xs text-(--color-accent) hover:bg-(--color-accent)/10"
+        >
+          Refresh
         </button>
       )}
       <button
