@@ -12,6 +12,7 @@ import {
 } from "../lib/cube-store";
 import { EditAccess } from "./EditAccess";
 import { CubeCobraImport, type CubeCobraMode } from "./CubeCobraImport";
+import { CubeExport } from "./CubeExport";
 import { isCubeCobraCube } from "../lib/cubecobra";
 import { hasEditPin } from "../lib/sync";
 
@@ -31,6 +32,7 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
   const [syncOpen, setSyncOpen] = useState(false);
   const [cobraMode, setCobraMode] = useState<CubeCobraMode | null>(null);
   const [canEdit, setCanEdit] = useState(hasEditPin());
+  const [exportCube, setExportCube] = useState<Cube | null>(null);
 
   const activeCubes = cubes.filter((c) => !c.archived);
   const archivedCubes = cubes.filter((c) => c.archived);
@@ -92,6 +94,12 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
         onClose={() => setSyncOpen(false)}
         onChanged={() => setCanEdit(hasEditPin())}
       />
+    );
+  }
+
+  if (exportCube) {
+    return (
+      <CubeExport cube={exportCube} onClose={() => setExportCube(null)} />
     );
   }
 
@@ -197,6 +205,7 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Prop
             canRefresh={isCubeCobraCube(cube)}
             onRefresh={() => setCobraMode({ kind: "refresh", cube })}
             canEdit={canEdit}
+            onExport={() => setExportCube(cube)}
           />
         ))}
       </ul>
@@ -274,6 +283,7 @@ interface CubeRowProps {
   canRefresh: boolean;
   onRefresh: () => void;
   canEdit: boolean;
+  onExport: () => void;
 }
 
 function CubeRow({
@@ -289,6 +299,7 @@ function CubeRow({
   canRefresh,
   onRefresh,
   canEdit,
+  onExport,
 }: CubeRowProps) {
   return (
     <li className="flex items-center justify-between gap-2 rounded border border-(--color-border) bg-black/30 p-3">
@@ -326,6 +337,14 @@ function CubeRow({
           )}
         </button>
       )}
+      <button
+        type="button"
+        onClick={onExport}
+        title="Export as a .txt cube list"
+        className="rounded px-2 py-1 text-xs text-(--color-text-dim) hover:bg-white/5 hover:text-(--color-text)"
+      >
+        Export
+      </button>
       {canRefresh && canEdit && (
         <button
           type="button"

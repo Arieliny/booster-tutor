@@ -68,6 +68,35 @@ and re-pull it later in place.
 - Duplicate printings are skipped (the app keys cards by `scryfall_id`), and
   unresolvable cards (CubeCobra custom cards) are reported as failures.
 
+## ✅ Cube export (.txt) + pancake draft file (2026-09-18)
+
+Export any cube as plain text from Manage cubes → **Export** (read-only, so it
+works whether or not editing is unlocked).
+
+- `src/lib/cube-export.ts` + `CubeExport.tsx`.
+- **Cube list**: `1 Name (SET) 123` per line — Draftmancer / MTGO / Cockatrice,
+  and round-trips through our own paste importer. Double-faced cards export as
+  their front face, which is what deck-list tools expect.
+- **Pancake draft file**: the same list wrapped in Draftmancer's custom card
+  list format with a `[Settings]` block that configures the format outright.
+
+### How pancake maps onto Draftmancer
+
+Pancake (Joost Vunderink, 2013) is a 2-player pick-and-burn cube format:
+11-card packs; per pack the opener picks 1, passes, the opponent picks 2 and
+burns 2, passes back, and the opener picks 2 and burns the last 4.
+
+Draftmancer has **no** Pancake mode, but its `boosterSettings` accepts a
+sequence of pick/burn phases per booster, and with two players a pack changes
+hands after every phase — which *is* the swap. So it falls out as:
+
+```
+"boosterSettings": [{ "picks": [1,2,2], "burns": [0,2,4] }, ...]
+```
+
+5 picked + 6 burned = an 11-card pack, with `[Pancake(11)]` setting pack size
+and `boostersPerPlayer: 9` (clamped down for cubes smaller than 198 cards).
+
 ---
 
 ## Future / under consideration
