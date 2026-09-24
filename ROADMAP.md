@@ -126,6 +126,29 @@ Verified by stopping the server and reloading: the app booted, all 195 rows
 rendered, and a cached image served — while `/api/sync` correctly failed
 instead of being served a stale shell.
 
+### Real mana symbols
+
+- `scripts/build-mana-symbols.mjs` pulls Scryfall's official symbol SVGs for
+  exactly the symbols present in the set-review data and writes
+  `src/data/mana-symbols.json` as inline `data:` URIs (23 symbols, ~75 KB).
+- Inlined rather than hotlinked **because of the offline requirement** —
+  runtime requests to `svgs.scryfall.io` are precisely what fails at a
+  prerelease. Anything not baked in falls back to the old lettered disc.
+- Colour filter buttons use the real symbols for WUBRG; multicolour is a gold
+  disc (there's no official multicolour symbol) and colourless stays a plain
+  disc, which covers lands and artifacts fine.
+
+### Stale-chunk recovery (found while testing the PWA)
+
+Asset filenames are content-hashed, so after a deploy a tab still running the
+previous build — or one served from the old service-worker precache — can try
+to lazy-load a chunk that no longer exists. Observed live: a 404 on the old
+`SetReview-*.js`, a rejected dynamic import, and a blank page.
+
+`src/main.tsx` listens for `vite:preloadError` and reloads once, picking up the
+new `index.html` and assets. A 15-second cooldown in `sessionStorage` prevents
+a reload loop if the chunk is genuinely gone.
+
 ## ✅ Cube export (.txt) + pancake draft file (2026-09-18)
 
 Export any cube as plain text from Manage cubes → **Export** (read-only, so it

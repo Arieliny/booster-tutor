@@ -11,24 +11,45 @@ import {
   type ColorBucket,
   type SetReviewCard,
 } from "../lib/set-review";
+import manaSymbolUris from "../data/mana-symbols.json";
 import { Modal } from "./Modal";
 import { OfflinePanel } from "./OfflinePanel";
 
 type SortKey = "grade" | "name" | "cmc" | "rarity";
 
+/** Official Scryfall symbol artwork, inlined at build time so it works offline. */
+const SYMBOL_URI = manaSymbolUris as Record<string, string>;
+
+/** Fallback faces for anything without baked artwork (and the filter buttons). */
 const PIP_STYLE: Record<string, string> = {
   W: "bg-[#f8f4e4] text-black",
   U: "bg-[#9fd5f2] text-black",
   B: "bg-[#b0a7a3] text-black",
   R: "bg-[#f4a08a] text-black",
   G: "bg-[#9ad3ae] text-black",
+  // No real symbol exists for "multicolour" — gold is the convention.
+  M: "bg-gradient-to-br from-[#e9d585] to-[#c1971f] text-black",
+  C: "bg-[#cfc9c2] text-black",
 };
 
 function Pip({ sym }: { sym: string }) {
+  const uri = SYMBOL_URI[sym];
+  if (uri) {
+    return (
+      <img
+        src={uri}
+        alt={sym}
+        title={sym}
+        draggable={false}
+        className="inline-block h-[15px] w-[15px] shrink-0 align-[-2px]"
+      />
+    );
+  }
+  // A symbol we haven't baked (e.g. from a newer set) still renders legibly.
   return (
     <span
       className={
-        "inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-semibold " +
+        "inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-1 text-[10px] font-semibold " +
         (PIP_STYLE[sym] ?? "bg-[#cfc9c2] text-black")
       }
     >
@@ -239,23 +260,28 @@ export function SetReview() {
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {COLOR_BUCKETS.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              title={c.label}
-              onClick={() => toggleColor(c.id)}
-              className={
-                "h-8 w-8 rounded-full border text-xs font-semibold transition sm:h-7 sm:w-7 " +
-                (colors.has(c.id)
-                  ? "border-(--color-accent) ring-2 ring-(--color-accent)/40 "
-                  : "border-(--color-border) opacity-70 hover:opacity-100 ") +
-                (PIP_STYLE[c.id] ?? "bg-[#cfc9c2] text-black")
-              }
-            >
-              {c.id}
-            </button>
-          ))}
+          {COLOR_BUCKETS.map((c) => {
+            const uri = SYMBOL_URI[c.id];
+            return (
+              <button
+                key={c.id}
+                type="button"
+                title={c.label}
+                aria-pressed={colors.has(c.id)}
+                onClick={() => toggleColor(c.id)}
+                className={
+                  "flex h-8 w-8 items-center justify-center rounded-full border text-xs font-semibold transition sm:h-7 sm:w-7 " +
+                  (colors.has(c.id)
+                    ? "border-(--color-accent) ring-2 ring-(--color-accent)/40 "
+                    : "border-(--color-border) opacity-70 hover:opacity-100 ") +
+                  // The real symbols carry their own coloured disc.
+                  (uri ? "bg-transparent" : (PIP_STYLE[c.id] ?? "bg-[#cfc9c2] text-black"))
+                }
+              >
+                {uri ? <img src={uri} alt={c.label} className="h-5 w-5" /> : c.id}
+              </button>
+            );
+          })}
         </div>
 
         <label className="flex items-center gap-2 text-xs text-(--color-text-dim)">
