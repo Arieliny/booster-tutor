@@ -3,6 +3,7 @@ import {
   COLOR_BUCKETS,
   colorBucket,
   gradeTone,
+  hasAssessment,
   manaSymbols,
   primaryGrade,
   primaryValue,
@@ -53,15 +54,18 @@ function ManaCost({ cost }: { cost: string }) {
  */
 function GradePill({ card }: { card: SetReviewCard }) {
   const { grade, source } = primaryGrade(card);
+  // "Sideboard" is a grade on its own, not a letter.
+  const sideboardOnly = !grade && card.tag === "sideboard";
   return (
     <span className="inline-flex items-center gap-1">
       <span
+        title={sideboardOnly ? "Graded as a sideboard card" : undefined}
         className={
           "inline-block min-w-[32px] rounded px-1.5 py-0.5 text-center text-sm font-semibold " +
-          gradeTone(grade)
+          (sideboardOnly ? "bg-violet-500/20 text-violet-300" : gradeTone(grade))
         }
       >
-        {grade ?? "—"}
+        {grade ?? (sideboardOnly ? "SB" : "—")}
       </span>
       {source === "marshall" && (
         <span
@@ -115,7 +119,7 @@ export function SetReview() {
   const [opened, setOpened] = useState<SetReviewCard | null>(null);
 
   const graded = useMemo(
-    () => setReview.cards.filter((c) => primaryGrade(c).grade).length,
+    () => setReview.cards.filter((c) => hasAssessment(c)).length,
     [],
   );
 
@@ -132,7 +136,7 @@ export function SetReview() {
     const filtered = setReview.cards.filter((c) => {
       if (rarity !== "all" && c.rarity !== rarity) return false;
       if (colors.size > 0 && !colors.has(colorBucket(c))) return false;
-      if (gradedOnly && !primaryGrade(c).grade) return false;
+      if (gradedOnly && !hasAssessment(c)) return false;
       if (q) {
         const hay = `${c.name} ${c.type_line} ${c.oracle_text} ${c.note ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;

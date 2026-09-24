@@ -345,7 +345,7 @@
    "marshall": null,
    "luis": null,
    "tag": "sideboard",
-   "note": "Green/blue-hosing exile effect, dead in best-of-1 but strong to bring in against those colors."
+   "note": "Green/blue-hosing exile effect - dead in best-of-one, but strong to bring in against those colors."
   },
   {
    "name": "Rescue Girl, First Responder",
@@ -1064,9 +1064,9 @@
    "scryfall_id": "7e5a640b-fd88-4b5a-9dfc-1d8f5a5cef41",
    "image_url": "https://cards.scryfall.io/normal/front/7/e/7e5a640b-fd88-4b5a-9dfc-1d8f5a5cef41.jpg?1789127516",
    "marshall": null,
-   "luis": null,
+   "luis": "C",
    "tag": null,
-   "note": "Called a rock-solid playable 4-mana 3/4 with surveil and a strong flashback spell, but the transcript's grade line is garbled/overlapping and no clear letter is stated."
+   "note": "Rock-solid playable: 4-mana 3/4 that surveils on entry, plus the Peer Review flashback half."
   },
   {
    "name": "Sphinx's Approach",
@@ -2001,9 +2001,9 @@
    "scryfall_id": "7d3b720d-f27c-462a-8f80-15748e5086e1",
    "image_url": "https://cards.scryfall.io/normal/front/7/d/7d3b720d-f27c-462a-8f80-15748e5086e1.jpg?1789729762",
    "marshall": null,
-   "luis": null,
-   "tag": null,
-   "note": "A prowess-enabling draw spell; both agree it's only worth considering in a dedicated prowess deck and otherwise unplayable, no letter grade given."
+   "luis": "C",
+   "tag": "build-around",
+   "note": "Only worth considering in a dedicated prowess deck; close to unplayable outside it."
   },
   {
    "name": "Awaken the Inferno",

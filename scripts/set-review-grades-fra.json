@@ -95,7 +95,7 @@
   "marshall": null,
   "luis": null,
   "tag": "sideboard",
-  "note": "Green/blue-hosing exile effect, dead in best-of-1 but strong to bring in against those colors."
+  "note": "Green/blue-hosing exile effect - dead in best-of-one, but strong to bring in against those colors."
  },
  {
   "name": "Rescue Girl, First Responder",
@@ -303,9 +303,9 @@
  {
   "name": "Semester Foreseer // Peer Review",
   "marshall": null,
-  "luis": null,
+  "luis": "C",
   "tag": null,
-  "note": "Called a rock-solid playable 4-mana 3/4 with surveil and a strong flashback spell, but the transcript's grade line is garbled/overlapping and no clear letter is stated."
+  "note": "Rock-solid playable: 4-mana 3/4 that surveils on entry, plus the Peer Review flashback half."
  },
  {
   "name": "Sphinx's Approach",
@@ -576,9 +576,9 @@
  {
   "name": "Artifist Acumen",
   "marshall": null,
-  "luis": null,
-  "tag": null,
-  "note": "A prowess-enabling draw spell; both agree it's only worth considering in a dedicated prowess deck and otherwise unplayable, no letter grade given."
+  "luis": "C",
+  "tag": "build-around",
+  "note": "Only worth considering in a dedicated prowess deck; close to unplayable outside it."
  },
  {
   "name": "Awaken the Inferno",

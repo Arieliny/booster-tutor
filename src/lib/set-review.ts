@@ -86,6 +86,16 @@ export function primaryValue(card: SetReviewCard): number {
   return gradeValue(primaryGrade(card).grade);
 }
 
+/**
+ * The show uses two subgrades alongside the letters. "Build-around" modifies a
+ * letter ("a build-around B"), but "Sideboard" stands on its own — a sideboard
+ * card doesn't also get a letter. So a sideboard-tagged card counts as graded
+ * and shows "SB" in the grade column.
+ */
+export function hasAssessment(card: SetReviewCard): boolean {
+  return primaryGrade(card).grade !== null || card.tag === "sideboard";
+}
+
 /** Tailwind classes tinting a grade pill by letter. */
 export function gradeTone(g: Grade | null): string {
   if (!g) return "bg-white/5 text-(--color-text-dim)";
