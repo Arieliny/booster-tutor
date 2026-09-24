@@ -65,11 +65,25 @@ export function gradeValue(g: Grade | null): number {
   return i === -1 ? -1 : GRADE_ORDER.length - i;
 }
 
-/** Average of the two hosts, or whichever single grade exists. */
-export function consensus(card: SetReviewCard): number {
-  const vals = [gradeValue(card.marshall), gradeValue(card.luis)].filter((v) => v >= 0);
-  if (vals.length === 0) return -1;
-  return vals.reduce((a, b) => a + b, 0) / vals.length;
+/**
+ * The grade we actually show. Luis is the primary reviewer; Marshall's grade is
+ * only used when Luis didn't commit to one. Both are kept in the data so the
+ * fallback can be labelled (and so nothing is lost if the rule changes).
+ */
+export interface PrimaryGrade {
+  grade: Grade | null;
+  source: "luis" | "marshall" | null;
+}
+
+export function primaryGrade(card: SetReviewCard): PrimaryGrade {
+  if (card.luis) return { grade: card.luis, source: "luis" };
+  if (card.marshall) return { grade: card.marshall, source: "marshall" };
+  return { grade: null, source: null };
+}
+
+/** Sort key for the displayed grade; ungraded sorts last. */
+export function primaryValue(card: SetReviewCard): number {
+  return gradeValue(primaryGrade(card).grade);
 }
 
 /** Tailwind classes tinting a grade pill by letter. */

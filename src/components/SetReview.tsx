@@ -2,17 +2,17 @@ import { useMemo, useState } from "react";
 import {
   COLOR_BUCKETS,
   colorBucket,
-  consensus,
   gradeTone,
-  gradeValue,
   manaSymbols,
+  primaryGrade,
+  primaryValue,
   setReview,
   type ColorBucket,
-  type Grade,
   type SetReviewCard,
 } from "../lib/set-review";
+import { Modal } from "./Modal";
 
-type SortKey = "consensus" | "name" | "cmc" | "marshall" | "luis" | "rarity";
+type SortKey = "grade" | "name" | "cmc" | "rarity";
 
 const PIP_STYLE: Record<string, string> = {
   W: "bg-[#f8f4e4] text-black",
@@ -23,12 +23,11 @@ const PIP_STYLE: Record<string, string> = {
 };
 
 function Pip({ sym }: { sym: string }) {
-  const style = PIP_STYLE[sym] ?? "bg-[#cfc9c2] text-black";
   return (
     <span
       className={
         "inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-semibold " +
-        style
+        (PIP_STYLE[sym] ?? "bg-[#cfc9c2] text-black")
       }
     >
       {sym}
@@ -48,31 +47,75 @@ function ManaCost({ cost }: { cost: string }) {
   );
 }
 
-function GradePill({ grade }: { grade: Grade | null }) {
+/**
+ * The shown grade. A small "M" marks the rows where Luis never gave one and
+ * we're falling back to Marshall's.
+ */
+function GradePill({ card }: { card: SetReviewCard }) {
+  const { grade, source } = primaryGrade(card);
   return (
-    <span
-      className={
-        "inline-block min-w-[30px] rounded px-1.5 py-0.5 text-center text-xs font-semibold " +
-        gradeTone(grade)
-      }
-    >
-      {grade ?? "—"}
+    <span className="inline-flex items-center gap-1">
+      <span
+        className={
+          "inline-block min-w-[32px] rounded px-1.5 py-0.5 text-center text-sm font-semibold " +
+          gradeTone(grade)
+        }
+      >
+        {grade ?? "—"}
+      </span>
+      {source === "marshall" && (
+        <span
+          title="Marshall's grade — Luis didn't give one for this card"
+          className="text-[10px] font-medium text-(--color-text-dim)"
+        >
+          M
+        </span>
+      )}
     </span>
   );
 }
 
-/** Searchable, filterable table of a podcast set review. */
+function RarityBadge({ rarity }: { rarity: string }) {
+  return (
+    <span
+      className={
+        "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase " +
+        (rarity === "uncommon"
+          ? "bg-slate-300/20 text-slate-200"
+          : "bg-white/5 text-(--color-text-dim)")
+      }
+    >
+      {rarity === "uncommon" ? "U" : "C"}
+    </span>
+  );
+}
+
+function RulesText({ text }: { text: string }) {
+  if (!text) return <>—</>;
+  return (
+    <>
+      {text.split("\n").map((line, i) => (
+        <div key={i}>{line}</div>
+      ))}
+    </>
+  );
+}
+
+/** Searchable, filterable set review. Table on desktop, card list on phones. */
 export function SetReview() {
   const [search, setSearch] = useState("");
   const [rarity, setRarity] = useState<"all" | "common" | "uncommon">("all");
   const [colors, setColors] = useState<Set<ColorBucket>>(new Set());
   const [gradedOnly, setGradedOnly] = useState(false);
-  const [sortKey, setSortKey] = useState<SortKey>("consensus");
+  const [sortKey, setSortKey] = useState<SortKey>("grade");
   const [asc, setAsc] = useState(false);
-  const [preview, setPreview] = useState<SetReviewCard | null>(null);
+  /** Desktop hover preview. */
+  const [hovered, setHovered] = useState<SetReviewCard | null>(null);
+  /** Tapped/clicked card — opens the image modal (this is the phone path). */
+  const [opened, setOpened] = useState<SetReviewCard | null>(null);
 
   const graded = useMemo(
-    () => setReview.cards.filter((c) => c.marshall || c.luis).length,
+    () => setReview.cards.filter((c) => primaryGrade(c).grade).length,
     [],
   );
 
@@ -89,7 +132,7 @@ export function SetReview() {
     const filtered = setReview.cards.filter((c) => {
       if (rarity !== "all" && c.rarity !== rarity) return false;
       if (colors.size > 0 && !colors.has(colorBucket(c))) return false;
-      if (gradedOnly && !c.marshall && !c.luis) return false;
+      if (gradedOnly && !primaryGrade(c).grade) return false;
       if (q) {
         const hay = `${c.name} ${c.type_line} ${c.oracle_text} ${c.note ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
@@ -107,17 +150,11 @@ export function SetReview() {
         case "cmc":
           d = a.cmc - b.cmc;
           break;
-        case "marshall":
-          d = gradeValue(a.marshall) - gradeValue(b.marshall);
-          break;
-        case "luis":
-          d = gradeValue(a.luis) - gradeValue(b.luis);
-          break;
         case "rarity":
           d = a.rarity.localeCompare(b.rarity);
           break;
         default:
-          d = consensus(a) - consensus(b);
+          d = primaryValue(a) - primaryValue(b);
       }
       if (d === 0) d = a.name.localeCompare(b.name) * (asc ? 1 : -1);
       return d * dir;
@@ -162,22 +199,23 @@ export function SetReview() {
             >
               {setReview.source.title}
             </a>
-            . Card text via Scryfall.
+            . Luis's grade, falling back to Marshall's (marked{" "}
+            <span className="text-(--color-text)">M</span>). Card text via Scryfall.
           </p>
         </div>
         <span className="text-xs text-(--color-text-dim)">
-          {graded} of {setReview.cards.length} cards graded
+          {graded} of {setReview.cards.length} graded
         </span>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3 sm:gap-3">
         <input
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search name, type, rules text…"
-          className="w-56 rounded border border-(--color-border) bg-(--color-bg) px-3 py-1.5 text-sm text-(--color-text)"
+          className="w-full rounded border border-(--color-border) bg-(--color-bg) px-3 py-2 text-sm text-(--color-text) sm:w-56 sm:py-1.5"
         />
 
         <div className="inline-flex overflow-hidden rounded border border-(--color-border)">
@@ -187,7 +225,7 @@ export function SetReview() {
               type="button"
               onClick={() => setRarity(r)}
               className={
-                "px-2.5 py-1.5 text-xs capitalize " +
+                "px-3 py-2 text-xs capitalize sm:py-1.5 " +
                 (rarity === r
                   ? "bg-(--color-accent) font-medium text-black"
                   : "text-(--color-text-dim) hover:bg-white/5")
@@ -198,7 +236,7 @@ export function SetReview() {
           ))}
         </div>
 
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           {COLOR_BUCKETS.map((c) => (
             <button
               key={c.id}
@@ -206,7 +244,7 @@ export function SetReview() {
               title={c.label}
               onClick={() => toggleColor(c.id)}
               className={
-                "h-7 w-7 rounded-full border text-xs font-semibold transition " +
+                "h-8 w-8 rounded-full border text-xs font-semibold transition sm:h-7 sm:w-7 " +
                 (colors.has(c.id)
                   ? "border-(--color-accent) ring-2 ring-(--color-accent)/40 "
                   : "border-(--color-border) opacity-70 hover:opacity-100 ") +
@@ -230,9 +268,79 @@ export function SetReview() {
         <span className="ml-auto text-xs text-(--color-text-dim)">{rows.length} shown</span>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-(--color-border)">
-        <table className="w-full min-w-[900px] border-collapse text-sm">
+      {/* Mobile sort control — the table headers aren't reachable on a phone. */}
+      <div className="flex items-center gap-2 md:hidden">
+        <label className="text-xs text-(--color-text-dim)">Sort</label>
+        <select
+          value={sortKey}
+          onChange={(e) => setSortKey(e.target.value as SortKey)}
+          className="flex-1 rounded border border-(--color-border) bg-(--color-bg) px-2 py-2 text-sm text-(--color-text)"
+        >
+          <option value="grade">Grade</option>
+          <option value="name">Name</option>
+          <option value="cmc">Mana value</option>
+          <option value="rarity">Rarity</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => setAsc((s) => !s)}
+          className="rounded border border-(--color-border) px-3 py-2 text-sm text-(--color-text-dim)"
+        >
+          {asc ? "▲ Asc" : "▼ Desc"}
+        </button>
+      </div>
+
+      {/* Phone layout: stacked cards, tap for the image */}
+      <ul className="space-y-2 md:hidden">
+        {rows.map((c) => (
+          <li key={c.scryfall_id}>
+            <button
+              type="button"
+              onClick={() => setOpened(c)}
+              className="w-full rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3 text-left active:bg-white/5"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="font-medium text-(--color-text)">
+                  {c.name}
+                  {c.tag && (
+                    <span className="ml-1.5 rounded bg-(--color-accent)/15 px-1 py-0.5 text-[10px] text-(--color-accent)">
+                      {c.tag}
+                    </span>
+                  )}
+                </span>
+                <GradePill card={c} />
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-(--color-text-dim)">
+                <ManaCost cost={c.mana_cost} />
+                <span>{c.type_line}</span>
+                {c.power && (
+                  <span className="text-(--color-text)">
+                    {c.power}/{c.toughness}
+                  </span>
+                )}
+                <RarityBadge rarity={c.rarity} />
+              </div>
+              <div className="mt-2 text-xs leading-relaxed text-(--color-text-dim)">
+                <RulesText text={c.oracle_text} />
+              </div>
+              {c.note && (
+                <div className="mt-2 text-xs italic leading-relaxed text-(--color-text-dim)">
+                  {c.note}
+                </div>
+              )}
+            </button>
+          </li>
+        ))}
+        {rows.length === 0 && (
+          <li className="rounded-lg border border-(--color-border) p-6 text-center text-(--color-text-dim)">
+            No cards match those filters.
+          </li>
+        )}
+      </ul>
+
+      {/* Desktop layout: table */}
+      <div className="hidden overflow-x-auto rounded-lg border border-(--color-border) md:block">
+        <table className="w-full border-collapse text-sm">
           <thead className="bg-black/30 text-xs uppercase tracking-wide">
             <tr>
               <th className="px-3 py-2 text-left">{sortBtn("name", "Card")}</th>
@@ -242,8 +350,7 @@ export function SetReview() {
                 Rules text
               </th>
               <th className="px-3 py-2 text-left">{sortBtn("rarity", "Rar.")}</th>
-              <th className="px-3 py-2 text-left">{sortBtn("marshall", "Marshall")}</th>
-              <th className="px-3 py-2 text-left">{sortBtn("luis", "Luis")}</th>
+              <th className="px-3 py-2 text-left">{sortBtn("grade", "Grade")}</th>
               <th className="px-3 py-2 text-left font-medium text-(--color-text-dim)">Notes</th>
             </tr>
           </thead>
@@ -253,12 +360,16 @@ export function SetReview() {
                 key={c.scryfall_id}
                 className="border-t border-(--color-border) align-top hover:bg-white/[0.03]"
               >
-                <td
-                  className="px-3 py-2 font-medium text-(--color-text)"
-                  onMouseEnter={() => setPreview(c)}
-                  onMouseLeave={() => setPreview(null)}
-                >
-                  {c.name}
+                <td className="px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => setOpened(c)}
+                    onMouseEnter={() => setHovered(c)}
+                    onMouseLeave={() => setHovered(null)}
+                    className="text-left font-medium text-(--color-text) hover:text-(--color-accent)"
+                  >
+                    {c.name}
+                  </button>
                   {c.tag && (
                     <span className="ml-1.5 rounded bg-(--color-accent)/15 px-1 py-0.5 text-[10px] text-(--color-accent)">
                       {c.tag}
@@ -277,27 +388,13 @@ export function SetReview() {
                   )}
                 </td>
                 <td className="max-w-[360px] px-3 py-2 text-xs leading-relaxed text-(--color-text-dim)">
-                  {c.oracle_text
-                    ? c.oracle_text.split("\n").map((line, i) => <div key={i}>{line}</div>)
-                    : "—"}
+                  <RulesText text={c.oracle_text} />
                 </td>
                 <td className="px-3 py-2">
-                  <span
-                    className={
-                      "rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase " +
-                      (c.rarity === "uncommon"
-                        ? "bg-slate-300/20 text-slate-200"
-                        : "bg-white/5 text-(--color-text-dim)")
-                    }
-                  >
-                    {c.rarity === "uncommon" ? "U" : "C"}
-                  </span>
+                  <RarityBadge rarity={c.rarity} />
                 </td>
                 <td className="px-3 py-2">
-                  <GradePill grade={c.marshall} />
-                </td>
-                <td className="px-3 py-2">
-                  <GradePill grade={c.luis} />
+                  <GradePill card={c} />
                 </td>
                 <td className="max-w-[300px] px-3 py-2 text-xs italic leading-relaxed text-(--color-text-dim)">
                   {c.note ?? ""}
@@ -306,7 +403,7 @@ export function SetReview() {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-3 py-8 text-center text-(--color-text-dim)">
+                <td colSpan={7} className="px-3 py-8 text-center text-(--color-text-dim)">
                   No cards match those filters.
                 </td>
               </tr>
@@ -315,11 +412,48 @@ export function SetReview() {
         </table>
       </div>
 
-      {/* Hover preview */}
-      {preview?.image_url && (
+      {/* Desktop hover preview (suppressed while the modal is up) */}
+      {hovered?.image_url && !opened && (
         <div className="pointer-events-none fixed bottom-6 right-6 z-40 hidden w-[240px] overflow-hidden rounded-xl border-2 border-(--color-accent) shadow-2xl lg:block">
-          <img src={preview.image_url} alt={preview.name} className="w-full" />
+          <img src={hovered.image_url} alt={hovered.name} className="w-full" />
         </div>
+      )}
+
+      {/* Tap / click preview — the phone path */}
+      {opened && (
+        <Modal onClose={() => setOpened(null)}>
+          <div className="flex flex-col items-center gap-3">
+            {opened.image_url ? (
+              <img
+                src={opened.image_url}
+                alt={opened.name}
+                className="w-full max-w-[300px] rounded-xl border border-(--color-border)"
+              />
+            ) : (
+              <div className="w-full max-w-[300px] rounded-xl border border-(--color-border) p-6 text-center text-(--color-text-dim)">
+                {opened.name}
+              </div>
+            )}
+            <div className="w-full text-center">
+              <div className="flex items-center justify-center gap-2">
+                <span className="font-medium text-(--color-text)">{opened.name}</span>
+                <GradePill card={opened} />
+              </div>
+              {opened.note && (
+                <p className="mt-2 text-xs italic leading-relaxed text-(--color-text-dim)">
+                  {opened.note}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpened(null)}
+              className="w-full rounded-lg border border-(--color-border) px-4 py-2.5 text-sm text-(--color-text-dim) hover:bg-white/5"
+            >
+              Close
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

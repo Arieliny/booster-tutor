@@ -74,10 +74,17 @@ A fourth tab: a searchable, filterable table of a podcast set review.
 
 - Ships with **Reality Fracture** (set `fra`) commons & uncommons, graded by
   Marshall Sutcliffe and Luis Scott-Vargas on Limited Resources 872.
-- Columns: card, mana cost (rendered as pips), type, rules text, rarity, each
-  host's grade, and a one-line note. Search across name/type/rules/notes;
-  filter by rarity, colour, and "graded only"; sort by any grade column,
-  name, cost or rarity. Defaults to consensus grade, best first.
+- Columns: card, mana cost (rendered as pips), type, rules text, rarity, a
+  single grade, and a one-line note. Search across name/type/rules/notes;
+  filter by rarity, colour, and "graded only"; sort by grade, name, cost or
+  rarity. Defaults to grade, best first.
+- **One grade, Luis first.** Luis is the primary reviewer; Marshall's grade is
+  shown only when Luis didn't give one, marked with a small **M**. Both grades
+  stay in the data so nothing is lost if that rule changes. 154 cards have a
+  Luis grade, 27 fall back to Marshall.
+- **Works on a phone.** Below `md` the table is replaced by a stacked card list
+  (no horizontal scrolling) with its own sort control. Tapping a card anywhere
+  opens its image; desktop keeps the hover preview and adds click-to-open.
 - **Card facts come from Scryfall, not the transcript** — names, costs, rules
   text and rarity are authoritative rather than transcribed from speech. Only
   the grades and notes come from the review.
