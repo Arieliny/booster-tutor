@@ -149,6 +149,14 @@ to lazy-load a chunk that no longer exists. Observed live: a 404 on the old
 new `index.html` and assets. A 15-second cooldown in `sessionStorage` prevents
 a reload loop if the chunk is genuinely gone.
 
+A second, subtler version of the same problem: the worker uses `skipWaiting` +
+`clientsClaim`, so a new build activates and claims open tabs — but **claiming
+a page does not reload it**. The tab keeps running whatever the old worker
+served, which is how `/set-review` could load a build that predated routing and
+silently show the default tab. `main.tsx` also listens for `controllerchange`
+and reloads when a new worker takes over, guarded by whether the page had a
+controller at startup so a first-ever install doesn't refresh itself.
+
 ### Per-tab URLs
 
 Each tab has a real path, so views can be linked and bookmarked:
