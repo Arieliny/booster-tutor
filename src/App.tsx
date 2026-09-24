@@ -18,6 +18,12 @@ import { PackDisplay } from "./components/PackDisplay";
 import { PoolStatus } from "./components/PoolStatus";
 import { Rotisserie } from "./components/Rotisserie";
 import { Spotlight } from "./components/Spotlight";
+import {
+  isKnownPath,
+  pathForTab,
+  tabFromPath,
+  type Tab,
+} from "./lib/routes";
 
 // The set-review data file is large and rarely opened; keep it out of the
 // initial bundle and fetch it only when the tab is selected.
@@ -29,8 +35,6 @@ type View =
   | { kind: "loading" }
   | { kind: "ready" }
   | { kind: "error"; message: string };
-
-type Tab = "packs" | "rotisserie" | "inventory" | "review";
 
 function App() {
   const [view, setView] = useState<View>({ kind: "loading" });
@@ -48,7 +52,30 @@ function App() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCubeManager, setShowCubeManager] = useState(false);
   const [showPickedLog, setShowPickedLog] = useState(false);
-  const [tab, setTab] = useState<Tab>("packs");
+  const [tab, setTabState] = useState<Tab>(() => tabFromPath(window.location.pathname));
+
+  /** Switch tab and reflect it in the URL so each view is linkable. */
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    const path = pathForTab(next);
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, "", path);
+    }
+  };
+
+  // Keep the back/forward buttons working.
+  useEffect(() => {
+    const onPop = () => setTabState(tabFromPath(window.location.pathname));
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // Tidy an unrecognized path (e.g. a stale link) without adding history.
+  useEffect(() => {
+    if (!isKnownPath(window.location.pathname)) {
+      window.history.replaceState(null, "", pathForTab("packs"));
+    }
+  }, []);
 
   // Bootstrap on mount.
   useEffect(() => {

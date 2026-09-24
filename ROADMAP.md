@@ -149,6 +149,21 @@ to lazy-load a chunk that no longer exists. Observed live: a 404 on the old
 new `index.html` and assets. A 15-second cooldown in `sessionStorage` prevents
 a reload loop if the chunk is genuinely gone.
 
+### Per-tab URLs
+
+Each tab has a real path, so views can be linked and bookmarked:
+`/` (packs), `/rotisserie`, `/inventory`, `/set-review`.
+
+- `src/lib/routes.ts` is a hand-rolled path<->tab map. No router dependency:
+  four static routes, no params, no nesting. `App.tsx` seeds the tab from
+  `location.pathname`, pushes state on tab change, and listens for `popstate`
+  so back/forward work.
+- `vercel.json` rewrites unknown paths to `index.html`, excluding `/api/` so
+  the serverless functions still resolve.
+- Offline deep links work too — the service worker's `navigateFallback` serves
+  the precached shell, verified by loading `/set-review` with the server
+  stopped.
+
 ## ✅ Cube export (.txt) + pancake draft file (2026-09-18)
 
 Export any cube as plain text from Manage cubes → **Export** (read-only, so it
