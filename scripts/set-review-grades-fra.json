@@ -1220,9 +1220,9 @@
  {
   "name": "Living Library",
   "marshall": null,
-  "luis": null,
+  "luis": "F",
   "tag": null,
-  "note": "Both agree the sacrifice-bounce ability needs too many specific artifact/2-drop synergies to ever matter; effectively unplayable, no letter grade given."
+  "note": "The sacrifice-bounce ability needs too many specific pieces to line up; effectively unplayable."
  },
  {
   "name": "Medic's Kitesail",
