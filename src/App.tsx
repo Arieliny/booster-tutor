@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import type { Cube, CubeCard, GenerationMode } from "./types";
 import { DEFAULT_PACK_SIZE, generatePack } from "./lib/pack-generator";
 import {
@@ -19,12 +19,18 @@ import { PoolStatus } from "./components/PoolStatus";
 import { Rotisserie } from "./components/Rotisserie";
 import { Spotlight } from "./components/Spotlight";
 
+// The set-review data file is large and rarely opened; keep it out of the
+// initial bundle and fetch it only when the tab is selected.
+const SetReview = lazy(() =>
+  import("./components/SetReview").then((m) => ({ default: m.SetReview })),
+);
+
 type View =
   | { kind: "loading" }
   | { kind: "ready" }
   | { kind: "error"; message: string };
 
-type Tab = "packs" | "rotisserie" | "inventory";
+type Tab = "packs" | "rotisserie" | "inventory" | "review";
 
 function App() {
   const [view, setView] = useState<View>({ kind: "loading" });
@@ -208,6 +214,7 @@ function App() {
             { id: "packs", label: "Open packs" },
             { id: "rotisserie", label: "Rotisserie" },
             { id: "inventory", label: "Inventory" },
+            { id: "review", label: "Set review" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -286,6 +293,14 @@ function App() {
               </div>
             )}
           </>
+        ) : tab === "review" ? (
+          <Suspense
+            fallback={
+              <p className="text-(--color-text-dim)">Loading set review…</p>
+            }
+          >
+            <SetReview />
+          </Suspense>
         ) : tab === "rotisserie" ? (
           selectedCube && <Rotisserie key={selectedCube.id} cube={selectedCube} />
         ) : (

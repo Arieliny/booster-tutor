@@ -1,0 +1,1297 @@
+[
+ {
+  "name": "Academic Ascent",
+  "marshall": "C-",
+  "luis": "C-",
+  "tag": null,
+  "note": "2-mana +2/+2 flying trick that also builds Jace, underwhelming as just a pump spell."
+ },
+ {
+  "name": "Blossom-Blessed Angel // Seed Suture",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "Ludicrous rate (2/4 flying vigilance) for a common, plus a strong Seed Suture back half."
+ },
+ {
+  "name": "Campus Crier",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "2-mana 3/1 that can later exile from the graveyard to add loyalty to Jace."
+ },
+ {
+  "name": "Danitha, Sword of Hope",
+  "marshall": "C+",
+  "luis": "B-",
+  "tag": null,
+  "note": "2/2 first strike drawing a card once per turn off equipment or own-creature spells; better once it gets a counter."
+ },
+ {
+  "name": "Fateshaper Aspirant",
+  "marshall": null,
+  "luis": "C",
+  "tag": null,
+  "note": "Grade slides with how many legendary targets you have to return from the graveyard."
+ },
+ {
+  "name": "Generous Revival",
+  "marshall": "C+",
+  "luis": null,
+  "tag": null,
+  "note": "Returns a cheap creature with a +1/+1 counter and has flashback; needs enough good 3-drops to be worth it."
+ },
+ {
+  "name": "Ghalta the Immovable",
+  "marshall": "C-",
+  "luis": "C-",
+  "tag": null,
+  "note": "Needs a 4-5 toughness creature on board to become an affordable 7/7; risky if that creature gets removed."
+ },
+ {
+  "name": "Graft Surgeon",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "3-mana 3/3 that redistributes its counters to another creature when it dies."
+ },
+ {
+  "name": "Hexhaven Battalion",
+  "marshall": "C+",
+  "luis": "B-",
+  "tag": null,
+  "note": "Basic-land-cyclable sorcery that makes three 2/2s and a Jace; a board state in a box."
+ },
+ {
+  "name": "Koth of the Homestead",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Landfall lifegain plus a +1/+1 counter per Plains, snowballs easily without costing anything."
+ },
+ {
+  "name": "Memory Trap",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Reprint of the exile-until-leaves-play enchantment effect, a reliable format all-star."
+ },
+ {
+  "name": "Predictive Preparations",
+  "marshall": "D+",
+  "luis": "D",
+  "tag": null,
+  "note": "Needs counter synergies to shine; otherwise just a modest double-pump spell with flashback."
+ },
+ {
+  "name": "Prophesied End",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "Great if it only ever kills attackers, but forced non-attacker kills let the opponent draw a card."
+ },
+ {
+  "name": "Refute Destiny",
+  "marshall": null,
+  "luis": null,
+  "tag": "sideboard",
+  "note": "Green/blue-hosing exile effect, dead in best-of-1 but strong to bring in against those colors."
+ },
+ {
+  "name": "Rescue Girl, First Responder",
+  "marshall": "C+",
+  "luis": "B-",
+  "tag": "build-around",
+  "note": "1/3 flyer that bounces your own permanents for ETB value and can even rebounce a land for extra mana."
+ },
+ {
+  "name": "Saheeli, Consul of Oversight",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Turns any scry or surveil, including a Jace's minus ability, into a free flying Thopter token."
+ },
+ {
+  "name": "Shatterwing Pegasus",
+  "marshall": "C-",
+  "luis": "C-",
+  "tag": null,
+  "note": "Fits a flyers or go-wide deck but power level isn't quite high enough to overcome the synergy dependence."
+ },
+ {
+  "name": "Surgical Precision",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "Modal kill-a-big-creature or cantrip common with no real downside."
+ },
+ {
+  "name": "Teyo, Lightshield Expert",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "2-mana 1/1 flash that grants hexproof plus a permanent counter, protecting a creature while adding stats."
+ },
+ {
+  "name": "Thalia, the Survivor",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Great body (3/4 lifelink) that taxes opponents' noncreature spells and benefits from +1/+1 counters."
+ },
+ {
+  "name": "Tomik, Orzhov Lawmage",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "2-mana 2/1 flyer with niche upside protecting Jace and enabling +1/+1 counter synergies."
+ },
+ {
+  "name": "Unflinching Hortimancer",
+  "marshall": "C",
+  "luis": null,
+  "tag": null,
+  "note": "2-mana 2/1 Ward 1 that grows with lifegain, a nice payoff for the lifegain sub-theme."
+ },
+ {
+  "name": "Way of the Healer",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Almost always nets a 2/2 token, a 3-loyalty Jace, and a Surveil for 4 mana."
+ },
+ {
+  "name": "Way of the Mentor",
+  "marshall": "C",
+  "luis": "C",
+  "tag": "build-around",
+  "note": "Needs a life-gain shell to turn loyalty gains into real value; weak as your first big play of the game."
+ },
+ {
+  "name": "Yoshimaru, Beloved Companion",
+  "marshall": "B",
+  "luis": "B",
+  "tag": "build-around",
+  "note": "Explosive counter-doubling engine that pairs well with other 3-mana legends like Koth and Danitha."
+ },
+ {
+  "name": "Your Fate Ends Here",
+  "marshall": "B",
+  "luis": null,
+  "tag": null,
+  "note": "A really solid removal spell; the mana-value-3-or-greater restriction favors killing the bigger threat anyway."
+ },
+ {
+  "name": "Yuriko, Blade of the Mighty",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "High-variance card: huge upside if it survives and attacks, but a 4-mana 2/3 is a blowout when answered."
+ },
+ {
+  "name": "Arni, Humble Scribe",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": null,
+  "note": "Free looter that untaps whenever you play a nontoken creature, though it dies easily at 2 toughness."
+ },
+ {
+  "name": "Countersculpt",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "Essentially Cancel with a Surveil or bonus loyalty upside via Behold a Jace."
+ },
+ {
+  "name": "Cryotheory Adept",
+  "marshall": "D",
+  "luis": "C-",
+  "tag": null,
+  "note": "2/1 prowess is mediocre as a beatdown plan, though the graveyard tap ability adds some value."
+ },
+ {
+  "name": "Divining Duelist",
+  "marshall": null,
+  "luis": "C",
+  "tag": null,
+  "note": "Flexible flash creature that taps/untaps a creature or loots, a fine if unexciting playable."
+ },
+ {
+  "name": "Fblthp, Impossibly Lost",
+  "marshall": "D-",
+  "luis": "D",
+  "tag": null,
+  "note": "Cool alternate win condition (graded build-around A+), but as a functional card it needs you to already be hitting your opponent."
+ },
+ {
+  "name": "Geist of Saint Thalia",
+  "marshall": "C+",
+  "luis": null,
+  "tag": "build-around",
+  "note": "At 2 mana the noncreature-spell cost discount is strong enough to build a deck around."
+ },
+ {
+  "name": "Hapatra, the Desert Frost",
+  "marshall": "C+",
+  "luis": null,
+  "tag": null,
+  "note": "4-mana 4/3 that taps and stuns an opponent's creature on entry, plus a repeatable untap ability."
+ },
+ {
+  "name": "Icy Reception",
+  "marshall": "C",
+  "luis": "C+",
+  "tag": null,
+  "note": "Twist on Essence Scatter that also hits legendary spells or shrinks a creature, useful to trigger prowess."
+ },
+ {
+  "name": "Infinite Coursework",
+  "marshall": "C+",
+  "luis": "B",
+  "tag": null,
+  "note": "Solid blue removal that taps a creature and strips its abilities so it can't untap."
+ },
+ {
+  "name": "Mindseeker Oculus",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "3-mana 2/1 that draws a card and leaves behind an Empower Jace 4 token, huge value for a common."
+ },
+ {
+  "name": "Perfected Theory",
+  "marshall": "D",
+  "luis": "D",
+  "tag": null,
+  "note": "Flexible power/toughness-setting instant, but this style of effect tends not to play out well."
+ },
+ {
+  "name": "Plan for All Outcomes",
+  "marshall": "B",
+  "luis": "C+",
+  "tag": null,
+  "note": "Sorcery-speed tuck effect on a permanent that keeps generating Empower Jace value off your first noncreature spell each turn."
+ },
+ {
+  "name": "Precise Redaction",
+  "marshall": null,
+  "luis": "B",
+  "tag": "sideboard",
+  "note": "Narrow counterspell that only hits white or black spells, best kept in the sideboard."
+ },
+ {
+  "name": "Proft, Consulting Detective",
+  "marshall": "B",
+  "luis": null,
+  "tag": "build-around",
+  "note": "Strong scry/surveil payoff for counters and cards, but value depends on how much scry/surveil support you have."
+ },
+ {
+  "name": "Protege's Awakening",
+  "marshall": "C",
+  "luis": null,
+  "tag": null,
+  "note": "4-mana draw 2 that can become a draw 3 if the leftover Jace token survives to be used."
+ },
+ {
+  "name": "Ruric Thar, Biomagus",
+  "marshall": "B-",
+  "luis": null,
+  "tag": null,
+  "note": "6-mana 4/6 flying double-prowess finisher that draws a card when targeted, but still a costly card to lose."
+ },
+ {
+  "name": "Semester Foreseer // Peer Review",
+  "marshall": null,
+  "luis": null,
+  "tag": null,
+  "note": "Called a rock-solid playable 4-mana 3/4 with surveil and a strong flashback spell, but the transcript's grade line is garbled/overlapping and no clear letter is stated."
+ },
+ {
+  "name": "Sphinx's Approach",
+  "marshall": "D",
+  "luis": "D",
+  "tag": null,
+  "note": "Card-disadvantage draw-2 whose bonus mode needs 4 copies plus a Sphinx in play, too slow and cute for limited."
+ },
+ {
+  "name": "Surveillance Phantasm",
+  "marshall": "C",
+  "luis": "C+",
+  "tag": null,
+  "note": "Efficient 2-mana 2/3 flying defender that can attack and gives you a way to surveil if needed."
+ },
+ {
+  "name": "Tetsuko Umezawa, Fugitive",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "Makes small creatures unblockable and has historically overperformed in aggro decks full of 1-toughness bodies."
+ },
+ {
+  "name": "Traxos, Academy Guardian",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "1/5 flying vigilance with prowess that can cost as little as 2 mana after casting a noncreature spell."
+ },
+ {
+  "name": "Undulating Witness",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "Big 3/5 flyer for 5 mana with a small pump ability, comparable to the set's basic landcyclers."
+ },
+ {
+  "name": "Unsummon",
+  "marshall": "C",
+  "luis": "C+",
+  "tag": null,
+  "note": "Cheap, efficient bounce that's especially good against tokens and can save your own creature."
+ },
+ {
+  "name": "Way of the Cryomancer",
+  "marshall": null,
+  "luis": "D",
+  "tag": null,
+  "note": "Empowers Jace and lets a loyalty ability copy your next spell, but Jace's built-in -3 already does more."
+ },
+ {
+  "name": "Way of the Mind Sculptor",
+  "marshall": "B",
+  "luis": "B+",
+  "tag": "build-around",
+  "note": "Draws 2 cards and leaves a 2-loyalty Jace, best in decks that keep triggering loyalty abilities that remove 2+ counters."
+ },
+ {
+  "name": "Yargle, Goliath of Otaria",
+  "marshall": null,
+  "luis": "C-",
+  "tag": "sideboard",
+  "note": "Luis: matchup-dependent, great vs. red-green but a C/C- overall and a sideboard card; Marshall floated D or F for the maindeck without settling."
+ },
+ {
+  "name": "Yuriko, Hope from the Shadows",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "1-mana flash 1/1 with a flexible ETB (shrink an attacker or Surveil 2), close to a full card's worth of value."
+ },
+ {
+  "name": "Apex Witchstalker",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "A big menace body that can gain 4 life across its lifecycle, fills black's aggressive-green-creature slot."
+ },
+ {
+  "name": "Break Under Pressure",
+  "marshall": "B+",
+  "luis": "B",
+  "tag": null,
+  "note": "Forces the sacrifice of an opponent's best permanent and gains 2 life, a great and reliable effect."
+ },
+ {
+  "name": "Cast Away Doubt",
+  "marshall": "C-",
+  "luis": "C",
+  "tag": null,
+  "note": "Good for aggressive red-black, black-green, and black-white decks; worse in blue-black which doesn't want to pay life to draw."
+ },
+ {
+  "name": "Danitha, Spear of Agony",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Cheap first striker that only needs one targeted spell to become a 3/3, and black has plenty of removal to trigger it."
+ },
+ {
+  "name": "Extended Absence",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Premium exile removal that also pings for 1 and gains a life, strong in every deck."
+ },
+ {
+  "name": "Gallia, Tragic Host",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "2-mana 2/1 menace that can recur itself from the graveyard for 5 mana plus a counter, hard to keep down."
+ },
+ {
+  "name": "Last Gasp",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Efficient reprint removal, -3/-3 for 2 mana that consistently trades up."
+ },
+ {
+  "name": "Loot, the Anomaly",
+  "marshall": null,
+  "luis": "D",
+  "tag": null,
+  "note": "Threshold-gated sacrifice outlet is unreliable and the set doesn't support a sacrifice deck enough to make it good."
+ },
+ {
+  "name": "Mabel, Bitter Recluse",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "1-mana 1/1 deathtouch that strips counters, especially good at killing Jace planeswalker tokens."
+ },
+ {
+  "name": "Massacre Girl, Most Wanted",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "A huge threat that punishes opponents whenever your creatures or planeswalkers die, dangerous if it survives removal."
+ },
+ {
+  "name": "Multiply by Zero",
+  "marshall": "B",
+  "luis": null,
+  "tag": null,
+  "note": "2-mana instant-speed removal setting power/toughness to 0/0, blanked only by +1/+1 counters."
+ },
+ {
+  "name": "Proft, Sinister Mastermind",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Even without threshold it doubles as a fine removal spell, and once enabled it's a cheap 5/5 menace."
+ },
+ {
+  "name": "Rampart Hunter",
+  "marshall": "D",
+  "luis": "D",
+  "tag": null,
+  "note": "A clean, on-color effect but just not powerful enough to matter."
+ },
+ {
+  "name": "Rank Rat",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "1-mana 1/1 that makes the opponent discard, a reliably solid Ravenous Rats variant."
+ },
+ {
+  "name": "Rewrite Regrets",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "Reanimation plus empower 2 is good value, especially with self-mill support fueling the graveyard."
+ },
+ {
+  "name": "Screeching Soulbreaker",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "A 3-mana 1/4 flyer that pings for 2 and gains a life on attack is solid value."
+ },
+ {
+  "name": "Silence the Echo",
+  "marshall": "C",
+  "luis": null,
+  "tag": null,
+  "note": "5-mana sorcery-speed removal that drops to 2 mana if you sacrifice a creature or planeswalker."
+ },
+ {
+  "name": "Solve for Disappointment",
+  "marshall": "D-",
+  "luis": null,
+  "tag": null,
+  "note": "Missing the discard turns a cheap edict-style effect into a disaster, best against decks with big permanents."
+ },
+ {
+  "name": "Terminal Criticism",
+  "marshall": "B",
+  "luis": "B",
+  "tag": "sideboard",
+  "note": "Solid removal but color-restricted to blue or red, so it's mainly a sideboard card."
+ },
+ {
+  "name": "Teyo, Diamondblade Mage",
+  "marshall": "D",
+  "luis": "D",
+  "tag": null,
+  "note": "Flash deathtouch/counter is fine but a 3/1 body for 4 mana underwhelms."
+ },
+ {
+  "name": "Theoretical Necromancer",
+  "marshall": "D+",
+  "luis": "D+",
+  "tag": null,
+  "note": "Dies easily and the 4-mana Raise Dead ability is expensive, feels unpushed on both ends."
+ },
+ {
+  "name": "Tinybones, Pocket Nuisance",
+  "marshall": "C",
+  "luis": "C+",
+  "tag": null,
+  "note": "A better body than the 1-mana discard rat, trades with real creatures and pings repeatedly on future discards."
+ },
+ {
+  "name": "Void Extrapolator // Omit Variables",
+  "marshall": "C",
+  "luis": null,
+  "tag": null,
+  "note": "Efficient 2-mana 2/2 with Threshold upside, best as an enabler in blue-black self-mill."
+ },
+ {
+  "name": "Way of the Deathbringer",
+  "marshall": "C",
+  "luis": "C",
+  "tag": "build-around",
+  "note": "Replaces itself and can upgrade a bad creature into a 4/4, but only a good deal with expendable sacrifice fodder."
+ },
+ {
+  "name": "Way of the Necromancer",
+  "marshall": "D",
+  "luis": "C",
+  "tag": "build-around",
+  "note": "Only good if heavily invested in the empower/loyalty-counter theme, mediocre otherwise."
+ },
+ {
+  "name": "Winter, Tormented Loner",
+  "marshall": null,
+  "luis": "C+",
+  "tag": "build-around",
+  "note": "At worst an Edict effect; good if you have sacrifice fodder like small tokens, mediocre without it."
+ },
+ {
+  "name": "Yargle, Glutton of Urborg",
+  "marshall": "D",
+  "luis": "D",
+  "tag": null,
+  "note": "The reprinted vanilla giant doesn't play well without evasion or protection."
+ },
+ {
+  "name": "Arni, Renowned Champion",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "1/5 trample that grows on other creatures entering, swingy and a bit win-more but has upside."
+ },
+ {
+  "name": "Artifist Acumen",
+  "marshall": null,
+  "luis": null,
+  "tag": null,
+  "note": "A prowess-enabling draw spell; both agree it's only worth considering in a dedicated prowess deck and otherwise unplayable, no letter grade given."
+ },
+ {
+  "name": "Awaken the Inferno",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "5-mana removal that also pumps your own creature and basic land cycles when not needed."
+ },
+ {
+  "name": "Blazing Crescendo",
+  "marshall": "C-",
+  "luis": "D",
+  "tag": null,
+  "note": "A replaceable combat trick that impulse-draws a card, but lacking trample hurts it against planeswalkers."
+ },
+ {
+  "name": "Chandra's Emberling",
+  "marshall": "C",
+  "luis": "D",
+  "tag": null,
+  "note": "Marshall gives an optimistic C for the 2/2 haste counter-prowess common; Luis says probably a D, dislikes the haste and doubts the archetype's speed."
+ },
+ {
+  "name": "Command the Stage",
+  "marshall": "C+",
+  "luis": null,
+  "tag": "build-around",
+  "note": "Fun build-around for a prowess/token deck that returns itself, but a low-power 3-mana 2/2 at face value."
+ },
+ {
+  "name": "Eardrum Rattler",
+  "marshall": "D+",
+  "luis": "D+",
+  "tag": null,
+  "note": "A cheap unblockable-enabler that's mediocre generally but notably good at pushing damage through to kill planeswalkers."
+ },
+ {
+  "name": "Essence Burn",
+  "marshall": "B",
+  "luis": "B",
+  "tag": "sideboard",
+  "note": "Efficient exile removal for black or green threats, but too narrow to maindeck."
+ },
+ {
+  "name": "Fulminous Forte",
+  "marshall": "B",
+  "luis": null,
+  "tag": null,
+  "note": "3-mana instant that can deal 5 damage to a creature or planeswalker, occasionally a board wipe mode."
+ },
+ {
+  "name": "Gallia, the Merrymaker",
+  "marshall": "C-",
+  "luis": "C",
+  "tag": null,
+  "note": "A haste lord that can also grant haste and a counter, but the activated ability costs too much mana to use often."
+ },
+ {
+  "name": "Hallway Heckler // Vicious Verse",
+  "marshall": "C",
+  "luis": null,
+  "tag": null,
+  "note": "A rummaging ability plus a cheap prepared burn spell gives it enough value for a bread-and-butter common."
+ },
+ {
+  "name": "Heartstring Puller",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "3/1 trample for 4 that also makes a 2/2 token on entry, unusually strong for a common."
+ },
+ {
+  "name": "Jiang Yanggu, Alone",
+  "marshall": "B-",
+  "luis": "C+",
+  "tag": null,
+  "note": "5-mana 4/4 menace that loots and grows when attacking alone, good the turn it's cast."
+ },
+ {
+  "name": "Kiora of Fire and Ashes",
+  "marshall": "B+",
+  "luis": null,
+  "tag": null,
+  "note": "6 mana for a 2/2 plus a 5/5 flying dragon token, with a repeatable ability to make more dragons."
+ },
+ {
+  "name": "Koth, the Geomancer",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "3/2 reach that pings opponents and can add mana off landfalled mountains, a scary threat to answer."
+ },
+ {
+  "name": "Marwyn, the Clearcutter",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "Efficient 1-mana 2/1 with a solid late-game card-draw sacrifice ability."
+ },
+ {
+  "name": "No Admittance",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Efficient burn that also empowers Jace, an easy include."
+ },
+ {
+  "name": "Pia, Determined Rebuilder",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "2/2 for 3 that makes a 1/1 flying Thopter, plus a scalable late-game pump ability off artifacts."
+ },
+ {
+  "name": "Skilled Battlecarver",
+  "marshall": "C-",
+  "luis": "C-",
+  "tag": null,
+  "note": "The threat of its pump ability makes it an awkward attacker to block despite being a modest 2/1."
+ },
+ {
+  "name": "Tether Technician",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "5-mana 4/5 reach that can discard a card to deal 2 damage to any target on entry."
+ },
+ {
+  "name": "Tetsuko Umezawa, Pursuer",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "2/4 double strike and prowess that pings small blockers, hits hard and is tough to block profitably."
+ },
+ {
+  "name": "Tomik, Izzet Sparkmage",
+  "marshall": null,
+  "luis": "B",
+  "tag": "build-around",
+  "note": "Boosts repeatable noncombat damage sources, especially good alongside the black-red 'deal 1' Prepare cards."
+ },
+ {
+  "name": "Violent Echoes",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Instant-speed 6 damage that turns excess damage into planeswalker loyalty, effectively a clean 2-for-1."
+ },
+ {
+  "name": "Way of the Pyromancer",
+  "marshall": "C+",
+  "luis": "B",
+  "tag": null,
+  "note": "Empowers Jace 2 and gives planeswalkers a mana-ramping loyalty ability, strong early though weaker if drawn late."
+ },
+ {
+  "name": "Way of the Warlord",
+  "marshall": null,
+  "luis": "B",
+  "tag": null,
+  "note": "3-mana instant-speed removal for a planeswalker that deals 2 to a creature and 2 to the player."
+ },
+ {
+  "name": "Winter, Team Player",
+  "marshall": "C",
+  "luis": null,
+  "tag": null,
+  "note": "Convoke lets you cast it cheaply and it pumps the team on noncreature spells, but wants a build-around deck."
+ },
+ {
+  "name": "Wrath of the Bloodmane",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Instant-speed 4 damage to a creature or planeswalker, cost reduced to 2 mana with a legendary creature out."
+ },
+ {
+  "name": "Arcane Amphisbaena",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "1-mana deathtouch snake that also empowers Jace, giving value or protection."
+ },
+ {
+  "name": "Bestial Incursion",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "4-mana 4/4 trample with flashback 6; trample helps punch through token blockers."
+ },
+ {
+  "name": "Budding Insurgent",
+  "marshall": "C-",
+  "luis": "D+",
+  "tag": null,
+  "note": "3-mana 3/3 vigilance that can sac to destroy an artifact/enchantment, but feels off-brand in this synergy-heavy set."
+ },
+ {
+  "name": "Compel Brutality",
+  "marshall": "C+",
+  "luis": null,
+  "tag": null,
+  "note": "Instant-speed bite or loyalty-damage removal that fits green well and lets Jace's loyalty deal damage too."
+ },
+ {
+  "name": "Edgar, Moonlit Sovereign",
+  "marshall": "B",
+  "luis": "B-",
+  "tag": null,
+  "note": "Flash 4/4 that can ambush an attacker and grow with counters, though not hugely better than a vanilla flash 4/4."
+ },
+ {
+  "name": "Fblthp, Knows the Way",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": null,
+  "note": "Domain payoff that fetches basics to hand on ETB; overperforms even in two-color decks and helps splashes."
+ },
+ {
+  "name": "Flourishing Grapple",
+  "marshall": null,
+  "luis": "B",
+  "tag": "sideboard",
+  "note": "Confusingly worded but really just instant-speed bite with a narrow ability-strip upside against red or white."
+ },
+ {
+  "name": "Ghalta the Unstoppable",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "Cost reduced by your biggest creature's power; getting it out for 4-5 mana feels like a steal."
+ },
+ {
+  "name": "Greenhouse Propagator",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "Mana ramp creature that also gains life whenever another creature enters, nice even without synergies."
+ },
+ {
+  "name": "Heartwood Crafter // Soul Tether",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "Turns the Heartwood token into a turn-2 Rampant Growth-style ramp play, good even ignoring the mana ability."
+ },
+ {
+  "name": "Hunter's Axe",
+  "marshall": "C+",
+  "luis": "C-",
+  "tag": null,
+  "note": "Cheap +2/+0 equipment granting trample or deathtouch on attack; decent but shares the usual equipment ceiling."
+ },
+ {
+  "name": "Inspired Tethermage",
+  "marshall": "C-",
+  "luis": "C",
+  "tag": null,
+  "note": "Grows via loyalty counters placed on planeswalkers, including its own Empower Jace activated ability."
+ },
+ {
+  "name": "Jiang Yanggu, Never Alone",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": null,
+  "note": "4 mana for a 2/2 plus a 3/3 token, essentially a cheap Grave Titan."
+ },
+ {
+  "name": "Loot, the Nexus",
+  "marshall": "B",
+  "luis": null,
+  "tag": null,
+  "note": "Fragile but powerful mana rock tapping for mana equal to the number of different creature powers you control."
+ },
+ {
+  "name": "Marwyn, the Preserver",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": null,
+  "note": "Solid 2-mana 3/2 stats alone, plus land-recursion that shines with self-mill or discard synergies."
+ },
+ {
+  "name": "Pia, Aether Ascetic",
+  "marshall": null,
+  "luis": "C",
+  "tag": "build-around",
+  "note": "Discard-to-tutor an enchantment off a 3-mana 2/2; only worth it with a strong enchantment payoff."
+ },
+ {
+  "name": "Restore with Empathy",
+  "marshall": "B",
+  "luis": "D",
+  "tag": "build-around",
+  "note": "Slow permanent-recursion plus 4 life; Marshall likes it for green-white lifegain, Luis rates it lower but fine in blue-green graveyard decks."
+ },
+ {
+  "name": "Ruric Thar, Magecrusher",
+  "marshall": "C+",
+  "luis": null,
+  "tag": null,
+  "note": "Can't be countered and has hexproof until it deals combat damage, fixing the usual weakness of big ramp creatures."
+ },
+ {
+  "name": "Something Worth Saving",
+  "marshall": "C",
+  "luis": null,
+  "tag": null,
+  "note": "Mills 4, returns a permanent, and gains 1 life, enabling synergies across multiple archetypes despite low raw power."
+ },
+ {
+  "name": "Sureshot Sower",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "2-mana 3/1 reach with a discard-to-kill-a-flyer ability; solid defensive stats for the cost."
+ },
+ {
+  "name": "Tethermage's Advantage",
+  "marshall": "D",
+  "luis": "D",
+  "tag": null,
+  "note": null
+ },
+ {
+  "name": "Titanbones, Towering Heart",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "4/3 reach that grows via lifegain triggers, plus a discard-for-3-life bonus."
+ },
+ {
+  "name": "Vinelasher Adept",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "5/7 reach with basic landcycling for 2 mana, a great home for lands-needed counters."
+ },
+ {
+  "name": "Way of the Paradox",
+  "marshall": "C",
+  "luis": "C+",
+  "tag": "build-around",
+  "note": "Draws off Jace and ramps a land; a build-around ranging from D if unsupported up to B with full planeswalker support."
+ },
+ {
+  "name": "Way of the Wildspeaker",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": null,
+  "note": "Effectively a 5-mana 4/4 trample leaving behind a 3-loyalty Jace, a strong two-for-one."
+ },
+ {
+  "name": "Wrecking Gecko",
+  "marshall": "C-",
+  "luis": null,
+  "tag": null,
+  "note": "Marshall settles on C- for the 5-mana 5/5 Ward 2 (up from the usual D+ for that slot); Luis likes the Ward 2 but gives no letter grade."
+ },
+ {
+  "name": "Yoshimaru, Scrappy Stray",
+  "marshall": "B-",
+  "luis": "B",
+  "tag": null,
+  "note": "2-mana fight spell that leaves behind a 1/1 body, plus a clunky late-game counter ability."
+ },
+ {
+  "name": "Desperate Futurescribe",
+  "marshall": null,
+  "luis": "B",
+  "tag": null,
+  "note": "4-mana 3/4 flyer that upgrades pumps into counters whenever you scry or surveil."
+ },
+ {
+  "name": "Fatehold Charm",
+  "marshall": null,
+  "luis": "B",
+  "tag": null,
+  "note": "Flexible modal instant, good with creatures out or with an empty board."
+ },
+ {
+  "name": "Fatehold Chronologist // Peer Review",
+  "marshall": null,
+  "luis": "B-",
+  "tag": null,
+  "note": "Smooth 2-into-3 curve, a flyer plus a 2/2 and a Surveil; also useful to kill early."
+ },
+ {
+  "name": "Prudent Fateseer // Peer Review",
+  "marshall": "C+",
+  "luis": "B-",
+  "tag": null,
+  "note": "Repeatable team pump off scry/surveil, but an unexciting 1/4 body with no evasion."
+ },
+ {
+  "name": "Paradox Shaper // Omit Variables",
+  "marshall": null,
+  "luis": "C+",
+  "tag": null,
+  "note": "Self-mill and library-filtering engine that can loop card advantage; better if the deck needs threshold."
+ },
+ {
+  "name": "Recursive Recruitment",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "4 mana for two 2/2s that can flash back later for much bigger, counter-boosted tokens."
+ },
+ {
+  "name": "Theorix Charm",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Modal instant compared to Spell Pierce plus Disfigure plus a mill-3-draw-1 mode."
+ },
+ {
+  "name": "Theorix Metamage // Omit Variables",
+  "marshall": "C+",
+  "luis": null,
+  "tag": null,
+  "note": "Hybrid enabler/payoff for threshold with good stats late in the game."
+ },
+ {
+  "name": "Grim Repriser",
+  "marshall": "B",
+  "luis": null,
+  "tag": null,
+  "note": "2-mana 2/2 with prowess that can return from the graveyard once an opponent takes noncombat damage."
+ },
+ {
+  "name": "Stingerquill Charm",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": null,
+  "note": "Near-Lightning-Bolt mode plus a hasty 2/2 token option make it very flexible."
+ },
+ {
+  "name": "Stingerquill Voxmancer // Vicious Verse",
+  "marshall": null,
+  "luis": "B",
+  "tag": null,
+  "note": "Cheap repeatable pinger that enables the damage-matters theme, worse if the archetype underperforms."
+ },
+ {
+  "name": "Whiplash Wordsmith // Vicious Verse",
+  "marshall": null,
+  "luis": "C+",
+  "tag": null,
+  "note": "4-mana 3/3 that gains flying and haste when the opponent has taken noncombat damage."
+ },
+ {
+  "name": "Craftwork Crusher",
+  "marshall": "B+",
+  "luis": "B",
+  "tag": null,
+  "note": "7-mana 7/5 trample with a strong choose-2 ETB, but expensive and hard to splash."
+ },
+ {
+  "name": "Konstrari Charm",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "Weak modal charm; the counters-plus-trample combat trick mode is the only strong option."
+ },
+ {
+  "name": "Konstrari Improviser // Soul Tether",
+  "marshall": "C-",
+  "luis": "C",
+  "tag": null,
+  "note": "Expensive ramp payoff putting mediocre stuff into play; skeptical it's worth the mana investment."
+ },
+ {
+  "name": "Woodwork Prodigy // Soul Tether",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "3-mana 3/3 that trades well and piles up mana toward bigger payoffs."
+ },
+ {
+  "name": "Bloombrute",
+  "marshall": "A-",
+  "luis": "A-",
+  "tag": "build-around",
+  "note": "4/4 for 4 that draws a card whenever you gain life, extremely well supported by the archetype."
+ },
+ {
+  "name": "Emergency Phytomedic // Seed Suture",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "Flexible 1-drop that grows into a decent body and enables the archetype's lifegain payoffs."
+ },
+ {
+  "name": "Vigorbloom Charm",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": null,
+  "note": "Versatile charm offering protection, card draw plus lifegain, or a pump-and-fight mode."
+ },
+ {
+  "name": "Vigorbloom Vanguard // Seed Suture",
+  "marshall": "B+",
+  "luis": "B",
+  "tag": null,
+  "note": "2-mana 2/2 that grants vigilance to countered creatures and can pump plus gain life."
+ },
+ {
+  "name": "Blessed Ghoul",
+  "marshall": "C",
+  "luis": "C+",
+  "tag": null,
+  "note": "Cheap lifelinker whose 3-mana recursion is steep, but incremental lifelink value adds up over a game."
+ },
+ {
+  "name": "Edgar, Ancient Bloodlord",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Hard-to-block 2/3 that gains life on creature deaths and grows via sacrifice, benefits from synergy support."
+ },
+ {
+  "name": "Twisted Fates",
+  "marshall": "A-",
+  "luis": "A-",
+  "tag": null,
+  "note": "5-mana removal that also pumps a player's whole board, like a 3/3 haste attached to a kill spell."
+ },
+ {
+  "name": "Clash of Elements",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "Cheap, flexible instant that either bounces a permanent or deals damage, no restrictive clauses."
+ },
+ {
+  "name": "Saheeli, Jewel of Avishkar",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": "build-around",
+  "note": "Makes hasty thopter tokens off any noncreature spell, a strong mild build-around for the archetype."
+ },
+ {
+  "name": "Twinned Vision",
+  "marshall": "C-",
+  "luis": "C+",
+  "tag": null,
+  "note": "Flashback card draw hurt badly by the mandatory discard cost on the flashback side."
+ },
+ {
+  "name": "Ferocity of the Hunt",
+  "marshall": "C-",
+  "luis": "C",
+  "tag": null,
+  "note": "Cheap deathtouch aura that returns its creature on death, pairs well with trample synergies."
+ },
+ {
+  "name": "Hapatra, the Desert Fang",
+  "marshall": "B+",
+  "luis": "A-",
+  "tag": null,
+  "note": "5-mana 3/3 that shrinks a creature based on the highest mana value in the graveyard, reliably strong."
+ },
+ {
+  "name": "Primal Witchstalker",
+  "marshall": "B",
+  "luis": "B",
+  "tag": null,
+  "note": "2/1 menace that mills 4 and returns a land to the battlefield, a strong 3-drop."
+ },
+ {
+  "name": "Charge the Sanctum",
+  "marshall": "C",
+  "luis": "C-",
+  "tag": null,
+  "note": "Expensive but powerful combat trick that can pump the team or give first strike plus a counter."
+ },
+ {
+  "name": "Mabel, Valley Hero",
+  "marshall": "B+",
+  "luis": "B+",
+  "tag": null,
+  "note": "Comes down as a 2/3 that gives every entering creature an extra counter, seen as a must-kill threat."
+ },
+ {
+  "name": "Warrior's Blades",
+  "marshall": null,
+  "luis": "B",
+  "tag": null,
+  "note": "Equipment that enters like a Lightning Helix, then leaves behind solid +2/+1 equipment."
+ },
+ {
+  "name": "Kiora of Salt and Sand",
+  "marshall": "B-",
+  "luis": "B-",
+  "tag": "build-around",
+  "note": "Build-around that turns empowered Jace loyalty into an unblockable attack and an 8/8 hexproof ultimate, but needs setup."
+ },
+ {
+  "name": "Mind Meanderer",
+  "marshall": "B-",
+  "luis": null,
+  "tag": null,
+  "note": "6-mana 4/4 flier that fights on ETB is a solid two-for-one, though slow and only kills small creatures."
+ },
+ {
+  "name": "Tam's Resistance",
+  "marshall": "C",
+  "luis": "C",
+  "tag": null,
+  "note": "2 mana for counter, vigilance, and a card back fits great in prowess decks that want cheap cantrips."
+ },
+ {
+  "name": "Afterthought Sentry",
+  "marshall": null,
+  "luis": "D",
+  "tag": null,
+  "note": "Clunky 2/2 with an expensive flying activation, though exiling graveyard cards on attack has minor upside."
+ },
+ {
+  "name": "Archive Arbiter",
+  "marshall": "C+",
+  "luis": null,
+  "tag": null,
+  "note": "6-mana 4/4 flyer that either gains 4 life or destroys a noncreature nonland permanent, a solid top-end 2-for-1."
+ },
+ {
+  "name": "Eye of Jace",
+  "marshall": "C",
+  "luis": "C+",
+  "tag": "build-around",
+  "note": "1-mana artifact that surveils each turn and eventually sacrifices for damage and life; best in surveil/graveyard decks."
+ },
+ {
+  "name": "Keeper of the Quiet Hour",
+  "marshall": "C-",
+  "luis": "C-",
+  "tag": null,
+  "note": "3/2 for 3 that empowers a planeswalker by 2 on entry, solid for a colorless common."
+ },
+ {
+  "name": "Living Library",
+  "marshall": null,
+  "luis": null,
+  "tag": null,
+  "note": "Both agree the sacrifice-bounce ability needs too many specific artifact/2-drop synergies to ever matter; effectively unplayable, no letter grade given."
+ },
+ {
+  "name": "Medic's Kitesail",
+  "marshall": "D+",
+  "luis": "C-",
+  "tag": null,
+  "note": "Cheap equipment giving +1/+0, flying, and lifegain on attack; a fringe playable that can quietly pull weight."
+ },
+ {
+  "name": "Murmuring Volume",
+  "marshall": "D",
+  "luis": null,
+  "tag": null,
+  "note": "Mana rock that can also loot, but unclear which archetype actually wants a colorless ramp-and-filter artifact."
+ },
+ {
+  "name": "Traxos, Scourge Eternal",
+  "marshall": "B",
+  "luis": "C+",
+  "tag": null,
+  "note": "4-mana 5/4 trample that untaps whenever you cast an artifact or creature spell, trivially easy to keep active."
+ },
+ {
+  "name": "Fatehold Annex",
+  "marshall": null,
+  "luis": "C+",
+  "tag": null,
+  "note": "Enters tapped unless you control a planeswalker, a cycle land that's about average value like most fixing lands."
+ },
+ {
+  "name": "Theorix Annex",
+  "marshall": null,
+  "luis": "C+",
+  "tag": null,
+  "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+ },
+ {
+  "name": "Stingerquill Annex",
+  "marshall": null,
+  "luis": "C+",
+  "tag": null,
+  "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+ },
+ {
+  "name": "Konstrari Annex",
+  "marshall": null,
+  "luis": "C+",
+  "tag": null,
+  "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+ },
+ {
+  "name": "Vigorbloom Annex",
+  "marshall": null,
+  "luis": "C+",
+  "tag": null,
+  "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+ },
+ {
+  "name": "Hexhaven Dueling Arena",
+  "marshall": "F",
+  "luis": "F",
+  "tag": null,
+  "note": "Colorless land whose activated ability to make a creature prepared isn't worth the mana-fixing cost."
+ },
+ {
+  "name": "Room of Refuge",
+  "marshall": "C+",
+  "luis": "C+",
+  "tag": null,
+  "note": "Enters tapped for any color with no shuffling, plus a late-game sac ability to add +1/+1 counters."
+ }
+]

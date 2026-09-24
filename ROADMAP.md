@@ -68,6 +68,32 @@ and re-pull it later in place.
 - Duplicate printings are skipped (the app keys cards by `scryfall_id`), and
   unresolvable cards (CubeCobra custom cards) are reported as failures.
 
+## ✅ Set review tab (2026-09-23)
+
+A fourth tab: a searchable, filterable table of a podcast set review.
+
+- Ships with **Reality Fracture** (set `fra`) commons & uncommons, graded by
+  Marshall Sutcliffe and Luis Scott-Vargas on Limited Resources 872.
+- Columns: card, mana cost (rendered as pips), type, rules text, rarity, each
+  host's grade, and a one-line note. Search across name/type/rules/notes;
+  filter by rarity, colour, and "graded only"; sort by any grade column,
+  name, cost or rarity. Defaults to consensus grade, best first.
+- **Card facts come from Scryfall, not the transcript** — names, costs, rules
+  text and rarity are authoritative rather than transcribed from speech. Only
+  the grades and notes come from the review.
+- Data is baked into `src/data/set-review-fra.json` at authoring time, and the
+  tab is lazy-loaded so that file stays out of the initial bundle.
+- `scripts/build-set-review.mjs` regenerates the data file from Scryfall plus
+  `scripts/set-review-grades-fra.json`; its header documents the chunked LLM
+  extraction that produced the grades.
+
+**Coverage: 181 of 195 cards graded.** The 14 without a grade are all
+legitimate: 5 basic lands and the 5 "Commons" lands are never discussed on the
+show, and 4 cards (Refute Destiny, Semester Foreseer, Artifist Acumen, Living
+Library) were discussed but never given a letter grade. Cards are left
+ungraded rather than having a grade inferred from tone. The five "Annex" lands
+were graded as a cycle ("they're all the same") and share that grade.
+
 ## ✅ Cube export (.txt) + pancake draft file (2026-09-18)
 
 Export any cube as plain text from Manage cubes → **Export** (read-only, so it

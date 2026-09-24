@@ -1,0 +1,4709 @@
+{
+ "set": "fra",
+ "setName": "Reality Fracture",
+ "source": {
+  "title": "Limited Resources 872 — Reality Fracture Set Review: Commons and Uncommons",
+  "url": "https://www.youtube.com/watch?v=mLABrUxyTKw",
+  "reviewers": [
+   "Marshall Sutcliffe",
+   "Luis Scott-Vargas"
+  ]
+ },
+ "cards": [
+  {
+   "name": "Academic Ascent",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Target creature gets +2/+2 and gains flying until end of turn.\nEmpower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "2",
+   "scryfall_id": "730d8c28-1e58-4b8e-89e9-445d154d2e83",
+   "image_url": "https://cards.scryfall.io/normal/front/7/3/730d8c28-1e58-4b8e-89e9-445d154d2e83.jpg?1788878081",
+   "marshall": "C-",
+   "luis": "C-",
+   "tag": null,
+   "note": "2-mana +2/+2 flying trick that also builds Jace, underwhelming as just a pump spell."
+  },
+  {
+   "name": "Blossom-Blessed Angel // Seed Suture",
+   "mana_cost": "{3}{W} // {G/W}",
+   "cmc": 4,
+   "type_line": "Creature — Angel Cleric // Sorcery",
+   "oracle_text": "Blossom-Blessed Angel — Flying, vigilance\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nSeed Suture — Put a +1/+1 counter on target creature. You gain 1 life.",
+   "power": "2",
+   "toughness": "4",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "G",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "3",
+   "scryfall_id": "5e77fbf0-9d1f-4e7d-a02e-43065d11b0d9",
+   "image_url": "https://cards.scryfall.io/normal/front/5/e/5e77fbf0-9d1f-4e7d-a02e-43065d11b0d9.jpg?1789692643",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "Ludicrous rate (2/4 flying vigilance) for a common, plus a strong Seed Suture back half."
+  },
+  {
+   "name": "Campus Crier",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Creature — Human Advisor",
+   "oracle_text": "{1}, Exile this card from your graveyard: Empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": "3",
+   "toughness": "1",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "4",
+   "scryfall_id": "6047b14c-91d5-4f8e-af3f-057a541e2546",
+   "image_url": "https://cards.scryfall.io/normal/front/6/0/6047b14c-91d5-4f8e-af3f-057a541e2546.jpg?1788878120",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "2-mana 3/1 that can later exile from the graveyard to add loyalty to Jace."
+  },
+  {
+   "name": "Danitha, Sword of Hope",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Knight",
+   "oracle_text": "First strike\nWhenever you cast an Equipment spell or a spell that targets a creature you control, draw a card. This ability triggers only once each turn.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "196",
+   "scryfall_id": "d5cb9810-3c2d-4ae4-b8b6-0155ca3f47ad",
+   "image_url": "https://cards.scryfall.io/normal/front/d/5/d5cb9810-3c2d-4ae4-b8b6-0155ca3f47ad.jpg?1789127178",
+   "marshall": "C+",
+   "luis": "B-",
+   "tag": null,
+   "note": "2/2 first strike drawing a card once per turn off equipment or own-creature spells; better once it gets a counter."
+  },
+  {
+   "name": "Fateshaper Aspirant",
+   "mana_cost": "{4}{W}",
+   "cmc": 5,
+   "type_line": "Creature — Rhino Cleric",
+   "oracle_text": "When this creature enters, choose one —\n• Return target legendary card from your graveyard to your hand.\n• Put a +1/+1 counter on target creature. It gains vigilance and indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+   "power": "3",
+   "toughness": "4",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "6",
+   "scryfall_id": "f0c8400d-824f-4d79-84bc-7615a0deb831",
+   "image_url": "https://cards.scryfall.io/normal/front/f/0/f0c8400d-824f-4d79-84bc-7615a0deb831.jpg?1789556683",
+   "marshall": null,
+   "luis": "C",
+   "tag": null,
+   "note": "Grade slides with how many legendary targets you have to return from the graveyard."
+  },
+  {
+   "name": "Generous Revival",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Sorcery",
+   "oracle_text": "Return target creature card with mana value 3 or less from your graveyard to the battlefield with an additional +1/+1 counter on it.\nFlashback {4}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "8",
+   "scryfall_id": "f82f181b-a43b-4cec-b8f6-f6c1dd4c64fd",
+   "image_url": "https://cards.scryfall.io/normal/front/f/8/f82f181b-a43b-4cec-b8f6-f6c1dd4c64fd.jpg?1788433351",
+   "marshall": "C+",
+   "luis": null,
+   "tag": null,
+   "note": "Returns a cheap creature with a +1/+1 counter and has flashback; needs enough good 3-drops to be worth it."
+  },
+  {
+   "name": "Ghalta the Immovable",
+   "mana_cost": "{8}{W}",
+   "cmc": 9,
+   "type_line": "Legendary Creature — Elder Dinosaur",
+   "oracle_text": "This spell costs {X} less to cast, where X is the greatest toughness among creatures you control.\nCreatures you control can attack as though they didn't have defender.\nEach creature you control with toughness greater than its power assigns combat damage equal to its toughness rather than its power.",
+   "power": "0",
+   "toughness": "7",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "197",
+   "scryfall_id": "a9f3aa55-908f-42db-8135-4201433df850",
+   "image_url": "https://cards.scryfall.io/normal/front/a/9/a9f3aa55-908f-42db-8135-4201433df850.jpg?1789014423",
+   "marshall": "C-",
+   "luis": "C-",
+   "tag": null,
+   "note": "Needs a 4-5 toughness creature on board to become an affordable 7/7; risky if that creature gets removed."
+  },
+  {
+   "name": "Graft Surgeon",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Creature — Human Cleric",
+   "oracle_text": "This creature enters with a +1/+1 counter on it.\nWhen this creature dies, put its counters on up to one target creature you control.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "10",
+   "scryfall_id": "32a7a905-11bf-4b66-a28e-1066a0e372b8",
+   "image_url": "https://cards.scryfall.io/normal/front/3/2/32a7a905-11bf-4b66-a28e-1066a0e372b8.jpg?1789644811",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "3-mana 3/3 that redistributes its counters to another creature when it dies."
+  },
+  {
+   "name": "Hexhaven Battalion",
+   "mana_cost": "{4}{W}{W}",
+   "cmc": 6,
+   "type_line": "Sorcery",
+   "oracle_text": "Create three 2/2 colorless Wizard Soldier creature tokens named Cadet. Empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nBasic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "12",
+   "scryfall_id": "3b6ac80e-c726-4bd0-893a-e666041a04a6",
+   "image_url": "https://cards.scryfall.io/normal/front/3/b/3b6ac80e-c726-4bd0-893a-e666041a04a6.jpg?1789556695",
+   "marshall": "C+",
+   "luis": "B-",
+   "tag": null,
+   "note": "Basic-land-cyclable sorcery that makes three 2/2s and a Jace; a board state in a box."
+  },
+  {
+   "name": "Koth of the Homestead",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Citizen",
+   "oracle_text": "Landfall — Whenever a land you control enters, you gain 1 life.\nWhenever a Plains you control enters, put a +1/+1 counter on target creature.",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "199",
+   "scryfall_id": "920703fd-2a2f-454b-8829-af8f2afda4f4",
+   "image_url": "https://cards.scryfall.io/normal/front/9/2/920703fd-2a2f-454b-8829-af8f2afda4f4.jpg?1789568532",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Landfall lifegain plus a +1/+1 counter per Plains, snowballs easily without costing anything."
+  },
+  {
+   "name": "Memory Trap",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Enchantment",
+   "oracle_text": "When this enchantment enters, exile target nonland permanent an opponent controls until this enchantment leaves the battlefield.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "15",
+   "scryfall_id": "2f5345ae-4489-4d05-b2d5-c71285254f05",
+   "image_url": "https://cards.scryfall.io/normal/front/2/f/2f5345ae-4489-4d05-b2d5-c71285254f05.jpg?1788866058",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Reprint of the exile-until-leaves-play enchantment effect, a reliable format all-star."
+  },
+  {
+   "name": "Predictive Preparations",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Sorcery",
+   "oracle_text": "Put a +1/+1 counter on each of one or two target creatures.\nFlashback {3}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "16",
+   "scryfall_id": "50a0e5f0-3c39-4f16-9a73-eec8ef71f12e",
+   "image_url": "https://cards.scryfall.io/normal/front/5/0/50a0e5f0-3c39-4f16-9a73-eec8ef71f12e.jpg?1789556696",
+   "marshall": "D+",
+   "luis": "D",
+   "tag": null,
+   "note": "Needs counter synergies to shine; otherwise just a modest double-pump spell with flashback."
+  },
+  {
+   "name": "Prophesied End",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Destroy target creature. If it wasn't attacking, its controller draws a card.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "17",
+   "scryfall_id": "1f95399a-9766-4f3d-aa6a-ece55e0530d9",
+   "image_url": "https://cards.scryfall.io/normal/front/1/f/1f95399a-9766-4f3d-aa6a-ece55e0530d9.jpg?1788951920",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "Great if it only ever kills attackers, but forced non-attacker kills let the opponent draw a card."
+  },
+  {
+   "name": "Refute Destiny",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Sorcery",
+   "oracle_text": "Exile target creature or planeswalker that's green or blue. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "18",
+   "scryfall_id": "2c588954-c6eb-4aae-a2fa-0651ccf2d90a",
+   "image_url": "https://cards.scryfall.io/normal/front/2/c/2c588954-c6eb-4aae-a2fa-0651ccf2d90a.jpg?1789470778",
+   "marshall": null,
+   "luis": null,
+   "tag": "sideboard",
+   "note": "Green/blue-hosing exile effect, dead in best-of-1 but strong to bring in against those colors."
+  },
+  {
+   "name": "Rescue Girl, First Responder",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Cleric",
+   "oracle_text": "Flying\n{T}: Return another target permanent you control to its owner's hand. Activate only during your turn.",
+   "power": "1",
+   "toughness": "3",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "202",
+   "scryfall_id": "699874e3-1ccf-4a6c-8371-61040de82d08",
+   "image_url": "https://cards.scryfall.io/normal/front/6/9/699874e3-1ccf-4a6c-8371-61040de82d08.jpg?1789645598",
+   "marshall": "C+",
+   "luis": "B-",
+   "tag": "build-around",
+   "note": "1/3 flyer that bounces your own permanents for ETB value and can even rebounce a land for extra mana."
+  },
+  {
+   "name": "Saheeli, Consul of Oversight",
+   "mana_cost": "{3}{W}{W}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Human Advisor",
+   "oracle_text": "Flying\nWhenever you scry or surveil, create a 1/1 colorless Thopter artifact creature token with flying. This ability triggers only once each turn.",
+   "power": "4",
+   "toughness": "4",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "203",
+   "scryfall_id": "07572be0-6610-493c-a21e-14b78e9805c9",
+   "image_url": "https://cards.scryfall.io/normal/front/0/7/07572be0-6610-493c-a21e-14b78e9805c9.jpg?1789645608",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Turns any scry or surveil, including a Jace's minus ability, into a free flying Thopter token."
+  },
+  {
+   "name": "Shatterwing Pegasus",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Creature — Pegasus",
+   "oracle_text": "Flying\n{4}{W}: Creatures you control get +1/+1 until end of turn.",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "21",
+   "scryfall_id": "e29095de-59ec-4562-ba8e-73f952e457ae",
+   "image_url": "https://cards.scryfall.io/normal/front/e/2/e29095de-59ec-4562-ba8e-73f952e457ae.jpg?1789385580",
+   "marshall": "C-",
+   "luis": "C-",
+   "tag": null,
+   "note": "Fits a flyers or go-wide deck but power level isn't quite high enough to overcome the synergy dependence."
+  },
+  {
+   "name": "Surgical Precision",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Sorcery",
+   "oracle_text": "Choose one —\n• Destroy target creature with toughness 4 or greater. You gain 1 life.\n• You draw a card and gain 2 life.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "22",
+   "scryfall_id": "d3acf176-ef02-4729-88c4-0f0dfbfdada4",
+   "image_url": "https://cards.scryfall.io/normal/front/d/3/d3acf176-ef02-4729-88c4-0f0dfbfdada4.jpg?1789385570",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "Modal kill-a-big-creature or cantrip common with no real downside."
+  },
+  {
+   "name": "Teyo, Lightshield Expert",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Human Cleric",
+   "oracle_text": "Flash\nWhen Teyo enters, target permanent you control gains hexproof until end of turn. Put a +1/+1 counter on it if it's a creature. Put a loyalty counter on it if it's a planeswalker. (It can't be the target of spells or abilities your opponents control.)",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "204",
+   "scryfall_id": "5f7521d7-9f1f-4f03-b2ea-dd2a1b1e4e5b",
+   "image_url": "https://cards.scryfall.io/normal/front/5/f/5f7521d7-9f1f-4f03-b2ea-dd2a1b1e4e5b.jpg?1789471515",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "2-mana 1/1 flash that grants hexproof plus a permanent counter, protecting a creature while adding stats."
+  },
+  {
+   "name": "Thalia, the Survivor",
+   "mana_cost": "{3}{W}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Soldier",
+   "oracle_text": "Lifelink\nNoncreature spells your opponents cast cost {1} more to cast.",
+   "power": "3",
+   "toughness": "4",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "205",
+   "scryfall_id": "80226231-9e70-430e-aabc-f262f70b9226",
+   "image_url": "https://cards.scryfall.io/normal/front/8/0/80226231-9e70-430e-aabc-f262f70b9226.jpg?1789127700",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Great body (3/4 lifelink) that taxes opponents' noncreature spells and benefits from +1/+1 counters."
+  },
+  {
+   "name": "Tomik, Orzhov Lawmage",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Human Advisor",
+   "oracle_text": "Flying\nPlaneswalkers you control have \"No more than one creature can attack this planeswalker each combat.\"\n{T}: Target creature with a +1/+1 counter on it gains flying until end of turn.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "206",
+   "scryfall_id": "7ca95235-6e54-4ff8-bc2e-6a3d483ff007",
+   "image_url": "https://cards.scryfall.io/normal/front/7/c/7ca95235-6e54-4ff8-bc2e-6a3d483ff007.jpg?1789729766",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "2-mana 2/1 flyer with niche upside protecting Jace and enabling +1/+1 counter synergies."
+  },
+  {
+   "name": "Unflinching Hortimancer",
+   "mana_cost": "{1}{W}",
+   "cmc": 2,
+   "type_line": "Creature — Human Cleric",
+   "oracle_text": "Ward {1} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {1}.)\nWhenever you gain life, put a +1/+1 counter on this creature.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "23",
+   "scryfall_id": "63f82985-c9c2-4d0a-ac4f-560166bebd9f",
+   "image_url": "https://cards.scryfall.io/normal/front/6/3/63f82985-c9c2-4d0a-ac4f-560166bebd9f.jpg?1789556741",
+   "marshall": "C",
+   "luis": null,
+   "tag": null,
+   "note": "2-mana 2/1 Ward 1 that grows with lifegain, a nice payoff for the lifegain sub-theme."
+  },
+  {
+   "name": "Way of the Healer",
+   "mana_cost": "{3}{W}",
+   "cmc": 4,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Healer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−2]: Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.\"",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "207",
+   "scryfall_id": "50326a2a-7e10-464b-a97e-e880bda0558c",
+   "image_url": "https://cards.scryfall.io/normal/front/5/0/50326a2a-7e10-464b-a97e-e880bda0558c.jpg?1789729503",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Almost always nets a 2/2 token, a 3-loyalty Jace, and a Surveil for 4 mana."
+  },
+  {
+   "name": "Way of the Mentor",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Mentor enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nWhenever you gain life, put a loyalty counter on each planeswalker you control.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "208",
+   "scryfall_id": "1a59d5b1-12d6-486b-bd29-ca371359addd",
+   "image_url": "https://cards.scryfall.io/normal/front/1/a/1a59d5b1-12d6-486b-bd29-ca371359addd.jpg?1789729554",
+   "marshall": "C",
+   "luis": "C",
+   "tag": "build-around",
+   "note": "Needs a life-gain shell to turn loyalty gains into real value; weak as your first big play of the game."
+  },
+  {
+   "name": "Yoshimaru, Beloved Companion",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Dog",
+   "oracle_text": "If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.\n{6}: Put a +1/+1 counter on target legendary creature.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "209",
+   "scryfall_id": "384f3b7d-8d7f-41bf-bebd-64e8babe7fca",
+   "image_url": "https://cards.scryfall.io/normal/front/3/8/384f3b7d-8d7f-41bf-bebd-64e8babe7fca.jpg?1789470881",
+   "marshall": "B",
+   "luis": "B",
+   "tag": "build-around",
+   "note": "Explosive counter-doubling engine that pairs well with other 3-mana legends like Koth and Danitha."
+  },
+  {
+   "name": "Your Fate Ends Here",
+   "mana_cost": "{2}{W}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "Destroy target creature or planeswalker with mana value 3 or greater. Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "24",
+   "scryfall_id": "25000a17-b701-4d69-b2ef-2c74029199d3",
+   "image_url": "https://cards.scryfall.io/normal/front/2/5/25000a17-b701-4d69-b2ef-2c74029199d3.jpg?1789729751",
+   "marshall": "B",
+   "luis": null,
+   "tag": null,
+   "note": "A really solid removal spell; the mana-value-3-or-greater restriction favors killing the bigger threat anyway."
+  },
+  {
+   "name": "Yuriko, Blade of the Mighty",
+   "mana_cost": "{3}{W}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Samurai",
+   "oracle_text": "During combat, players can't cast spells or activate abilities that aren't mana abilities.\nWhenever a creature you control attacks a player alone, it gains double strike until end of turn.",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "W"
+   ],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "210",
+   "scryfall_id": "ccbe92a5-42bc-4228-9d5a-212df2f5dc15",
+   "image_url": "https://cards.scryfall.io/normal/front/c/c/ccbe92a5-42bc-4228-9d5a-212df2f5dc15.jpg?1789128047",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "High-variance card: huge upside if it survives and attacks, but a 4-mana 2/3 is a blowout when answered."
+  },
+  {
+   "name": "Arni, Humble Scribe",
+   "mana_cost": "{2}{U}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Wizard",
+   "oracle_text": "Whenever another nontoken creature you control enters, untap Arni.\n{T}: Draw a card, then discard a card.",
+   "power": "3",
+   "toughness": "2",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "211",
+   "scryfall_id": "8e3a2239-9348-4639-9318-e9e35b2cf86b",
+   "image_url": "https://cards.scryfall.io/normal/front/8/e/8e3a2239-9348-4639-9318-e9e35b2cf86b.jpg?1789568409",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": null,
+   "note": "Free looter that untaps whenever you play a nontoken creature, though it dies easily at 2 toughness."
+  },
+  {
+   "name": "Countersculpt",
+   "mana_cost": "{U}{U}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "As an additional cost to cast this spell, behold a Jace or pay {1}. (To behold a Jace, choose a Jace you control or reveal a Jace card from your hand.)\nCounter target spell. Empower Jace 1. (Put a loyalty counter on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "25",
+   "scryfall_id": "145b928d-a7ff-4fe5-ae4d-bbae7b1d955b",
+   "image_url": "https://cards.scryfall.io/normal/front/1/4/145b928d-a7ff-4fe5-ae4d-bbae7b1d955b.jpg?1788878107",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "Essentially Cancel with a Surveil or bonus loyalty upside via Behold a Jace."
+  },
+  {
+   "name": "Cryotheory Adept",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Creature — Human Wizard",
+   "oracle_text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\n{3}{U}, Exile this card from your graveyard: Tap target creature and put a stun counter on it. Activate only as a sorcery. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "27",
+   "scryfall_id": "9ba1f7ce-3404-4932-9795-22967707f762",
+   "image_url": "https://cards.scryfall.io/normal/front/9/b/9ba1f7ce-3404-4932-9795-22967707f762.jpg?1789556701",
+   "marshall": "D",
+   "luis": "C-",
+   "tag": null,
+   "note": "2/1 prowess is mediocre as a beatdown plan, though the graveyard tap ability adds some value."
+  },
+  {
+   "name": "Divining Duelist",
+   "mana_cost": "{2}{U}",
+   "cmc": 3,
+   "type_line": "Creature — Merfolk Wizard",
+   "oracle_text": "Flash\nWhen this creature enters, choose one —\n• Tap target creature.\n• Untap target creature.\n• Draw a card, then discard a card.",
+   "power": "3",
+   "toughness": "2",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "29",
+   "scryfall_id": "960c7335-331d-488b-be68-2ad1c1c695dc",
+   "image_url": "https://cards.scryfall.io/normal/front/9/6/960c7335-331d-488b-be68-2ad1c1c695dc.jpg?1789556709",
+   "marshall": null,
+   "luis": "C",
+   "tag": null,
+   "note": "Flexible flash creature that taps/untaps a creature or loots, a fine if unexciting playable."
+  },
+  {
+   "name": "Fblthp, Impossibly Lost",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Homunculus",
+   "oracle_text": "When one or more of your opponents are dealt combat damage during your turn, draw two cards. If your library has no cards in it, you win the game. Fblthp's owner shuffles him into their library. (If you draw from an empty library this way, you still win the game.)",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "213",
+   "scryfall_id": "a3a2edbb-d144-4670-acad-17316cea98d2",
+   "image_url": "https://cards.scryfall.io/normal/front/a/3/a3a2edbb-d144-4670-acad-17316cea98d2.jpg?1789127697",
+   "marshall": "D-",
+   "luis": "D",
+   "tag": null,
+   "note": "Cool alternate win condition (graded build-around A+), but as a functional card it needs you to already be hitting your opponent."
+  },
+  {
+   "name": "Geist of Saint Thalia",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Spirit Cleric",
+   "oracle_text": "Flying\nNoncreature spells you cast cost {1} less to cast.",
+   "power": "1",
+   "toughness": "2",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "214",
+   "scryfall_id": "9c334530-0880-46b5-a358-9603eee3cecf",
+   "image_url": "https://cards.scryfall.io/normal/front/9/c/9c334530-0880-46b5-a358-9603eee3cecf.jpg?1789128026",
+   "marshall": "C+",
+   "luis": null,
+   "tag": "build-around",
+   "note": "At 2 mana the noncreature-spell cost discount is strong enough to build a deck around."
+  },
+  {
+   "name": "Hapatra, the Desert Frost",
+   "mana_cost": "{3}{U}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Wizard",
+   "oracle_text": "When Hapatra enters, for each opponent, tap up to one target creature that player controls. Put a stun counter on each of those creatures. (If a permanent with a stun counter would become untapped, remove one from it instead.)\n{2}{U}: Untap target creature.",
+   "power": "4",
+   "toughness": "3",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "215",
+   "scryfall_id": "85faaa9d-4656-4365-871d-7cba53ed0996",
+   "image_url": "https://cards.scryfall.io/normal/front/8/5/85faaa9d-4656-4365-871d-7cba53ed0996.jpg?1789387113",
+   "marshall": "C+",
+   "luis": null,
+   "tag": null,
+   "note": "4-mana 4/3 that taps and stuns an opponent's creature on entry, plus a repeatable untap ability."
+  },
+  {
+   "name": "Icy Reception",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Counter target creature or legendary spell unless its controller pays {3}.\n• Target creature gets -5/-0 until end of turn.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "30",
+   "scryfall_id": "8d754b96-5e44-45af-9c7a-b0da59fbe4c3",
+   "image_url": "https://cards.scryfall.io/normal/front/8/d/8d754b96-5e44-45af-9c7a-b0da59fbe4c3.jpg?1788779540",
+   "marshall": "C",
+   "luis": "C+",
+   "tag": null,
+   "note": "Twist on Essence Scatter that also hits legendary spells or shrinks a creature, useful to trigger prowess."
+  },
+  {
+   "name": "Infinite Coursework",
+   "mana_cost": "{2}{U}",
+   "cmc": 3,
+   "type_line": "Enchantment — Aura",
+   "oracle_text": "Enchant creature\nWhen this Aura enters, tap enchanted creature. It becomes unprepared.\nEnchanted creature loses all abilities and doesn't untap during its controller's untap step.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "31",
+   "scryfall_id": "a5988272-faaa-463d-a0a1-a8e96b946bad",
+   "image_url": "https://cards.scryfall.io/normal/front/a/5/a5988272-faaa-463d-a0a1-a8e96b946bad.jpg?1789385916",
+   "marshall": "C+",
+   "luis": "B",
+   "tag": null,
+   "note": "Solid blue removal that taps a creature and strips its abilities so it can't untap."
+  },
+  {
+   "name": "Mindseeker Oculus",
+   "mana_cost": "{2}{U}",
+   "cmc": 3,
+   "type_line": "Creature — Homunculus",
+   "oracle_text": "When this creature enters, empower Jace 4. (Put four loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "33",
+   "scryfall_id": "f5324741-353a-4a70-adb2-b631b00806dd",
+   "image_url": "https://cards.scryfall.io/normal/front/f/5/f5324741-353a-4a70-adb2-b631b00806dd.jpg?1789556707",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "3-mana 2/1 that draws a card and leaves behind an Empower Jace 4 token, huge value for a common."
+  },
+  {
+   "name": "Perfected Theory",
+   "mana_cost": "{U}",
+   "cmc": 1,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Target creature has base power and toughness 1/1 until end of turn.\n• Target creature has base power and toughness 4/5 until end of turn.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "34",
+   "scryfall_id": "d0ecae06-bc5a-4886-84df-c2900816f226",
+   "image_url": "https://cards.scryfall.io/normal/front/d/0/d0ecae06-bc5a-4886-84df-c2900816f226.jpg?1788329222",
+   "marshall": "D",
+   "luis": "D",
+   "tag": null,
+   "note": "Flexible power/toughness-setting instant, but this style of effect tends not to play out well."
+  },
+  {
+   "name": "Plan for All Outcomes",
+   "mana_cost": "{3}{U}",
+   "cmc": 4,
+   "type_line": "Enchantment",
+   "oracle_text": "When this enchantment enters, the owner of up to one other target nonland permanent puts it on their choice of the top or bottom of their library.\nWhenever you cast your first noncreature spell each turn, empower Jace 1. (Put a loyalty counter on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "35",
+   "scryfall_id": "c4effc17-0d0e-423a-b5f2-597ea6c71f67",
+   "image_url": "https://cards.scryfall.io/normal/front/c/4/c4effc17-0d0e-423a-b5f2-597ea6c71f67.jpg?1789576786",
+   "marshall": "B",
+   "luis": "C+",
+   "tag": null,
+   "note": "Sorcery-speed tuck effect on a permanent that keeps generating Empower Jace value off your first noncreature spell each turn."
+  },
+  {
+   "name": "Precise Redaction",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Counter target white or black spell.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "36",
+   "scryfall_id": "9244efad-35ab-45c0-b173-4bc68276cb67",
+   "image_url": "https://cards.scryfall.io/normal/front/9/2/9244efad-35ab-45c0-b173-4bc68276cb67.jpg?1789470790",
+   "marshall": null,
+   "luis": "B",
+   "tag": "sideboard",
+   "note": "Narrow counterspell that only hits white or black spells, best kept in the sideboard."
+  },
+  {
+   "name": "Proft, Consulting Detective",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Human Detective",
+   "oracle_text": "Whenever you scry or surveil, you may pay {2}. If you do, put a +1/+1 counter on Proft and draw a card. (Draw after you scry or surveil.)",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "218",
+   "scryfall_id": "b8466593-40fe-4557-89b2-760c1c92087b",
+   "image_url": "https://cards.scryfall.io/normal/front/b/8/b8466593-40fe-4557-89b2-760c1c92087b.jpg?1789127178",
+   "marshall": "B",
+   "luis": null,
+   "tag": "build-around",
+   "note": "Strong scry/surveil payoff for counters and cards, but value depends on how much scry/surveil support you have."
+  },
+  {
+   "name": "Protege's Awakening",
+   "mana_cost": "{3}{U}",
+   "cmc": 4,
+   "type_line": "Sorcery",
+   "oracle_text": "Empower Jace 6. (Put six loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nDraw a card.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "37",
+   "scryfall_id": "a08c7ec2-4c6a-4db2-85a7-41afe8731523",
+   "image_url": "https://cards.scryfall.io/normal/front/a/0/a08c7ec2-4c6a-4db2-85a7-41afe8731523.jpg?1788878176",
+   "marshall": "C",
+   "luis": null,
+   "tag": null,
+   "note": "4-mana draw 2 that can become a draw 3 if the leftover Jace token survives to be used."
+  },
+  {
+   "name": "Ruric Thar, Biomagus",
+   "mana_cost": "{4}{U}{U}",
+   "cmc": 6,
+   "type_line": "Legendary Creature — Ogre Crab Wizard",
+   "oracle_text": "Flying\nProwess, prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn twice.)\nWhenever Ruric Thar becomes the target of a spell or ability an opponent controls, draw a card.",
+   "power": "4",
+   "toughness": "6",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "219",
+   "scryfall_id": "00af4e87-5576-4a43-9422-4c35b2b66775",
+   "image_url": "https://cards.scryfall.io/normal/front/0/0/00af4e87-5576-4a43-9422-4c35b2b66775.jpg?1789127229",
+   "marshall": "B-",
+   "luis": null,
+   "tag": null,
+   "note": "6-mana 4/6 flying double-prowess finisher that draws a card when targeted, but still a costly card to lose."
+  },
+  {
+   "name": "Semester Foreseer // Peer Review",
+   "mana_cost": "{3}{U} // {2}{W/U}",
+   "cmc": 4,
+   "type_line": "Creature — Human Wizard // Sorcery",
+   "oracle_text": "Semester Foreseer — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nWhen this creature enters, surveil 1.\n//\nPeer Review — Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.",
+   "power": "3",
+   "toughness": "4",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "39",
+   "scryfall_id": "7e5a640b-fd88-4b5a-9dfc-1d8f5a5cef41",
+   "image_url": "https://cards.scryfall.io/normal/front/7/e/7e5a640b-fd88-4b5a-9dfc-1d8f5a5cef41.jpg?1789127516",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": "Called a rock-solid playable 4-mana 3/4 with surveil and a strong flashback spell, but the transcript's grade line is garbled/overlapping and no clear letter is stated."
+  },
+  {
+   "name": "Sphinx's Approach",
+   "mana_cost": "{1}{U}{U}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "Draw two cards. Then you may exile this spell and four cards named Sphinx's Approach from your graveyard. If you do, search your library for a Sphinx creature card, put it onto the battlefield, then shuffle.\nA deck can have any number of cards named Sphinx's Approach.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "41",
+   "scryfall_id": "f49be090-c745-40e5-bc1c-605b8d98acdf",
+   "image_url": "https://cards.scryfall.io/normal/front/f/4/f49be090-c745-40e5-bc1c-605b8d98acdf.jpg?1789644816",
+   "marshall": "D",
+   "luis": "D",
+   "tag": null,
+   "note": "Card-disadvantage draw-2 whose bonus mode needs 4 copies plus a Sphinx in play, too slow and cute for limited."
+  },
+  {
+   "name": "Surveillance Phantasm",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Creature — Bird Illusion",
+   "oracle_text": "Defender, flying, vigilance\nAs long as you've scried or surveilled this turn, this creature can attack as though it didn't have defender.\n{3}{U}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "42",
+   "scryfall_id": "9df8a06d-c7de-49af-8c01-06dca3dfef4b",
+   "image_url": "https://cards.scryfall.io/normal/front/9/d/9df8a06d-c7de-49af-8c01-06dca3dfef4b.jpg?1789385597",
+   "marshall": "C",
+   "luis": "C+",
+   "tag": null,
+   "note": "Efficient 2-mana 2/3 flying defender that can attack and gives you a way to surveil if needed."
+  },
+  {
+   "name": "Tetsuko Umezawa, Fugitive",
+   "mana_cost": "{1}{U}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Human Rogue",
+   "oracle_text": "Creatures you control with power or toughness 1 or less can't be blocked.",
+   "power": "1",
+   "toughness": "3",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "221",
+   "scryfall_id": "3983d71e-3c23-4b36-b331-08e0707d8245",
+   "image_url": "https://cards.scryfall.io/normal/front/3/9/3983d71e-3c23-4b36-b331-08e0707d8245.jpg?1789127702",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "Makes small creatures unblockable and has historically overperformed in aggro decks full of 1-toughness bodies."
+  },
+  {
+   "name": "Traxos, Academy Guardian",
+   "mana_cost": "{3}{U}",
+   "cmc": 4,
+   "type_line": "Legendary Artifact Creature — Dragon Construct",
+   "oracle_text": "This spell costs {2} less to cast if you've cast a noncreature spell this turn.\nFlying, vigilance\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+   "power": "1",
+   "toughness": "5",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "222",
+   "scryfall_id": "a349800f-b634-4e74-a9d9-185df37ad909",
+   "image_url": "https://cards.scryfall.io/normal/front/a/3/a349800f-b634-4e74-a9d9-185df37ad909.jpg?1789568451",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "1/5 flying vigilance with prowess that can cost as little as 2 mana after casting a noncreature spell."
+  },
+  {
+   "name": "Undulating Witness",
+   "mana_cost": "{4}{U}",
+   "cmc": 5,
+   "type_line": "Creature — Serpent",
+   "oracle_text": "Flying\n{2}: This creature gets +1/-1 until end of turn.\nBasic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)",
+   "power": "3",
+   "toughness": "5",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "45",
+   "scryfall_id": "0adbb4b2-a142-48da-8f4b-fa91529dbac4",
+   "image_url": "https://cards.scryfall.io/normal/front/0/a/0adbb4b2-a142-48da-8f4b-fa91529dbac4.jpg?1789556706",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "Big 3/5 flyer for 5 mana with a small pump ability, comparable to the set's basic landcyclers."
+  },
+  {
+   "name": "Unsummon",
+   "mana_cost": "{U}",
+   "cmc": 1,
+   "type_line": "Instant",
+   "oracle_text": "Return target creature to its owner's hand.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "46",
+   "scryfall_id": "ddad9f16-52d5-49de-82b0-b1a5294a9c44",
+   "image_url": "https://cards.scryfall.io/normal/front/d/d/ddad9f16-52d5-49de-82b0-b1a5294a9c44.jpg?1789556722",
+   "marshall": "C",
+   "luis": "C+",
+   "tag": null,
+   "note": "Cheap, efficient bounce that's especially good against tokens and can save your own creature."
+  },
+  {
+   "name": "Way of the Cryomancer",
+   "mana_cost": "{2}{U}",
+   "cmc": 3,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Cryomancer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−3]: When you next cast an instant or sorcery spell this turn, copy that spell. You may choose new targets for the copy.\"",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "223",
+   "scryfall_id": "838b0efb-7398-4df9-8fdf-b8af43b47938",
+   "image_url": "https://cards.scryfall.io/normal/front/8/3/838b0efb-7398-4df9-8fdf-b8af43b47938.jpg?1789014637",
+   "marshall": null,
+   "luis": "D",
+   "tag": null,
+   "note": "Empowers Jace and lets a loyalty ability copy your next spell, but Jace's built-in -3 already does more."
+  },
+  {
+   "name": "Way of the Mind Sculptor",
+   "mana_cost": "{4}{U}",
+   "cmc": 5,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Mind Sculptor enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nWhenever you activate a loyalty ability, if you removed two or more loyalty counters to activate it, draw a card.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "224",
+   "scryfall_id": "5838af68-66c3-4fe8-ab89-0a1721b0cfeb",
+   "image_url": "https://cards.scryfall.io/normal/front/5/8/5838af68-66c3-4fe8-ab89-0a1721b0cfeb.jpg?1789729565",
+   "marshall": "B",
+   "luis": "B+",
+   "tag": "build-around",
+   "note": "Draws 2 cards and leaves a 2-loyalty Jace, best in decks that keep triggering loyalty abilities that remove 2+ counters."
+  },
+  {
+   "name": "Yargle, Goliath of Otaria",
+   "mana_cost": "{4}{U}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Frog Spirit",
+   "oracle_text": "",
+   "power": "3",
+   "toughness": "9",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "225",
+   "scryfall_id": "f45ba926-6496-4bd4-96eb-663946d56bbf",
+   "image_url": "https://cards.scryfall.io/normal/front/f/4/f45ba926-6496-4bd4-96eb-663946d56bbf.jpg?1789128043",
+   "marshall": null,
+   "luis": "C-",
+   "tag": "sideboard",
+   "note": "Luis: matchup-dependent, great vs. red-green but a C/C- overall and a sideboard card; Marshall floated D or F for the maindeck without settling."
+  },
+  {
+   "name": "Yuriko, Hope from the Shadows",
+   "mana_cost": "{U}",
+   "cmc": 1,
+   "type_line": "Legendary Creature — Human Ninja",
+   "oracle_text": "Flash\nWhen Yuriko enters, choose one —\n• Target creature gets -X/-0 until end of turn, where X is the number of cards in your graveyard.\n• Surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "U"
+   ],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "226",
+   "scryfall_id": "45e81487-8b8c-480b-922a-eaa9edc7201d",
+   "image_url": "https://cards.scryfall.io/normal/front/4/5/45e81487-8b8c-480b-922a-eaa9edc7201d.jpg?1789127717",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "1-mana flash 1/1 with a flexible ETB (shrink an attacker or Surveil 2), close to a full card's worth of value."
+  },
+  {
+   "name": "Apex Witchstalker",
+   "mana_cost": "{4}{B}{B}",
+   "cmc": 6,
+   "type_line": "Creature — Wolf",
+   "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nWhen this creature enters or dies, you gain 2 life.\nBasic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)",
+   "power": "6",
+   "toughness": "4",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "48",
+   "scryfall_id": "cd56f047-6bdc-4e83-8a7c-923ebad26302",
+   "image_url": "https://cards.scryfall.io/normal/front/c/d/cd56f047-6bdc-4e83-8a7c-923ebad26302.jpg?1789556710",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "A big menace body that can gain 4 life across its lifecycle, fills black's aggressive-green-creature slot."
+  },
+  {
+   "name": "Break Under Pressure",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "Target opponent sacrifices a creature or planeswalker with the greatest mana value among creatures and planeswalkers they control. You gain 2 life.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "50",
+   "scryfall_id": "46974d94-e900-43e4-92b5-4fb9b9f7cf46",
+   "image_url": "https://cards.scryfall.io/normal/front/4/6/46974d94-e900-43e4-92b5-4fb9b9f7cf46.jpg?1789385622",
+   "marshall": "B+",
+   "luis": "B",
+   "tag": null,
+   "note": "Forces the sacrifice of an opponent's best permanent and gains 2 life, a great and reliable effect."
+  },
+  {
+   "name": "Cast Away Doubt",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Sorcery",
+   "oracle_text": "Draw two cards. Cast Away Doubt deals 2 damage to each player.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "51",
+   "scryfall_id": "3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d",
+   "image_url": "https://cards.scryfall.io/normal/front/3/b/3b5b28a4-0abd-4dc2-9856-c9a8d27f6a2d.jpg?1788353191",
+   "marshall": "C-",
+   "luis": "C",
+   "tag": null,
+   "note": "Good for aggressive red-black, black-green, and black-white decks; worse in blue-black which doesn't want to pay life to draw."
+  },
+  {
+   "name": "Danitha, Spear of Agony",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Knight",
+   "oracle_text": "First strike\nWhenever you cast a spell that targets an opponent or a creature an opponent controls, put a +1/+1 counter on Danitha.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "227",
+   "scryfall_id": "6489814b-3d10-423e-988c-324740d36748",
+   "image_url": "https://cards.scryfall.io/normal/front/6/4/6489814b-3d10-423e-988c-324740d36748.jpg?1789127194",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Cheap first striker that only needs one targeted spell to become a 3/3, and black has plenty of removal to trigger it."
+  },
+  {
+   "name": "Extended Absence",
+   "mana_cost": "{3}{B}",
+   "cmc": 4,
+   "type_line": "Instant",
+   "oracle_text": "Exile target creature or planeswalker. Extended Absence deals 1 damage to each opponent and you gain 1 life.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "54",
+   "scryfall_id": "eb4b6ed8-782e-4473-abc9-d50bf2275c6a",
+   "image_url": "https://cards.scryfall.io/normal/front/e/b/eb4b6ed8-782e-4473-abc9-d50bf2275c6a.jpg?1789556713",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Premium exile removal that also pings for 1 and gains a life, strong in every deck."
+  },
+  {
+   "name": "Gallia, Tragic Host",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Zombie Satyr",
+   "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\n{4}{B}, Exile another creature card from your graveyard: Return this card from your graveyard to the battlefield tapped with a +1/+1 counter on her.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "228",
+   "scryfall_id": "498fa810-8522-4020-b773-52ad404c9f65",
+   "image_url": "https://cards.scryfall.io/normal/front/4/9/498fa810-8522-4020-b773-52ad404c9f65.jpg?1789385697",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "2-mana 2/1 menace that can recur itself from the graveyard for 5 mana plus a counter, hard to keep down."
+  },
+  {
+   "name": "Last Gasp",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Target creature gets -3/-3 until end of turn.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "56",
+   "scryfall_id": "2381d123-d8c7-4822-98fe-b1c365beb5ed",
+   "image_url": "https://cards.scryfall.io/normal/front/2/3/2381d123-d8c7-4822-98fe-b1c365beb5ed.jpg?1789127524",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Efficient reprint removal, -3/-3 for 2 mana that consistently trades up."
+  },
+  {
+   "name": "Loot, the Anomaly",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Beast Horror",
+   "oracle_text": "If Loot's power is negative, he assigns combat damage as though his power were positive.\nThreshold — Sacrifice another creature or planeswalker: Loot gets -2/-0 until end of turn. Activate only if there are seven or more cards in your graveyard.",
+   "power": "-2",
+   "toughness": "4",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "232",
+   "scryfall_id": "4f6fd2fa-8bc8-4743-bbc8-b56475d64eff",
+   "image_url": "https://cards.scryfall.io/normal/front/4/f/4f6fd2fa-8bc8-4743-bbc8-b56475d64eff.jpg?1789568430",
+   "marshall": null,
+   "luis": "D",
+   "tag": null,
+   "note": "Threshold-gated sacrifice outlet is unreliable and the set doesn't support a sacrifice deck enough to make it good."
+  },
+  {
+   "name": "Mabel, Bitter Recluse",
+   "mana_cost": "{B}",
+   "cmc": 1,
+   "type_line": "Legendary Creature — Mouse Warlock",
+   "oracle_text": "Deathtouch\nWhen Mabel enters, remove up to three counters from another target creature or planeswalker.",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "233",
+   "scryfall_id": "b2a412b0-2ae4-4552-bc5e-70654b6b9b4e",
+   "image_url": "https://cards.scryfall.io/normal/front/b/2/b2a412b0-2ae4-4552-bc5e-70654b6b9b4e.jpg?1789385677",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "1-mana 1/1 deathtouch that strips counters, especially good at killing Jace planeswalker tokens."
+  },
+  {
+   "name": "Massacre Girl, Most Wanted",
+   "mana_cost": "{4}{B}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Human Assassin",
+   "oracle_text": "Whenever another creature or planeswalker you control dies, Massacre Girl deals 1 damage to target opponent and you gain 1 life.\nWhenever an opponent is dealt noncombat damage, put a +1/+1 counter on Massacre Girl.",
+   "power": "4",
+   "toughness": "4",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "234",
+   "scryfall_id": "9028d31f-9c41-47e3-885b-6a869bca8178",
+   "image_url": "https://cards.scryfall.io/normal/front/9/0/9028d31f-9c41-47e3-885b-6a869bca8178.jpg?1789644882",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "A huge threat that punishes opponents whenever your creatures or planeswalkers die, dangerous if it survives removal."
+  },
+  {
+   "name": "Multiply by Zero",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Target creature has base power and toughness 0/0 until end of turn.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "58",
+   "scryfall_id": "90d684a4-9639-4792-8760-2011a7a85370",
+   "image_url": "https://cards.scryfall.io/normal/front/9/0/90d684a4-9639-4792-8760-2011a7a85370.jpg?1789644823",
+   "marshall": "B",
+   "luis": null,
+   "tag": null,
+   "note": "2-mana instant-speed removal setting power/toughness to 0/0, blanked only by +1/+1 counters."
+  },
+  {
+   "name": "Proft, Sinister Mastermind",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Rogue",
+   "oracle_text": "Threshold — You can't cast this spell unless there are seven or more cards in your graveyard.\nMenace\n{B}, Discard this card: Target creature gets -3/-1 until end of turn.",
+   "power": "5",
+   "toughness": "5",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "235",
+   "scryfall_id": "d36b0e06-cb82-4c48-bf35-e76f109116f6",
+   "image_url": "https://cards.scryfall.io/normal/front/d/3/d36b0e06-cb82-4c48-bf35-e76f109116f6.jpg?1789127196",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Even without threshold it doubles as a fine removal spell, and once enabled it's a cheap 5/5 menace."
+  },
+  {
+   "name": "Rampart Hunter",
+   "mana_cost": "{3}{B}",
+   "cmc": 4,
+   "type_line": "Creature — Horror",
+   "oracle_text": "Deathtouch\nWhen this creature enters, target creature gets +2/+2 and gains deathtouch until end of turn.",
+   "power": "3",
+   "toughness": "3",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "60",
+   "scryfall_id": "f4a80225-7459-4151-86bb-8fdea31c39a6",
+   "image_url": "https://cards.scryfall.io/normal/front/f/4/f4a80225-7459-4151-86bb-8fdea31c39a6.jpg?1789127211",
+   "marshall": "D",
+   "luis": "D",
+   "tag": null,
+   "note": "A clean, on-color effect but just not powerful enough to matter."
+  },
+  {
+   "name": "Rank Rat",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Creature — Zombie Rat",
+   "oracle_text": "When this creature enters, each opponent discards a card.",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "61",
+   "scryfall_id": "4ff6da82-d7dd-4b59-b7e6-30670cea7169",
+   "image_url": "https://cards.scryfall.io/normal/front/4/f/4ff6da82-d7dd-4b59-b7e6-30670cea7169.jpg?1789556727",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "1-mana 1/1 that makes the opponent discard, a reliably solid Ravenous Rats variant."
+  },
+  {
+   "name": "Rewrite Regrets",
+   "mana_cost": "{3}{B}",
+   "cmc": 4,
+   "type_line": "Sorcery",
+   "oracle_text": "Return target creature or planeswalker card with mana value 6 or less from your graveyard to the battlefield.\nEmpower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "62",
+   "scryfall_id": "453cfde7-c460-4b55-9472-b714e16f24bb",
+   "image_url": "https://cards.scryfall.io/normal/front/4/5/453cfde7-c460-4b55-9472-b714e16f24bb.jpg?1788952087",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "Reanimation plus empower 2 is good value, especially with self-mill support fueling the graveyard."
+  },
+  {
+   "name": "Screeching Soulbreaker",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Creature — Siren Bard",
+   "oracle_text": "Flying\nWhenever this creature attacks, it deals 1 damage to each opponent and you gain 1 life.",
+   "power": "1",
+   "toughness": "4",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "65",
+   "scryfall_id": "738667a1-c184-43ea-829f-49fbb69b6fc0",
+   "image_url": "https://cards.scryfall.io/normal/front/7/3/738667a1-c184-43ea-829f-49fbb69b6fc0.jpg?1789385960",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "A 3-mana 1/4 flyer that pings for 2 and gains a life on attack is solid value."
+  },
+  {
+   "name": "Silence the Echo",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Sorcery",
+   "oracle_text": "As an additional cost to cast this spell, sacrifice a creature or planeswalker or pay {3}.\nDestroy target creature or planeswalker.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "66",
+   "scryfall_id": "f1d274db-751b-4414-a38d-762198168e91",
+   "image_url": "https://cards.scryfall.io/normal/front/f/1/f1d274db-751b-4414-a38d-762198168e91.jpg?1789385640",
+   "marshall": "C",
+   "luis": null,
+   "tag": null,
+   "note": "5-mana sorcery-speed removal that drops to 2 mana if you sacrifice a creature or planeswalker."
+  },
+  {
+   "name": "Solve for Disappointment",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Sorcery",
+   "oracle_text": "Target opponent reveals their hand. You choose a nonland permanent card from it. That player discards that card.\nEmpower Jace 1. (Put a loyalty counter on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "67",
+   "scryfall_id": "7beaa8c9-1a2c-4c88-b579-91e371d8d9e3",
+   "image_url": "https://cards.scryfall.io/normal/front/7/b/7beaa8c9-1a2c-4c88-b579-91e371d8d9e3.jpg?1788878155",
+   "marshall": "D-",
+   "luis": null,
+   "tag": null,
+   "note": "Missing the discard turns a cheap edict-style effect into a disaster, best against decks with big permanents."
+  },
+  {
+   "name": "Terminal Criticism",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Destroy target creature or planeswalker that's blue or red. You gain 1 life.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "68",
+   "scryfall_id": "7ebd7e38-b27c-4c6e-aaea-e8ee5ba5e5df",
+   "image_url": "https://cards.scryfall.io/normal/front/7/e/7ebd7e38-b27c-4c6e-aaea-e8ee5ba5e5df.jpg?1789470810",
+   "marshall": "B",
+   "luis": "B",
+   "tag": "sideboard",
+   "note": "Solid removal but color-restricted to blue or red, so it's mainly a sideboard card."
+  },
+  {
+   "name": "Teyo, Diamondblade Mage",
+   "mana_cost": "{3}{B}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Warlock",
+   "oracle_text": "Flash\nWhen Teyo enters, target permanent you control gains deathtouch until end of turn. Put a +1/+1 counter on it if it's a creature. Put a loyalty counter on it if it's a planeswalker.",
+   "power": "3",
+   "toughness": "1",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "236",
+   "scryfall_id": "100c3b67-0c92-4224-b5ed-67789c612df7",
+   "image_url": "https://cards.scryfall.io/normal/front/1/0/100c3b67-0c92-4224-b5ed-67789c612df7.jpg?1789470892",
+   "marshall": "D",
+   "luis": "D",
+   "tag": null,
+   "note": "Flash deathtouch/counter is fine but a 3/1 body for 4 mana underwhelms."
+  },
+  {
+   "name": "Theoretical Necromancer",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Creature — Vampire Warlock",
+   "oracle_text": "{3}{B}, Exile this card from your graveyard: Return another target creature card from your graveyard to your hand.",
+   "power": "4",
+   "toughness": "1",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "69",
+   "scryfall_id": "e36a7908-1e22-494b-adb4-e72ac0974d62",
+   "image_url": "https://cards.scryfall.io/normal/front/e/3/e36a7908-1e22-494b-adb4-e72ac0974d62.jpg?1789556734",
+   "marshall": "D+",
+   "luis": "D+",
+   "tag": null,
+   "note": "Dies easily and the 4-mana Raise Dead ability is expensive, feels unpushed on both ends."
+  },
+  {
+   "name": "Tinybones, Pocket Nuisance",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Skeleton Rogue",
+   "oracle_text": "When Tinybones enters, each opponent discards a card.\nWhenever a player discards one or more cards, Tinybones deals 1 damage to each opponent.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "237",
+   "scryfall_id": "2f47ddf7-35b6-4205-8045-f057914c5f64",
+   "image_url": "https://cards.scryfall.io/normal/front/2/f/2f47ddf7-35b6-4205-8045-f057914c5f64.jpg?1788329294",
+   "marshall": "C",
+   "luis": "C+",
+   "tag": null,
+   "note": "A better body than the 1-mana discard rat, trades with real creatures and pings repeatedly on future discards."
+  },
+  {
+   "name": "Void Extrapolator // Omit Variables",
+   "mana_cost": "{1}{B} // {U/B}",
+   "cmc": 2,
+   "type_line": "Creature — Aetherborn Warlock // Sorcery",
+   "oracle_text": "Void Extrapolator — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nThreshold — This creature gets +1/+1 as long as there are seven or more cards in your graveyard.\n//\nOmit Variables — Mill three cards. (Put the top three cards of your library into your graveyard.)",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B",
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "70",
+   "scryfall_id": "0eae2efb-bf25-48ee-9c07-9098008110ad",
+   "image_url": "https://cards.scryfall.io/normal/front/0/e/0eae2efb-bf25-48ee-9c07-9098008110ad.jpg?1789556787",
+   "marshall": "C",
+   "luis": null,
+   "tag": null,
+   "note": "Efficient 2-mana 2/2 with Threshold upside, best as an enabler in blue-black self-mill."
+  },
+  {
+   "name": "Way of the Deathbringer",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Deathbringer enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−2]: You may sacrifice a creature. If you do, create a 4/4 green Beast creature token with trample.\"",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "238",
+   "scryfall_id": "12dd46b2-e892-4660-b120-55766fd4d878",
+   "image_url": "https://cards.scryfall.io/normal/front/1/2/12dd46b2-e892-4660-b120-55766fd4d878.jpg?1789729576",
+   "marshall": "C",
+   "luis": "C",
+   "tag": "build-around",
+   "note": "Replaces itself and can upgrade a bad creature into a 4/4, but only a good deal with expendable sacrifice fodder."
+  },
+  {
+   "name": "Way of the Necromancer",
+   "mana_cost": "{1}{B}",
+   "cmc": 2,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Necromancer enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nWhenever a creature you control dies, put a loyalty counter on each planeswalker you control.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "239",
+   "scryfall_id": "a0ff9689-ea49-4fff-b37c-4abbaeb0f73d",
+   "image_url": "https://cards.scryfall.io/normal/front/a/0/a0ff9689-ea49-4fff-b37c-4abbaeb0f73d.jpg?1789729526",
+   "marshall": "D",
+   "luis": "C",
+   "tag": "build-around",
+   "note": "Only good if heavily invested in the empower/loyalty-counter theme, mediocre otherwise."
+  },
+  {
+   "name": "Winter, Tormented Loner",
+   "mana_cost": "{2}{B}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Warlock",
+   "oracle_text": "When Winter enters, you may sacrifice a creature or planeswalker. When you do, each opponent sacrifices a creature of their choice.\nWinter gets +1/+0 for each creature and planeswalker card in your graveyard.",
+   "power": "0",
+   "toughness": "3",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "240",
+   "scryfall_id": "9670f754-f41f-45ac-8e8b-025ad2c0f66b",
+   "image_url": "https://cards.scryfall.io/normal/front/9/6/9670f754-f41f-45ac-8e8b-025ad2c0f66b.jpg?1789127724",
+   "marshall": null,
+   "luis": "C+",
+   "tag": "build-around",
+   "note": "At worst an Edict effect; good if you have sacrifice fodder like small tokens, mediocre without it."
+  },
+  {
+   "name": "Yargle, Glutton of Urborg",
+   "mana_cost": "{4}{B}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Frog Spirit",
+   "oracle_text": "",
+   "power": "9",
+   "toughness": "3",
+   "colors": [
+    "B"
+   ],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "241",
+   "scryfall_id": "04c816fb-5951-4db1-8834-ed3f0b36bfe1",
+   "image_url": "https://cards.scryfall.io/normal/front/0/4/04c816fb-5951-4db1-8834-ed3f0b36bfe1.jpg?1789127722",
+   "marshall": "D",
+   "luis": "D",
+   "tag": null,
+   "note": "The reprinted vanilla giant doesn't play well without evasion or protection."
+  },
+  {
+   "name": "Arni, Renowned Champion",
+   "mana_cost": "{3}{R}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Berserker",
+   "oracle_text": "Trample\nWhenever another creature you control enters, Arni gets +X/+0 until end of turn, where X is that creature's power.",
+   "power": "1",
+   "toughness": "5",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "243",
+   "scryfall_id": "bd8db649-1dba-457d-8327-e1f1da1aab36",
+   "image_url": "https://cards.scryfall.io/normal/front/b/d/bd8db649-1dba-457d-8327-e1f1da1aab36.jpg?1789557035",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "1/5 trample that grows on other creatures entering, swingy and a bit win-more but has upside."
+  },
+  {
+   "name": "Artifist Acumen",
+   "mana_cost": "{R}",
+   "cmc": 1,
+   "type_line": "Sorcery",
+   "oracle_text": "Creatures you control gain first strike until end of turn.\nDraw a card.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "73",
+   "scryfall_id": "7d3b720d-f27c-462a-8f80-15748e5086e1",
+   "image_url": "https://cards.scryfall.io/normal/front/7/d/7d3b720d-f27c-462a-8f80-15748e5086e1.jpg?1789729762",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": "A prowess-enabling draw spell; both agree it's only worth considering in a dedicated prowess deck and otherwise unplayable, no letter grade given."
+  },
+  {
+   "name": "Awaken the Inferno",
+   "mana_cost": "{4}{R}",
+   "cmc": 5,
+   "type_line": "Sorcery",
+   "oracle_text": "Awaken the Inferno deals 6 damage to target creature or planeswalker an opponent controls. Put a +1/+1 counter on up to one target creature you control.\nBasic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "74",
+   "scryfall_id": "c596c4ec-8480-4be9-a45d-700398a126f6",
+   "image_url": "https://cards.scryfall.io/normal/front/c/5/c596c4ec-8480-4be9-a45d-700398a126f6.jpg?1789556812",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "5-mana removal that also pumps your own creature and basic land cycles when not needed."
+  },
+  {
+   "name": "Blazing Crescendo",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Target creature gets +3/+1 until end of turn.\nExile the top card of your library. Until the end of your next turn, you may play that card.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "75",
+   "scryfall_id": "8414a98c-0c79-4884-bc9b-061a6456b392",
+   "image_url": "https://cards.scryfall.io/normal/front/8/4/8414a98c-0c79-4884-bc9b-061a6456b392.jpg?1789060147",
+   "marshall": "C-",
+   "luis": "D",
+   "tag": null,
+   "note": "A replaceable combat trick that impulse-draws a card, but lacking trample hurts it against planeswalkers."
+  },
+  {
+   "name": "Chandra's Emberling",
+   "mana_cost": "{2}{R}",
+   "cmc": 3,
+   "type_line": "Creature — Gremlin Elemental",
+   "oracle_text": "Haste\nWhenever you cast a noncreature spell, put a +1/+1 counter on this creature.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "76",
+   "scryfall_id": "3a64c5f4-9cfc-4d19-bd99-13d619b1aa9d",
+   "image_url": "https://cards.scryfall.io/normal/front/3/a/3a64c5f4-9cfc-4d19-bd99-13d619b1aa9d.jpg?1789385708",
+   "marshall": "C",
+   "luis": "D",
+   "tag": null,
+   "note": "Marshall gives an optimistic C for the 2/2 haste counter-prowess common; Luis says probably a D, dislikes the haste and doubts the archetype's speed."
+  },
+  {
+   "name": "Command the Stage",
+   "mana_cost": "{2}{R}",
+   "cmc": 3,
+   "type_line": "Sorcery",
+   "oracle_text": "Create a 2/2 colorless Wizard Soldier creature token named Cadet, then put a +1/+1 counter on each other Wizard token you control.\nAt the beginning of each upkeep, if an opponent was dealt noncombat damage last turn, return this card from your graveyard to your hand.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "77",
+   "scryfall_id": "f3307da2-6dad-4ef2-9614-a7d34f38088e",
+   "image_url": "https://cards.scryfall.io/normal/front/f/3/f3307da2-6dad-4ef2-9614-a7d34f38088e.jpg?1789644825",
+   "marshall": "C+",
+   "luis": null,
+   "tag": "build-around",
+   "note": "Fun build-around for a prowess/token deck that returns itself, but a low-power 3-mana 2/2 at face value."
+  },
+  {
+   "name": "Eardrum Rattler",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Creature — Human Bard",
+   "oracle_text": "{1}, {T}: Another target creature you control with power 2 or less can't be blocked this turn.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "81",
+   "scryfall_id": "5f8771f9-8128-4818-a11d-41ea368cf697",
+   "image_url": "https://cards.scryfall.io/normal/front/5/f/5f8771f9-8128-4818-a11d-41ea368cf697.jpg?1789127173",
+   "marshall": "D+",
+   "luis": "D+",
+   "tag": null,
+   "note": "A cheap unblockable-enabler that's mediocre generally but notably good at pushing damage through to kill planeswalkers."
+  },
+  {
+   "name": "Essence Burn",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Essence Burn deals 5 damage to target black or green creature or planeswalker. If that permanent would die this turn, exile it instead.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "82",
+   "scryfall_id": "d2e958de-70de-4156-8f9b-b2c0c1ba704a",
+   "image_url": "https://cards.scryfall.io/normal/front/d/2/d2e958de-70de-4156-8f9b-b2c0c1ba704a.jpg?1789470825",
+   "marshall": "B",
+   "luis": "B",
+   "tag": "sideboard",
+   "note": "Efficient exile removal for black or green threats, but too narrow to maindeck."
+  },
+  {
+   "name": "Fulminous Forte",
+   "mana_cost": "{2}{R}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Fulminous Forte deals 1 damage to each creature and planeswalker your opponents control.\n• Fulminous Forte deals 5 damage to target creature or planeswalker.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "84",
+   "scryfall_id": "19acb2b5-3b3e-43f0-bd81-8426ed3d9c55",
+   "image_url": "https://cards.scryfall.io/normal/front/1/9/19acb2b5-3b3e-43f0-bd81-8426ed3d9c55.jpg?1789614832",
+   "marshall": "B",
+   "luis": null,
+   "tag": null,
+   "note": "3-mana instant that can deal 5 damage to a creature or planeswalker, occasionally a board wipe mode."
+  },
+  {
+   "name": "Gallia, the Merrymaker",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Satyr",
+   "oracle_text": "Haste\nEach other creature you control with a +1/+1 counter on it has haste.\n{1}{R}, {T}: Put a +1/+1 counter on target creature that entered this turn.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "245",
+   "scryfall_id": "f27d50f0-d76e-4ce1-a8d9-d997af6a5b41",
+   "image_url": "https://cards.scryfall.io/normal/front/f/2/f27d50f0-d76e-4ce1-a8d9-d997af6a5b41.jpg?1789385716",
+   "marshall": "C-",
+   "luis": "C",
+   "tag": null,
+   "note": "A haste lord that can also grant haste and a counter, but the activated ability costs too much mana to use often."
+  },
+  {
+   "name": "Hallway Heckler // Vicious Verse",
+   "mana_cost": "{2}{R} // {B/R}",
+   "cmc": 3,
+   "type_line": "Creature — Elemental Sorcerer // Sorcery",
+   "oracle_text": "Hallway Heckler — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n{T}, Discard a card: Draw a card.\n//\nVicious Verse — Vicious Verse deals 1 damage to target opponent.",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "B",
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "85",
+   "scryfall_id": "7e324816-552f-455d-97c4-5ea6b26d2e6e",
+   "image_url": "https://cards.scryfall.io/normal/front/7/e/7e324816-552f-455d-97c4-5ea6b26d2e6e.jpg?1789127576",
+   "marshall": "C",
+   "luis": null,
+   "tag": null,
+   "note": "A rummaging ability plus a cheap prepared burn spell gives it enough value for a bread-and-butter common."
+  },
+  {
+   "name": "Heartstring Puller",
+   "mana_cost": "{3}{R}",
+   "cmc": 4,
+   "type_line": "Creature — Elf Sorcerer",
+   "oracle_text": "Trample\nWhen this creature enters, create a 2/2 colorless Wizard Soldier creature token named Cadet.",
+   "power": "3",
+   "toughness": "1",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "86",
+   "scryfall_id": "cbfe3354-7ced-4773-9a4e-a937ae9f94f8",
+   "image_url": "https://cards.scryfall.io/normal/front/c/b/cbfe3354-7ced-4773-9a4e-a937ae9f94f8.jpg?1789556808",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "3/1 trample for 4 that also makes a 2/2 token on entry, unusually strong for a common."
+  },
+  {
+   "name": "Jiang Yanggu, Alone",
+   "mana_cost": "{4}{R}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Human Berserker",
+   "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nWhenever a creature you control attacks a player alone, discard a card, then draw a card. Then put a +1/+1 counter on that creature for each card you've discarded this turn.",
+   "power": "4",
+   "toughness": "4",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "246",
+   "scryfall_id": "e8c1ce21-b77d-40bf-9ed1-478604e71f5f",
+   "image_url": "https://cards.scryfall.io/normal/front/e/8/e8c1ce21-b77d-40bf-9ed1-478604e71f5f.jpg?1789014416",
+   "marshall": "B-",
+   "luis": "C+",
+   "tag": null,
+   "note": "5-mana 4/4 menace that loots and grows when attacking alone, good the turn it's cast."
+  },
+  {
+   "name": "Kiora of Fire and Ashes",
+   "mana_cost": "{4}{R}{R}",
+   "cmc": 6,
+   "type_line": "Legendary Creature — Merfolk Noble",
+   "oracle_text": "When Kiora enters, create a 5/5 red Dragon creature token with flying.\n{8}: Create a 5/5 red Dragon creature token with flying.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "247",
+   "scryfall_id": "08657053-86f9-4c52-abf0-d9cdd443ae3b",
+   "image_url": "https://cards.scryfall.io/normal/front/0/8/08657053-86f9-4c52-abf0-d9cdd443ae3b.jpg?1789127995",
+   "marshall": "B+",
+   "luis": null,
+   "tag": null,
+   "note": "6 mana for a 2/2 plus a 5/5 flying dragon token, with a repeatable ability to make more dragons."
+  },
+  {
+   "name": "Koth, the Geomancer",
+   "mana_cost": "{2}{R}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Warrior",
+   "oracle_text": "Reach\nLandfall — Whenever a land you control enters, Koth deals 1 damage to each opponent. If that land is a Mountain, add {R}.",
+   "power": "3",
+   "toughness": "2",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "248",
+   "scryfall_id": "54f64e95-5a97-4d7c-9939-7f33a3165562",
+   "image_url": "https://cards.scryfall.io/normal/front/5/4/54f64e95-5a97-4d7c-9939-7f33a3165562.jpg?1789470892",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "3/2 reach that pings opponents and can add mana off landfalled mountains, a scary threat to answer."
+  },
+  {
+   "name": "Marwyn, the Clearcutter",
+   "mana_cost": "{R}",
+   "cmc": 1,
+   "type_line": "Legendary Creature — Elf Warrior",
+   "oracle_text": "{2}, {T}, Sacrifice an artifact or land: Draw a card.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "249",
+   "scryfall_id": "f93da73c-ca8b-438e-8387-6109dac3fc1a",
+   "image_url": "https://cards.scryfall.io/normal/front/f/9/f93da73c-ca8b-438e-8387-6109dac3fc1a.jpg?1789644549",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "Efficient 1-mana 2/1 with a solid late-game card-draw sacrifice ability."
+  },
+  {
+   "name": "No Admittance",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Sorcery",
+   "oracle_text": "No Admittance deals 3 damage to any target.\nEmpower Jace 1. (Put a loyalty counter on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "89",
+   "scryfall_id": "11ba4fdd-cc03-4bb6-a493-91a9785771d0",
+   "image_url": "https://cards.scryfall.io/normal/front/1/1/11ba4fdd-cc03-4bb6-a493-91a9785771d0.jpg?1788878170",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Efficient burn that also empowers Jace, an easy include."
+  },
+  {
+   "name": "Pia, Determined Rebuilder",
+   "mana_cost": "{2}{R}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Artificer",
+   "oracle_text": "When Pia enters, create a 1/1 colorless Thopter artifact creature token with flying.\n{5}{R}: Target creature gets +X/+0 until end of turn, where X is the number of artifacts you control.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "250",
+   "scryfall_id": "dd3faaf4-45ca-4714-8dbe-37102ec131cf",
+   "image_url": "https://cards.scryfall.io/normal/front/d/d/dd3faaf4-45ca-4714-8dbe-37102ec131cf.jpg?1789385851",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "2/2 for 3 that makes a 1/1 flying Thopter, plus a scalable late-game pump ability off artifacts."
+  },
+  {
+   "name": "Skilled Battlecarver",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Creature — Human Warrior",
+   "oracle_text": "During your turn, this creature has first strike.\n{1}{R}: This creature gets +1/+0 until end of turn.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "92",
+   "scryfall_id": "0e44f959-1322-4abd-b6eb-dea992307c0c",
+   "image_url": "https://cards.scryfall.io/normal/front/0/e/0e44f959-1322-4abd-b6eb-dea992307c0c.jpg?1789556811",
+   "marshall": "C-",
+   "luis": "C-",
+   "tag": null,
+   "note": "The threat of its pump ability makes it an awkward attacker to block despite being a modest 2/1."
+  },
+  {
+   "name": "Tether Technician",
+   "mana_cost": "{4}{R}",
+   "cmc": 5,
+   "type_line": "Creature — Minotaur Artificer",
+   "oracle_text": "Reach\nWhen this creature enters, you may discard a card. When you do, this creature deals 2 damage to any target.",
+   "power": "4",
+   "toughness": "5",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "94",
+   "scryfall_id": "b75bbf46-a421-467a-9433-6cf22398a3a5",
+   "image_url": "https://cards.scryfall.io/normal/front/b/7/b75bbf46-a421-467a-9433-6cf22398a3a5.jpg?1789556839",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "5-mana 4/5 reach that can discard a card to deal 2 damage to any target on entry."
+  },
+  {
+   "name": "Tetsuko Umezawa, Pursuer",
+   "mana_cost": "{3}{R}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Mercenary",
+   "oracle_text": "Double strike\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nWhenever a creature an opponent controls with power or toughness 1 or less blocks, Tetsuko Umezawa deals 1 damage to that creature's controller.",
+   "power": "2",
+   "toughness": "4",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "252",
+   "scryfall_id": "df818900-ce5e-4b0d-a927-c975cbef7eda",
+   "image_url": "https://cards.scryfall.io/normal/front/d/f/df818900-ce5e-4b0d-a927-c975cbef7eda.jpg?1789128002",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "2/4 double strike and prowess that pings small blockers, hits hard and is tough to block profitably."
+  },
+  {
+   "name": "Tomik, Izzet Sparkmage",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Human Wizard",
+   "oracle_text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nIf a source you control would deal noncombat damage to an opponent or a permanent an opponent controls, it deals that much damage plus 1 instead.",
+   "power": "1",
+   "toughness": "2",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "253",
+   "scryfall_id": "5c5afd5f-6f37-4c3e-83f0-68fdcea98810",
+   "image_url": "https://cards.scryfall.io/normal/front/5/c/5c5afd5f-6f37-4c3e-83f0-68fdcea98810.jpg?1789729773",
+   "marshall": null,
+   "luis": "B",
+   "tag": "build-around",
+   "note": "Boosts repeatable noncombat damage sources, especially good alongside the black-red 'deal 1' Prepare cards."
+  },
+  {
+   "name": "Violent Echoes",
+   "mana_cost": "{2}{R}{R}",
+   "cmc": 4,
+   "type_line": "Instant",
+   "oracle_text": "Violent Echoes deals 6 damage to target creature or planeswalker. If excess damage was dealt to that permanent this way, empower Jace X, where X is that excess damage. (Put that many loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "95",
+   "scryfall_id": "ad03ba90-2442-4a71-94df-2088b5b63662",
+   "image_url": "https://cards.scryfall.io/normal/front/a/d/ad03ba90-2442-4a71-94df-2088b5b63662.jpg?1789127599",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Instant-speed 6 damage that turns excess damage into planeswalker loyalty, effectively a clean 2-for-1."
+  },
+  {
+   "name": "Way of the Pyromancer",
+   "mana_cost": "{1}{R}",
+   "cmc": 2,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Pyromancer enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[+1]: Add {R}.\"",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "254",
+   "scryfall_id": "c1a00020-7c14-4503-a057-5763704bb83e",
+   "image_url": "https://cards.scryfall.io/normal/front/c/1/c1a00020-7c14-4503-a057-5763704bb83e.jpg?1788878311",
+   "marshall": "C+",
+   "luis": "B",
+   "tag": null,
+   "note": "Empowers Jace 2 and gives planeswalkers a mana-ramping loyalty ability, strong early though weaker if drawn late."
+  },
+  {
+   "name": "Way of the Warlord",
+   "mana_cost": "{2}{R}",
+   "cmc": 3,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Warlord enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−4]: This planeswalker deals 2 damage to up to one target creature or planeswalker and 2 damage to target player.\"",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "255",
+   "scryfall_id": "6d86e410-20c4-4248-96bf-5780ece6274a",
+   "image_url": "https://cards.scryfall.io/normal/front/6/d/6d86e410-20c4-4248-96bf-5780ece6274a.jpg?1789729585",
+   "marshall": null,
+   "luis": "B",
+   "tag": null,
+   "note": "3-mana instant-speed removal for a planeswalker that deals 2 to a creature and 2 to the player."
+  },
+  {
+   "name": "Winter, Team Player",
+   "mana_cost": "{4}{R}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Human Warrior",
+   "oracle_text": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nWhenever you cast a noncreature spell, creatures you control get +1/+0 until end of turn.",
+   "power": "3",
+   "toughness": "3",
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "256",
+   "scryfall_id": "df8713cd-3f4b-43ef-adbd-e37c2617c617",
+   "image_url": "https://cards.scryfall.io/normal/front/d/f/df8713cd-3f4b-43ef-adbd-e37c2617c617.jpg?1789128020",
+   "marshall": "C",
+   "luis": null,
+   "tag": null,
+   "note": "Convoke lets you cast it cheaply and it pumps the team on noncreature spells, but wants a build-around deck."
+  },
+  {
+   "name": "Wrath of the Bloodmane",
+   "mana_cost": "{2}{R}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "This spell costs {1} less to cast if you control a legendary creature.\nWrath of the Bloodmane deals 4 damage to target creature or planeswalker.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R"
+   ],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "96",
+   "scryfall_id": "b5b55617-684a-4036-be9b-a3b24fc9cd5a",
+   "image_url": "https://cards.scryfall.io/normal/front/b/5/b5b55617-684a-4036-be9b-a3b24fc9cd5a.jpg?1789385820",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Instant-speed 4 damage to a creature or planeswalker, cost reduced to 2 mana with a legendary creature out."
+  },
+  {
+   "name": "Arcane Amphisbaena",
+   "mana_cost": "{1}{G}",
+   "cmc": 2,
+   "type_line": "Creature — Snake",
+   "oracle_text": "Deathtouch\nWhen this creature enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "97",
+   "scryfall_id": "1bf923c4-f0b7-4271-978c-fd2e79fe1cc8",
+   "image_url": "https://cards.scryfall.io/normal/front/1/b/1bf923c4-f0b7-4271-978c-fd2e79fe1cc8.jpg?1788878190",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "1-mana deathtouch snake that also empowers Jace, giving value or protection."
+  },
+  {
+   "name": "Bestial Incursion",
+   "mana_cost": "{3}{G}",
+   "cmc": 4,
+   "type_line": "Sorcery",
+   "oracle_text": "Create a 4/4 green Beast creature token with trample.\nFlashback {5}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "98",
+   "scryfall_id": "e0de5f66-f0df-4866-9f73-104ce50411b4",
+   "image_url": "https://cards.scryfall.io/normal/front/e/0/e0de5f66-f0df-4866-9f73-104ce50411b4.jpg?1789127248",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "4-mana 4/4 trample with flashback 6; trample helps punch through token blockers."
+  },
+  {
+   "name": "Budding Insurgent",
+   "mana_cost": "{2}{G}",
+   "cmc": 3,
+   "type_line": "Creature — Dryad Scout",
+   "oracle_text": "Vigilance\nSacrifice this creature: Destroy target artifact or enchantment. If that permanent was a legendary enchantment, draw a card. Activate only as a sorcery.",
+   "power": "3",
+   "toughness": "3",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "99",
+   "scryfall_id": "18c59d60-2640-4576-9375-3ba38aa3ecb7",
+   "image_url": "https://cards.scryfall.io/normal/front/1/8/18c59d60-2640-4576-9375-3ba38aa3ecb7.jpg?1789127120",
+   "marshall": "C-",
+   "luis": "D+",
+   "tag": null,
+   "note": "3-mana 3/3 vigilance that can sac to destroy an artifact/enchantment, but feels off-brand in this synergy-heavy set."
+  },
+  {
+   "name": "Compel Brutality",
+   "mana_cost": "{1}{G}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Target creature you control deals damage equal to its power to target creature or planeswalker an opponent controls.\n• Target planeswalker you control deals damage equal to its loyalty to target creature or planeswalker an opponent controls.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "101",
+   "scryfall_id": "bd32d736-7a58-46b9-90b4-2cac3c3e80a1",
+   "image_url": "https://cards.scryfall.io/normal/front/b/d/bd32d736-7a58-46b9-90b4-2cac3c3e80a1.jpg?1788521235",
+   "marshall": "C+",
+   "luis": null,
+   "tag": null,
+   "note": "Instant-speed bite or loyalty-damage removal that fits green well and lets Jace's loyalty deal damage too."
+  },
+  {
+   "name": "Edgar, Moonlit Sovereign",
+   "mana_cost": "{3}{G}{G}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Werewolf Noble",
+   "oracle_text": "Flash\nAt the beginning of your end step, if you didn't cast a spell this turn, put two +1/+1 counters on Edgar.\n{4}{G}: Put a +1/+1 counter on each creature you control with a +1/+1 counter on it.",
+   "power": "4",
+   "toughness": "4",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "257",
+   "scryfall_id": "dad6afc9-8505-4cdd-bf79-e9ba4670f2bb",
+   "image_url": "https://cards.scryfall.io/normal/front/d/a/dad6afc9-8505-4cdd-bf79-e9ba4670f2bb.jpg?1789127966",
+   "marshall": "B",
+   "luis": "B-",
+   "tag": null,
+   "note": "Flash 4/4 that can ambush an attacker and grow with counters, though not hugely better than a vanilla flash 4/4."
+  },
+  {
+   "name": "Fblthp, Knows the Way",
+   "mana_cost": "{X}{G}{G}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Homunculus Scout",
+   "oracle_text": "Domain — Fblthp's power is equal to the number of basic land types among lands you control.\nWhen Fblthp enters, search your library for up to X basic land cards with different names, reveal them, put them into your hand, then shuffle.",
+   "power": "*",
+   "toughness": "2",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "258",
+   "scryfall_id": "28fbb55a-5c9d-45ee-bf42-a84b1048f5d2",
+   "image_url": "https://cards.scryfall.io/normal/front/2/8/28fbb55a-5c9d-45ee-bf42-a84b1048f5d2.jpg?1789127976",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": null,
+   "note": "Domain payoff that fetches basics to hand on ETB; overperforms even in two-color decks and helps splashes."
+  },
+  {
+   "name": "Flourishing Grapple",
+   "mana_cost": "{G}",
+   "cmc": 1,
+   "type_line": "Instant",
+   "oracle_text": "Target creature or planeswalker an opponent controls that's red or white loses all abilities until end of turn. Target creature you control deals damage equal to its power to that permanent.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "102",
+   "scryfall_id": "f71958e9-6d6d-4393-8b49-567103b50877",
+   "image_url": "https://cards.scryfall.io/normal/front/f/7/f71958e9-6d6d-4393-8b49-567103b50877.jpg?1789470852",
+   "marshall": null,
+   "luis": "B",
+   "tag": "sideboard",
+   "note": "Confusingly worded but really just instant-speed bite with a narrow ability-strip upside against red or white."
+  },
+  {
+   "name": "Ghalta the Unstoppable",
+   "mana_cost": "{8}{G}",
+   "cmc": 9,
+   "type_line": "Legendary Creature — Elder Dinosaur",
+   "oracle_text": "This spell costs {X} less to cast, where X is the greatest power among creatures you control.\nTrample\nOther creatures you control have trample.",
+   "power": "8",
+   "toughness": "8",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "260",
+   "scryfall_id": "1d535b5f-c916-4f16-89a7-9477578826d2",
+   "image_url": "https://cards.scryfall.io/normal/front/1/d/1d535b5f-c916-4f16-89a7-9477578826d2.jpg?1788878290",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "Cost reduced by your biggest creature's power; getting it out for 4-5 mana feels like a steal."
+  },
+  {
+   "name": "Greenhouse Propagator",
+   "mana_cost": "{2}{G}",
+   "cmc": 3,
+   "type_line": "Creature — Cat Druid",
+   "oracle_text": "Whenever another creature you control enters, you gain 1 life.\n{T}: Add {G}.",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "104",
+   "scryfall_id": "a56e0f91-b128-4693-a949-53cb403f4fbf",
+   "image_url": "https://cards.scryfall.io/normal/front/a/5/a56e0f91-b128-4693-a949-53cb403f4fbf.jpg?1789127136",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "Mana ramp creature that also gains life whenever another creature enters, nice even without synergies."
+  },
+  {
+   "name": "Heartwood Crafter // Soul Tether",
+   "mana_cost": "{G} // {2}{R/G}",
+   "cmc": 1,
+   "type_line": "Creature — Elf Artificer // Sorcery",
+   "oracle_text": "Heartwood Crafter — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n{T}: Add {C}. This mana can't be spent to cast spells from your hand.\n//\nSoul Tether — Create a Heartwood token. (It's a red and green artifact with \"{T}: Add {R} or {G}.\")",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G",
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "105",
+   "scryfall_id": "910a1f41-17fd-4ab0-9597-7151e79dc760",
+   "image_url": "https://cards.scryfall.io/normal/front/9/1/910a1f41-17fd-4ab0-9597-7151e79dc760.jpg?1789127630",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "Turns the Heartwood token into a turn-2 Rampant Growth-style ramp play, good even ignoring the mana ability."
+  },
+  {
+   "name": "Hunter's Axe",
+   "mana_cost": "{G}",
+   "cmc": 1,
+   "type_line": "Artifact — Equipment",
+   "oracle_text": "Equipped creature gets +2/+0 and has \"Whenever this creature attacks, it gains your choice of trample or deathtouch until end of turn.\"\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "108",
+   "scryfall_id": "a2cc5d0e-9643-4ee2-81de-fa2c3bd1ab09",
+   "image_url": "https://cards.scryfall.io/normal/front/a/2/a2cc5d0e-9643-4ee2-81de-fa2c3bd1ab09.jpg?1789556822",
+   "marshall": "C+",
+   "luis": "C-",
+   "tag": null,
+   "note": "Cheap +2/+0 equipment granting trample or deathtouch on attack; decent but shares the usual equipment ceiling."
+  },
+  {
+   "name": "Inspired Tethermage",
+   "mana_cost": "{2}{G}",
+   "cmc": 3,
+   "type_line": "Creature — Elf Warrior",
+   "oracle_text": "Whenever you put one or more loyalty counters on a planeswalker, put a +1/+1 counter on this creature.\n{6}: Empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": "3",
+   "toughness": "2",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "109",
+   "scryfall_id": "073f4998-a204-447b-93d5-746ae87fd6a1",
+   "image_url": "https://cards.scryfall.io/normal/front/0/7/073f4998-a204-447b-93d5-746ae87fd6a1.jpg?1788878192",
+   "marshall": "C-",
+   "luis": "C",
+   "tag": null,
+   "note": "Grows via loyalty counters placed on planeswalkers, including its own Empower Jace activated ability."
+  },
+  {
+   "name": "Jiang Yanggu, Never Alone",
+   "mana_cost": "{3}{G}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Druid",
+   "oracle_text": "When Jiang Yanggu enters, create Mowu, a legendary 3/3 green Dog creature token.\nAt the beginning of your end step, untap all tokens you control.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "261",
+   "scryfall_id": "f5a0bb3e-8119-4739-8684-e61d1d607dcb",
+   "image_url": "https://cards.scryfall.io/normal/front/f/5/f5a0bb3e-8119-4739-8684-e61d1d607dcb.jpg?1789014406",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": null,
+   "note": "4 mana for a 2/2 plus a 3/3 token, essentially a cheap Grave Titan."
+  },
+  {
+   "name": "Loot, the Nexus",
+   "mana_cost": "{2}{G}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Beast Noble",
+   "oracle_text": "{T}: Choose a color. Add one mana of that color for each different power among creatures you control.",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "262",
+   "scryfall_id": "3cfa4fc6-4d90-4576-a83f-6496c7f21104",
+   "image_url": "https://cards.scryfall.io/normal/front/3/c/3cfa4fc6-4d90-4576-a83f-6496c7f21104.jpg?1789614764",
+   "marshall": "B",
+   "luis": null,
+   "tag": null,
+   "note": "Fragile but powerful mana rock tapping for mana equal to the number of different creature powers you control."
+  },
+  {
+   "name": "Marwyn, the Preserver",
+   "mana_cost": "{1}{G}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Elf Druid",
+   "oracle_text": "Lands you control have hexproof. (They can't be the targets of spells or abilities your opponents control.)\n{2}: Return target land card from your graveyard to your hand.",
+   "power": "3",
+   "toughness": "2",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "263",
+   "scryfall_id": "90f33f99-7bc5-42e1-815e-bfb4c2b74107",
+   "image_url": "https://cards.scryfall.io/normal/front/9/0/90f33f99-7bc5-42e1-815e-bfb4c2b74107.jpg?1789644564",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": null,
+   "note": "Solid 2-mana 3/2 stats alone, plus land-recursion that shines with self-mill or discard synergies."
+  },
+  {
+   "name": "Pia, Aether Ascetic",
+   "mana_cost": "{2}{G}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Human Druid",
+   "oracle_text": "When Pia enters, you may discard a card. If you do, search your library for an enchantment card, reveal it, put it into your hand, then shuffle.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "264",
+   "scryfall_id": "ff0bc30f-9d20-458e-808f-bdc2825905a5",
+   "image_url": "https://cards.scryfall.io/normal/front/f/f/ff0bc30f-9d20-458e-808f-bdc2825905a5.jpg?1789387120",
+   "marshall": null,
+   "luis": "C",
+   "tag": "build-around",
+   "note": "Discard-to-tutor an enchantment off a 3-mana 2/2; only worth it with a strong enchantment payoff."
+  },
+  {
+   "name": "Restore with Empathy",
+   "mana_cost": "{2}{G}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "Return target permanent card from your graveyard to your hand. You gain 4 life.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "112",
+   "scryfall_id": "3546b93b-a7d1-451d-a369-22cc8ddcd00d",
+   "image_url": "https://cards.scryfall.io/normal/front/3/5/3546b93b-a7d1-451d-a369-22cc8ddcd00d.jpg?1788865848",
+   "marshall": "B",
+   "luis": "D",
+   "tag": "build-around",
+   "note": "Slow permanent-recursion plus 4 life; Marshall likes it for green-white lifegain, Luis rates it lower but fine in blue-green graveyard decks."
+  },
+  {
+   "name": "Ruric Thar, Magecrusher",
+   "mana_cost": "{5}{G}{G}",
+   "cmc": 7,
+   "type_line": "Legendary Creature — Ogre Warrior",
+   "oracle_text": "This spell can't be countered.\nReach, vigilance, trample\nRuric Thar has hexproof as long as they haven't dealt combat damage yet. (They can't be the target of spells or abilities your opponents control.)",
+   "power": "7",
+   "toughness": "7",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "265",
+   "scryfall_id": "eed83302-dc2c-45f4-a4bd-af9da51edef5",
+   "image_url": "https://cards.scryfall.io/normal/front/e/e/eed83302-dc2c-45f4-a4bd-af9da51edef5.jpg?1789358701",
+   "marshall": "C+",
+   "luis": null,
+   "tag": null,
+   "note": "Can't be countered and has hexproof until it deals combat damage, fixing the usual weakness of big ramp creatures."
+  },
+  {
+   "name": "Something Worth Saving",
+   "mana_cost": "{1}{G}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Mill four cards. You may put a permanent card from among them into your hand. You gain 1 life. (To mill four cards, put the top four cards of your library into your graveyard.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "114",
+   "scryfall_id": "02ee7817-40af-4fcf-a2df-eb218b669281",
+   "image_url": "https://cards.scryfall.io/normal/front/0/2/02ee7817-40af-4fcf-a2df-eb218b669281.jpg?1788878199",
+   "marshall": "C",
+   "luis": null,
+   "tag": null,
+   "note": "Mills 4, returns a permanent, and gains 1 life, enabling synergies across multiple archetypes despite low raw power."
+  },
+  {
+   "name": "Sureshot Sower",
+   "mana_cost": "{1}{G}",
+   "cmc": 2,
+   "type_line": "Creature — Human Archer",
+   "oracle_text": "Reach\n{3}{G}, Discard this card: Destroy target creature with flying.",
+   "power": "3",
+   "toughness": "1",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "115",
+   "scryfall_id": "b635389c-e286-4edb-80d1-23dbe4a18857",
+   "image_url": "https://cards.scryfall.io/normal/front/b/6/b635389c-e286-4edb-80d1-23dbe4a18857.jpg?1789614751",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "2-mana 3/1 reach with a discard-to-kill-a-flyer ability; solid defensive stats for the cost."
+  },
+  {
+   "name": "Tethermage's Advantage",
+   "mana_cost": "{G}",
+   "cmc": 1,
+   "type_line": "Instant",
+   "oracle_text": "Target creature gets +2/+2 and gains reach until end of turn. Untap it.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "117",
+   "scryfall_id": "38589a7c-9cfb-4bcc-845e-9dc205095853",
+   "image_url": "https://cards.scryfall.io/normal/front/3/8/38589a7c-9cfb-4bcc-845e-9dc205095853.jpg?1789129937",
+   "marshall": "D",
+   "luis": "D",
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Titanbones, Towering Heart",
+   "mana_cost": "{3}{G}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Skeleton Druid",
+   "oracle_text": "Reach\nWhenever you gain life, put two +1/+1 counters on Titanbones.\nWhen you discard this card, you gain 3 life.",
+   "power": "4",
+   "toughness": "3",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "266",
+   "scryfall_id": "edea6f70-a5a7-475d-b7f2-97933d0f32cf",
+   "image_url": "https://cards.scryfall.io/normal/front/e/d/edea6f70-a5a7-475d-b7f2-97933d0f32cf.jpg?1788329375",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "4/3 reach that grows via lifegain triggers, plus a discard-for-3-life bonus."
+  },
+  {
+   "name": "Vinelasher Adept",
+   "mana_cost": "{4}{G}{G}",
+   "cmc": 6,
+   "type_line": "Creature — Rhino Soldier",
+   "oracle_text": "Reach\nWhen this creature enters, put three +1/+1 counters on target creature.\nBasic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)",
+   "power": "2",
+   "toughness": "4",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "119",
+   "scryfall_id": "e5ed142b-2b61-4ef5-8b23-2db2a0a0319d",
+   "image_url": "https://cards.scryfall.io/normal/front/e/5/e5ed142b-2b61-4ef5-8b23-2db2a0a0319d.jpg?1789556814",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "5/7 reach with basic landcycling for 2 mana, a great home for lands-needed counters."
+  },
+  {
+   "name": "Way of the Paradox",
+   "mana_cost": "{2}{G}",
+   "cmc": 3,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Paradox enters, empower Jace 5. (Put five loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nWhenever you activate a loyalty ability, you gain 1 life. You may play an additional land this turn.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "267",
+   "scryfall_id": "98dc5470-507a-4364-8480-42607255e56c",
+   "image_url": "https://cards.scryfall.io/normal/front/9/8/98dc5470-507a-4364-8480-42607255e56c.jpg?1789729606",
+   "marshall": "C",
+   "luis": "C+",
+   "tag": "build-around",
+   "note": "Draws off Jace and ramps a land; a build-around ranging from D if unsupported up to B with full planeswalker support."
+  },
+  {
+   "name": "Way of the Wildspeaker",
+   "mana_cost": "{4}{G}",
+   "cmc": 5,
+   "type_line": "Legendary Enchantment",
+   "oracle_text": "When Way of the Wildspeaker enters, empower Jace 7. (Put seven loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")\nPlaneswalkers you control have \"[−4]: Create a 4/4 green Beast creature token with trample.\"",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "268",
+   "scryfall_id": "a252cb01-537b-4afe-9abc-81a98c4a1439",
+   "image_url": "https://cards.scryfall.io/normal/front/a/2/a252cb01-537b-4afe-9abc-81a98c4a1439.jpg?1789729602",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": null,
+   "note": "Effectively a 5-mana 4/4 trample leaving behind a 3-loyalty Jace, a strong two-for-one."
+  },
+  {
+   "name": "Wrecking Gecko",
+   "mana_cost": "{4}{G}",
+   "cmc": 5,
+   "type_line": "Artifact Creature — Lizard Construct",
+   "oracle_text": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)\n{6}{G}{G}: This creature gets +4/+4 and gains trample until end of turn.",
+   "power": "5",
+   "toughness": "5",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "120",
+   "scryfall_id": "3d693cb0-681e-480a-8f70-07e94c39225c",
+   "image_url": "https://cards.scryfall.io/normal/front/3/d/3d693cb0-681e-480a-8f70-07e94c39225c.jpg?1789385843",
+   "marshall": "C-",
+   "luis": null,
+   "tag": null,
+   "note": "Marshall settles on C- for the 5-mana 5/5 Ward 2 (up from the usual D+ for that slot); Luis likes the Ward 2 but gives no letter grade."
+  },
+  {
+   "name": "Yoshimaru, Scrappy Stray",
+   "mana_cost": "{1}{G}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Dog",
+   "oracle_text": "When Yoshimaru enters, another target creature you control fights up to one target creature an opponent controls. (Each deals damage equal to its power to the other.)\n{6}: Put a +1/+1 counter on target nonlegendary creature.",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "G"
+   ],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "269",
+   "scryfall_id": "b8dfd087-2434-42c6-ac4c-1decbcdde2db",
+   "image_url": "https://cards.scryfall.io/normal/front/b/8/b8dfd087-2434-42c6-ac4c-1decbcdde2db.jpg?1789470909",
+   "marshall": "B-",
+   "luis": "B",
+   "tag": null,
+   "note": "2-mana fight spell that leaves behind a 1/1 body, plus a clunky late-game counter ability."
+  },
+  {
+   "name": "Desperate Futurescribe",
+   "mana_cost": "{2}{W}{U}",
+   "cmc": 4,
+   "type_line": "Creature — Kor Scout",
+   "oracle_text": "Flying\nAt the beginning of combat on your turn, another target creature you control gets +1/+1 until end of turn. If you've scried or surveilled this turn, put a +1/+1 counter on that creature instead.",
+   "power": "3",
+   "toughness": "4",
+   "colors": [
+    "U",
+    "W"
+   ],
+   "color_identity": [
+    "U",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "129",
+   "scryfall_id": "cfaa3ebd-5c21-4e99-a0dd-8426d19b53a5",
+   "image_url": "https://cards.scryfall.io/normal/front/c/f/cfaa3ebd-5c21-4e99-a0dd-8426d19b53a5.jpg?1789644852",
+   "marshall": null,
+   "luis": "B",
+   "tag": null,
+   "note": "4-mana 3/4 flyer that upgrades pumps into counters whenever you scry or surveil."
+  },
+  {
+   "name": "Fatehold Charm",
+   "mana_cost": "{W}{U}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Draw a card. Empower Jace 2.\n• Return target spell or creature to its owner's hand.\n• Creatures you control get +1/+2 until end of turn.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "U",
+    "W"
+   ],
+   "color_identity": [
+    "U",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "132",
+   "scryfall_id": "cfc54011-647e-4428-bcdb-59400e1da49d",
+   "image_url": "https://cards.scryfall.io/normal/front/c/f/cfc54011-647e-4428-bcdb-59400e1da49d.jpg?1789127637",
+   "marshall": null,
+   "luis": "B",
+   "tag": null,
+   "note": "Flexible modal instant, good with creatures out or with an empty board."
+  },
+  {
+   "name": "Fatehold Chronologist // Peer Review",
+   "mana_cost": "{1}{W/U} // {2}{W/U}",
+   "cmc": 2,
+   "type_line": "Creature — Bird Wizard // Sorcery",
+   "oracle_text": "Fatehold Chronologist — Flying\nThis creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nPeer Review — Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.",
+   "power": "1",
+   "toughness": "2",
+   "colors": [
+    "U",
+    "W"
+   ],
+   "color_identity": [
+    "U",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "133",
+   "scryfall_id": "29e7ec16-0c16-48aa-8e09-ce6e0d5bd40b",
+   "image_url": "https://cards.scryfall.io/normal/front/2/9/29e7ec16-0c16-48aa-8e09-ce6e0d5bd40b.jpg?1789060173",
+   "marshall": null,
+   "luis": "B-",
+   "tag": null,
+   "note": "Smooth 2-into-3 curve, a flyer plus a 2/2 and a Surveil; also useful to kill early."
+  },
+  {
+   "name": "Prudent Fateseer // Peer Review",
+   "mana_cost": "{1}{W/U}{W/U} // {2}{W/U}",
+   "cmc": 3,
+   "type_line": "Creature — Dwarf Wizard // Sorcery",
+   "oracle_text": "Prudent Fateseer — This creature enters prepared.\nWhenever you scry or surveil, creatures you control get +1/+0 until end of turn. This ability triggers only once each turn.\n//\nPeer Review — Create a 2/2 colorless Wizard Soldier creature token named Cadet. Surveil 1.",
+   "power": "1",
+   "toughness": "4",
+   "colors": [
+    "U",
+    "W"
+   ],
+   "color_identity": [
+    "U",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "146",
+   "scryfall_id": "6c1c790b-9e0e-4964-9ea3-554843907f06",
+   "image_url": "https://cards.scryfall.io/normal/front/6/c/6c1c790b-9e0e-4964-9ea3-554843907f06.jpg?1788329412",
+   "marshall": "C+",
+   "luis": "B-",
+   "tag": null,
+   "note": "Repeatable team pump off scry/surveil, but an unexciting 1/4 body with no evasion."
+  },
+  {
+   "name": "Paradox Shaper // Omit Variables",
+   "mana_cost": "{1}{U/B} // {U/B}",
+   "cmc": 2,
+   "type_line": "Creature — Octopus Wizard // Sorcery",
+   "oracle_text": "Paradox Shaper — At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared.\n{2}: Put target card from your graveyard on the bottom of your library.\n//\nOmit Variables — Mill three cards. (Put the top three cards of your library into your graveyard.)",
+   "power": "1",
+   "toughness": "3",
+   "colors": [
+    "B",
+    "U"
+   ],
+   "color_identity": [
+    "B",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "143",
+   "scryfall_id": "e61b9d48-0ace-4453-afe0-a1024444bac0",
+   "image_url": "https://cards.scryfall.io/normal/front/e/6/e61b9d48-0ace-4453-afe0-a1024444bac0.jpg?1788329390",
+   "marshall": null,
+   "luis": "C+",
+   "tag": null,
+   "note": "Self-mill and library-filtering engine that can loop card advantage; better if the deck needs threshold."
+  },
+  {
+   "name": "Recursive Recruitment",
+   "mana_cost": "{2}{U}{B}",
+   "cmc": 4,
+   "type_line": "Sorcery",
+   "oracle_text": "Create two 2/2 colorless Wizard Soldier creature tokens named Cadet. If this spell was cast from a graveyard, put a +1/+1 counter on each of them for every three cards in your graveyard.\nFlashback {6}{U}{B} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B",
+    "U"
+   ],
+   "color_identity": [
+    "B",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "147",
+   "scryfall_id": "68fddb6a-86d4-4ebb-907d-fdcaadebc4b3",
+   "image_url": "https://cards.scryfall.io/normal/front/6/8/68fddb6a-86d4-4ebb-907d-fdcaadebc4b3.jpg?1789556898",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "4 mana for two 2/2s that can flash back later for much bigger, counter-boosted tokens."
+  },
+  {
+   "name": "Theorix Charm",
+   "mana_cost": "{U}{B}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Counter target noncreature spell unless its controller pays {2}.\n• Target creature gets -2/-2 until end of turn.\n• Mill three cards, then draw a card. (To mill three cards, put the top three cards of your library into your graveyard.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B",
+    "U"
+   ],
+   "color_identity": [
+    "B",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "155",
+   "scryfall_id": "2835c9aa-0904-44db-8da2-e8c4e04201aa",
+   "image_url": "https://cards.scryfall.io/normal/front/2/8/2835c9aa-0904-44db-8da2-e8c4e04201aa.jpg?1789127659",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Modal instant compared to Spell Pierce plus Disfigure plus a mill-3-draw-1 mode."
+  },
+  {
+   "name": "Theorix Metamage // Omit Variables",
+   "mana_cost": "{2}{U/B} // {U/B}",
+   "cmc": 3,
+   "type_line": "Creature — Shade Wizard // Sorcery",
+   "oracle_text": "Theorix Metamage — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nThreshold — This creature gets +1/+0 and has flying as long as there are seven or more cards in your graveyard.\n//\nOmit Variables — Mill three cards. (Put the top three cards of your library into your graveyard.)",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "B",
+    "U"
+   ],
+   "color_identity": [
+    "B",
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "156",
+   "scryfall_id": "fb6bad96-841d-4738-8e62-92f346f914fd",
+   "image_url": "https://cards.scryfall.io/normal/front/f/b/fb6bad96-841d-4738-8e62-92f346f914fd.jpg?1789556930",
+   "marshall": "C+",
+   "luis": null,
+   "tag": null,
+   "note": "Hybrid enabler/payoff for threshold with good stats late in the game."
+  },
+  {
+   "name": "Grim Repriser",
+   "mana_cost": "{B}{R}",
+   "cmc": 2,
+   "type_line": "Creature — Zombie Bard",
+   "oracle_text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\n{B}{R}: Return this card from your graveyard to the battlefield with a finality counter on it. Activate only if an opponent has been dealt noncombat damage this turn. (If a creature with a finality counter on it would die, exile it instead.)",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "B",
+    "R"
+   ],
+   "color_identity": [
+    "B",
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "136",
+   "scryfall_id": "8295c48c-b4dd-4bc1-a206-04cf12b79bbd",
+   "image_url": "https://cards.scryfall.io/normal/front/8/2/8295c48c-b4dd-4bc1-a206-04cf12b79bbd.jpg?1789470746",
+   "marshall": "B",
+   "luis": null,
+   "tag": null,
+   "note": "2-mana 2/2 with prowess that can return from the graveyard once an opponent takes noncombat damage."
+  },
+  {
+   "name": "Stingerquill Charm",
+   "mana_cost": "{B}{R}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Stingerquill Charm deals 3 damage to any target.\n• Target creature gains first strike and deathtouch until end of turn.\n• Create a 2/2 colorless Wizard Soldier creature token named Cadet. It gains haste until end of turn.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B",
+    "R"
+   ],
+   "color_identity": [
+    "B",
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "150",
+   "scryfall_id": "81733ff7-e611-43ee-bf38-6bb700676017",
+   "image_url": "https://cards.scryfall.io/normal/front/8/1/81733ff7-e611-43ee-bf38-6bb700676017.jpg?1789127652",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": null,
+   "note": "Near-Lightning-Bolt mode plus a hasty 2/2 token option make it very flexible."
+  },
+  {
+   "name": "Stingerquill Voxmancer // Vicious Verse",
+   "mana_cost": "{B/R} // {B/R}",
+   "cmc": 1,
+   "type_line": "Creature — Goblin Sorcerer // Sorcery",
+   "oracle_text": "Stingerquill Voxmancer — At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nVicious Verse — Vicious Verse deals 1 damage to target opponent.",
+   "power": "1",
+   "toughness": "2",
+   "colors": [
+    "B",
+    "R"
+   ],
+   "color_identity": [
+    "B",
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "151",
+   "scryfall_id": "84b1c268-3b8a-41b6-92e3-a2ce0cc3d738",
+   "image_url": "https://cards.scryfall.io/normal/front/8/4/84b1c268-3b8a-41b6-92e3-a2ce0cc3d738.jpg?1788329418",
+   "marshall": null,
+   "luis": "B",
+   "tag": null,
+   "note": "Cheap repeatable pinger that enables the damage-matters theme, worse if the archetype underperforms."
+  },
+  {
+   "name": "Whiplash Wordsmith // Vicious Verse",
+   "mana_cost": "{3}{B/R} // {B/R}",
+   "cmc": 4,
+   "type_line": "Creature — Vampire Sorcerer // Sorcery",
+   "oracle_text": "Whiplash Wordsmith — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nAs long as an opponent was dealt noncombat damage this turn, this creature has flying and haste.\n//\nVicious Verse — Vicious Verse deals 1 damage to target opponent.",
+   "power": "3",
+   "toughness": "3",
+   "colors": [
+    "B",
+    "R"
+   ],
+   "color_identity": [
+    "B",
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "164",
+   "scryfall_id": "8096bc9a-a610-448f-bef2-7230e17e9777",
+   "image_url": "https://cards.scryfall.io/normal/front/8/0/8096bc9a-a610-448f-bef2-7230e17e9777.jpg?1789127692",
+   "marshall": null,
+   "luis": "C+",
+   "tag": null,
+   "note": "4-mana 3/3 that gains flying and haste when the opponent has taken noncombat damage."
+  },
+  {
+   "name": "Craftwork Crusher",
+   "mana_cost": "{3}{R}{R}{G}{G}",
+   "cmc": 7,
+   "type_line": "Artifact Creature — Boar Construct",
+   "oracle_text": "Trample\nWhen this creature enters, choose two —\n• This creature deals 4 damage to target creature or planeswalker.\n• Create a 2/2 colorless Wizard Soldier creature token named Cadet.\n• Draw a card.",
+   "power": "7",
+   "toughness": "5",
+   "colors": [
+    "G",
+    "R"
+   ],
+   "color_identity": [
+    "G",
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "127",
+   "scryfall_id": "03f9839c-aa07-4ee7-847b-091e47ab80c4",
+   "image_url": "https://cards.scryfall.io/normal/front/0/3/03f9839c-aa07-4ee7-847b-091e47ab80c4.jpg?1789470711",
+   "marshall": "B+",
+   "luis": "B",
+   "tag": null,
+   "note": "7-mana 7/5 trample with a strong choose-2 ETB, but expensive and hard to splash."
+  },
+  {
+   "name": "Konstrari Charm",
+   "mana_cost": "{R}{G}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Konstrari Charm deals 6 damage to target creature with flying.\n• Put two +1/+1 counters on target creature. It gains trample until end of turn.\n• Add {C}{C}{C}.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G",
+    "R"
+   ],
+   "color_identity": [
+    "G",
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "138",
+   "scryfall_id": "7d29dfa1-9582-47bc-8f42-62b611bdcc4e",
+   "image_url": "https://cards.scryfall.io/normal/front/7/d/7d29dfa1-9582-47bc-8f42-62b611bdcc4e.jpg?1789127645",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "Weak modal charm; the counters-plus-trample combat trick mode is the only strong option."
+  },
+  {
+   "name": "Konstrari Improviser // Soul Tether",
+   "mana_cost": "{1}{R/G} // {2}{R/G}",
+   "cmc": 2,
+   "type_line": "Creature — Human Artificer // Sorcery",
+   "oracle_text": "Konstrari Improviser — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nSoul Tether — Create a Heartwood token. (It's a red and green artifact with \"{T}: Add {R} or {G}.\")",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "G",
+    "R"
+   ],
+   "color_identity": [
+    "G",
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "139",
+   "scryfall_id": "42e28bd2-486b-45d4-8840-6e33c19c2d57",
+   "image_url": "https://cards.scryfall.io/normal/front/4/2/42e28bd2-486b-45d4-8840-6e33c19c2d57.jpg?1789556881",
+   "marshall": "C-",
+   "luis": "C",
+   "tag": null,
+   "note": "Expensive ramp payoff putting mediocre stuff into play; skeptical it's worth the mana investment."
+  },
+  {
+   "name": "Woodwork Prodigy // Soul Tether",
+   "mana_cost": "{2}{R/G} // {2}{R/G}",
+   "cmc": 3,
+   "type_line": "Creature — Cat Druid // Sorcery",
+   "oracle_text": "Woodwork Prodigy — At the beginning of your upkeep, if this creature isn't prepared, it becomes prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nSoul Tether — Create a Heartwood token. (It's a red and green artifact with \"{T}: Add {R} or {G}.\")",
+   "power": "3",
+   "toughness": "3",
+   "colors": [
+    "G",
+    "R"
+   ],
+   "color_identity": [
+    "G",
+    "R"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "165",
+   "scryfall_id": "7d17f7e3-7b63-4674-9024-4fd1827f40ec",
+   "image_url": "https://cards.scryfall.io/normal/front/7/d/7d17f7e3-7b63-4674-9024-4fd1827f40ec.jpg?1788329429",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "3-mana 3/3 that trades well and piles up mana toward bigger payoffs."
+  },
+  {
+   "name": "Bloombrute",
+   "mana_cost": "{2}{G}{W}",
+   "cmc": 4,
+   "type_line": "Creature — Plant Elemental",
+   "oracle_text": "Whenever you gain life, draw a card. This ability triggers only once each turn.\n{4}{G}{W}: Target creature gains trample and lifelink until end of turn.",
+   "power": "4",
+   "toughness": "4",
+   "colors": [
+    "G",
+    "W"
+   ],
+   "color_identity": [
+    "G",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "124",
+   "scryfall_id": "6b804503-9c70-4b1f-bb13-a65fb6dd3ef8",
+   "image_url": "https://cards.scryfall.io/normal/front/6/b/6b804503-9c70-4b1f-bb13-a65fb6dd3ef8.jpg?1789644843",
+   "marshall": "A-",
+   "luis": "A-",
+   "tag": "build-around",
+   "note": "4/4 for 4 that draws a card whenever you gain life, extremely well supported by the archetype."
+  },
+  {
+   "name": "Emergency Phytomedic // Seed Suture",
+   "mana_cost": "{G/W} // {G/W}",
+   "cmc": 1,
+   "type_line": "Creature — Dryad Cleric // Sorcery",
+   "oracle_text": "Emergency Phytomedic — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\n//\nSeed Suture — Put a +1/+1 counter on target creature. You gain 1 life.",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "G",
+    "W"
+   ],
+   "color_identity": [
+    "G",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "130",
+   "scryfall_id": "de94d388-919d-44ff-baef-8c90a417ac6d",
+   "image_url": "https://cards.scryfall.io/normal/front/d/e/de94d388-919d-44ff-baef-8c90a417ac6d.jpg?1789637792",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "Flexible 1-drop that grows into a decent body and enables the archetype's lifegain payoffs."
+  },
+  {
+   "name": "Vigorbloom Charm",
+   "mana_cost": "{G}{W}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Target permanent you control gains hexproof and indestructible until end of turn.\n• You draw a card and gain 3 life.\n• Put a +1/+1 counter on target creature you control. Then it fights target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G",
+    "W"
+   ],
+   "color_identity": [
+    "G",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "160",
+   "scryfall_id": "2b198e10-b507-4314-a29c-a219f06e48b7",
+   "image_url": "https://cards.scryfall.io/normal/front/2/b/2b198e10-b507-4314-a29c-a219f06e48b7.jpg?1789127656",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": null,
+   "note": "Versatile charm offering protection, card draw plus lifegain, or a pump-and-fight mode."
+  },
+  {
+   "name": "Vigorbloom Vanguard // Seed Suture",
+   "mana_cost": "{1}{G/W} // {G/W}",
+   "cmc": 2,
+   "type_line": "Creature — Troll Druid // Sorcery",
+   "oracle_text": "Vigorbloom Vanguard — This creature enters prepared. (While it's prepared, you may cast a copy of its spell. Doing so unprepares it.)\nEach creature you control with a +1/+1 counter on it has vigilance.\n//\nSeed Suture — Put a +1/+1 counter on target creature. You gain 1 life.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [
+    "G",
+    "W"
+   ],
+   "color_identity": [
+    "G",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "161",
+   "scryfall_id": "acefc515-bf97-4dc0-b0f7-ae8ae5a61671",
+   "image_url": "https://cards.scryfall.io/normal/front/a/c/acefc515-bf97-4dc0-b0f7-ae8ae5a61671.jpg?1788329423",
+   "marshall": "B+",
+   "luis": "B",
+   "tag": null,
+   "note": "2-mana 2/2 that grants vigilance to countered creatures and can pump plus gain life."
+  },
+  {
+   "name": "Blessed Ghoul",
+   "mana_cost": "{W/B}",
+   "cmc": 1,
+   "type_line": "Creature — Zombie Cleric",
+   "oracle_text": "Lifelink\n{2}{W/B}: Return this card from your graveyard to your hand.",
+   "power": "1",
+   "toughness": "1",
+   "colors": [
+    "B",
+    "W"
+   ],
+   "color_identity": [
+    "B",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "123",
+   "scryfall_id": "bb975803-9bf2-401e-9414-d272df314398",
+   "image_url": "https://cards.scryfall.io/normal/front/b/b/bb975803-9bf2-401e-9414-d272df314398.jpg?1789556847",
+   "marshall": "C",
+   "luis": "C+",
+   "tag": null,
+   "note": "Cheap lifelinker whose 3-mana recursion is steep, but incremental lifelink value adds up over a game."
+  },
+  {
+   "name": "Edgar, Ancient Bloodlord",
+   "mana_cost": "{W}{B}",
+   "cmc": 2,
+   "type_line": "Legendary Creature — Vampire Noble",
+   "oracle_text": "Whenever another creature or planeswalker you control dies, you gain 1 life.\n{2}, Sacrifice another creature or planeswalker: Put a +1/+1 counter on Edgar. He gains menace until end of turn. (He can't be blocked except by two or more creatures.)",
+   "power": "2",
+   "toughness": "3",
+   "colors": [
+    "B",
+    "W"
+   ],
+   "color_identity": [
+    "B",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "270",
+   "scryfall_id": "7c619fed-2394-4efc-8cdc-6df5f51c1f57",
+   "image_url": "https://cards.scryfall.io/normal/front/7/c/7c619fed-2394-4efc-8cdc-6df5f51c1f57.jpg?1789127743",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Hard-to-block 2/3 that gains life on creature deaths and grows via sacrifice, benefits from synergy support."
+  },
+  {
+   "name": "Twisted Fates",
+   "mana_cost": "{2}{W}{W}{B}",
+   "cmc": 5,
+   "type_line": "Sorcery",
+   "oracle_text": "Destroy target nonland permanent. Put a +1/+1 counter on each creature target player controls.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B",
+    "W"
+   ],
+   "color_identity": [
+    "B",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "158",
+   "scryfall_id": "c7c0765d-38fd-4d7b-bfb4-49b10ff5939b",
+   "image_url": "https://cards.scryfall.io/normal/front/c/7/c7c0765d-38fd-4d7b-bfb4-49b10ff5939b.jpg?1789614785",
+   "marshall": "A-",
+   "luis": "A-",
+   "tag": null,
+   "note": "5-mana removal that also pumps a player's whole board, like a 3/3 haste attached to a kill spell."
+  },
+  {
+   "name": "Clash of Elements",
+   "mana_cost": "{1}{U}{R}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "Choose target nonland permanent. Its owner may put it on top of their library. If they do, Clash of Elements deals 2 damage to them. If they didn't put the card on top of their library, they put it on the bottom.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R",
+    "U"
+   ],
+   "color_identity": [
+    "R",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "126",
+   "scryfall_id": "b61bcef7-5832-45e6-a2bc-26d4f23707fc",
+   "image_url": "https://cards.scryfall.io/normal/front/b/6/b61bcef7-5832-45e6-a2bc-26d4f23707fc.jpg?1788878210",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "Cheap, flexible instant that either bounces a permanent or deals damage, no restrictive clauses."
+  },
+  {
+   "name": "Saheeli, Jewel of Avishkar",
+   "mana_cost": "{2}{U}{R}",
+   "cmc": 4,
+   "type_line": "Legendary Creature — Human Artificer",
+   "oracle_text": "Thopters you control have haste.\nWhenever you cast a noncreature spell, create a 1/1 colorless Thopter artifact creature token with flying.",
+   "power": "2",
+   "toughness": "4",
+   "colors": [
+    "R",
+    "U"
+   ],
+   "color_identity": [
+    "R",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "275",
+   "scryfall_id": "28d84ef6-e190-46d4-882d-1cea5e111e2a",
+   "image_url": "https://cards.scryfall.io/normal/front/2/8/28d84ef6-e190-46d4-882d-1cea5e111e2a.jpg?1789644883",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": "build-around",
+   "note": "Makes hasty thopter tokens off any noncreature spell, a strong mild build-around for the archetype."
+  },
+  {
+   "name": "Twinned Vision",
+   "mana_cost": "{1}{U/R}",
+   "cmc": 2,
+   "type_line": "Instant",
+   "oracle_text": "Draw a card. If this spell wasn't cast from your hand, draw two cards instead.\nFlashback—{1}{U/R}{U/R}, Discard a card. (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R",
+    "U"
+   ],
+   "color_identity": [
+    "R",
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "157",
+   "scryfall_id": "55f85984-0137-4899-8993-bbc8c4794d33",
+   "image_url": "https://cards.scryfall.io/normal/front/5/5/55f85984-0137-4899-8993-bbc8c4794d33.jpg?1789556940",
+   "marshall": "C-",
+   "luis": "C+",
+   "tag": null,
+   "note": "Flashback card draw hurt badly by the mandatory discard cost on the flashback side."
+  },
+  {
+   "name": "Ferocity of the Hunt",
+   "mana_cost": "{1}{B/G}",
+   "cmc": 2,
+   "type_line": "Enchantment — Aura",
+   "oracle_text": "Flash\nEnchant creature\nEnchanted creature gets +1/+0 and has deathtouch.\nWhen enchanted creature dies, return that card to the battlefield tapped under its owner's control.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "B",
+    "G"
+   ],
+   "color_identity": [
+    "B",
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "134",
+   "scryfall_id": "a9793ce9-5a0b-41fe-b9ad-02f6f7da2481",
+   "image_url": "https://cards.scryfall.io/normal/front/a/9/a9793ce9-5a0b-41fe-b9ad-02f6f7da2481.jpg?1789644856",
+   "marshall": "C-",
+   "luis": "C",
+   "tag": null,
+   "note": "Cheap deathtouch aura that returns its creature on death, pairs well with trample synergies."
+  },
+  {
+   "name": "Hapatra, the Desert Fang",
+   "mana_cost": "{2}{B}{B}{G}",
+   "cmc": 5,
+   "type_line": "Legendary Creature — Human Cleric",
+   "oracle_text": "When Hapatra enters, for each opponent, put X -1/-1 counters on up to one target creature that player controls, where X is the greatest mana value among cards in your graveyard.",
+   "power": "3",
+   "toughness": "3",
+   "colors": [
+    "B",
+    "G"
+   ],
+   "color_identity": [
+    "B",
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "271",
+   "scryfall_id": "cf7c1534-af41-4991-b3c3-f0a34ae330b5",
+   "image_url": "https://cards.scryfall.io/normal/front/c/f/cf7c1534-af41-4991-b3c3-f0a34ae330b5.jpg?1789385991",
+   "marshall": "B+",
+   "luis": "A-",
+   "tag": null,
+   "note": "5-mana 3/3 that shrinks a creature based on the highest mana value in the graveyard, reliably strong."
+  },
+  {
+   "name": "Primal Witchstalker",
+   "mana_cost": "{1}{B}{G}",
+   "cmc": 3,
+   "type_line": "Creature — Wolf",
+   "oracle_text": "Menace (This creature can't be blocked except by two or more creatures.)\nWhen this creature enters, mill four cards. When you do, return target land card from your graveyard to the battlefield tapped. (To mill four cards, put the top four cards of your library into your graveyard.)",
+   "power": "2",
+   "toughness": "1",
+   "colors": [
+    "B",
+    "G"
+   ],
+   "color_identity": [
+    "B",
+    "G"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "144",
+   "scryfall_id": "04e64af7-cca1-499e-8951-f386e84c8b5b",
+   "image_url": "https://cards.scryfall.io/normal/front/0/4/04e64af7-cca1-499e-8951-f386e84c8b5b.jpg?1789644850",
+   "marshall": "B",
+   "luis": "B",
+   "tag": null,
+   "note": "2/1 menace that mills 4 and returns a land to the battlefield, a strong 3-drop."
+  },
+  {
+   "name": "Charge the Sanctum",
+   "mana_cost": "{2}{R/W}",
+   "cmc": 3,
+   "type_line": "Instant",
+   "oracle_text": "Choose one —\n• Creatures you control get +2/+0 until end of turn.\n• Target creature gets +2/+0 and gains first strike until end of turn. Put a +1/+1 counter on it.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R",
+    "W"
+   ],
+   "color_identity": [
+    "R",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "125",
+   "scryfall_id": "87b40df5-5c0a-41f5-a09c-a04f17066a91",
+   "image_url": "https://cards.scryfall.io/normal/front/8/7/87b40df5-5c0a-41f5-a09c-a04f17066a91.jpg?1788521570",
+   "marshall": "C",
+   "luis": "C-",
+   "tag": null,
+   "note": "Expensive but powerful combat trick that can pump the team or give first strike plus a counter."
+  },
+  {
+   "name": "Mabel, Valley Hero",
+   "mana_cost": "{1}{R}{W}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Mouse Soldier",
+   "oracle_text": "Whenever Mabel or another creature you control enters, put a +1/+1 counter on target creature that entered this turn.",
+   "power": "1",
+   "toughness": "2",
+   "colors": [
+    "R",
+    "W"
+   ],
+   "color_identity": [
+    "R",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "274",
+   "scryfall_id": "47abea4b-9848-48aa-bc1b-f04f4799e920",
+   "image_url": "https://cards.scryfall.io/normal/front/4/7/47abea4b-9848-48aa-bc1b-f04f4799e920.jpg?1790135467",
+   "marshall": "B+",
+   "luis": "B+",
+   "tag": null,
+   "note": "Comes down as a 2/3 that gives every entering creature an extra counter, seen as a must-kill threat."
+  },
+  {
+   "name": "Warrior's Blades",
+   "mana_cost": "{2}{R}{W}",
+   "cmc": 4,
+   "type_line": "Artifact — Equipment",
+   "oracle_text": "When this Equipment enters, it deals 3 damage to any target and you gain 3 life.\nEquipped creature gets +2/+1.\nEquip {3}. This ability costs {1} less to activate for each +1/+1 counter on the creature it targets.",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "R",
+    "W"
+   ],
+   "color_identity": [
+    "R",
+    "W"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "163",
+   "scryfall_id": "c63d5b0e-ee72-42ed-aa7e-484ba84507cd",
+   "image_url": "https://cards.scryfall.io/normal/front/c/6/c63d5b0e-ee72-42ed-aa7e-484ba84507cd.jpg?1789007648",
+   "marshall": null,
+   "luis": "B",
+   "tag": null,
+   "note": "Equipment that enters like a Lightning Helix, then leaves behind solid +2/+1 equipment."
+  },
+  {
+   "name": "Kiora of Salt and Sand",
+   "mana_cost": "{1}{G}{U}",
+   "cmc": 3,
+   "type_line": "Legendary Creature — Merfolk Noble",
+   "oracle_text": "Whenever you attack, if you've activated a loyalty ability this turn, untap target attacking creature. It can't be blocked this turn.\nPlaneswalkers you control have \"[−8]: Create an 8/8 blue Leviathan creature token with hexproof.\"",
+   "power": "2",
+   "toughness": "4",
+   "colors": [
+    "G",
+    "U"
+   ],
+   "color_identity": [
+    "G",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "273",
+   "scryfall_id": "8151f5f5-e9f6-4fbe-b543-f456ebf22aa5",
+   "image_url": "https://cards.scryfall.io/normal/front/8/1/8151f5f5-e9f6-4fbe-b543-f456ebf22aa5.jpg?1789127745",
+   "marshall": "B-",
+   "luis": "B-",
+   "tag": "build-around",
+   "note": "Build-around that turns empowered Jace loyalty into an unblockable attack and an 8/8 hexproof ultimate, but needs setup."
+  },
+  {
+   "name": "Mind Meanderer",
+   "mana_cost": "{3}{G}{U}{U}",
+   "cmc": 6,
+   "type_line": "Creature — Bird Fish Illusion",
+   "oracle_text": "Flying\nThis creature has vigilance as long as you control a Jace planeswalker.\nWhen this creature enters, it fights up to one target creature an opponent controls. (Each deals damage equal to its power to the other.)",
+   "power": "4",
+   "toughness": "4",
+   "colors": [
+    "G",
+    "U"
+   ],
+   "color_identity": [
+    "G",
+    "U"
+   ],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "141",
+   "scryfall_id": "94c290ce-252c-42b3-bcb0-c1ef621df566",
+   "image_url": "https://cards.scryfall.io/normal/front/9/4/94c290ce-252c-42b3-bcb0-c1ef621df566.jpg?1789470861",
+   "marshall": "B-",
+   "luis": null,
+   "tag": null,
+   "note": "6-mana 4/4 flier that fights on ETB is a solid two-for-one, though slow and only kills small creatures."
+  },
+  {
+   "name": "Tam's Resistance",
+   "mana_cost": "{1}{G/U}",
+   "cmc": 2,
+   "type_line": "Sorcery",
+   "oracle_text": "Put a +1/+1 counter on up to one target creature. It gains vigilance until end of turn.\nEmpower Jace 4. (Put four loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": null,
+   "toughness": null,
+   "colors": [
+    "G",
+    "U"
+   ],
+   "color_identity": [
+    "G",
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "153",
+   "scryfall_id": "b3d33df2-a77b-4c2e-ba7f-2cc9c1505f9b",
+   "image_url": "https://cards.scryfall.io/normal/front/b/3/b3d33df2-a77b-4c2e-ba7f-2cc9c1505f9b.jpg?1788878215",
+   "marshall": "C",
+   "luis": "C",
+   "tag": null,
+   "note": "2 mana for counter, vigilance, and a card back fits great in prowess decks that want cheap cantrips."
+  },
+  {
+   "name": "Afterthought Sentry",
+   "mana_cost": "{2}",
+   "cmc": 2,
+   "type_line": "Artifact Creature — Gargoyle",
+   "oracle_text": "{2}: This creature gains flying until end of turn.\nWhenever this creature attacks, exile up to one target card from a graveyard.",
+   "power": "2",
+   "toughness": "2",
+   "colors": [],
+   "color_identity": [],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "166",
+   "scryfall_id": "4d4b3bf7-a149-4099-b97d-4e36a87dfa60",
+   "image_url": "https://cards.scryfall.io/normal/front/4/d/4d4b3bf7-a149-4099-b97d-4e36a87dfa60.jpg?1789385875",
+   "marshall": null,
+   "luis": "D",
+   "tag": null,
+   "note": "Clunky 2/2 with an expensive flying activation, though exiling graveyard cards on attack has minor upside."
+  },
+  {
+   "name": "Archive Arbiter",
+   "mana_cost": "{6}",
+   "cmc": 6,
+   "type_line": "Artifact Creature — Sphinx",
+   "oracle_text": "Flying\nWhen this creature enters, choose one —\n• Destroy target noncreature, nonland permanent.\n• You gain 4 life.",
+   "power": "4",
+   "toughness": "4",
+   "colors": [],
+   "color_identity": [],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "167",
+   "scryfall_id": "024bce1e-a5f3-4292-bc17-d0355a5d65e1",
+   "image_url": "https://cards.scryfall.io/normal/front/0/2/024bce1e-a5f3-4292-bc17-d0355a5d65e1.jpg?1789614867",
+   "marshall": "C+",
+   "luis": null,
+   "tag": null,
+   "note": "6-mana 4/4 flyer that either gains 4 life or destroys a noncreature nonland permanent, a solid top-end 2-for-1."
+  },
+  {
+   "name": "Eye of Jace",
+   "mana_cost": "{1}",
+   "cmc": 1,
+   "type_line": "Artifact",
+   "oracle_text": "At the beginning of your upkeep, surveil 1. Then if there are seven or more cards in your graveyard, sacrifice this artifact, it deals 2 damage to each opponent, and you gain 2 life. (To surveil 1, look at the top card of your library. You may put it into your graveyard.)",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "170",
+   "scryfall_id": "0edba64a-39cf-4a8d-ba20-4f7da10b6c3d",
+   "image_url": "https://cards.scryfall.io/normal/front/0/e/0edba64a-39cf-4a8d-ba20-4f7da10b6c3d.jpg?1789614864",
+   "marshall": "C",
+   "luis": "C+",
+   "tag": "build-around",
+   "note": "1-mana artifact that surveils each turn and eventually sacrifices for damage and life; best in surveil/graveyard decks."
+  },
+  {
+   "name": "Keeper of the Quiet Hour",
+   "mana_cost": "{3}",
+   "cmc": 3,
+   "type_line": "Artifact Creature — Chimera",
+   "oracle_text": "When this creature enters, empower Jace 2. (Put two loyalty counters on a Jace token you control. If you don't control one, first create a blue Jace planeswalker token with \"[−1]: Surveil 1\" and \"[−3]: Draw a card.\")",
+   "power": "3",
+   "toughness": "2",
+   "colors": [],
+   "color_identity": [],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "171",
+   "scryfall_id": "b6331218-dbb8-44a9-8ba5-5fb1ab41c5c0",
+   "image_url": "https://cards.scryfall.io/normal/front/b/6/b6331218-dbb8-44a9-8ba5-5fb1ab41c5c0.jpg?1788878239",
+   "marshall": "C-",
+   "luis": "C-",
+   "tag": null,
+   "note": "3/2 for 3 that empowers a planeswalker by 2 on entry, solid for a colorless common."
+  },
+  {
+   "name": "Living Library",
+   "mana_cost": "{2}",
+   "cmc": 2,
+   "type_line": "Artifact Creature — Book Illusion",
+   "oracle_text": "{6}, Sacrifice this creature: Choose target creature or planeswalker an opponent controls. Its owner shuffles it into their library.",
+   "power": "0",
+   "toughness": "4",
+   "colors": [],
+   "color_identity": [],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "172",
+   "scryfall_id": "5d4a8e5f-0024-4da3-a2f5-edb48b12e733",
+   "image_url": "https://cards.scryfall.io/normal/front/5/d/5d4a8e5f-0024-4da3-a2f5-edb48b12e733.jpg?1789556949",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": "Both agree the sacrifice-bounce ability needs too many specific artifact/2-drop synergies to ever matter; effectively unplayable, no letter grade given."
+  },
+  {
+   "name": "Medic's Kitesail",
+   "mana_cost": "{2}",
+   "cmc": 2,
+   "type_line": "Artifact — Equipment",
+   "oracle_text": "Equipped creature gets +1/+0 and has flying and \"Whenever this creature attacks, you gain 1 life.\"\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "173",
+   "scryfall_id": "8b07409a-1dce-461d-95e4-1130521ff4c4",
+   "image_url": "https://cards.scryfall.io/normal/front/8/b/8b07409a-1dce-461d-95e4-1130521ff4c4.jpg?1789556945",
+   "marshall": "D+",
+   "luis": "C-",
+   "tag": null,
+   "note": "Cheap equipment giving +1/+0, flying, and lifegain on attack; a fringe playable that can quietly pull weight."
+  },
+  {
+   "name": "Murmuring Volume",
+   "mana_cost": "{3}",
+   "cmc": 3,
+   "type_line": "Artifact — Book",
+   "oracle_text": "{T}: Add one mana of any color.\n{2}, {T}, Discard a card: Draw a card.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "174",
+   "scryfall_id": "d68eab2e-89dd-4377-b7af-01512b1804a0",
+   "image_url": "https://cards.scryfall.io/normal/front/d/6/d68eab2e-89dd-4377-b7af-01512b1804a0.jpg?1789385977",
+   "marshall": "D",
+   "luis": null,
+   "tag": null,
+   "note": "Mana rock that can also loot, but unclear which archetype actually wants a colorless ramp-and-filter artifact."
+  },
+  {
+   "name": "Traxos, Scourge Eternal",
+   "mana_cost": "{4}",
+   "cmc": 4,
+   "type_line": "Legendary Artifact Creature — Dragon Construct",
+   "oracle_text": "Trample\nTraxos doesn't untap during your untap step.\nWhenever you cast an artifact or creature spell, untap Traxos.",
+   "power": "5",
+   "toughness": "4",
+   "colors": [],
+   "color_identity": [],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "280",
+   "scryfall_id": "05102c46-96f8-44a0-a1e6-e388fa5e0841",
+   "image_url": "https://cards.scryfall.io/normal/front/0/5/05102c46-96f8-44a0-a1e6-e388fa5e0841.jpg?1789557046",
+   "marshall": "B",
+   "luis": "C+",
+   "tag": null,
+   "note": "4-mana 5/4 trample that untaps whenever you cast an artifact or creature spell, trivially easy to keep active."
+  },
+  {
+   "name": "Plains",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Basic Land — Plains",
+   "oracle_text": "({T}: Add {W}.)",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "281",
+   "scryfall_id": "a4eaecb8-066a-4c72-aa5d-5ed0614ba537",
+   "image_url": "https://cards.scryfall.io/normal/front/a/4/a4eaecb8-066a-4c72-aa5d-5ed0614ba537.jpg?1789599702",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Island",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Basic Land — Island",
+   "oracle_text": "({T}: Add {U}.)",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "283",
+   "scryfall_id": "d8184e92-54e6-4ddc-86e8-67f5c5eb079d",
+   "image_url": "https://cards.scryfall.io/normal/front/d/8/d8184e92-54e6-4ddc-86e8-67f5c5eb079d.jpg?1789599732",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Swamp",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Basic Land — Swamp",
+   "oracle_text": "({T}: Add {B}.)",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "B"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "285",
+   "scryfall_id": "30693b85-550d-4c98-8c5b-4fd4e91c9f28",
+   "image_url": "https://cards.scryfall.io/normal/front/3/0/30693b85-550d-4c98-8c5b-4fd4e91c9f28.jpg?1789599699",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Mountain",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Basic Land — Mountain",
+   "oracle_text": "({T}: Add {R}.)",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "287",
+   "scryfall_id": "16671d98-6f00-477b-a010-d2905c94eb65",
+   "image_url": "https://cards.scryfall.io/normal/front/1/6/16671d98-6f00-477b-a010-d2905c94eb65.jpg?1789599693",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Forest",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Basic Land — Forest",
+   "oracle_text": "({T}: Add {G}.)",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "289",
+   "scryfall_id": "613bc075-2fe4-421f-bfec-3786a5e37797",
+   "image_url": "https://cards.scryfall.io/normal/front/6/1/613bc075-2fe4-421f-bfec-3786a5e37797.jpg?1789729776",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Fatehold Annex",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {W} or {U}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "U",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "177",
+   "scryfall_id": "5140f962-62f3-40fd-a322-44896c7e2613",
+   "image_url": "https://cards.scryfall.io/normal/front/5/1/5140f962-62f3-40fd-a322-44896c7e2613.jpg?1789556955",
+   "marshall": null,
+   "luis": "C+",
+   "tag": null,
+   "note": "Enters tapped unless you control a planeswalker, a cycle land that's about average value like most fixing lands."
+  },
+  {
+   "name": "Theorix Annex",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {U} or {B}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "B",
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "192",
+   "scryfall_id": "97bbbd23-ecb1-4407-ac14-dede08532a1e",
+   "image_url": "https://cards.scryfall.io/normal/front/9/7/97bbbd23-ecb1-4407-ac14-dede08532a1e.jpg?1789557008",
+   "marshall": null,
+   "luis": "C+",
+   "tag": null,
+   "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+  },
+  {
+   "name": "Stingerquill Annex",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {B} or {R}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "B",
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "190",
+   "scryfall_id": "6ede3143-69ac-4cbe-922a-d25b07c26da7",
+   "image_url": "https://cards.scryfall.io/normal/front/6/e/6ede3143-69ac-4cbe-922a-d25b07c26da7.jpg?1789557046",
+   "marshall": null,
+   "luis": "C+",
+   "tag": null,
+   "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+  },
+  {
+   "name": "Konstrari Annex",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {R} or {G}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "G",
+    "R"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "183",
+   "scryfall_id": "39c805e3-82cd-42a9-80fe-8d81712a94ea",
+   "image_url": "https://cards.scryfall.io/normal/front/3/9/39c805e3-82cd-42a9-80fe-8d81712a94ea.jpg?1789556993",
+   "marshall": null,
+   "luis": "C+",
+   "tag": null,
+   "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+  },
+  {
+   "name": "Vigorbloom Annex",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {G} or {W}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "G",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "194",
+   "scryfall_id": "db8c7bdd-76cd-4be0-ae0d-d430e9a5fe7a",
+   "image_url": "https://cards.scryfall.io/normal/front/d/b/db8c7bdd-76cd-4be0-ae0d-d430e9a5fe7a.jpg?1789557019",
+   "marshall": null,
+   "luis": "C+",
+   "tag": null,
+   "note": "Graded as a cycle - all five annexes are the same card. Marshall: don't overlook these if you're heavy on playables."
+  },
+  {
+   "name": "Meticulous Commons",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {W} or {B}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "B",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "184",
+   "scryfall_id": "93ac525e-1919-43dd-aba4-073b7e4c1768",
+   "image_url": "https://cards.scryfall.io/normal/front/9/3/93ac525e-1919-43dd-aba4-073b7e4c1768.jpg?1789557002",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Innovative Commons",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {U} or {R}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "R",
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "182",
+   "scryfall_id": "84ea799a-faa2-4ff1-a933-432d4ee31a3b",
+   "image_url": "https://cards.scryfall.io/normal/front/8/4/84ea799a-faa2-4ff1-a933-432d4ee31a3b.jpg?1789556991",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Formidable Commons",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {B} or {G}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "B",
+    "G"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "178",
+   "scryfall_id": "e6ca6c3e-f145-42d6-8a17-90770c15afaf",
+   "image_url": "https://cards.scryfall.io/normal/front/e/6/e6ca6c3e-f145-42d6-8a17-90770c15afaf.jpg?1789556960",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Dedicated Commons",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {R} or {W}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "R",
+    "W"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "175",
+   "scryfall_id": "3223e5db-5cc4-42f9-ae9e-ff58abc7c390",
+   "image_url": "https://cards.scryfall.io/normal/front/3/2/3223e5db-5cc4-42f9-ae9e-ff58abc7c390.jpg?1789556950",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Transformative Commons",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped unless you control a planeswalker.\n{T}: Add {G} or {U}.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [
+    "G",
+    "U"
+   ],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "193",
+   "scryfall_id": "b57d5be7-3157-4b49-aeb8-d7368ca7e9dd",
+   "image_url": "https://cards.scryfall.io/normal/front/b/5/b57d5be7-3157-4b49-aeb8-d7368ca7e9dd.jpg?1789557014",
+   "marshall": null,
+   "luis": null,
+   "tag": null,
+   "note": null
+  },
+  {
+   "name": "Hexhaven Dueling Arena",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "{T}: Add {C}.\n{2}, {T}: Target creature that attacked this turn becomes prepared. Activate only as a sorcery. (Only creatures with prepare spells can become prepared.)\n{4}, {T}: Target creature becomes prepared.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [],
+   "rarity": "uncommon",
+   "set": "fra",
+   "collector_number": "181",
+   "scryfall_id": "9128ce00-6744-4d36-bfbe-ef75d78110b0",
+   "image_url": "https://cards.scryfall.io/normal/front/9/1/9128ce00-6744-4d36-bfbe-ef75d78110b0.jpg?1789556985",
+   "marshall": "F",
+   "luis": "F",
+   "tag": null,
+   "note": "Colorless land whose activated ability to make a creature prepared isn't worth the mana-fixing cost."
+  },
+  {
+   "name": "Room of Refuge",
+   "mana_cost": "",
+   "cmc": 0,
+   "type_line": "Land",
+   "oracle_text": "This land enters tapped. As it enters, choose a color.\n{T}: Add one mana of the chosen color.\n{5}, {T}, Sacrifice this land: Put two +1/+1 counters on target creature. Activate only as a sorcery.",
+   "power": null,
+   "toughness": null,
+   "colors": [],
+   "color_identity": [],
+   "rarity": "common",
+   "set": "fra",
+   "collector_number": "188",
+   "scryfall_id": "9a467560-6676-4fc2-9400-768a79650aa4",
+   "image_url": "https://cards.scryfall.io/normal/front/9/a/9a467560-6676-4fc2-9400-768a79650aa4.jpg?1789557010",
+   "marshall": "C+",
+   "luis": "C+",
+   "tag": null,
+   "note": "Enters tapped for any color with no shuffling, plus a late-game sac ability to add +1/+1 counters."
+  }
+ ]
+}
