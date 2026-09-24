@@ -12,6 +12,7 @@ import {
   type SetReviewCard,
 } from "../lib/set-review";
 import { Modal } from "./Modal";
+import { OfflinePanel } from "./OfflinePanel";
 
 type SortKey = "grade" | "name" | "cmc" | "rarity";
 
@@ -49,11 +50,12 @@ function ManaCost({ cost }: { cost: string }) {
 }
 
 /**
- * The shown grade. A small "M" marks the rows where Luis never gave one and
- * we're falling back to Marshall's.
+ * The shown grade: Luis's, or Marshall's when Luis didn't give one. The two
+ * are close enough in practice that the table doesn't distinguish them; both
+ * are still kept in the data.
  */
 function GradePill({ card }: { card: SetReviewCard }) {
-  const { grade, source } = primaryGrade(card);
+  const { grade } = primaryGrade(card);
   // "Sideboard" is a grade on its own, not a letter.
   const sideboardOnly = !grade && card.tag === "sideboard";
   return (
@@ -67,14 +69,6 @@ function GradePill({ card }: { card: SetReviewCard }) {
       >
         {grade ?? (sideboardOnly ? "SB" : "—")}
       </span>
-      {source === "marshall" && (
-        <span
-          title="Marshall's grade — Luis didn't give one for this card"
-          className="text-[10px] font-medium text-(--color-text-dim)"
-        >
-          M
-        </span>
-      )}
     </span>
   );
 }
@@ -120,6 +114,10 @@ export function SetReview() {
 
   const graded = useMemo(
     () => setReview.cards.filter((c) => hasAssessment(c)).length,
+    [],
+  );
+  const imageUrls = useMemo(
+    () => setReview.cards.map((c) => c.image_url).filter((u): u is string => !!u),
     [],
   );
 
@@ -203,8 +201,8 @@ export function SetReview() {
             >
               {setReview.source.title}
             </a>
-            . Luis's grade, falling back to Marshall's (marked{" "}
-            <span className="text-(--color-text)">M</span>). Card text via Scryfall.
+            , graded by Luis (or Marshall where Luis didn't give one). Card text
+            via Scryfall.
           </p>
         </div>
         <span className="text-xs text-(--color-text-dim)">
@@ -271,6 +269,8 @@ export function SetReview() {
 
         <span className="ml-auto text-xs text-(--color-text-dim)">{rows.length} shown</span>
       </div>
+
+      <OfflinePanel urls={imageUrls} />
 
       {/* Mobile sort control — the table headers aren't reachable on a phone. */}
       <div className="flex items-center gap-2 md:hidden">
