@@ -6,6 +6,7 @@ import {
   hasAssessment,
   manaSymbols,
   primaryGrade,
+  primaryValue,
   setReview,
   type ColorBucket,
   type SetReviewCard,
@@ -49,19 +50,57 @@ function Cost({ cost }: { cost: string }) {
  * grade, name, cost and the note, grouped by colour and ordered by mana value.
  * Designed to be printed — see the @media print block in index.css.
  */
+type SortKey = "cmc" | "grade" | "name";
+
+const SORT_LABELS: Record<SortKey, string> = {
+  cmc: "Mana value",
+  grade: "Grade",
+  name: "Name",
+};
+
+/** The direction that reads as "best first" for each key. */
+const SORT_DEFAULT_ASC: Record<SortKey, boolean> = {
+  cmc: true,
+  grade: false,
+  name: true,
+};
+
 export function SetReviewPrint({ onBack }: { onBack: () => void }) {
   const [showNotes, setShowNotes] = useState(true);
   const [gradedOnly, setGradedOnly] = useState(true);
+  const [sortKey, setSortKey] = useState<SortKey>("cmc");
+  const [asc, setAsc] = useState(true);
 
+  // Cards stay grouped by colour; the sort applies within each section.
   const sections = useMemo(() => {
+    const dir = asc ? 1 : -1;
+    const compare = (a: SetReviewCard, b: SetReviewCard) => {
+      let d: number;
+      switch (sortKey) {
+        case "grade":
+          d = primaryValue(a) - primaryValue(b);
+          break;
+        case "name":
+          d = a.name.localeCompare(b.name);
+          break;
+        default:
+          d = a.cmc - b.cmc;
+      }
+      // Within equal keys, fall back to mana value then name so the order is
+      // stable and still scannable.
+      if (d === 0 && sortKey !== "cmc") d = (a.cmc - b.cmc) * dir;
+      if (d === 0) d = a.name.localeCompare(b.name) * dir;
+      return d * dir;
+    };
+
     return COLOR_BUCKETS.map((bucket) => {
       const cards = setReview.cards
         .filter((c) => colorBucket(c) === bucket.id)
         .filter((c) => (gradedOnly ? hasAssessment(c) : true))
-        .sort((a, b) => a.cmc - b.cmc || a.name.localeCompare(b.name));
+        .sort(compare);
       return { ...bucket, cards };
     }).filter((s) => s.cards.length > 0);
-  }, [gradedOnly]);
+  }, [gradedOnly, sortKey, asc]);
 
   const total = sections.reduce((n, s) => n + s.cards.length, 0);
 
@@ -92,6 +131,32 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
           />
           Graded only
         </label>
+        <label className="flex items-center gap-1.5 text-xs text-(--color-text-dim)">
+          Sort
+          <select
+            value={sortKey}
+            onChange={(e) => {
+              const next = e.target.value as SortKey;
+              setSortKey(next);
+              setAsc(SORT_DEFAULT_ASC[next]);
+            }}
+            className="rounded border border-(--color-border) bg-(--color-bg) px-2 py-1 text-xs text-(--color-text)"
+          >
+            {(Object.keys(SORT_LABELS) as SortKey[]).map((k) => (
+              <option key={k} value={k}>
+                {SORT_LABELS[k]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={() => setAsc((v) => !v)}
+          title={asc ? "Ascending" : "Descending"}
+          className="rounded border border-(--color-border) px-2 py-1 text-xs text-(--color-text-dim) hover:bg-white/5"
+        >
+          {asc ? "▲" : "▼"}
+        </button>
         <span className="text-xs text-(--color-text-dim)">{total} cards</span>
         <button
           type="button"
@@ -108,8 +173,8 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
           {setReview.setName} — commons &amp; uncommons
         </h2>
         <p className="text-[10px] text-(--color-text-dim)">
-          Grades from {setReview.source.title}. Within each colour, ordered by
-          mana value.
+          Grades from {setReview.source.title}. Grouped by colour, ordered by{" "}
+          {SORT_LABELS[sortKey].toLowerCase()} ({asc ? "ascending" : "descending"}).
         </p>
       </div>
 

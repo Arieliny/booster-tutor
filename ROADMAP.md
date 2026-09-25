@@ -181,6 +181,10 @@ A condensed reference for use at the table, asked for by a friend who wanted
   Grouped into colour sections (W/U/B/R/G/multicolour/colourless), ordered by
   mana value ascending within each.
 - Toggles for comments and graded-only; defaults to graded-only (185 cards).
+- Sortable within each colour: mana value, grade or name, with a direction
+  toggle. Each key picks the direction that reads as "best first" when
+  selected. Equal keys fall back to mana value then name, so grade order
+  stays scannable (all the B's ordered cheap to expensive).
 - **One colour per printed page.** Sections after the first carry
   `break-before: page`; the first deliberately doesn't, so there's no blank
   leading page. The columns sit on each section's list rather than wrapping all
