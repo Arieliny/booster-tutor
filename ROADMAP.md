@@ -181,8 +181,14 @@ A condensed reference for use at the table, asked for by a friend who wanted
   Grouped into colour sections (W/U/B/R/G/multicolour/colourless), ordered by
   mana value ascending within each.
 - Toggles for comments and graded-only; defaults to graded-only (185 cards).
-- Two columns on paper, one on screen. `break-inside-avoid` keeps entries and
-  sections from splitting across a page.
+- Two columns on paper, one on screen. `break-inside: avoid` applies to
+  individual entries only — **not** to sections. A colour section is 820–1060px
+  tall, taller than a printable column, so marking it unbreakable made it
+  unplaceable: the first section got pushed wholesale to page 2 and page 1 held
+  nothing but the title. Headings use `break-after: avoid` so they aren't
+  orphaned at the foot of a column.
+- The app shell is a `min-h-screen` flex column for the screen, which fragments
+  badly across printed pages; `print:block print:min-h-0 print:p-0` collapses it.
 - **The whole theme flips light for print** by overriding the CSS variables in
   a single `@media print` block in `index.css`, rather than per-component print
   rules. App chrome (header, tabs, footer) is `print:hidden`.

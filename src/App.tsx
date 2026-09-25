@@ -200,8 +200,8 @@ function App() {
   const onPacksTab = tab === "packs";
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 lg:p-8">
+    <div className="flex min-h-screen flex-col print:block print:min-h-0">
+      <div className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 lg:p-8 print:max-w-none print:p-0">
         <header className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4 print:hidden">
           <div>
             <h1 className="text-2xl font-semibold text-(--color-text) sm:text-3xl">

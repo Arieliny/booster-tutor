@@ -116,9 +116,9 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
       {/* Two columns on paper; one on screen so it stays readable. */}
       <div className="print:columns-2 print:gap-6">
         {sections.map((section) => (
-          <section key={section.id} className="mb-3 break-inside-avoid">
+          <section key={section.id} className="mb-3">
             <h3
-              className="mb-1 border-b-2 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-(--color-text)"
+              className="mb-1 break-after-avoid border-b-2 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-(--color-text)"
               style={{ borderColor: SECTION_RULE[section.id] }}
             >
               {section.label}
