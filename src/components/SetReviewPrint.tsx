@@ -102,8 +102,8 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
         </button>
       </div>
 
-      {/* Title block — prints once at the top */}
-      <div className="border-b border-(--color-border) pb-2">
+      {/* Context for the screen only — on paper it would eat a whole page. */}
+      <div className="border-b border-(--color-border) pb-2 print:hidden">
         <h2 className="text-base font-semibold text-(--color-text)">
           {setReview.setName} — commons &amp; uncommons
         </h2>
@@ -113,10 +113,18 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
         </p>
       </div>
 
-      {/* Two columns on paper; one on screen so it stays readable. */}
-      <div className="print:columns-2 print:gap-6">
-        {sections.map((section) => (
-          <section key={section.id} className="mb-3">
+      {/*
+        One colour per printed page. The columns live on each section's list
+        rather than wrapping every section, so the heading spans the full width
+        and a forced page break sits on a normal block instead of inside a
+        multi-column flow (where browsers handle it inconsistently).
+      */}
+      <div>
+        {sections.map((section, i) => (
+          <section
+            key={section.id}
+            className={"mb-3" + (i > 0 ? " print:break-before-page" : "")}
+          >
             <h3
               className="mb-1 break-after-avoid border-b-2 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-(--color-text)"
               style={{ borderColor: SECTION_RULE[section.id] }}
@@ -126,7 +134,7 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
                 {section.cards.length}
               </span>
             </h3>
-            <ul>
+            <ul className="print:columns-2 print:gap-6">
               {section.cards.map((card) => (
                 <Entry key={card.scryfall_id} card={card} showNote={showNotes} />
               ))}
