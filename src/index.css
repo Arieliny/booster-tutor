@@ -21,3 +21,31 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/*
+ * Print: flip the whole theme light. Everything is driven by these variables,
+ * so overriding them here converts the app rather than needing print rules per
+ * component. Card symbols are <img>, so they still print when the browser's
+ * "background graphics" option is off — CSS-background pips would not.
+ */
+@media print {
+  :root {
+    --color-bg: #ffffff;
+    --color-bg-elev: #ffffff;
+    --color-border: #c3c8d0;
+    --color-text: #000000;
+    --color-text-dim: #3f4550;
+    --color-accent: #5b21b6;
+    --color-accent-bright: #5b21b6;
+  }
+
+  html, body, #root {
+    height: auto;
+    background: #ffffff;
+    color: #000000;
+  }
+
+  @page {
+    margin: 12mm;
+  }
+}

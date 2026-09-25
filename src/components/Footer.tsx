@@ -1,6 +1,6 @@
 export function Footer() {
   return (
-    <footer className="mx-auto mt-12 max-w-7xl border-t border-(--color-border) p-4 text-center text-xs leading-relaxed text-(--color-text-dim) sm:p-6 lg:p-8">
+    <footer className="mx-auto mt-12 max-w-7xl border-t border-(--color-border) p-4 text-center text-xs leading-relaxed text-(--color-text-dim) sm:p-6 lg:p-8 print:hidden">
       <p className="mb-2">
         <strong className="text-(--color-text)">Booster Tutor</strong> is unofficial
         Fan Content permitted under the{" "}

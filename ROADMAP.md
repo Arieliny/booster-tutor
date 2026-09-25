@@ -172,6 +172,24 @@ Each tab has a real path, so views can be linked and bookmarked:
   the precached shell, verified by loading `/set-review` with the server
   stopped.
 
+### Print view (`/set-review/print`)
+
+A condensed reference for use at the table, asked for by a friend who wanted
+"as condensed as possible, no need for what's on the card".
+
+- Grade, name, mana cost and the comment only — no rules text, no images.
+  Grouped into colour sections (W/U/B/R/G/multicolour/colourless), ordered by
+  mana value ascending within each.
+- Toggles for comments and graded-only; defaults to graded-only (185 cards).
+- Two columns on paper, one on screen. `break-inside-avoid` keeps entries and
+  sections from splitting across a page.
+- **The whole theme flips light for print** by overriding the CSS variables in
+  a single `@media print` block in `index.css`, rather than per-component print
+  rules. App chrome (header, tabs, footer) is `print:hidden`.
+- Mana pips are `<img>` data URIs, so they still print when the browser's
+  "background graphics" option is off — CSS-background pips would vanish.
+- Split cards show the front face for both name and cost, so the two agree.
+
 ## ✅ Cube export (.txt) + pancake draft file (2026-09-18)
 
 Export any cube as plain text from Manage cubes → **Export** (read-only, so it

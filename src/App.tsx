@@ -30,6 +30,9 @@ import {
 const SetReview = lazy(() =>
   import("./components/SetReview").then((m) => ({ default: m.SetReview })),
 );
+const SetReviewPrint = lazy(() =>
+  import("./components/SetReviewPrint").then((m) => ({ default: m.SetReviewPrint })),
+);
 
 type View =
   | { kind: "loading" }
@@ -199,7 +202,7 @@ function App() {
   return (
     <div className="flex min-h-screen flex-col">
       <div className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 lg:p-8">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4">
+        <header className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4 print:hidden">
           <div>
             <h1 className="text-2xl font-semibold text-(--color-text) sm:text-3xl">
               Booster Tutor
@@ -235,7 +238,7 @@ function App() {
         <nav
           role="tablist"
           aria-label="View"
-          className="mb-6 inline-flex overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg-elev)"
+          className="mb-6 inline-flex overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg-elev) print:hidden"
         >
           {([
             { id: "packs", label: "Open packs" },
@@ -326,7 +329,15 @@ function App() {
               <p className="text-(--color-text-dim)">Loading set review…</p>
             }
           >
-            <SetReview />
+            <SetReview onPrintView={() => setTab("reviewPrint")} />
+          </Suspense>
+        ) : tab === "reviewPrint" ? (
+          <Suspense
+            fallback={
+              <p className="text-(--color-text-dim)">Loading set review…</p>
+            }
+          >
+            <SetReviewPrint onBack={() => setTab("review")} />
           </Suspense>
         ) : tab === "rotisserie" ? (
           selectedCube && <Rotisserie key={selectedCube.id} cube={selectedCube} />

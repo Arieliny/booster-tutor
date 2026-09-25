@@ -121,7 +121,7 @@ function RulesText({ text }: { text: string }) {
 }
 
 /** Searchable, filterable set review. Table on desktop, card list on phones. */
-export function SetReview() {
+export function SetReview({ onPrintView }: { onPrintView: () => void }) {
   const [search, setSearch] = useState("");
   const [rarity, setRarity] = useState<"all" | "common" | "uncommon">("all");
   const [colors, setColors] = useState<Set<ColorBucket>>(new Set());
@@ -226,9 +226,18 @@ export function SetReview() {
             via Scryfall.
           </p>
         </div>
-        <span className="text-xs text-(--color-text-dim)">
-          {graded} of {setReview.cards.length} graded
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onPrintView}
+            className="rounded border border-(--color-border) px-3 py-1.5 text-xs text-(--color-text-dim) hover:bg-white/5 hover:text-(--color-text)"
+          >
+            🖨 Print view
+          </button>
+          <span className="text-xs text-(--color-text-dim)">
+            {graded} of {setReview.cards.length} graded
+          </span>
+        </div>
       </div>
 
       {/* Filters */}
