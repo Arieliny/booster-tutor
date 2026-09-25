@@ -70,6 +70,13 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
   const [gradedOnly, setGradedOnly] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("cmc");
   const [asc, setAsc] = useState(true);
+  /**
+   * Off = the most condensed layout: every colour flows through one shared
+   * two-column stream, so a section starts wherever the previous one ended.
+   * On = each colour starts its own page, which reads better as a reference
+   * but costs a page per colour.
+   */
+  const [pageBreaks, setPageBreaks] = useState(false);
 
   // Cards stay grouped by colour; the sort applies within each section.
   const sections = useMemo(() => {
@@ -131,6 +138,17 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
           />
           Graded only
         </label>
+        <label
+          className="flex items-center gap-2 text-xs text-(--color-text-dim)"
+          title="Off packs everything together for the fewest pages; on gives each colour its own page."
+        >
+          <input
+            type="checkbox"
+            checked={pageBreaks}
+            onChange={(e) => setPageBreaks(e.target.checked)}
+          />
+          Page per colour
+        </label>
         <label className="flex items-center gap-1.5 text-xs text-(--color-text-dim)">
           Sort
           <select
@@ -174,7 +192,10 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
         </h2>
         <p className="text-[10px] text-(--color-text-dim)">
           Grades from {setReview.source.title}. Grouped by colour, ordered by{" "}
-          {SORT_LABELS[sortKey].toLowerCase()} ({asc ? "ascending" : "descending"}).
+          {SORT_LABELS[sortKey].toLowerCase()} ({asc ? "ascending" : "descending"}).{" "}
+          {pageBreaks
+            ? "Each colour starts a new page."
+            : "Packed continuously for the fewest pages."}
         </p>
       </div>
 
@@ -184,11 +205,13 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
         and a forced page break sits on a normal block instead of inside a
         multi-column flow (where browsers handle it inconsistently).
       */}
-      <div>
+      <div className={pageBreaks ? undefined : "print:columns-2 print:gap-6"}>
         {sections.map((section, i) => (
           <section
             key={section.id}
-            className={"mb-3" + (i > 0 ? " print:break-before-page" : "")}
+            className={
+              "mb-3" + (pageBreaks && i > 0 ? " print:break-before-page" : "")
+            }
           >
             <h3
               className="mb-1 break-after-avoid border-b-2 pb-0.5 text-[11px] font-bold uppercase tracking-wider text-(--color-text)"
@@ -199,7 +222,7 @@ export function SetReviewPrint({ onBack }: { onBack: () => void }) {
                 {section.cards.length}
               </span>
             </h3>
-            <ul className="print:columns-2 print:gap-6">
+            <ul className={pageBreaks ? "print:columns-2 print:gap-6" : undefined}>
               {section.cards.map((card) => (
                 <Entry key={card.scryfall_id} card={card} showNote={showNotes} />
               ))}

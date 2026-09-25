@@ -185,12 +185,16 @@ A condensed reference for use at the table, asked for by a friend who wanted
   toggle. Each key picks the direction that reads as "best first" when
   selected. Equal keys fall back to mana value then name, so grade order
   stays scannable (all the B's ordered cheap to expensive).
-- **One colour per printed page.** Sections after the first carry
-  `break-before: page`; the first deliberately doesn't, so there's no blank
-  leading page. The columns sit on each section's list rather than wrapping all
-  the sections, so the heading spans full width and the forced break lands on a
-  normal block instead of inside a multi-column flow, where browsers handle it
-  inconsistently.
+- **"Page per colour" toggle**, because the two people using this want opposite
+  things — one likes a page per colour as a reference, the other wants the
+  fewest pages possible. It changes the structure, not just a break rule:
+  - *off (default, fewest pages)*: every colour flows through one shared
+    two-column stream, so a section starts wherever the last one ended.
+  - *on*: each section gets its own two-column block and
+    `break-before: page` — except the first, or you get a blank leading page.
+    Columns live on the section's list so the forced break lands on a normal
+    block rather than inside a multi-column flow, where browsers are
+    inconsistent.
 - `break-inside: avoid` applies to individual entries only, so a single card
   never splits; headings use `break-after: avoid` so they aren't orphaned.
 - The title block is screen-only (`print:hidden`) — on paper it consumed a page
