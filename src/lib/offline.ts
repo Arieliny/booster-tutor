@@ -25,8 +25,8 @@ export function cachesSupported(): boolean {
   return typeof caches !== "undefined";
 }
 
-export function estimateBytes(count: number): number {
-  return count * AVG_IMAGE_BYTES;
+export function estimateBytes(count: number, avgBytes = AVG_IMAGE_BYTES): number {
+  return count * avgBytes;
 }
 
 export function formatBytes(bytes: number): string {

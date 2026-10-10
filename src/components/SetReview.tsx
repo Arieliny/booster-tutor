@@ -4,71 +4,18 @@ import {
   colorBucket,
   gradeTone,
   hasAssessment,
-  manaSymbols,
   primaryGrade,
   primaryValue,
   setReview,
   type ColorBucket,
   type SetReviewCard,
 } from "../lib/set-review";
-import manaSymbolUris from "../data/mana-symbols.json";
+import { ManaCost } from "./ManaCost";
+import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
 import { Modal } from "./Modal";
 import { OfflinePanel } from "./OfflinePanel";
 
 type SortKey = "grade" | "name" | "cmc" | "rarity";
-
-/** Official Scryfall symbol artwork, inlined at build time so it works offline. */
-const SYMBOL_URI = manaSymbolUris as Record<string, string>;
-
-/** Fallback faces for anything without baked artwork (and the filter buttons). */
-const PIP_STYLE: Record<string, string> = {
-  W: "bg-[#f8f4e4] text-black",
-  U: "bg-[#9fd5f2] text-black",
-  B: "bg-[#b0a7a3] text-black",
-  R: "bg-[#f4a08a] text-black",
-  G: "bg-[#9ad3ae] text-black",
-  // No real symbol exists for "multicolour" — gold is the convention.
-  M: "bg-gradient-to-br from-[#e9d585] to-[#c1971f] text-black",
-  C: "bg-[#cfc9c2] text-black",
-};
-
-function Pip({ sym }: { sym: string }) {
-  const uri = SYMBOL_URI[sym];
-  if (uri) {
-    return (
-      <img
-        src={uri}
-        alt={sym}
-        title={sym}
-        draggable={false}
-        className="inline-block h-[15px] w-[15px] shrink-0 align-[-2px]"
-      />
-    );
-  }
-  // A symbol we haven't baked (e.g. from a newer set) still renders legibly.
-  return (
-    <span
-      className={
-        "inline-flex h-[15px] min-w-[15px] items-center justify-center rounded-full px-1 text-[10px] font-semibold " +
-        (PIP_STYLE[sym] ?? "bg-[#cfc9c2] text-black")
-      }
-    >
-      {sym}
-    </span>
-  );
-}
-
-function ManaCost({ cost }: { cost: string }) {
-  const syms = manaSymbols(cost);
-  if (syms.length === 0) return <span className="text-(--color-text-dim)">—</span>;
-  return (
-    <span className="inline-flex flex-wrap gap-0.5">
-      {syms.map((s, i) => (
-        <Pip key={i} sym={s} />
-      ))}
-    </span>
-  );
-}
 
 /**
  * The shown grade: Luis's, or Marshall's when Luis didn't give one. The two

@@ -10,7 +10,7 @@
  *   - the service worker's navigateFallback does the same offline
  */
 
-export type Tab = "packs" | "rotisserie" | "inventory" | "review" | "reviewPrint";
+export type Tab = "packs" | "rotisserie" | "inventory" | "review" | "reviewPrint" | "cubeReview";
 
 export const TAB_PATHS: Record<Tab, string> = {
   packs: "/",
@@ -19,6 +19,7 @@ export const TAB_PATHS: Record<Tab, string> = {
   review: "/set-review",
   // Not a top-level tab — a condensed, printable view of the set review.
   reviewPrint: "/set-review/print",
+  cubeReview: "/cube-review",
 };
 
 const PATH_TABS = new Map<string, Tab>(

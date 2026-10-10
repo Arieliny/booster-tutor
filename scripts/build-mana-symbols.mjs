@@ -29,6 +29,17 @@ for (const f of fs.readdirSync(DATA_DIR).filter((f) => /^set-review-.*\.json$/.t
     }
   }
 }
+// ...and in the cube review data (cards keyed by Oracle ID, cost on each card + face).
+const cubeReview = path.join(DATA_DIR, "cube-review.json");
+if (fs.existsSync(cubeReview)) {
+  const doc = JSON.parse(fs.readFileSync(cubeReview, "utf8"));
+  for (const card of Object.values(doc.cards ?? {})) {
+    const costs = [card.cost, ...(card.faces ?? []).map((f) => f.cost)];
+    for (const cost of costs) {
+      for (const m of String(cost ?? "").matchAll(/\{([^}]+)\}/g)) used.add(m[1]);
+    }
+  }
+}
 if (used.size === 0) throw new Error("No mana symbols found in src/data/set-review-*.json");
 
 const res = await fetch("https://api.scryfall.com/symbology", {

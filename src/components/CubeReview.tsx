@@ -1,0 +1,1187 @@
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CMC_FACETS,
+  COLOR_FACETS,
+  CUBE_KEYS,
+  CUBE_SHORT,
+  RARITY_FACETS,
+  STATUSES,
+  STATUS_KEY,
+  STATUS_LABEL,
+  TYPE_FACETS,
+  allIds,
+  allImageUrls,
+  card,
+  cmcFacet,
+  colorFacet,
+  cubeUnion,
+  data,
+  frontName,
+  hasType,
+  historyEvents,
+  imageUrl,
+  lastChange,
+  loadDecisions,
+  logById,
+  members,
+  saveDecisions,
+  storageWritable,
+  searchText,
+  setIds,
+  shortDate,
+  type CmcFacet,
+  type ColorFacet,
+  type CubeKey,
+  type Decisions,
+  type LogKey,
+  type ReviewCard,
+  type Status,
+  type TypeFacet,
+} from "../lib/cube-review";
+import { gradeTone, primaryGrade, setReview, type SetReviewCard } from "../lib/set-review";
+import { ManaCost } from "./ManaCost";
+import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
+import { OfflinePanel } from "./OfflinePanel";
+import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
+
+type View = "compare" | "changelog" | "set" | "all" | "decisions" | "summary";
+type Member = "in" | "out" | "any";
+type LogTag = "all" | "current" | "past" | "tried";
+type Layout = "grid" | "list";
+type SortKey = "name" | "cmc" | "recent" | "grade";
+type StatusFilter = Status | "none";
+
+interface Ui {
+  view: View;
+  member: Record<CubeKey, Member>;
+  log: LogKey;
+  logTag: LogTag;
+  hideMine: boolean;
+  layout: Partial<Record<View, Layout>>;
+  sort: Partial<Record<View, SortKey>>;
+  colors: ColorFacet[];
+  types: TypeFacet[];
+  cmcs: CmcFacet[];
+  rarities: string[];
+  statuses: StatusFilter[];
+  autoAdvance: boolean;
+}
+
+const DEFAULT_UI: Ui = {
+  view: "compare",
+  member: { mine: "out", lsv: "in", mtgo: "any" },
+  log: "lsv",
+  logTag: "all",
+  hideMine: false,
+  layout: {},
+  sort: {},
+  colors: [],
+  types: [],
+  cmcs: [],
+  rarities: [],
+  statuses: [],
+  autoAdvance: true,
+};
+
+const UI_KEY = "booster-tutor-cube-review-ui-v1";
+
+function loadUi(): Ui {
+  try {
+    const s = localStorage.getItem(UI_KEY);
+    return s ? { ...DEFAULT_UI, ...(JSON.parse(s) as Partial<Ui>) } : DEFAULT_UI;
+  } catch {
+    return DEFAULT_UI;
+  }
+}
+
+const VIEWS: { id: View; label: string }[] = [
+  { id: "compare", label: "Compare cubes" },
+  { id: "changelog", label: "Changelogs" },
+  { id: "set", label: data.set.name },
+  { id: "all", label: "All cards" },
+  { id: "decisions", label: "My decisions" },
+];
+
+const PRESETS: { label: string; m: Record<CubeKey, Member> }[] = [
+  { label: "LSV has, I don't", m: { mine: "out", lsv: "in", mtgo: "any" } },
+  { label: "I have, LSV doesn't", m: { mine: "in", lsv: "out", mtgo: "any" } },
+  { label: "MTGO has, I don't", m: { mine: "out", lsv: "any", mtgo: "in" } },
+  { label: "Only mine", m: { mine: "in", lsv: "out", mtgo: "out" } },
+  { label: "In all three", m: { mine: "in", lsv: "in", mtgo: "in" } },
+  { label: "All cube cards", m: { mine: "any", lsv: "any", mtgo: "any" } },
+];
+
+const STATUS_TONE: Record<Status, string> = {
+  keep: "bg-sky-500/25 text-sky-200",
+  cut: "bg-red-500/25 text-red-200",
+  add: "bg-emerald-500/25 text-emerald-200",
+  maybe: "bg-amber-500/25 text-amber-200",
+};
+
+const STATUS_BUTTON: Record<Status, string> = {
+  keep: "border-sky-500/60 bg-sky-500/25 text-sky-100",
+  cut: "border-red-500/60 bg-red-500/25 text-red-100",
+  add: "border-emerald-500/60 bg-emerald-500/25 text-emerald-100",
+  maybe: "border-amber-500/60 bg-amber-500/25 text-amber-100",
+};
+
+const PAGE = 240;
+
+/** LR grades for the new set, matched on front-face name. */
+const gradeByName = new Map<string, SetReviewCard>(
+  setReview.cards.map((c) => [c.name.split(" // ")[0].toLowerCase(), c]),
+);
+function setGrade(c: ReviewCard): string | null {
+  if (!setIds.has(c.id)) return null;
+  const sr = gradeByName.get(frontName(c).toLowerCase());
+  if (!sr) return null;
+  const { grade } = primaryGrade(sr);
+  return grade ?? (sr.tag === "sideboard" ? "SB" : null);
+}
+function gradeSortValue(c: ReviewCard): number {
+  const g = setGrade(c);
+  if (!g) return -1;
+  if (g === "SB") return 0;
+  const order = ["F", "D-", "D", "D+", "C-", "C", "C+", "B-", "B", "B+", "A-", "A", "A+"];
+  return order.indexOf(g) + 1;
+}
+
+/** Cards matching every active facet + the search box. */
+function facetFilter(ui: Ui, q: string, decisions: Decisions) {
+  const needle = q.trim().toLowerCase();
+  return (c: ReviewCard) => {
+    if (ui.colors.length && !ui.colors.includes(colorFacet(c))) return false;
+    if (ui.types.length && !ui.types.some((t) => hasType(c, t))) return false;
+    if (ui.cmcs.length && !ui.cmcs.includes(cmcFacet(c))) return false;
+    if (ui.rarities.length && !ui.rarities.includes(c.rarity)) return false;
+    if (ui.statuses.length) {
+      const s: StatusFilter = decisions[c.id]?.status ?? "none";
+      if (!ui.statuses.includes(s)) return false;
+    }
+    if (needle && !searchText(c).includes(needle)) return false;
+    return true;
+  };
+}
+
+function matchesMembers(id: string, m: Record<CubeKey, Member>) {
+  return CUBE_KEYS.every((k) => m[k] === "any" || (m[k] === "in") === members[k].has(id));
+}
+
+export function CubeReview() {
+  const [ui, setUi] = useState<Ui>(loadUi);
+  const [q, setQ] = useState("");
+  const [decisions, setDecisions] = useState<Decisions>(loadDecisions);
+  // Tested once: if storage is blocked, every save would fail the same way.
+  const [saveFailed] = useState(() => !storageWritable());
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selId, setSelId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<{ ids: string[]; index: number } | null>(null);
+  const [paging, setPaging] = useState({ key: "", n: PAGE });
+  const [fullSize, setFullSize] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(UI_KEY, JSON.stringify(ui));
+    } catch {
+      // A remembered view is a convenience; nothing to do if storage is blocked.
+    }
+  }, [ui]);
+
+  useEffect(() => {
+    saveDecisions(decisions);
+  }, [decisions]);
+
+  const patch = useCallback((p: Partial<Ui>) => setUi((u) => ({ ...u, ...p })), []);
+
+  const setStatus = useCallback((id: string, s: Status) => {
+    setDecisions((d) => {
+      const prev = d[id];
+      const status = prev?.status === s ? undefined : s; // same key again clears it
+      return { ...d, [id]: { ...prev, status, t: Date.now() } };
+    });
+  }, []);
+
+  const setNote = useCallback((id: string, note: string) => {
+    setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
+  }, []);
+
+  const view = ui.view;
+  const layout: Layout = ui.layout[view] ?? (view === "changelog" ? "list" : "grid");
+  const sort: SortKey = ui.sort[view] ?? (view === "changelog" ? "recent" : "name");
+
+  const presetCounts = useMemo(
+    () => PRESETS.map((p) => cubeUnion.filter((id) => matchesMembers(id, p.m)).length),
+    [],
+  );
+
+  const logCounts = useMemo(() => {
+    const entries = data.changelogs[ui.log];
+    return {
+      all: entries.length,
+      current: entries.filter((e) => e.current).length,
+      past: entries.filter((e) => !e.current).length,
+      tried: entries.filter((e) => e.adds.length && !e.current).length,
+    };
+  }, [ui.log]);
+
+  const decided = useMemo(
+    () => Object.entries(decisions).filter(([id, d]) => d.status && data.cards[id]),
+    [decisions],
+  );
+
+  const baseIds = useMemo((): string[] => {
+    switch (view) {
+      case "compare":
+        return cubeUnion.filter((id) => matchesMembers(id, ui.member));
+      case "changelog":
+        return data.changelogs[ui.log]
+          .filter((e) =>
+            ui.logTag === "current"
+              ? e.current
+              : ui.logTag === "past"
+                ? !e.current
+                : ui.logTag === "tried"
+                  ? e.adds.length > 0 && !e.current
+                  : true,
+          )
+          .filter((e) => !(ui.hideMine && members.mine.has(e.id)))
+          .map((e) => e.id);
+      case "set":
+        return data.set.cards;
+      case "decisions":
+        return decided.map(([id]) => id);
+      default:
+        return allIds;
+    }
+  }, [view, ui.member, ui.log, ui.logTag, ui.hideMine, decided]);
+
+  const ids = useMemo(() => {
+    const keep = facetFilter(ui, q, decisions);
+    const list = baseIds.filter((id) => data.cards[id] && keep(data.cards[id]));
+    const byName = (a: string, b: string) => card(a).name.localeCompare(card(b).name);
+    if (sort === "cmc") list.sort((a, b) => card(a).cmc - card(b).cmc || byName(a, b));
+    else if (sort === "grade") list.sort((a, b) => gradeSortValue(card(b)) - gradeSortValue(card(a)) || byName(a, b));
+    else if (sort === "recent" && view === "changelog") {
+      const log = logById[ui.log];
+      list.sort((a, b) => lastChange(log.get(b)!).localeCompare(lastChange(log.get(a)!)) || byName(a, b));
+    } else list.sort(byName);
+    return list;
+  }, [baseIds, ui, q, decisions, sort, view]);
+
+  // Render a page at a time; any change to what's listed starts again at one page.
+  const listKey = useMemo(
+    () =>
+      JSON.stringify([view, ui.member, ui.log, ui.logTag, ui.hideMine, ui.colors, ui.types, ui.cmcs, ui.rarities, ui.statuses, q, sort]),
+    [view, ui.member, ui.log, ui.logTag, ui.hideMine, ui.colors, ui.types, ui.cmcs, ui.rarities, ui.statuses, q, sort],
+  );
+  const limit = paging.key === listKey ? paging.n : PAGE;
+  const showAtLeast = useCallback((n: number) => setPaging({ key: listKey, n }), [listKey]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) showAtLeast(limit + PAGE);
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ids.length, limit, showAtLeast]);
+
+  const open = useCallback(
+    (id: string) => {
+      const index = ids.indexOf(id);
+      if (index === -1) return;
+      setSelId(id);
+      // Snapshot the list so tagging a card (which can drop it out of a
+      // status filter) doesn't reshuffle what next/previous means.
+      setDetail({ ids: [...ids], index });
+    },
+    [ids],
+  );
+
+  // Laptop keyboard: arrows move the cursor, Enter opens, K/C/A/M tag.
+  useEffect(() => {
+    if (detail || view === "summary") return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
+      if (e.ctrlKey || e.metaKey || e.altKey || ids.length === 0) return;
+      const cur = selId ? ids.indexOf(selId) : -1;
+      const cols =
+        layout === "grid" && gridRef.current
+          ? getComputedStyle(gridRef.current).gridTemplateColumns.split(" ").length
+          : 1;
+      let next: number;
+      if (e.key === "ArrowRight") next = cur + 1;
+      else if (e.key === "ArrowLeft") next = cur - 1;
+      else if (e.key === "ArrowDown") next = cur === -1 ? 0 : cur + cols;
+      else if (e.key === "ArrowUp") next = cur - cols;
+      else if ((e.key === "Enter" || e.key === " ") && selId) {
+        e.preventDefault();
+        open(selId);
+        return;
+      } else if (STATUS_KEY[e.key.toLowerCase()] && selId) {
+        setStatus(selId, STATUS_KEY[e.key.toLowerCase()]);
+        return;
+      } else return;
+      e.preventDefault();
+      next = Math.max(0, Math.min(ids.length - 1, next));
+      if (next >= limit) showAtLeast(next + PAGE);
+      setSelId(ids[next]);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [detail, view, ids, selId, layout, limit, open, setStatus, showAtLeast]);
+
+  useEffect(() => {
+    if (!selId) return;
+    document.querySelector(`[data-card="${selId}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [selId]);
+
+  const toggle = <T,>(list: T[], v: T): T[] =>
+    list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
+
+  const activeFilters =
+    ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length + (q ? 1 : 0);
+
+  const offlineUrls = useMemo(
+    () => (fullSize ? [...allImageUrls("small"), ...allImageUrls("normal")] : allImageUrls("small")),
+    [fullSize],
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Data freshness + device sync */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-(--color-text-dim)">
+        <span title="Refresh: node --use-system-ca scripts/build-cube-review.mjs, then deploy">
+          Data from {shortDate(data.builtAt.slice(0, 10))} · LSV updated {shortDate(data.cubes.lsv.updated)} ·
+          MTGO {shortDate(data.cubes.mtgo.updated)} · changelogs since {shortDate(data.changelogSince)}
+        </span>
+        <span className="ml-auto flex flex-wrap items-center gap-2">
+          <DecisionsSync decisions={decisions} onImport={setDecisions} />
+          <button
+            type="button"
+            onClick={() => patch({ view: view === "summary" ? "compare" : "summary" })}
+            className={
+              "rounded border px-3 py-1.5 text-sm " +
+              (view === "summary"
+                ? "border-(--color-accent) bg-(--color-accent) font-medium text-black"
+                : "border-(--color-border) text-(--color-text) hover:bg-white/5")
+            }
+          >
+            Summary · {decided.length}
+          </button>
+        </span>
+      </div>
+
+      {saveFailed && (
+        <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          This browser isn't saving your decisions (storage is blocked). Export them before closing the tab.
+        </p>
+      )}
+
+      {/* View switcher — scrolls sideways on a phone rather than wrapping. */}
+      <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+        {VIEWS.map((v) => (
+          <button
+            key={v.id}
+            type="button"
+            onClick={() => patch({ view: v.id })}
+            className={
+              "shrink-0 rounded-lg border px-3 py-2 text-sm whitespace-nowrap " +
+              (view === v.id
+                ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)"
+                : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+            }
+          >
+            {v.label}
+            {v.id === "decisions" && decided.length > 0 && (
+              <span className="ml-1.5 text-(--color-text-dim)">{decided.length}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {view === "summary" ? (
+        <CubeReviewSummary decisions={decisions} onOpenCard={(id) => setDetail({ ids: [id], index: 0 })} />
+      ) : (
+        <>
+          {/* View-specific controls */}
+          {view === "compare" && (
+            <div className="space-y-3 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
+              <div className="flex flex-wrap gap-x-5 gap-y-2">
+                {CUBE_KEYS.map((k) => (
+                  <div key={k} className="flex items-center gap-2 text-sm">
+                    <span className="w-16 text-(--color-text) sm:w-auto">{data.cubes[k].label}</span>
+                    <Segmented
+                      value={ui.member[k]}
+                      options={[
+                        ["in", "In"],
+                        ["out", "Not in"],
+                        ["any", "Either"],
+                      ]}
+                      onChange={(v) => patch({ member: { ...ui.member, [k]: v } })}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {PRESETS.map((p, i) => {
+                  const on = CUBE_KEYS.every((k) => ui.member[k] === p.m[k]);
+                  return (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => patch({ member: p.m })}
+                      className={
+                        "rounded-full border px-3 py-1 text-xs " +
+                        (on
+                          ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)"
+                          : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+                      }
+                    >
+                      {p.label} · {presetCounts[i]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {view === "changelog" && (
+            <div className="flex flex-wrap items-center gap-2 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
+              <Segmented
+                value={ui.log}
+                options={[
+                  ["lsv", `LSV · ${data.changelogs.lsv.length}`],
+                  ["mtgo", `MTGO · ${data.changelogs.mtgo.length}`],
+                ]}
+                onChange={(v) => patch({ log: v })}
+              />
+              <Segmented
+                value={ui.logTag}
+                options={[
+                  ["all", `All · ${logCounts.all}`],
+                  ["current", `Current · ${logCounts.current}`],
+                  ["past", `Past · ${logCounts.past}`],
+                  ["tried", `Tried and cut · ${logCounts.tried}`],
+                ]}
+                onChange={(v) => patch({ logTag: v })}
+              />
+              <label className="flex items-center gap-2 text-sm text-(--color-text-dim)">
+                <input
+                  type="checkbox"
+                  checked={ui.hideMine}
+                  onChange={(e) => patch({ hideMine: e.target.checked })}
+                />
+                Hide cards in my cube
+              </label>
+            </div>
+          )}
+
+          {view === "set" && (
+            <OfflineHint text={`Main set, basics excluded. Commons and uncommons show their Limited Resources grade.`} />
+          )}
+
+          {view === "decisions" && (
+            <div className="flex flex-wrap gap-1.5 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
+              {STATUSES.map((s) => {
+                const n = decided.filter(([, d]) => d.status === s).length;
+                const on = ui.statuses.length === 1 && ui.statuses[0] === s;
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => patch({ statuses: on ? [] : [s] })}
+                    className={
+                      "rounded-lg border px-3 py-1.5 text-sm " +
+                      (on ? STATUS_BUTTON[s] : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+                    }
+                  >
+                    {STATUS_LABEL[s]} · {n}
+                  </button>
+                );
+              })}
+              {decided.length === 0 && (
+                <span className="self-center text-sm text-(--color-text-dim)">
+                  Tag cards Keep / Cut / Add / Maybe in any view and they collect here.
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Shared filters — collapsed behind one button on a phone. */}
+          <div className="rounded-lg border border-(--color-border) bg-(--color-bg-elev)">
+            <div className="flex items-center gap-2 p-2">
+              <input
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search name or rules text"
+                className="min-w-0 flex-1 rounded border border-(--color-border) bg-(--color-bg) px-3 py-2 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
+              />
+              <button
+                type="button"
+                onClick={() => setFiltersOpen((o) => !o)}
+                className="shrink-0 rounded border border-(--color-border) px-3 py-2 text-sm text-(--color-text-dim) hover:bg-white/5 md:hidden"
+              >
+                Filters{activeFilters ? ` · ${activeFilters}` : ""}
+              </button>
+            </div>
+            <div className={(filtersOpen ? "block" : "hidden") + " space-y-2 border-t border-(--color-border) p-3 md:block"}>
+              <FacetRow label="Color">
+                {COLOR_FACETS.map((f) => (
+                  <ColorChip
+                    key={f}
+                    facet={f}
+                    on={ui.colors.includes(f)}
+                    onClick={() => patch({ colors: toggle(ui.colors, f) })}
+                  />
+                ))}
+              </FacetRow>
+              <FacetRow label="Type">
+                {TYPE_FACETS.map((t) => (
+                  <Chip key={t} on={ui.types.includes(t)} onClick={() => patch({ types: toggle(ui.types, t) })}>
+                    {t}
+                  </Chip>
+                ))}
+              </FacetRow>
+              <FacetRow label="Mana value">
+                {CMC_FACETS.map((m) => (
+                  <Chip key={m} on={ui.cmcs.includes(m)} onClick={() => patch({ cmcs: toggle(ui.cmcs, m) })}>
+                    {m}
+                  </Chip>
+                ))}
+              </FacetRow>
+              <FacetRow label="Rarity">
+                {RARITY_FACETS.map((r) => (
+                  <Chip
+                    key={r}
+                    on={ui.rarities.includes(r)}
+                    onClick={() => patch({ rarities: toggle(ui.rarities, r) })}
+                  >
+                    {r[0].toUpperCase() + r.slice(1)}
+                  </Chip>
+                ))}
+              </FacetRow>
+              <FacetRow label="Decision">
+                {([...STATUSES, "none"] as StatusFilter[]).map((s) => (
+                  <Chip
+                    key={s}
+                    on={ui.statuses.includes(s)}
+                    onClick={() => patch({ statuses: toggle(ui.statuses, s) })}
+                  >
+                    {s === "none" ? "Undecided" : STATUS_LABEL[s]}
+                  </Chip>
+                ))}
+              </FacetRow>
+              {activeFilters > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    patch({ colors: [], types: [], cmcs: [], rarities: [], statuses: [] });
+                    setQ("");
+                  }}
+                  className="text-xs text-(--color-accent) hover:underline"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Result bar */}
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-(--color-text)">
+              {ids.length} card{ids.length === 1 ? "" : "s"}
+            </span>
+            <span className="hidden text-xs text-(--color-text-dim) lg:inline">
+              Arrows move · Enter opens · K C A M tag
+            </span>
+            <span className="ml-auto flex items-center gap-2">
+              <select
+                value={sort}
+                onChange={(e) => patch({ sort: { ...ui.sort, [view]: e.target.value as SortKey } })}
+                className="rounded border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-sm text-(--color-text)"
+                aria-label="Sort"
+              >
+                <option value="name">Name</option>
+                <option value="cmc">Mana value</option>
+                {view === "changelog" && <option value="recent">Newest change</option>}
+                {view === "set" && <option value="grade">LR grade</option>}
+              </select>
+              <Segmented
+                value={layout}
+                options={[
+                  ["grid", "Grid"],
+                  ["list", "List"],
+                ]}
+                onChange={(v) => patch({ layout: { ...ui.layout, [view]: v } })}
+              />
+            </span>
+          </div>
+
+          {ids.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-(--color-border) p-8 text-center text-sm text-(--color-text-dim)">
+              No cards match. Loosen a filter or the cube toggles.
+            </p>
+          ) : layout === "grid" ? (
+            <div
+              ref={gridRef}
+              className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
+            >
+              {ids.slice(0, limit).map((id) => (
+                <Tile
+                  key={id}
+                  c={card(id)}
+                  status={decisions[id]?.status}
+                  hasNote={!!decisions[id]?.note}
+                  selected={selId === id}
+                  onOpen={open}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
+              {ids.slice(0, limit).map((id) => (
+                <Row
+                  key={id}
+                  c={card(id)}
+                  log={view === "changelog" ? ui.log : null}
+                  status={decisions[id]?.status}
+                  selected={selId === id}
+                  onOpen={open}
+                />
+              ))}
+            </div>
+          )}
+          {limit < ids.length && <div ref={sentinelRef} className="h-10" />}
+
+          <OfflinePanel
+            urls={offlineUrls}
+            title="Offline — save cube review images"
+            intro="Every card's data and Oracle text already work with no connection."
+            avgBytes={fullSize ? 53 * 1024 : 13 * 1024}
+          >
+            <label className="mb-3 flex items-center gap-2 text-(--color-text-dim)">
+              <input type="checkbox" checked={fullSize} onChange={(e) => setFullSize(e.target.checked)} />
+              Also save full-size images for the enlarged view (much bigger)
+            </label>
+          </OfflinePanel>
+        </>
+      )}
+
+      {detail && (
+        <CardDetail
+          ids={detail.ids}
+          index={detail.index}
+          decisions={decisions}
+          autoAdvance={ui.autoAdvance}
+          onAutoAdvance={(v) => patch({ autoAdvance: v })}
+          onIndex={(index) => {
+            setDetail((d) => (d ? { ...d, index } : d));
+            setSelId(detail.ids[index]);
+          }}
+          onStatus={setStatus}
+          onNote={setNote}
+          onClose={() => setDetail(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- pieces
+
+function OfflineHint({ text }: { text: string }) {
+  return <p className="text-xs text-(--color-text-dim)">{text}</p>;
+}
+
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+}: {
+  value: T;
+  options: [T, string][];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <span className="inline-flex shrink-0 overflow-hidden rounded border border-(--color-border)">
+      {options.map(([v, label]) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className={
+            "px-2.5 py-1.5 text-xs whitespace-nowrap " +
+            (value === v
+              ? "bg-(--color-accent) font-medium text-black"
+              : "text-(--color-text-dim) hover:bg-white/5")
+          }
+        >
+          {label}
+        </button>
+      ))}
+    </span>
+  );
+}
+
+function FacetRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="w-20 shrink-0 text-xs text-(--color-text-dim)">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "rounded-full border px-2.5 py-1 text-xs " +
+        (on
+          ? "border-(--color-accent) bg-(--color-accent)/20 text-(--color-text)"
+          : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+      }
+    >
+      {children}
+    </button>
+  );
+}
+
+const COLOR_LABEL: Record<ColorFacet, string> = {
+  W: "White",
+  U: "Blue",
+  B: "Black",
+  R: "Red",
+  G: "Green",
+  M: "Multicolor",
+  C: "Colorless",
+};
+
+function ColorChip({ facet, on, onClick }: { facet: ColorFacet; on: boolean; onClick: () => void }) {
+  const uri = facet !== "M" && facet !== "C" ? SYMBOL_URI[facet] : undefined;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={COLOR_LABEL[facet]}
+      aria-label={COLOR_LABEL[facet]}
+      aria-pressed={on}
+      className={
+        "flex h-8 w-8 items-center justify-center rounded-full border-2 " +
+        (on ? "border-(--color-accent)" : "border-transparent opacity-60 hover:opacity-100")
+      }
+    >
+      {uri ? (
+        <img src={uri} alt="" className="h-6 w-6" />
+      ) : (
+        <span className={"flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold " + PIP_STYLE[facet]}>
+          {facet === "M" ? "" : "C"}
+        </span>
+      )}
+    </button>
+  );
+}
+
+function MemberDots({ id }: { id: string }) {
+  return (
+    <span className="inline-flex gap-0.5">
+      {CUBE_KEYS.map((k) => {
+        const has = members[k].has(id);
+        return (
+          <span
+            key={k}
+            title={`${has ? "In" : "Not in"} ${data.cubes[k].label}`}
+            className={
+              "flex h-4 w-4 items-center justify-center rounded text-[10px] font-semibold " +
+              (has ? "bg-violet-500/35 text-violet-100" : "border border-(--color-border) text-(--color-text-dim)/60")
+            }
+          >
+            {CUBE_SHORT[k]}
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+function StatusPill({ status }: { status?: Status }) {
+  if (!status) return null;
+  return (
+    <span className={"rounded px-1.5 py-0.5 text-[10px] font-semibold " + STATUS_TONE[status]}>
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
+
+const Tile = memo(function Tile({
+  c,
+  status,
+  hasNote,
+  selected,
+  onOpen,
+}: {
+  c: ReviewCard;
+  status?: Status;
+  hasNote: boolean;
+  selected: boolean;
+  onOpen: (id: string) => void;
+}) {
+  const src = imageUrl(c, "small");
+  const grade = setGrade(c);
+  return (
+    <button
+      type="button"
+      data-card={c.id}
+      onClick={() => onOpen(c.id)}
+      className={
+        "group relative flex flex-col rounded-lg border bg-(--color-bg-elev) p-1 text-left " +
+        (selected ? "border-(--color-accent) ring-2 ring-(--color-accent)" : "border-(--color-border) hover:border-(--color-text-dim)")
+      }
+    >
+      <div className="relative aspect-[488/680] w-full overflow-hidden rounded-[5%] bg-(--color-bg)">
+        {src ? (
+          <img src={src} alt={c.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+        ) : (
+          <span className="flex h-full items-center justify-center p-2 text-center text-[11px] text-(--color-text-dim)">
+            {c.name}
+          </span>
+        )}
+        {status && (
+          <span className="absolute top-1 right-1">
+            <StatusPill status={status} />
+          </span>
+        )}
+        {grade && (
+          <span className={"absolute bottom-1 left-1 rounded px-1 text-[10px] font-semibold " + gradeTone(grade === "SB" ? null : (grade as never))}>
+            {grade}
+          </span>
+        )}
+      </div>
+      <div className="mt-1 flex items-center justify-between gap-1 px-0.5">
+        <span className="truncate text-[11px] text-(--color-text)">
+          {hasNote && <span title="Has a note">✎ </span>}
+          {frontName(c)}
+        </span>
+        <MemberDots id={c.id} />
+      </div>
+    </button>
+  );
+});
+
+const Row = memo(function Row({
+  c,
+  log,
+  status,
+  selected,
+  onOpen,
+}: {
+  c: ReviewCard;
+  log: LogKey | null;
+  status?: Status;
+  selected: boolean;
+  onOpen: (id: string) => void;
+}) {
+  const entry = log ? logById[log].get(c.id) : undefined;
+  return (
+    <button
+      type="button"
+      data-card={c.id}
+      onClick={() => onOpen(c.id)}
+      className={
+        "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 px-3 py-2.5 text-left text-sm sm:grid-cols-[minmax(0,2fr)_auto_minmax(0,2fr)_auto] " +
+        (selected ? "bg-(--color-accent)/10" : "hover:bg-white/5")
+      }
+    >
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate text-(--color-text)">{c.name}</span>
+        <span className="hidden shrink-0 sm:inline-flex">
+          <ManaCost cost={c.cost} size={13} />
+        </span>
+      </span>
+      <span className="flex items-center justify-end gap-1.5">
+        {entry && (
+          <span
+            className={
+              "rounded px-1.5 py-0.5 text-[10px] font-semibold " +
+              (entry.current ? "bg-emerald-500/20 text-emerald-200" : "border border-(--color-border) text-(--color-text-dim)")
+            }
+          >
+            {entry.current ? "Current" : "Past"}
+          </span>
+        )}
+        <StatusPill status={status} />
+      </span>
+      <span className="col-span-2 truncate text-xs text-(--color-text-dim) sm:col-span-1">
+        {entry
+          ? historyEvents(entry)
+              .map((h) => `${h.kind === "add" ? "+" : "cut"} ${shortDate(h.date)}`)
+              .join(" · ")
+          : c.type}
+      </span>
+      <span className="col-span-2 sm:col-span-1">
+        <MemberDots id={c.id} />
+      </span>
+    </button>
+  );
+});
+
+// ---------------------------------------------------------------- detail
+
+function CardDetail({
+  ids,
+  index,
+  decisions,
+  autoAdvance,
+  onAutoAdvance,
+  onIndex,
+  onStatus,
+  onNote,
+  onClose,
+}: {
+  ids: string[];
+  index: number;
+  decisions: Decisions;
+  autoAdvance: boolean;
+  onAutoAdvance: (v: boolean) => void;
+  onIndex: (i: number) => void;
+  onStatus: (id: string, s: Status) => void;
+  onNote: (id: string, note: string) => void;
+  onClose: () => void;
+}) {
+  const c = card(ids[index]);
+  const status = decisions[c.id]?.status;
+
+  const go = useCallback(
+    (delta: number) => {
+      const next = index + delta;
+      if (next >= 0 && next < ids.length) onIndex(next);
+    },
+    [index, ids.length, onIndex],
+  );
+
+  const tag = useCallback(
+    (s: Status) => {
+      onStatus(c.id, s);
+      // Advance only when setting (not clearing) a status.
+      if (autoAdvance && status !== s && index < ids.length - 1) onIndex(index + 1);
+    },
+    [c.id, onStatus, autoAdvance, status, index, ids.length, onIndex],
+  );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA");
+      if (e.key === "Escape") {
+        if (typing) (t as HTMLElement).blur();
+        else onClose();
+        return;
+      }
+      if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === "ArrowRight") go(1);
+      else if (e.key === "ArrowLeft") go(-1);
+      else if (STATUS_KEY[e.key.toLowerCase()]) tag(STATUS_KEY[e.key.toLowerCase()]);
+      else if (e.key.toLowerCase() === "n") {
+        e.preventDefault();
+        document.getElementById("cube-review-note")?.focus();
+      } else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go, tag, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/80 sm:items-center sm:p-4" onClick={onClose}>
+      <div
+        className="flex w-full max-w-3xl flex-col overflow-hidden bg-(--color-bg-elev) sm:max-h-[92vh] sm:rounded-xl sm:border sm:border-(--color-border)"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2 border-b border-(--color-border) px-3 py-2 text-xs text-(--color-text-dim)">
+          <span>
+            {index + 1} / {ids.length}
+          </span>
+          <label className="flex items-center gap-1.5">
+            <input type="checkbox" checked={autoAdvance} onChange={(e) => onAutoAdvance(e.target.checked)} />
+            Next card after tagging
+          </label>
+          <button type="button" onClick={onClose} className="rounded px-2 py-1 text-base hover:bg-white/10" aria-label="Close">
+            ✕
+          </button>
+        </div>
+
+        {/* Keyed by card so the face and the note draft reset per card. */}
+        <CardBody key={c.id} c={c} savedNote={decisions[c.id]?.note ?? ""} onNote={onNote} />
+        {/* Review bar — big tap targets, pinned to the bottom on a phone. */}
+        <div className="grid grid-cols-[auto_repeat(4,minmax(0,1fr))_auto] gap-1.5 border-t border-(--color-border) p-2">
+          <button
+            type="button"
+            onClick={() => go(-1)}
+            disabled={index === 0}
+            className="rounded border border-(--color-border) px-3 text-lg text-(--color-text-dim) hover:bg-white/5 disabled:opacity-30"
+            aria-label="Previous card"
+          >
+            ‹
+          </button>
+          {STATUSES.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => tag(s)}
+              className={
+                "rounded-lg border py-3 text-sm font-medium " +
+                (status === s ? STATUS_BUTTON[s] : "border-(--color-border) text-(--color-text) hover:bg-white/5")
+              }
+            >
+              {STATUS_LABEL[s]}
+              <span className="ml-1 hidden text-xs text-(--color-text-dim) lg:inline">{s[0].toUpperCase()}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => go(1)}
+            disabled={index === ids.length - 1}
+            className="rounded border border-(--color-border) px-3 text-lg text-(--color-text-dim) hover:bg-white/5 disabled:opacity-30"
+            aria-label="Next card"
+          >
+            ›
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CardBody({
+  c,
+  savedNote,
+  onNote,
+}: {
+  c: ReviewCard;
+  savedNote: string;
+  onNote: (id: string, note: string) => void;
+}) {
+  const [face, setFace] = useState<"front" | "back">("front");
+  const [noteDraft, setNoteDraft] = useState(savedNote);
+
+  // F flips double-faced cards.
+  useEffect(() => {
+    if (!c.back) return;
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      if (e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setFace((f) => (f === "front" ? "back" : "front"));
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [c.back]);
+
+  const big = imageUrl(c, "normal", face);
+  const small = imageUrl(c, "small", face);
+  const grade = setGrade(c);
+  const faces = c.faces && c.faces.length > 1 ? c.faces : null;
+
+  return (
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+          <div className="grid gap-4 sm:grid-cols-[260px_minmax(0,1fr)]">
+            <div className="mx-auto w-full max-w-[300px]">
+              <div className="aspect-[488/680] overflow-hidden rounded-[4.5%] bg-(--color-bg)">
+                {big && (
+                  <img
+                    key={big}
+                    src={big}
+                    alt={c.name}
+                    className="h-full w-full object-cover"
+                    // Offline without full-size images saved: fall back to the small one.
+                    onError={(e) => {
+                      if (small && e.currentTarget.src !== small) e.currentTarget.src = small;
+                    }}
+                  />
+                )}
+              </div>
+              {c.back && (
+                <button
+                  type="button"
+                  onClick={() => setFace((f) => (f === "front" ? "back" : "front"))}
+                  className="mt-2 w-full rounded border border-(--color-border) py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
+                >
+                  ⟲ Show {face === "front" ? "back" : "front"} face <span className="hidden lg:inline">(F)</span>
+                </button>
+              )}
+            </div>
+
+            <div className="min-w-0 space-y-3 text-sm">
+              {(faces ?? [{ name: c.name, cost: c.cost, type: c.type, text: c.text, pt: c.pt, loy: c.loy }]).map((f, i) => (
+                <div key={i} className={i > 0 ? "border-t border-(--color-border) pt-3" : ""}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-base font-semibold text-(--color-text)">{f.name}</span>
+                    {f.cost && <ManaCost cost={f.cost} />}
+                  </div>
+                  <div className="text-xs text-(--color-text-dim)">
+                    {f.type}
+                    {i === 0 && <> · {c.rarity}</>}
+                    {f.pt && <> · {f.pt}</>}
+                    {f.loy && <> · loyalty {f.loy}</>}
+                  </div>
+                  {f.text && (
+                    <div className="mt-2 space-y-1 leading-relaxed text-(--color-text)">
+                      {f.text.split("\n").map((line, j) => (
+                        <p key={j}>{line}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              <div className="space-y-1 rounded border border-(--color-border) p-2 text-xs text-(--color-text-dim)">
+                {CUBE_KEYS.map((k) => {
+                  const entry = k === "mine" ? undefined : logById[k].get(c.id);
+                  return (
+                    <div key={k}>
+                      <span className="text-(--color-text)">{data.cubes[k].label}:</span>{" "}
+                      {members[k].has(c.id) ? "in" : "not in"}
+                      {entry && (
+                        <>
+                          {" · "}
+                          {historyEvents(entry)
+                            .map((h) => `${h.kind === "add" ? "added" : "cut"} ${shortDate(h.date)}`)
+                            .join(", ")}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+                {grade && (
+                  <div>
+                    <span className="text-(--color-text)">Limited Resources:</span> {grade}
+                  </div>
+                )}
+              </div>
+
+              <textarea
+                id="cube-review-note"
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                onBlur={() => {
+                  if (noteDraft !== savedNote) onNote(c.id, noteDraft.trim());
+                }}
+                placeholder="Note (N to type, Esc to leave)"
+                rows={2}
+                className="w-full rounded border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
+              />
+            </div>
+          </div>
+        </div>
+  );
+}
+

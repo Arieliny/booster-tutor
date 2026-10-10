@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import {
   cachesSupported,
   clearImageCache,
@@ -12,6 +12,14 @@ import {
 interface Props {
   /** Image URLs to make available offline. */
   urls: string[];
+  /** Collapsed-row label. */
+  title?: string;
+  /** What already works offline, shown above the download button. */
+  intro?: string;
+  /** Average bytes per image, for the size estimate (defaults to "normal" jpegs). */
+  avgBytes?: number;
+  /** Extra controls rendered above the buttons (e.g. an image-size choice). */
+  children?: ReactNode;
 }
 
 type State =
@@ -23,7 +31,7 @@ type State =
  * Pre-download card images so the set review is fully usable with no signal —
  * the table itself already works offline, this covers the card images.
  */
-export function OfflinePanel({ urls }: Props) {
+export function OfflinePanel({ urls, title, intro, avgBytes, children }: Props) {
   const [state, setState] = useState<State>({ kind: "idle", cached: null });
   const [open, setOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -42,6 +50,9 @@ export function OfflinePanel({ urls }: Props) {
   };
 
   const start = async () => {
+    // Ask the browser not to evict the cache under storage pressure. Chrome
+    // grants this silently for installed apps; elsewhere it's a harmless no-op.
+    void navigator.storage?.persist?.().catch(() => undefined);
     const ac = new AbortController();
     abortRef.current = ac;
     setState({
@@ -72,7 +83,7 @@ export function OfflinePanel({ urls }: Props) {
         className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs text-(--color-text-dim) hover:text-(--color-text)"
       >
         <span>
-          📶 Offline — save card images for the prerelease
+          📶 {title ?? "Offline — save card images for the prerelease"}
           {state.kind === "idle" && state.cached !== null && (
             <span className="ml-1 text-(--color-text)">
               ({state.cached}/{urls.length} saved)
@@ -85,11 +96,12 @@ export function OfflinePanel({ urls }: Props) {
       {open && (
         <div className="border-t border-(--color-border) p-3 text-xs">
           <p className="mb-3 text-(--color-text-dim)">
-            The table, grades and rules text already work with no connection.
+            {intro ?? "The table, grades and rules text already work with no connection."}{" "}
             This downloads the {urls.length} card images too — roughly{" "}
-            {formatBytes(estimateBytes(urls.length))}. Do it on wifi, then add
-            the app to your home screen.
+            {formatBytes(estimateBytes(urls.length, avgBytes))}. Do it on wifi, then
+            install the app to your home screen.
           </p>
+          {children}
 
           {state.kind === "running" && (
             <>

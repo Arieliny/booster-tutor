@@ -38,6 +38,8 @@ export default defineConfig({
       workbox: {
         // The set-review data ships as a JS chunk, so it precaches with the rest.
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
+        // The cube review data chunk is ~750 KB; keep headroom over Workbox's 2 MB default.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // Never hand the SPA shell back for an API call.
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [
@@ -46,7 +48,9 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: {
               cacheName: 'scryfall-images',
-              expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              // Set review (~200) + cube review (~1,100 small, ~1,100 normal) with room
+              // to grow. At 800 the cube images evicted each other and the set review's.
+              expiration: { maxEntries: 5000, maxAgeSeconds: 60 * 60 * 24 * 120 },
               cacheableResponse: { statuses: [0, 200] },
             },
           },

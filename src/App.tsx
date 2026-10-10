@@ -30,6 +30,9 @@ import {
 const SetReview = lazy(() =>
   import("./components/SetReview").then((m) => ({ default: m.SetReview })),
 );
+const CubeReview = lazy(() =>
+  import("./components/CubeReview").then((m) => ({ default: m.CubeReview })),
+);
 const SetReviewPrint = lazy(() =>
   import("./components/SetReviewPrint").then((m) => ({ default: m.SetReviewPrint })),
 );
@@ -238,13 +241,14 @@ function App() {
         <nav
           role="tablist"
           aria-label="View"
-          className="mb-6 inline-flex overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg-elev) print:hidden"
+          className="mb-6 flex max-w-full overflow-x-auto rounded-lg border border-(--color-border) bg-(--color-bg-elev) sm:inline-flex print:hidden"
         >
           {([
             { id: "packs", label: "Open packs" },
             { id: "rotisserie", label: "Rotisserie" },
             { id: "inventory", label: "Inventory" },
             { id: "review", label: "Set review" },
+            { id: "cubeReview", label: "Cube review" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -253,7 +257,7 @@ function App() {
               aria-selected={tab === t.id}
               onClick={() => setTab(t.id)}
               className={
-                "px-4 py-2 text-sm transition-colors " +
+                "shrink-0 whitespace-nowrap px-4 py-2 text-sm transition-colors " +
                 (tab === t.id
                   ? "bg-(--color-accent) text-black font-medium"
                   : "text-(--color-text-dim) hover:bg-white/5")
@@ -330,6 +334,14 @@ function App() {
             }
           >
             <SetReview onPrintView={() => setTab("reviewPrint")} />
+          </Suspense>
+        ) : tab === "cubeReview" ? (
+          <Suspense
+            fallback={
+              <p className="text-(--color-text-dim)">Loading cube review…</p>
+            }
+          >
+            <CubeReview />
           </Suspense>
         ) : tab === "reviewPrint" ? (
           <Suspense
