@@ -155,3 +155,44 @@ export function diffCards(
 export function isCubeCobraCube(cube: Cube): boolean {
   return typeof cube.cubecobraId === "string" && cube.cubecobraId.length > 0;
 }
+
+export interface CubeCobraDrift {
+  /** On Cube Cobra now but not in the stored copy. */
+  added: string[];
+  /** In the stored copy but no longer on Cube Cobra. */
+  removed: string[];
+}
+
+/**
+ * How a stored copy differs from the cube on Cube Cobra right now.
+ *
+ * Uses /cube/api/cubelist (names only, ~9 KB, CORS-enabled) rather than the
+ * 1.4 MB cubeJSON, since this runs on a phone every time the app opens. Names
+ * are compared on the front face, case-insensitively, because Cube Cobra lists
+ * double-faced cards by their front face while the copy stores "Front // Back".
+ * A printing-only change isn't reported - it doesn't change what's in a pack.
+ *
+ * Cube Cobra's own "last updated" date is deliberately NOT used: it moves on
+ * any edit (tags, printings, notes) and would flag Refresh when nothing changed.
+ */
+export async function cubeCobraDrift(cube: Cube, signal?: AbortSignal): Promise<CubeCobraDrift> {
+  if (!cube.cubecobraId) return { added: [], removed: [] };
+  const res = await fetch(
+    `https://cubecobra.com/cube/api/cubelist/${encodeURIComponent(cube.cubecobraId)}`,
+    { signal },
+  );
+  if (!res.ok) throw new Error(`Cube Cobra returned ${res.status}`);
+  const text = await res.text();
+  const key = (name: string) => name.split(" // ")[0].trim().toLowerCase();
+  const remote = new Map<string, string>();
+  for (const line of text.split("\n")) {
+    const name = line.trim();
+    if (name) remote.set(key(name), name);
+  }
+  if (remote.size === 0) throw new Error("Cube Cobra returned an empty list");
+  const local = new Map(cube.cards.map((c) => [key(c.name), c.name]));
+  return {
+    added: [...remote].filter(([k]) => !local.has(k)).map(([, n]) => n),
+    removed: [...local].filter(([k]) => !remote.has(k)).map(([, n]) => n),
+  };
+}

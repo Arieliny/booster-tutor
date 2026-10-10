@@ -21,16 +21,22 @@ interface Props {
   selectedId: string;
   onClose: () => void;
   onCubesChanged: (next: { cubes: Cube[]; selectedId: string }) => void;
+  /** Open straight into "Refresh from Cube Cobra" for this cube (if editing is unlocked). */
+  refreshCubeId?: string;
 }
 
-export function CubeManager({ cubes, selectedId, onClose, onCubesChanged }: Props) {
+export function CubeManager({ cubes, selectedId, onClose, onCubesChanged, refreshCubeId }: Props) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
-  const [cobraMode, setCobraMode] = useState<CubeCobraMode | null>(null);
+  const [cobraMode, setCobraMode] = useState<CubeCobraMode | null>(() => {
+    // Locked: open the normal manager instead, where the PIN can be entered.
+    const cube = refreshCubeId && hasEditPin() ? cubes.find((c) => c.id === refreshCubeId) : undefined;
+    return cube ? { kind: "refresh", cube } : null;
+  });
   const [canEdit, setCanEdit] = useState(hasEditPin());
   const [exportCube, setExportCube] = useState<Cube | null>(null);
 

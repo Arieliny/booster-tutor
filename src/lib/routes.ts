@@ -45,3 +45,41 @@ export function isKnownPath(pathname: string): boolean {
 export function pathForTab(tab: Tab): string {
   return TAB_PATHS[tab];
 }
+
+// ---------------------------------------------------------------- last tab
+
+const LAST_TAB_KEY = "booster-tutor-last-tab";
+
+/** Remember the mode in use, so the app reopens on it. */
+export function rememberTab(tab: Tab): void {
+  try {
+    // The print view is a sub-page; reopening on it would be odd.
+    localStorage.setItem(LAST_TAB_KEY, tab === "reviewPrint" ? "review" : tab);
+  } catch {
+    // Private mode / blocked storage: just open on the default tab next time.
+  }
+}
+
+function rememberedTab(): Tab | null {
+  try {
+    const t = localStorage.getItem(LAST_TAB_KEY);
+    return t && t in TAB_PATHS ? (t as Tab) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The tab to open on. A bare "/" (which is how the installed app's home-screen
+ * icon launches) resumes the last mode used; any other path is an explicit
+ * link, so it wins.
+ */
+export function initialTab(pathname: string): Tab {
+  if (normalize(pathname) === "/") return rememberedTab() ?? "packs";
+  return tabFromPath(pathname);
+}
+
+/** Tabs that act on the selected cube, so only they show the cube picker. */
+export function tabUsesCube(tab: Tab): boolean {
+  return tab === "packs" || tab === "rotisserie" || tab === "inventory";
+}

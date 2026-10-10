@@ -180,6 +180,7 @@ export function CubeReview() {
   const [fullSize, setFullSize] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const viewBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
@@ -208,6 +209,18 @@ export function CubeReview() {
   }, []);
 
   const view = ui.view;
+
+  // The view switcher scrolls sideways on a phone; keep the active view in sight
+  // (the app reopens on the last view used, which may be the rightmost).
+  useEffect(() => {
+    const bar = viewBarRef.current;
+    const btn = bar?.querySelector<HTMLElement>('[aria-pressed="true"]');
+    if (!bar || !btn) return;
+    const left = btn.offsetLeft;
+    const right = left + btn.offsetWidth;
+    if (left < bar.scrollLeft) bar.scrollLeft = left;
+    else if (right > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = right - bar.clientWidth;
+  }, [view]);
   const layout: Layout = ui.layout[view] ?? (view === "changelog" ? "list" : "grid");
   const sort: SortKey = ui.sort[view] ?? (view === "changelog" ? "recent" : "name");
 
@@ -383,11 +396,12 @@ export function CubeReview() {
       )}
 
       {/* View switcher — scrolls sideways on a phone rather than wrapping. */}
-      <div className="-mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
+      <div ref={viewBarRef} className="relative -mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
         {VIEWS.map((v) => (
           <button
             key={v.id}
             type="button"
+            aria-pressed={view === v.id}
             onClick={() => patch({ view: v.id })}
             className={
               "shrink-0 rounded-lg border px-3 py-2 text-sm whitespace-nowrap " +

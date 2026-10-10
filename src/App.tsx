@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import type { Cube, CubeCard, GenerationMode } from "./types";
 import { DEFAULT_PACK_SIZE, generatePack } from "./lib/pack-generator";
 import {
@@ -13,17 +13,14 @@ import { CubeManager } from "./components/CubeManager";
 import { CubeSelector } from "./components/CubeSelector";
 import { Footer } from "./components/Footer";
 import { Inventory } from "./components/Inventory";
+import { CubeCobraStatus } from "./components/CubeCobraStatus";
+import { isCubeCobraCube } from "./lib/cubecobra";
 import { Modal } from "./components/Modal";
 import { PackDisplay } from "./components/PackDisplay";
 import { PoolStatus } from "./components/PoolStatus";
 import { Rotisserie } from "./components/Rotisserie";
 import { Spotlight } from "./components/Spotlight";
-import {
-  isKnownPath,
-  pathForTab,
-  tabFromPath,
-  type Tab,
-} from "./lib/routes";
+import { pathForTab, tabFromPath, type Tab, initialTab, rememberTab, tabUsesCube } from "./lib/routes";
 
 // The set-review data file is large and rarely opened; keep it out of the
 // initial bundle and fetch it only when the tab is selected.
@@ -57,8 +54,11 @@ function App() {
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showCubeManager, setShowCubeManager] = useState(false);
+  /** Set when the manager should open straight into a Cube Cobra refresh. */
+  const [managerRefreshId, setManagerRefreshId] = useState<string | undefined>();
   const [showPickedLog, setShowPickedLog] = useState(false);
-  const [tab, setTabState] = useState<Tab>(() => tabFromPath(window.location.pathname));
+  const [tab, setTabState] = useState<Tab>(() => initialTab(window.location.pathname));
+  const navRef = useRef<HTMLElement>(null);
 
   /** Switch tab and reflect it in the URL so each view is linkable. */
   const setTab = (next: Tab) => {
@@ -76,12 +76,28 @@ function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  // Tidy an unrecognized path (e.g. a stale link) without adding history.
+  // On load, make the URL match the tab we opened on, without adding history:
+  // tidies an unrecognized path, and turns a bare "/" into the resumed tab's.
   useEffect(() => {
-    if (!isKnownPath(window.location.pathname)) {
-      window.history.replaceState(null, "", pathForTab("packs"));
-    }
+    const want = pathForTab(initialTab(window.location.pathname));
+    if (window.location.pathname !== want) window.history.replaceState(null, "", want);
   }, []);
+
+  // Reopen on whichever mode was used last.
+  useEffect(() => rememberTab(tab), [tab]);
+
+  // On a phone the tab bar scrolls sideways; keep the active tab in view
+  // (otherwise resuming on "Cube review" leaves its tab off-screen).
+  useEffect(() => {
+    const nav = navRef.current;
+    const btn = nav?.querySelector<HTMLElement>('[aria-selected="true"]');
+    if (!nav || !btn) return;
+    const left = btn.offsetLeft;
+    const right = left + btn.offsetWidth;
+    if (left < nav.scrollLeft) nav.scrollLeft = left;
+    else if (right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = right - nav.clientWidth;
+    // view.kind: the tab bar only exists once the startup Loading screen is gone.
+  }, [tab, view.kind]);
 
   // Bootstrap on mount.
   useEffect(() => {
@@ -213,12 +229,25 @@ function App() {
             <p className="text-xs text-(--color-text-dim)">Cube pack simulator</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <CubeSelector
-              cubes={visibleCubes}
-              selectedId={selectedCubeId}
-              onSelect={handleSelectCube}
-              onManage={() => setShowCubeManager(true)}
-            />
+            {tabUsesCube(tab) && (
+              <div className="flex flex-col items-start gap-1 sm:items-end">
+                <CubeSelector
+                  cubes={visibleCubes}
+                  selectedId={selectedCubeId}
+                  onSelect={handleSelectCube}
+                  onManage={() => setShowCubeManager(true)}
+                />
+                {selectedCube && isCubeCobraCube(selectedCube) && (
+                  <CubeCobraStatus
+                    cube={selectedCube}
+                    onRefresh={() => {
+                      setManagerRefreshId(selectedCube.id);
+                      setShowCubeManager(true);
+                    }}
+                  />
+                )}
+              </div>
+            )}
             {onPacksTab && (
               <>
                 <PoolStatus
@@ -239,16 +268,17 @@ function App() {
         </header>
 
         <nav
+          ref={navRef}
           role="tablist"
           aria-label="View"
-          className="mb-6 flex max-w-full overflow-x-auto rounded-lg border border-(--color-border) bg-(--color-bg-elev) sm:inline-flex print:hidden"
+          className="relative mb-6 flex max-w-full overflow-x-auto rounded-lg border border-(--color-border) bg-(--color-bg-elev) sm:inline-flex print:hidden"
         >
           {([
             { id: "packs", label: "Open packs" },
-            { id: "rotisserie", label: "Rotisserie" },
-            { id: "inventory", label: "Inventory" },
-            { id: "review", label: "Set review" },
             { id: "cubeReview", label: "Cube review" },
+            { id: "rotisserie", label: "Rotisserie" },
+            { id: "review", label: "Set review" },
+            { id: "inventory", label: "Inventory" },
           ] as { id: Tab; label: string }[]).map((t) => (
             <button
               key={t.id}
@@ -361,7 +391,11 @@ function App() {
           <CubeManager
             cubes={cubes}
             selectedId={selectedCubeId}
-            onClose={() => setShowCubeManager(false)}
+            refreshCubeId={managerRefreshId}
+            onClose={() => {
+              setShowCubeManager(false);
+              setManagerRefreshId(undefined);
+            }}
             onCubesChanged={async ({ cubes: nextCubes, selectedId }) => {
               setCubes(nextCubes);
               if (selectedId !== selectedCubeId) {
