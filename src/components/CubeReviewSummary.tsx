@@ -53,9 +53,12 @@ export function DecisionsSync({
 
   const doImport = async (f: File) => {
     try {
-      const { merged, updated, total } = mergeImport(decisions, await f.text());
+      const { merged, updated, total, newCards } = mergeImport(decisions, await f.text());
       onImport(merged);
-      setMsg(`Imported: ${updated} of ${total} were newer and applied`);
+      setMsg(
+        `Imported: ${updated} of ${total} were newer and applied` +
+          (newCards ? `, plus ${newCards} hand-added card${newCards === 1 ? "" : "s"}` : ""),
+      );
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Couldn't read that file.");
     }
@@ -105,7 +108,7 @@ export function CubeReviewSummary({
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
         {STATUSES.map((st) => (
           <div key={st} className="rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
             <div className="text-xs text-(--color-text-dim)">{STATUS_LABEL[st]}</div>
@@ -129,14 +132,6 @@ export function CubeReviewSummary({
             )}
           </span>
         </div>
-        {(s.ignoredCuts > 0 || s.ignoredAdds > 0) && (
-          <p className="mt-1 text-xs text-(--color-text-dim)">
-            Not counted:{" "}
-            {s.ignoredCuts > 0 && `${s.ignoredCuts} Cut on cards you don't run`}
-            {s.ignoredCuts > 0 && s.ignoredAdds > 0 && " · "}
-            {s.ignoredAdds > 0 && `${s.ignoredAdds} Add on cards you already run`}
-          </p>
-        )}
 
         <table className="mt-4 w-full max-w-md text-sm">
           <thead>

@@ -93,10 +93,67 @@ export const cubeUnion: string[] = [
   ...new Set([...data.cubes.mine.cards, ...data.cubes.lsv.cards, ...data.cubes.mtgo.cards]),
 ];
 
-export const allIds: string[] = Object.keys(data.cards);
+// ---------------------------------------------------------------- extra cards
+//
+// Cards added by hand from Scryfall (outside the three cubes and the set).
+// Stored with full card data so they keep working offline, and carried in the
+// decisions export so the other device can show them too.
+
+const EXTRAS_KEY = "booster-tutor-cube-review-extras-v1";
+
+function loadExtras(): Record<string, ReviewCard> {
+  try {
+    const s = localStorage.getItem(EXTRAS_KEY);
+    return s ? (JSON.parse(s) as Record<string, ReviewCard>) : {};
+  } catch {
+    return {};
+  }
+}
+
+const extras: Record<string, ReviewCard> = loadExtras();
+
+function saveExtras(): void {
+  try {
+    localStorage.setItem(EXTRAS_KEY, JSON.stringify(extras));
+  } catch {
+    // Blocked storage: the card still works this session.
+  }
+}
+
+/** Cards added by hand that aren't already in the baked data. */
+export function extraCards(): Record<string, ReviewCard> {
+  const out: Record<string, ReviewCard> = {};
+  for (const [id, c] of Object.entries(extras)) if (!data.cards[id]) out[id] = c;
+  return out;
+}
+
+export function isExtra(id: string): boolean {
+  return !data.cards[id] && !!extras[id];
+}
+
+/** Add (or update) hand-added cards; returns how many were new. */
+export function addExtraCards(cards: ReviewCard[]): number {
+  let added = 0;
+  for (const c of cards) {
+    if (!c?.id || data.cards[c.id]) continue;
+    if (!extras[c.id]) added++;
+    extras[c.id] = c;
+  }
+  saveExtras();
+  return added;
+}
+
+/** Every card id: the baked data plus anything added by hand. */
+export function allCardIds(): string[] {
+  return [...Object.keys(data.cards), ...Object.keys(extraCards())];
+}
+
+export function hasCard(id: string): boolean {
+  return !!(data.cards[id] ?? extras[id]);
+}
 
 export function card(id: string): ReviewCard {
-  return data.cards[id];
+  return data.cards[id] ?? extras[id];
 }
 
 // ---------------------------------------------------------------- images
@@ -114,7 +171,7 @@ export function imageUrl(c: ReviewCard, size: ImageSize, face: "front" | "back" 
 /** Every image the offline download should cover, at one size. */
 export function allImageUrls(size: ImageSize): string[] {
   const out: string[] = [];
-  for (const c of Object.values(data.cards)) {
+  for (const c of [...Object.values(data.cards), ...Object.values(extraCards())]) {
     const f = imageUrl(c, size);
     if (f) out.push(f);
     if (c.back) {
@@ -226,15 +283,52 @@ export function lastChange(e: ChangelogEntry): string {
 
 // ---------------------------------------------------------------- decisions
 
-export type Status = "keep" | "cut" | "add" | "maybe";
-export const STATUSES: Status[] = ["keep", "cut", "add", "maybe"];
+/**
+ * Keep / Cut apply to cards in my cube; Add / No to cards outside it. They're
+ * the same yes/no question either way, so they're stored and keyed by meaning
+ * and shown in the right words for where the card currently is.
+ */
+export type Status = "keep" | "cut" | "add" | "no" | "maybe";
+export const STATUSES: Status[] = ["keep", "cut", "add", "no", "maybe"];
 export const STATUS_LABEL: Record<Status, string> = {
   keep: "Keep",
   cut: "Cut",
   add: "Add",
+  no: "No",
   maybe: "Maybe",
 };
-export const STATUS_KEY: Record<string, Status> = { k: "keep", c: "cut", a: "add", m: "maybe" };
+export const STATUS_SHORTCUT: Record<Status, string> = { keep: "K", cut: "C", add: "A", no: "N", maybe: "M" };
+
+export type Polarity = "yes" | "no" | "maybe";
+/** K/A mean "yes" and C/N mean "no" on any card, so either letter works. */
+export const KEY_POLARITY: Record<string, Polarity> = { k: "yes", a: "yes", c: "no", n: "no", m: "maybe" };
+
+export function inMyCube(id: string): boolean {
+  return members.mine.has(id);
+}
+
+/** The status a yes / no / maybe means for this card. */
+export function statusFor(id: string, p: Polarity): Status {
+  if (p === "maybe") return "maybe";
+  const mine = inMyCube(id);
+  return p === "yes" ? (mine ? "keep" : "add") : mine ? "cut" : "no";
+}
+
+/**
+ * The status in the right words for where the card is now — so an old "Cut"
+ * on a card I don't run reads "No", and an "Add" on a card that has since
+ * joined my cube reads "Keep".
+ */
+export function normalizeStatus(id: string, s: Status | undefined): Status | undefined {
+  if (!s) return undefined;
+  if (s === "maybe") return s;
+  return statusFor(id, s === "keep" || s === "add" ? "yes" : "no");
+}
+
+/** The three buttons a card offers. */
+export function choicesFor(id: string): Status[] {
+  return inMyCube(id) ? ["keep", "cut", "maybe"] : ["add", "no", "maybe"];
+}
 
 export interface Decision {
   status?: Status;
@@ -288,6 +382,8 @@ export interface DecisionsFile {
   version: 1;
   exportedAt: string;
   decisions: Decisions;
+  /** Hand-added cards, so the importing device can show them. */
+  extraCards?: Record<string, ReviewCard>;
 }
 
 export function toExportFile(d: Decisions): DecisionsFile {
@@ -296,6 +392,7 @@ export function toExportFile(d: Decisions): DecisionsFile {
     version: 1,
     exportedAt: new Date().toISOString(),
     decisions: prune(d),
+    extraCards: extraCards(),
   };
 }
 
@@ -307,11 +404,12 @@ export function toExportFile(d: Decisions): DecisionsFile {
 export function mergeImport(
   current: Decisions,
   text: string,
-): { merged: Decisions; updated: number; total: number } {
+): { merged: Decisions; updated: number; total: number; newCards: number } {
   const parsed = JSON.parse(text) as Partial<DecisionsFile>;
   if (parsed?.app !== "booster-tutor-cube-review" || typeof parsed.decisions !== "object") {
     throw new Error("That isn't a Booster Tutor cube review file.");
   }
+  const newCards = parsed.extraCards ? addExtraCards(Object.values(parsed.extraCards)) : 0;
   const merged: Decisions = { ...current };
   let updated = 0;
   const incoming = parsed.decisions as Decisions;
@@ -322,41 +420,30 @@ export function mergeImport(
       updated++;
     }
   }
-  return { merged: prune(merged), updated, total: Object.keys(incoming).length };
+  return { merged: prune(merged), updated, total: Object.keys(incoming).length, newCards };
 }
 
 // ---------------------------------------------------------------- summary
 
 export interface Summary {
   counts: Record<Status, number>;
-  /** Cuts that apply (card is in my cube) and adds that apply (it isn't). */
   cuts: ReviewCard[];
   adds: ReviewCard[];
-  /** Decisions that don't change the cube: a Cut on a card I don't run, etc. */
-  ignoredCuts: number;
-  ignoredAdds: number;
   current: number;
   result: number;
   balance: { id: BalanceRow; label: string; now: number; minus: number; plus: number }[];
 }
 
 export function summarize(d: Decisions): Summary {
-  const counts: Record<Status, number> = { keep: 0, cut: 0, add: 0, maybe: 0 };
+  const counts: Record<Status, number> = { keep: 0, cut: 0, add: 0, no: 0, maybe: 0 };
   const cuts: ReviewCard[] = [];
   const adds: ReviewCard[] = [];
-  let ignoredCuts = 0;
-  let ignoredAdds = 0;
   for (const [id, v] of Object.entries(d)) {
-    if (!v.status || !data.cards[id]) continue;
-    counts[v.status]++;
-    if (v.status === "cut") {
-      if (members.mine.has(id)) cuts.push(data.cards[id]);
-      else ignoredCuts++;
-    }
-    if (v.status === "add") {
-      if (!members.mine.has(id)) adds.push(data.cards[id]);
-      else ignoredAdds++;
-    }
+    const status = normalizeStatus(id, v.status);
+    if (!status || !hasCard(id)) continue;
+    counts[status]++;
+    if (status === "cut") cuts.push(card(id));
+    if (status === "add") adds.push(card(id));
   }
   const byName = (a: ReviewCard, b: ReviewCard) => a.name.localeCompare(b.name);
   cuts.sort(byName);
@@ -369,14 +456,77 @@ export function summarize(d: Decisions): Summary {
   for (const c of adds) row(c).plus++;
 
   const current = members.mine.size;
+  return { counts, cuts, adds, current, result: current - cuts.length + adds.length, balance };
+}
+
+// ---------------------------------------------------------------- Scryfall (online only)
+
+const SCRYFALL = "https://api.scryfall.com";
+
+/** Card-name suggestions as you type. */
+export async function scryfallSuggest(q: string, signal?: AbortSignal): Promise<string[]> {
+  const res = await fetch(`${SCRYFALL}/cards/autocomplete?q=${encodeURIComponent(q)}`, { signal });
+  if (!res.ok) throw new Error(`Scryfall returned ${res.status}`);
+  const j = (await res.json()) as { data?: string[] };
+  return j.data ?? [];
+}
+
+/** One card by exact name, in the same shape as the baked data. */
+export async function scryfallCard(name: string): Promise<ReviewCard> {
+  const res = await fetch(`${SCRYFALL}/cards/named?exact=${encodeURIComponent(name)}`);
+  if (!res.ok) throw new Error(`Scryfall couldn't find "${name}"`);
+  return fromScryfall(await res.json());
+}
+
+interface ScryFace {
+  name: string;
+  mana_cost?: string;
+  type_line?: string;
+  oracle_text?: string;
+  power?: string;
+  toughness?: string;
+  loyalty?: string;
+  colors?: string[];
+  oracle_id?: string;
+  image_uris?: { small?: string };
+}
+interface ScryCard extends ScryFace {
+  id: string;
+  cmc?: number;
+  color_identity: string[];
+  rarity: string;
+  layout: string;
+  card_faces?: ScryFace[];
+}
+
+/** Mirrors normalize() in scripts/build-cube-review.mjs. */
+export function fromScryfall(c: ScryCard): ReviewCard {
+  const faces = c.card_faces;
+  const frontImg = c.image_uris ?? faces?.[0]?.image_uris;
+  const pt = (x: ScryFace) => (x.power != null ? `${x.power}/${x.toughness}` : undefined);
   return {
-    counts,
-    cuts,
-    adds,
-    ignoredCuts,
-    ignoredAdds,
-    current,
-    result: current - cuts.length + adds.length,
-    balance,
+    id: c.oracle_id ?? faces?.[0]?.oracle_id ?? c.id,
+    sid: c.id,
+    name: c.name,
+    cost: c.mana_cost ?? (faces ?? []).map((f) => f.mana_cost ?? "").join(" // "),
+    cmc: c.cmc ?? 0,
+    colors: c.colors ?? [...new Set((faces ?? []).flatMap((f) => f.colors ?? []))],
+    ci: c.color_identity,
+    type: c.type_line ?? (faces ?? []).map((f) => f.type_line ?? "").join(" // "),
+    text: c.oracle_text ?? (faces ?? []).map((f) => f.oracle_text ?? "").join("\n//\n"),
+    pt: pt(c),
+    loy: c.loyalty,
+    rarity: c.rarity,
+    layout: c.layout,
+    faces: faces?.map((f) => ({
+      name: f.name,
+      cost: f.mana_cost,
+      type: f.type_line,
+      text: f.oracle_text,
+      pt: pt(f),
+      loy: f.loyalty,
+    })),
+    img: frontImg?.small,
+    back: !c.image_uris && faces?.[1]?.image_uris ? true : undefined,
   };
 }

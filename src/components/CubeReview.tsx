@@ -5,13 +5,23 @@ import {
   CUBE_KEYS,
   CUBE_SHORT,
   RARITY_FACETS,
+  KEY_POLARITY,
   STATUSES,
-  STATUS_KEY,
   STATUS_LABEL,
+  STATUS_SHORTCUT,
   TYPE_FACETS,
-  allIds,
+  addExtraCards,
+  allCardIds,
   allImageUrls,
   card,
+  choicesFor,
+  hasCard,
+  isExtra,
+  normalizeStatus,
+  scryfallCard,
+  scryfallSuggest,
+  statusFor,
+  summarize,
   cmcFacet,
   colorFacet,
   cubeUnion,
@@ -36,6 +46,7 @@ import {
   type LogKey,
   type ReviewCard,
   type Status,
+  type Summary,
   type TypeFacet,
 } from "../lib/cube-review";
 import { gradeTone, primaryGrade, setReview, type SetReviewCard } from "../lib/set-review";
@@ -115,6 +126,7 @@ const STATUS_TONE: Record<Status, string> = {
   keep: "bg-sky-500/25 text-sky-200",
   cut: "bg-red-500/25 text-red-200",
   add: "bg-emerald-500/25 text-emerald-200",
+  no: "bg-slate-500/30 text-slate-200",
   maybe: "bg-amber-500/25 text-amber-200",
 };
 
@@ -122,6 +134,7 @@ const STATUS_BUTTON: Record<Status, string> = {
   keep: "border-sky-500/60 bg-sky-500/25 text-sky-100",
   cut: "border-red-500/60 bg-red-500/25 text-red-100",
   add: "border-emerald-500/60 bg-emerald-500/25 text-emerald-100",
+  no: "border-slate-400/60 bg-slate-500/30 text-slate-100",
   maybe: "border-amber-500/60 bg-amber-500/25 text-amber-100",
 };
 
@@ -155,7 +168,7 @@ function facetFilter(ui: Ui, q: string, decisions: Decisions) {
     if (ui.cmcs.length && !ui.cmcs.includes(cmcFacet(c))) return false;
     if (ui.rarities.length && !ui.rarities.includes(c.rarity)) return false;
     if (ui.statuses.length) {
-      const s: StatusFilter = decisions[c.id]?.status ?? "none";
+      const s: StatusFilter = normalizeStatus(c.id, decisions[c.id]?.status) ?? "none";
       if (!ui.statuses.includes(s)) return false;
     }
     if (needle && !searchText(c).includes(needle)) return false;
@@ -178,6 +191,8 @@ export function CubeReview() {
   const [detail, setDetail] = useState<{ ids: string[]; index: number } | null>(null);
   const [paging, setPaging] = useState({ key: "", n: PAGE });
   const [fullSize, setFullSize] = useState(false);
+  // Bumped when hand-added cards change, so card lists recompute.
+  const [extrasVersion, setExtrasVersion] = useState(0);
   const gridRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const viewBarRef = useRef<HTMLDivElement>(null);
@@ -199,9 +214,24 @@ export function CubeReview() {
   const setStatus = useCallback((id: string, s: Status) => {
     setDecisions((d) => {
       const prev = d[id];
-      const status = prev?.status === s ? undefined : s; // same key again clears it
+      // The same choice again clears it (compared in this card's own words).
+      const status = normalizeStatus(id, prev?.status) === s ? undefined : s;
       return { ...d, [id]: { ...prev, status, t: Date.now() } };
     });
+  }, []);
+
+  /** Add a card from Scryfall (or just open it if it's already here). */
+  const pickFromScryfall = useCallback(async (name: string) => {
+    const c = await scryfallCard(name);
+    if (!hasCard(c.id)) {
+      addExtraCards([c]);
+      setExtrasVersion((v) => v + 1);
+      // You went looking for it, so start it as an Add.
+      setDecisions((d) =>
+        d[c.id]?.status ? d : { ...d, [c.id]: { ...d[c.id], status: statusFor(c.id, "yes"), t: Date.now() } },
+      );
+    }
+    setDetail({ ids: [c.id], index: 0 });
   }, []);
 
   const setNote = useCallback((id: string, note: string) => {
@@ -240,9 +270,14 @@ export function CubeReview() {
   }, [ui.log]);
 
   const decided = useMemo(
-    () => Object.entries(decisions).filter(([id, d]) => d.status && data.cards[id]),
-    [decisions],
+    () => Object.entries(decisions).filter(([id, d]) => d.status && hasCard(id)),
+    // extrasVersion: an import can bring in cards that make decisions visible.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [decisions, extrasVersion],
   );
+
+  // Live: what my cube becomes with every Cut and Add applied.
+  const live = useMemo(() => summarize(decisions), [decisions]);
 
   const baseIds = useMemo((): string[] => {
     switch (view) {
@@ -266,13 +301,15 @@ export function CubeReview() {
       case "decisions":
         return decided.map(([id]) => id);
       default:
-        return allIds;
+        return allCardIds();
     }
-  }, [view, ui.member, ui.log, ui.logTag, ui.hideMine, decided]);
+    // extrasVersion: hand-added cards join "All cards".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, ui.member, ui.log, ui.logTag, ui.hideMine, decided, extrasVersion]);
 
   const ids = useMemo(() => {
     const keep = facetFilter(ui, q, decisions);
-    const list = baseIds.filter((id) => data.cards[id] && keep(data.cards[id]));
+    const list = baseIds.filter((id) => hasCard(id) && keep(card(id)));
     const byName = (a: string, b: string) => card(a).name.localeCompare(card(b).name);
     if (sort === "cmc") list.sort((a, b) => card(a).cmc - card(b).cmc || byName(a, b));
     else if (sort === "grade") list.sort((a, b) => gradeSortValue(card(b)) - gradeSortValue(card(a)) || byName(a, b));
@@ -335,8 +372,8 @@ export function CubeReview() {
         e.preventDefault();
         open(selId);
         return;
-      } else if (STATUS_KEY[e.key.toLowerCase()] && selId) {
-        setStatus(selId, STATUS_KEY[e.key.toLowerCase()]);
+      } else if (KEY_POLARITY[e.key.toLowerCase()] && selId) {
+        setStatus(selId, statusFor(selId, KEY_POLARITY[e.key.toLowerCase()]));
         return;
       } else return;
       e.preventDefault();
@@ -373,7 +410,13 @@ export function CubeReview() {
           MTGO {shortDate(data.cubes.mtgo.updated)} · changelogs since {shortDate(data.changelogSince)}
         </span>
         <span className="ml-auto flex flex-wrap items-center gap-2">
-          <DecisionsSync decisions={decisions} onImport={setDecisions} />
+          <DecisionsSync
+            decisions={decisions}
+            onImport={(d) => {
+              setDecisions(d);
+              setExtrasVersion((v) => v + 1);
+            }}
+          />
           <button
             type="button"
             onClick={() => patch({ view: view === "summary" ? "compare" : "summary" })}
@@ -388,6 +431,8 @@ export function CubeReview() {
           </button>
         </span>
       </div>
+
+      <LiveCount live={live} />
 
       {saveFailed && (
         <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
@@ -502,7 +547,7 @@ export function CubeReview() {
           {view === "decisions" && (
             <div className="flex flex-wrap gap-1.5 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
               {STATUSES.map((s) => {
-                const n = decided.filter(([, d]) => d.status === s).length;
+                const n = decided.filter(([id, d]) => normalizeStatus(id, d.status) === s).length;
                 const on = ui.statuses.length === 1 && ui.statuses[0] === s;
                 return (
                   <button
@@ -520,7 +565,7 @@ export function CubeReview() {
               })}
               {decided.length === 0 && (
                 <span className="self-center text-sm text-(--color-text-dim)">
-                  Tag cards Keep / Cut / Add / Maybe in any view and they collect here.
+                  Tag cards in any view (Keep / Cut for your cube, Add / No for the rest, or Maybe) and they collect here.
                 </span>
               )}
             </div>
@@ -606,13 +651,15 @@ export function CubeReview() {
             </div>
           </div>
 
+          {q.trim().length >= 2 && <ScryfallAdd q={q.trim()} onPick={pickFromScryfall} />}
+
           {/* Result bar */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-(--color-text)">
               {ids.length} card{ids.length === 1 ? "" : "s"}
             </span>
             <span className="hidden text-xs text-(--color-text-dim) lg:inline">
-              Arrows move · Enter opens · K C A M tag
+              Arrows move · Enter opens · K/A yes · C/N no · M maybe
             </span>
             <span className="ml-auto flex items-center gap-2">
               <select
@@ -650,7 +697,7 @@ export function CubeReview() {
                 <Tile
                   key={id}
                   c={card(id)}
-                  status={decisions[id]?.status}
+                  status={normalizeStatus(id, decisions[id]?.status)}
                   hasNote={!!decisions[id]?.note}
                   selected={selId === id}
                   onOpen={open}
@@ -664,7 +711,7 @@ export function CubeReview() {
                   key={id}
                   c={card(id)}
                   log={view === "changelog" ? ui.log : null}
-                  status={decisions[id]?.status}
+                  status={normalizeStatus(id, decisions[id]?.status)}
                   selected={selId === id}
                   onOpen={open}
                 />
@@ -692,6 +739,7 @@ export function CubeReview() {
           ids={detail.ids}
           index={detail.index}
           decisions={decisions}
+          live={live}
           autoAdvance={ui.autoAdvance}
           onAutoAdvance={(v) => patch({ autoAdvance: v })}
           onIndex={(index) => {
@@ -708,6 +756,106 @@ export function CubeReview() {
 }
 
 // ---------------------------------------------------------------- pieces
+
+/** Always-visible: my cube's size with every Cut and Add applied. */
+function LiveCount({ live }: { live: Summary }) {
+  const delta = live.result - live.current;
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2 text-sm">
+      <span className="text-(--color-text-dim)">My cube</span>
+      <span className="text-xl font-semibold tabular-nums text-(--color-text)">{live.result}</span>
+      <span className="tabular-nums text-(--color-text-dim)">
+        {live.current}
+        <span className="text-red-300"> − {live.cuts.length}</span>
+        <span className="text-emerald-300"> + {live.adds.length}</span>
+        {delta !== 0 && (
+          <span className={delta > 0 ? "text-amber-300" : "text-sky-300"}>
+            {" "}
+            ({delta > 0 ? "+" : ""}
+            {delta})
+          </span>
+        )}
+      </span>
+      {live.counts.maybe > 0 && <span className="text-amber-300">· {live.counts.maybe} maybe</span>}
+    </div>
+  );
+}
+
+type SuggestState =
+  | { q: string; kind: "idle" }
+  | { q: string; kind: "loading" }
+  | { q: string; kind: "list"; names: string[] }
+  | { q: string; kind: "error"; message: string };
+
+/**
+ * Find a card that isn't in any of the cubes or the set. Needs a connection to
+ * search; once added, the card is stored and works offline.
+ */
+function ScryfallAdd({ q, onPick }: { q: string; onPick: (name: string) => Promise<void> }) {
+  const [state, setState] = useState<SuggestState>({ q: "", kind: "idle" });
+  const [busy, setBusy] = useState<string | null>(null);
+  // Results belong to the query they were fetched for; a new query starts idle.
+  const cur: SuggestState = state.q === q ? state : { q, kind: "idle" };
+  const offlineMsg = "Needs a connection — you're offline.";
+
+  const search = async () => {
+    setState({ q, kind: "loading" });
+    try {
+      setState({ q, kind: "list", names: (await scryfallSuggest(q)).slice(0, 8) });
+    } catch {
+      setState({ q, kind: "error", message: navigator.onLine ? "Scryfall didn't respond. Try again." : offlineMsg });
+    }
+  };
+
+  const pick = async (name: string) => {
+    setBusy(name);
+    try {
+      await onPick(name);
+    } catch {
+      setState({ q, kind: "error", message: navigator.onLine ? `Couldn't load ${name}.` : offlineMsg });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-dashed border-(--color-border) px-3 py-2 text-sm">
+      {cur.kind === "idle" && (
+        <button type="button" onClick={search} className="text-(--color-accent) hover:underline">
+          Not in these cubes? Search Scryfall for “{q}” →
+        </button>
+      )}
+      {cur.kind === "loading" && <span className="text-(--color-text-dim)">Searching Scryfall…</span>}
+      {cur.kind === "error" && (
+        <span className="text-(--color-text-dim)">
+          {cur.message}{" "}
+          <button type="button" onClick={search} className="text-(--color-accent) hover:underline">
+            Retry
+          </button>
+        </span>
+      )}
+      {cur.kind === "list" &&
+        (cur.names.length === 0 ? (
+          <span className="text-(--color-text-dim)">No card on Scryfall matches “{q}”.</span>
+        ) : (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-(--color-text-dim)">Add from Scryfall:</span>
+            {cur.names.map((n) => (
+              <button
+                key={n}
+                type="button"
+                disabled={busy !== null}
+                onClick={() => pick(n)}
+                className="rounded-full border border-(--color-border) px-2.5 py-1 text-xs text-(--color-text) hover:bg-white/5 disabled:opacity-50"
+              >
+                {busy === n ? "Adding…" : n}
+              </button>
+            ))}
+          </div>
+        ))}
+    </div>
+  );
+}
 
 function OfflineHint({ text }: { text: string }) {
   return <p className="text-xs text-(--color-text-dim)">{text}</p>;
@@ -953,6 +1101,7 @@ function CardDetail({
   ids,
   index,
   decisions,
+  live,
   autoAdvance,
   onAutoAdvance,
   onIndex,
@@ -963,6 +1112,7 @@ function CardDetail({
   ids: string[];
   index: number;
   decisions: Decisions;
+  live: Summary;
   autoAdvance: boolean;
   onAutoAdvance: (v: boolean) => void;
   onIndex: (i: number) => void;
@@ -971,7 +1121,7 @@ function CardDetail({
   onClose: () => void;
 }) {
   const c = card(ids[index]);
-  const status = decisions[c.id]?.status;
+  const status = normalizeStatus(c.id, decisions[c.id]?.status);
 
   const go = useCallback(
     (delta: number) => {
@@ -1002,8 +1152,8 @@ function CardDetail({
       if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.key === "ArrowRight") go(1);
       else if (e.key === "ArrowLeft") go(-1);
-      else if (STATUS_KEY[e.key.toLowerCase()]) tag(STATUS_KEY[e.key.toLowerCase()]);
-      else if (e.key.toLowerCase() === "n") {
+      else if (KEY_POLARITY[e.key.toLowerCase()]) tag(statusFor(c.id, KEY_POLARITY[e.key.toLowerCase()]));
+      else if (e.key.toLowerCase() === "e") {
         e.preventDefault();
         document.getElementById("cube-review-note")?.focus();
       } else return;
@@ -1011,7 +1161,7 @@ function CardDetail({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, tag, onClose]);
+  }, [go, tag, onClose, c.id]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/80 sm:items-center sm:p-4" onClick={onClose}>
@@ -1022,6 +1172,9 @@ function CardDetail({
         <div className="flex items-center justify-between gap-2 border-b border-(--color-border) px-3 py-2 text-xs text-(--color-text-dim)">
           <span>
             {index + 1} / {ids.length}
+          </span>
+          <span className="text-(--color-text)" title={`${live.current} now − ${live.cuts.length} cut + ${live.adds.length} added`}>
+            My cube <span className="font-semibold">{live.result}</span>
           </span>
           <label className="flex items-center gap-1.5">
             <input type="checkbox" checked={autoAdvance} onChange={(e) => onAutoAdvance(e.target.checked)} />
@@ -1035,7 +1188,7 @@ function CardDetail({
         {/* Keyed by card so the face and the note draft reset per card. */}
         <CardBody key={c.id} c={c} savedNote={decisions[c.id]?.note ?? ""} onNote={onNote} />
         {/* Review bar — big tap targets, pinned to the bottom on a phone. */}
-        <div className="grid grid-cols-[auto_repeat(4,minmax(0,1fr))_auto] gap-1.5 border-t border-(--color-border) p-2">
+        <div className="grid grid-cols-[auto_repeat(3,minmax(0,1fr))_auto] gap-1.5 border-t border-(--color-border) p-2">
           <button
             type="button"
             onClick={() => go(-1)}
@@ -1045,7 +1198,7 @@ function CardDetail({
           >
             ‹
           </button>
-          {STATUSES.map((s) => (
+          {choicesFor(c.id).map((s) => (
             <button
               key={s}
               type="button"
@@ -1056,7 +1209,7 @@ function CardDetail({
               }
             >
               {STATUS_LABEL[s]}
-              <span className="ml-1 hidden text-xs text-(--color-text-dim) lg:inline">{s[0].toUpperCase()}</span>
+              <span className="ml-1 hidden text-xs text-(--color-text-dim) lg:inline">{STATUS_SHORTCUT[s]}</span>
             </button>
           ))}
           <button
@@ -1180,6 +1333,7 @@ function CardBody({
                     <span className="text-(--color-text)">Limited Resources:</span> {grade}
                   </div>
                 )}
+                {isExtra(c.id) && <div className="text-(--color-accent)">Added by hand from Scryfall</div>}
               </div>
 
               <textarea
@@ -1189,7 +1343,7 @@ function CardBody({
                 onBlur={() => {
                   if (noteDraft !== savedNote) onNote(c.id, noteDraft.trim());
                 }}
-                placeholder="Note (N to type, Esc to leave)"
+                placeholder="Note (E to type, Esc to leave)"
                 rows={2}
                 className="w-full rounded border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
               />
