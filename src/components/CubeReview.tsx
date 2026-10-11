@@ -26,8 +26,12 @@ import {
   cmcFacet,
   colorFacet,
   cubeUnion,
+  artChoice,
   data,
-  fallbackImageUrl,
+  fallbackImageUrls,
+  hasBackImage,
+  scryfallPrintings,
+  setArtChoice,
   frontName,
   hasType,
   historyEvents,
@@ -46,6 +50,7 @@ import {
   type CubeKey,
   type Decisions,
   type LogKey,
+  type Printing,
   type ReviewCard,
   type Status,
   type Summary,
@@ -198,6 +203,12 @@ export function CubeReview() {
   // Bumped when hand-added cards change, so card lists recompute.
   const [extrasVersion, setExtrasVersion] = useState(0);
   const cardDb = useCardDb();
+  // Bumped when a printing is chosen, so images re-render.
+  const [artVersion, setArtVersion] = useState(0);
+  const chooseArt = useCallback((id: string, p: Printing | null) => {
+    setArtChoice(id, p ? { sid: p.sid, back: p.back || undefined, label: `${p.set} · ${p.released.slice(0, 4)}` } : null);
+    setArtVersion((v) => v + 1);
+  }, []);
   const gridRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const viewBarRef = useRef<HTMLDivElement>(null);
@@ -408,7 +419,9 @@ export function CubeReview() {
 
   const offlineUrls = useMemo(
     () => (fullSize ? [...allImageUrls("small"), ...allImageUrls("normal")] : allImageUrls("small")),
-    [fullSize],
+    // artVersion: a chosen printing is what "Save images" should store.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [fullSize, artVersion],
   );
 
   return (
@@ -425,6 +438,7 @@ export function CubeReview() {
             onImport={(d) => {
               setDecisions(d);
               setExtrasVersion((v) => v + 1);
+              setArtVersion((v) => v + 1);
             }}
           />
           <button
@@ -712,6 +726,7 @@ export function CubeReview() {
                 <Tile
                   key={id}
                   c={card(id)}
+                  src={imageUrl(card(id), "small")}
                   status={normalizeStatus(id, decisions[id]?.status)}
                   hasNote={!!decisions[id]?.note}
                   selected={selId === id}
@@ -757,6 +772,8 @@ export function CubeReview() {
           index={detail.index}
           decisions={decisions}
           live={live}
+          artVersion={artVersion}
+          onChooseArt={chooseArt}
           autoAdvance={ui.autoAdvance}
           onAutoAdvance={(v) => patch({ autoAdvance: v })}
           onIndex={(index) => {
@@ -926,18 +943,19 @@ function StatusPill({ status }: { status?: Status }) {
 
 const Tile = memo(function Tile({
   c,
+  src,
   status,
   hasNote,
   selected,
   onOpen,
 }: {
   c: ReviewCard;
+  src: string | null;
   status?: Status;
   hasNote: boolean;
   selected: boolean;
   onOpen: (id: string) => void;
 }) {
-  const src = imageUrl(c, "small");
   const grade = setGrade(c);
   return (
     <button
@@ -957,11 +975,8 @@ const Tile = memo(function Tile({
             loading="lazy"
             decoding="async"
             className="h-full w-full object-cover"
-            // Offline before the oldest art was saved: show the cube's printing.
-            onError={(e) => {
-              const fb = fallbackImageUrl(c, "small");
-              if (fb && e.currentTarget.src !== fb) e.currentTarget.src = fb;
-            }}
+            // Offline and this image isn't saved: show whichever printing is.
+            onError={(e) => tryNextImage(e.currentTarget, fallbackImageUrls(c, "small"))}
           />
         ) : (
           <span className="flex h-full items-center justify-center p-2 text-center text-[11px] text-(--color-text-dim)">
@@ -1047,6 +1062,89 @@ const Row = memo(function Row({
   );
 });
 
+/** Step an <img> through fallback URLs it hasn't tried yet. */
+function tryNextImage(img: HTMLImageElement, candidates: (string | null)[]) {
+  const tried = (img.dataset.tried ?? "").split("|");
+  const next = candidates.find((u): u is string => !!u && u !== img.src && !tried.includes(u));
+  if (next) {
+    img.dataset.tried = [...tried, img.src].join("|");
+    img.src = next;
+  }
+}
+
+type PickState =
+  | { kind: "loading" }
+  | { kind: "list"; printings: Printing[] }
+  | { kind: "error"; message: string };
+
+/** Every printing of a card, oldest first; tap one to make it the default. Online only. */
+function PrintingPicker({ c, onPick }: { c: ReviewCard; onPick: (p: Printing | null) => void }) {
+  const [state, setState] = useState<PickState>({ kind: "loading" });
+  const current = artChoice(c.id)?.sid;
+
+  useEffect(() => {
+    const ac = new AbortController();
+    scryfallPrintings(c.id, ac.signal)
+      .then((printings) => setState({ kind: "list", printings }))
+      .catch(() => {
+        if (!ac.signal.aborted)
+          setState({
+            kind: "error",
+            message: navigator.onLine
+              ? "Scryfall didn't respond — try again in a moment."
+              : "Browsing printings needs a connection. Your current choice still shows offline once its image is saved.",
+          });
+      });
+    return () => ac.abort();
+  }, [c.id]);
+
+  return (
+    <div className="mt-4 border-t border-(--color-border) pt-3">
+      <div className="mb-2 flex items-center justify-between gap-2 text-xs text-(--color-text-dim)">
+        <span>
+          {state.kind === "list" ? `${state.printings.length} printings, oldest first` : "Printings"}
+        </span>
+        {current && (
+          <button type="button" onClick={() => onPick(null)} className="text-(--color-accent) hover:underline">
+            Reset to default
+          </button>
+        )}
+      </div>
+      {state.kind === "loading" && <p className="text-sm text-(--color-text-dim)">Loading printings from Scryfall…</p>}
+      {state.kind === "error" && <p className="text-sm text-(--color-text-dim)">{state.message}</p>}
+      {state.kind === "list" && (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+          {state.printings.map((p) => {
+            const isCurrent = current ? p.sid === current : p.sid === c.img?.split("/").pop()?.split(".jpg")[0];
+            return (
+              <button
+                key={p.sid}
+                type="button"
+                onClick={() => onPick(p)}
+                className={
+                  "rounded-lg border p-1 text-left " +
+                  (isCurrent ? "border-(--color-accent) ring-2 ring-(--color-accent)" : "border-(--color-border) hover:border-(--color-text-dim)")
+                }
+              >
+                <img
+                  src={`https://cards.scryfall.io/small/front/${p.sid[0]}/${p.sid[1]}/${p.sid}.jpg`}
+                  alt={`${c.name} — ${p.setName}`}
+                  loading="lazy"
+                  className="aspect-[488/680] w-full rounded-[5%] object-cover"
+                />
+                <span className="mt-0.5 block truncate text-[10px] text-(--color-text-dim)" title={p.setName}>
+                  {p.set} · {p.released.slice(0, 4)}
+                  {p.digital ? " · MTGO" : ""}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- detail
 
 function CardDetail({
@@ -1054,6 +1152,8 @@ function CardDetail({
   index,
   decisions,
   live,
+  artVersion,
+  onChooseArt,
   autoAdvance,
   onAutoAdvance,
   onIndex,
@@ -1065,6 +1165,8 @@ function CardDetail({
   index: number;
   decisions: Decisions;
   live: Summary;
+  artVersion: number;
+  onChooseArt: (id: string, p: Printing | null) => void;
   autoAdvance: boolean;
   onAutoAdvance: (v: boolean) => void;
   onIndex: (i: number) => void;
@@ -1138,7 +1240,14 @@ function CardDetail({
         </div>
 
         {/* Keyed by card so the face and the note draft reset per card. */}
-        <CardBody key={c.id} c={c} savedNote={decisions[c.id]?.note ?? ""} onNote={onNote} />
+        <CardBody
+          key={c.id}
+          c={c}
+          savedNote={decisions[c.id]?.note ?? ""}
+          onNote={onNote}
+          artVersion={artVersion}
+          onChooseArt={onChooseArt}
+        />
         {/* Review bar — big tap targets, pinned to the bottom on a phone. */}
         <div className="grid grid-cols-[auto_repeat(3,minmax(0,1fr))_auto] gap-1.5 border-t border-(--color-border) p-2">
           <button
@@ -1183,17 +1292,23 @@ function CardBody({
   c,
   savedNote,
   onNote,
+  artVersion,
+  onChooseArt,
 }: {
   c: ReviewCard;
   savedNote: string;
   onNote: (id: string, note: string) => void;
+  artVersion: number;
+  onChooseArt: (id: string, p: Printing | null) => void;
 }) {
   const [face, setFace] = useState<"front" | "back">("front");
   const [noteDraft, setNoteDraft] = useState(savedNote);
+  const [picking, setPicking] = useState(false);
+  const back = hasBackImage(c);
 
   // F flips double-faced cards.
   useEffect(() => {
-    if (!c.back) return;
+    if (!back) return;
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
@@ -1203,7 +1318,7 @@ function CardBody({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [c.back]);
+  }, [back]);
 
   const big = imageUrl(c, "normal", face);
   const small = imageUrl(c, "small", face);
@@ -1217,26 +1332,26 @@ function CardBody({
               <div className="aspect-[488/680] overflow-hidden rounded-[4.5%] bg-(--color-bg)">
                 {big && (
                   <img
-                    key={big}
+                    key={`${big}|${artVersion}`}
                     src={big}
                     alt={c.name}
                     className="h-full w-full object-cover"
-                    // Offline: try the saved small image, then the cube's own printing.
-                    onError={(e) => {
-                      const img = e.currentTarget;
-                      const tried = (img.dataset.tried ?? "").split("|");
-                      const next = [small, fallbackImageUrl(c, "small", face)].find(
-                        (u) => u && u !== img.src && !tried.includes(u),
-                      );
-                      if (next) {
-                        img.dataset.tried = [...tried, img.src].join("|");
-                        img.src = next;
-                      }
-                    }}
+                    // Offline: try the saved small image, then the other printings it may have.
+                    onError={(e) =>
+                      tryNextImage(e.currentTarget, [small, ...fallbackImageUrls(c, "small", face)])
+                    }
                   />
                 )}
               </div>
-              {c.back && (
+              <button
+                type="button"
+                onClick={() => setPicking((v) => !v)}
+                className="mt-2 w-full rounded border border-(--color-border) py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
+              >
+                🎨 {picking ? "Close printings" : "Change printing"}
+                {artChoice(c.id)?.label && <span className="ml-1 text-(--color-accent)">({artChoice(c.id)?.label})</span>}
+              </button>
+              {back && (
                 <button
                   type="button"
                   onClick={() => setFace((f) => (f === "front" ? "back" : "front"))}
@@ -1312,6 +1427,16 @@ function CardBody({
               />
             </div>
           </div>
+          {picking && (
+            <PrintingPicker
+              c={c}
+              onPick={(p) => {
+                onChooseArt(c.id, p);
+                setFace("front");
+                setPicking(false);
+              }}
+            />
+          )}
         </div>
   );
 }

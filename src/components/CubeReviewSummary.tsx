@@ -53,11 +53,12 @@ export function DecisionsSync({
 
   const doImport = async (f: File) => {
     try {
-      const { merged, updated, total, newCards } = mergeImport(decisions, await f.text());
+      const { merged, updated, total, newCards, artUpdated } = mergeImport(decisions, await f.text());
       onImport(merged);
       setMsg(
         `Imported: ${updated} of ${total} were newer and applied` +
-          (newCards ? `, plus ${newCards} hand-added card${newCards === 1 ? "" : "s"}` : ""),
+          (newCards ? `, plus ${newCards} hand-added card${newCards === 1 ? "" : "s"}` : "") +
+          (artUpdated ? `, ${artUpdated} printing choice${artUpdated === 1 ? "" : "s"}` : ""),
       );
     } catch (e) {
       setMsg(e instanceof Error ? e.message : "Couldn't read that file.");

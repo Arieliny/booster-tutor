@@ -188,21 +188,83 @@ export function card(id: string): ReviewCard {
 
 export type ImageSize = "small" | "normal";
 
-export function imageUrl(c: ReviewCard, size: ImageSize, face: "front" | "back" = "front") {
-  if (!c.img) return null;
-  let url = c.img;
-  if (size === "normal") url = url.replace("/small/", "/normal/");
-  if (face === "back") url = url.replace("/front/", "/back/");
-  return url;
+// ---------------------------------------------------------------- chosen printings
+//
+// Per-card printing choices ("Change printing" in the popup), keyed by Oracle
+// id. Cube review + lookup only. Resetting stores an empty choice with its own
+// timestamp, so the reset - not just the pick - carries across devices.
+
+export interface ArtChoice {
+  /** Scryfall printing id; empty means "back to the default". */
+  sid: string;
+  back?: boolean;
+  /** e.g. "LEA · 1993", for showing what's chosen. */
+  label?: string;
+  t: number;
 }
 
-/** The cube's own printing for this face - the fallback when the oldest art isn't saved. */
-export function fallbackImageUrl(c: ReviewCard, size: ImageSize, face: "front" | "back" = "front") {
-  if (!c.cubeImg) return null;
-  let url = c.cubeImg;
-  if (size === "normal") url = url.replace("/small/", "/normal/");
-  if (face === "back") url = url.replace("/front/", "/back/");
-  return url;
+const ART_KEY = "booster-tutor-cube-review-art-v1";
+
+function loadArt(): Record<string, ArtChoice> {
+  try {
+    const s = localStorage.getItem(ART_KEY);
+    return s ? (JSON.parse(s) as Record<string, ArtChoice>) : {};
+  } catch {
+    return {};
+  }
+}
+
+const artChoices: Record<string, ArtChoice> = loadArt();
+
+function saveArt(): void {
+  try {
+    localStorage.setItem(ART_KEY, JSON.stringify(artChoices));
+  } catch {
+    // Blocked storage: the choice still applies this session.
+  }
+}
+
+export function artChoice(id: string): ArtChoice | undefined {
+  const a = artChoices[id];
+  return a?.sid ? a : undefined;
+}
+
+/** Choose a printing for a card, or pass null to go back to the default. */
+export function setArtChoice(id: string, choice: Omit<ArtChoice, "t"> | null): void {
+  artChoices[id] = choice ? { ...choice, t: Date.now() } : { sid: "", t: Date.now() };
+  saveArt();
+}
+
+const smallUrl = (sid: string) => `https://cards.scryfall.io/small/front/${sid[0]}/${sid[1]}/${sid}.jpg`;
+
+function sized(url: string, size: ImageSize, face: "front" | "back") {
+  let u = url;
+  if (size === "normal") u = u.replace("/small/", "/normal/");
+  if (face === "back") u = u.replace("/front/", "/back/");
+  return u;
+}
+
+/** Whether the shown printing has a separate back-face image. */
+export function hasBackImage(c: ReviewCard): boolean {
+  const a = artChoice(c.id);
+  return a ? !!a.back : !!c.back;
+}
+
+export function imageUrl(c: ReviewCard, size: ImageSize, face: "front" | "back" = "front") {
+  const a = artChoice(c.id);
+  const base = a ? smallUrl(a.sid) : c.img;
+  return base ? sized(base, size, face) : null;
+}
+
+/**
+ * What to show if the chosen/default image can't load (offline, not saved):
+ * the default printing when one was chosen, then the cube's own printing.
+ */
+export function fallbackImageUrls(c: ReviewCard, size: ImageSize, face: "front" | "back" = "front"): string[] {
+  const out: string[] = [];
+  if (artChoice(c.id) && c.img) out.push(sized(c.img, size, face));
+  if (c.cubeImg) out.push(sized(c.cubeImg, size, face));
+  return out;
 }
 
 /** Every image the offline download should cover, at one size. */
@@ -211,7 +273,7 @@ export function allImageUrls(size: ImageSize): string[] {
   for (const c of [...Object.values(data.cards), ...Object.values(extraCards())]) {
     const f = imageUrl(c, size);
     if (f) out.push(f);
-    if (c.back) {
+    if (hasBackImage(c)) {
       const b = imageUrl(c, size, "back");
       if (b) out.push(b);
     }
@@ -421,6 +483,8 @@ export interface DecisionsFile {
   decisions: Decisions;
   /** Hand-added cards, so the importing device can show them. */
   extraCards?: Record<string, ReviewCard>;
+  /** Chosen printings (incl. resets), merged per card by timestamp. */
+  art?: Record<string, ArtChoice>;
 }
 
 export function toExportFile(d: Decisions): DecisionsFile {
@@ -430,6 +494,7 @@ export function toExportFile(d: Decisions): DecisionsFile {
     exportedAt: new Date().toISOString(),
     decisions: prune(d),
     extraCards: extraCards(),
+    art: { ...artChoices },
   };
 }
 
@@ -441,12 +506,21 @@ export function toExportFile(d: Decisions): DecisionsFile {
 export function mergeImport(
   current: Decisions,
   text: string,
-): { merged: Decisions; updated: number; total: number; newCards: number } {
+): { merged: Decisions; updated: number; total: number; newCards: number; artUpdated: number } {
   const parsed = JSON.parse(text) as Partial<DecisionsFile>;
   if (parsed?.app !== "booster-tutor-cube-review" || typeof parsed.decisions !== "object") {
     throw new Error("That isn't a Booster Tutor cube review file.");
   }
   const newCards = parsed.extraCards ? addExtraCards(Object.values(parsed.extraCards)) : 0;
+  let artUpdated = 0;
+  for (const [id, a] of Object.entries(parsed.art ?? {})) {
+    if (!a || typeof a.t !== "number") continue;
+    if (!artChoices[id] || artChoices[id].t < a.t) {
+      artChoices[id] = a;
+      artUpdated++;
+    }
+  }
+  if (artUpdated) saveArt();
   const merged: Decisions = { ...current };
   let updated = 0;
   const incoming = parsed.decisions as Decisions;
@@ -457,7 +531,7 @@ export function mergeImport(
       updated++;
     }
   }
-  return { merged: prune(merged), updated, total: Object.keys(incoming).length, newCards };
+  return { merged: prune(merged), updated, total: Object.keys(incoming).length, newCards, artUpdated };
 }
 
 // ---------------------------------------------------------------- summary
@@ -506,6 +580,47 @@ export async function scryfallSuggest(q: string, signal?: AbortSignal): Promise<
   if (!res.ok) throw new Error(`Scryfall returned ${res.status}`);
   const j = (await res.json()) as { data?: string[] };
   return j.data ?? [];
+}
+
+export interface Printing {
+  sid: string;
+  set: string;
+  setName: string;
+  released: string;
+  num: string;
+  back: boolean;
+  /** MTGO/Arena-only printing. */
+  digital: boolean;
+}
+
+/** Every printing of a card that has an image, oldest first. Needs a connection. */
+export async function scryfallPrintings(oracleId: string, signal?: AbortSignal): Promise<Printing[]> {
+  const out: Printing[] = [];
+  let url: string | null =
+    `${SCRYFALL}/cards/search?q=${encodeURIComponent(`oracleid:${oracleId}`)}&unique=prints&order=released&dir=asc`;
+  for (let page = 0; url && page < 4; page++) {
+    const res: Response = await fetch(url, { signal });
+    if (!res.ok) throw new Error(`Scryfall returned ${res.status}`);
+    const j = (await res.json()) as {
+      data?: (ScryPrinting & { set: string; set_name: string; released_at: string; collector_number: string })[];
+      has_more?: boolean;
+      next_page?: string;
+    };
+    for (const p of j.data ?? []) {
+      if (!(p.image_uris || p.card_faces?.[0]?.image_uris) || p.layout === "art_series") continue;
+      out.push({
+        sid: p.id,
+        set: p.set.toUpperCase(),
+        setName: p.set_name,
+        released: p.released_at,
+        num: p.collector_number,
+        back: !p.image_uris && !!p.card_faces?.[1]?.image_uris,
+        digital: !!p.digital,
+      });
+    }
+    url = j.has_more && j.next_page ? j.next_page : null;
+  }
+  return out;
 }
 
 /** One card by exact name, in the same shape as the baked data, with its oldest art. */
