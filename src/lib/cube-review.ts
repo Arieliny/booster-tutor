@@ -131,6 +131,29 @@ export function isExtra(id: string): boolean {
   return !data.cards[id] && !!extras[id];
 }
 
+/**
+ * Cards opened from a lookup but not (yet) decided on. Kept in memory only, so
+ * browsing the card database doesn't fill "All cards"; tagging or noting one
+ * promotes it to a saved extra card (see persistIfLookedUp).
+ */
+const lookedUp: Record<string, ReviewCard> = {};
+
+export function registerLookup(c: ReviewCard): void {
+  if (!data.cards[c.id] && !extras[c.id]) lookedUp[c.id] = c;
+}
+
+export function isLookedUp(id: string): boolean {
+  return !data.cards[id] && !extras[id] && !!lookedUp[id];
+}
+
+/** Save a looked-up card for good; returns true if it was promoted. */
+export function persistIfLookedUp(id: string): boolean {
+  if (!isLookedUp(id)) return false;
+  addExtraCards([lookedUp[id]]);
+  delete lookedUp[id];
+  return true;
+}
+
 /** Add (or update) hand-added cards; returns how many were new. */
 export function addExtraCards(cards: ReviewCard[]): number {
   let added = 0;
@@ -149,11 +172,11 @@ export function allCardIds(): string[] {
 }
 
 export function hasCard(id: string): boolean {
-  return !!(data.cards[id] ?? extras[id]);
+  return !!(data.cards[id] ?? extras[id] ?? lookedUp[id]);
 }
 
 export function card(id: string): ReviewCard {
-  return data.cards[id] ?? extras[id];
+  return data.cards[id] ?? extras[id] ?? lookedUp[id];
 }
 
 // ---------------------------------------------------------------- images

@@ -10,16 +10,17 @@ import {
   STATUS_LABEL,
   STATUS_SHORTCUT,
   TYPE_FACETS,
-  addExtraCards,
   allCardIds,
   allImageUrls,
   card,
   choicesFor,
   hasCard,
   isExtra,
+  isLookedUp,
   normalizeStatus,
+  persistIfLookedUp,
+  registerLookup,
   scryfallCard,
-  scryfallSuggest,
   statusFor,
   summarize,
   cmcFacet,
@@ -54,6 +55,8 @@ import { ManaCost } from "./ManaCost";
 import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
 import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
+import { CardDbPanel, CardLookup } from "./CardLookup";
+import { useCardDb } from "../lib/card-db";
 
 type View = "compare" | "changelog" | "set" | "all" | "decisions" | "summary";
 type Member = "in" | "out" | "any";
@@ -193,6 +196,7 @@ export function CubeReview() {
   const [fullSize, setFullSize] = useState(false);
   // Bumped when hand-added cards change, so card lists recompute.
   const [extrasVersion, setExtrasVersion] = useState(0);
+  const cardDb = useCardDb();
   const gridRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
   const viewBarRef = useRef<HTMLDivElement>(null);
@@ -212,6 +216,8 @@ export function CubeReview() {
   const patch = useCallback((p: Partial<Ui>) => setUi((u) => ({ ...u, ...p })), []);
 
   const setStatus = useCallback((id: string, s: Status) => {
+    // Deciding on a card you only looked up keeps it on your list.
+    if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
     setDecisions((d) => {
       const prev = d[id];
       // The same choice again clears it (compared in this card's own words).
@@ -220,21 +226,22 @@ export function CubeReview() {
     });
   }, []);
 
-  /** Add a card from Scryfall (or just open it if it's already here). */
-  const pickFromScryfall = useCallback(async (name: string) => {
-    const c = await scryfallCard(name);
-    if (!hasCard(c.id)) {
-      addExtraCards([c]);
-      setExtrasVersion((v) => v + 1);
-      // You went looking for it, so start it as an Add.
-      setDecisions((d) =>
-        d[c.id]?.status ? d : { ...d, [c.id]: { ...d[c.id], status: statusFor(c.id, "yes"), t: Date.now() } },
-      );
-    }
+  /**
+   * Open a card from the card database or Scryfall. It's only looked at until
+   * you tag it or write a note - then it joins your list (setStatus/setNote).
+   */
+  const openLookedUp = useCallback((c: ReviewCard) => {
+    if (!hasCard(c.id)) registerLookup(c);
     setDetail({ ids: [c.id], index: 0 });
   }, []);
 
+  const openFromScryfall = useCallback(
+    async (name: string) => openLookedUp(await scryfallCard(name)),
+    [openLookedUp],
+  );
+
   const setNote = useCallback((id: string, note: string) => {
+    if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
     setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
   }, []);
 
@@ -319,6 +326,8 @@ export function CubeReview() {
     } else list.sort(byName);
     return list;
   }, [baseIds, ui, q, decisions, sort, view]);
+
+  const shownIds = useMemo(() => new Set(ids), [ids]);
 
   // Render a page at a time; any change to what's listed starts again at one page.
   const listKey = useMemo(
@@ -578,6 +587,11 @@ export function CubeReview() {
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
+                // Start loading the card database as soon as you tap in, so the
+                // ~1-2 s parse on a phone overlaps your typing.
+                onFocus={() => {
+                  if (cardDb.state.kind === "ready" && !cardDb.state.db) void cardDb.load();
+                }}
                 placeholder="Search name or rules text"
                 className="min-w-0 flex-1 rounded border border-(--color-border) bg-(--color-bg) px-3 py-2 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
               />
@@ -651,7 +665,7 @@ export function CubeReview() {
             </div>
           </div>
 
-          {q.trim().length >= 2 && <ScryfallAdd q={q.trim()} onPick={pickFromScryfall} />}
+          <CardLookup q={q} exclude={shownIds} db={cardDb} onOpenCard={openLookedUp} onScryfall={openFromScryfall} />
 
           {/* Result bar */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -720,6 +734,8 @@ export function CubeReview() {
           )}
           {limit < ids.length && <div ref={sentinelRef} className="h-10" />}
 
+          <CardDbPanel db={cardDb} />
+
           <OfflinePanel
             urls={offlineUrls}
             title="Offline — save cube review images"
@@ -777,82 +793,6 @@ function LiveCount({ live }: { live: Summary }) {
         )}
       </span>
       {live.counts.maybe > 0 && <span className="text-amber-300">· {live.counts.maybe} maybe</span>}
-    </div>
-  );
-}
-
-type SuggestState =
-  | { q: string; kind: "idle" }
-  | { q: string; kind: "loading" }
-  | { q: string; kind: "list"; names: string[] }
-  | { q: string; kind: "error"; message: string };
-
-/**
- * Find a card that isn't in any of the cubes or the set. Needs a connection to
- * search; once added, the card is stored and works offline.
- */
-function ScryfallAdd({ q, onPick }: { q: string; onPick: (name: string) => Promise<void> }) {
-  const [state, setState] = useState<SuggestState>({ q: "", kind: "idle" });
-  const [busy, setBusy] = useState<string | null>(null);
-  // Results belong to the query they were fetched for; a new query starts idle.
-  const cur: SuggestState = state.q === q ? state : { q, kind: "idle" };
-  const offlineMsg = "Needs a connection — you're offline.";
-
-  const search = async () => {
-    setState({ q, kind: "loading" });
-    try {
-      setState({ q, kind: "list", names: (await scryfallSuggest(q)).slice(0, 8) });
-    } catch {
-      setState({ q, kind: "error", message: navigator.onLine ? "Scryfall didn't respond. Try again." : offlineMsg });
-    }
-  };
-
-  const pick = async (name: string) => {
-    setBusy(name);
-    try {
-      await onPick(name);
-    } catch {
-      setState({ q, kind: "error", message: navigator.onLine ? `Couldn't load ${name}.` : offlineMsg });
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  return (
-    <div className="rounded-lg border border-dashed border-(--color-border) px-3 py-2 text-sm">
-      {cur.kind === "idle" && (
-        <button type="button" onClick={search} className="text-(--color-accent) hover:underline">
-          Not in these cubes? Search Scryfall for “{q}” →
-        </button>
-      )}
-      {cur.kind === "loading" && <span className="text-(--color-text-dim)">Searching Scryfall…</span>}
-      {cur.kind === "error" && (
-        <span className="text-(--color-text-dim)">
-          {cur.message}{" "}
-          <button type="button" onClick={search} className="text-(--color-accent) hover:underline">
-            Retry
-          </button>
-        </span>
-      )}
-      {cur.kind === "list" &&
-        (cur.names.length === 0 ? (
-          <span className="text-(--color-text-dim)">No card on Scryfall matches “{q}”.</span>
-        ) : (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-(--color-text-dim)">Add from Scryfall:</span>
-            {cur.names.map((n) => (
-              <button
-                key={n}
-                type="button"
-                disabled={busy !== null}
-                onClick={() => pick(n)}
-                className="rounded-full border border-(--color-border) px-2.5 py-1 text-xs text-(--color-text) hover:bg-white/5 disabled:opacity-50"
-              >
-                {busy === n ? "Adding…" : n}
-              </button>
-            ))}
-          </div>
-        ))}
     </div>
   );
 }
@@ -1333,7 +1273,10 @@ function CardBody({
                     <span className="text-(--color-text)">Limited Resources:</span> {grade}
                   </div>
                 )}
-                {isExtra(c.id) && <div className="text-(--color-accent)">Added by hand from Scryfall</div>}
+                {isExtra(c.id) && <div className="text-(--color-accent)">Added by hand</div>}
+                {isLookedUp(c.id) && (
+                  <div className="text-(--color-accent)">Looked up — tag it or add a note to keep it on your list</div>
+                )}
               </div>
 
               <textarea

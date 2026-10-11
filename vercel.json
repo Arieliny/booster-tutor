@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node scripts/build-card-db.mjs --soft && npm run build",
   "rewrites": [
     {
       "source": "/((?!api/).*)",

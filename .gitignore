@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Offline card database: generated at build time (scripts/build-card-db.mjs), never committed
+public/card-db.json
