@@ -23,6 +23,7 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { oldestPrintings, smallImageUrl } from "./lib/oldest-printings.mjs";
 
 const CONFIG = {
   cubes: [
@@ -222,7 +223,26 @@ for (const key of ["mine", "lsv", "mtgo"])
   for (const s of cubes[key].sids) if (found.has(s)) put(found.get(s));
 for (const c of found.values()) put(c);
 for (const c of fra.cards) put(c);
+
 const oid = (sid) => (found.has(sid) ? oracleOf(found.get(sid)) : null);
+
+// Artwork. Cards IN MY CUBE keep the printing my cube lists (Ari chose those).
+// Every other card defaults to its OLDEST regular printing (he prefers original
+// art to newer reprints). The printing it had before is kept as `cubeImg`, so a
+// device that saved that image offline still shows it until it re-saves.
+const myCube = new Set(cubes.mine.sids.map(oid).filter(Boolean));
+const oldest = await oldestPrintings({ userAgent: UA });
+let swapped = 0;
+for (const c of Object.values(cards)) {
+  if (myCube.has(c.id)) continue;
+  const o = oldest.get(c.id);
+  if (!o || o.sid === c.sid) continue;
+  if (c.img) c.cubeImg = c.img;
+  c.img = smallImageUrl(o.sid);
+  c.back = o.back || undefined;
+  swapped++;
+}
+console.log(`  Oldest art    ${swapped} cards outside my cube switched to their oldest printing (my ${myCube.size} keep theirs)\n`);
 
 const out = {
   builtAt: new Date().toISOString(),

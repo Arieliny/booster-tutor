@@ -42,6 +42,11 @@ export interface ReviewCard {
   img?: string;
   /** True when the back face has its own image (transform / modal DFCs). */
   back?: boolean;
+  /**
+   * The cube's own printing, when `img` was switched to the oldest printing.
+   * Used as a fallback so an offline device shows the image it already saved.
+   */
+  cubeImg?: string;
 }
 
 export interface ChangelogEntry {
@@ -186,6 +191,15 @@ export type ImageSize = "small" | "normal";
 export function imageUrl(c: ReviewCard, size: ImageSize, face: "front" | "back" = "front") {
   if (!c.img) return null;
   let url = c.img;
+  if (size === "normal") url = url.replace("/small/", "/normal/");
+  if (face === "back") url = url.replace("/front/", "/back/");
+  return url;
+}
+
+/** The cube's own printing for this face - the fallback when the oldest art isn't saved. */
+export function fallbackImageUrl(c: ReviewCard, size: ImageSize, face: "front" | "back" = "front") {
+  if (!c.cubeImg) return null;
+  let url = c.cubeImg;
   if (size === "normal") url = url.replace("/small/", "/normal/");
   if (face === "back") url = url.replace("/front/", "/back/");
   return url;
@@ -494,11 +508,54 @@ export async function scryfallSuggest(q: string, signal?: AbortSignal): Promise<
   return j.data ?? [];
 }
 
-/** One card by exact name, in the same shape as the baked data. */
+/** One card by exact name, in the same shape as the baked data, with its oldest art. */
 export async function scryfallCard(name: string): Promise<ReviewCard> {
   const res = await fetch(`${SCRYFALL}/cards/named?exact=${encodeURIComponent(name)}`);
   if (!res.ok) throw new Error(`Scryfall couldn't find "${name}"`);
-  return fromScryfall(await res.json());
+  const c = fromScryfall(await res.json());
+  return withOldestArt(c);
+}
+
+interface ScryPrinting {
+  id: string;
+  digital?: boolean;
+  promo?: boolean;
+  variation?: boolean;
+  oversized?: boolean;
+  set_type?: string;
+  layout?: string;
+  image_uris?: unknown;
+  card_faces?: { image_uris?: unknown }[];
+}
+
+/**
+ * Swap in the card's oldest regular paper printing (same rules as
+ * scripts/lib/oldest-printings.mjs). Best effort: on any failure the card keeps
+ * Scryfall's default printing.
+ */
+async function withOldestArt(c: ReviewCard): Promise<ReviewCard> {
+  try {
+    const q = `oracleid:${c.id} game:paper -is:promo -is:oversized`;
+    const res = await fetch(`${SCRYFALL}/cards/search?q=${encodeURIComponent(q)}&unique=prints&order=released&dir=asc`);
+    if (!res.ok) return c;
+    const { data } = (await res.json()) as { data?: ScryPrinting[] };
+    const p = (data ?? []).find(
+      (x) =>
+        !x.digital &&
+        !x.variation &&
+        x.set_type !== "memorabilia" &&
+        x.layout !== "art_series" &&
+        (x.image_uris || x.card_faces?.[0]?.image_uris),
+    );
+    if (!p || p.id === c.sid) return c;
+    return {
+      ...c,
+      img: `https://cards.scryfall.io/small/front/${p.id[0]}/${p.id[1]}/${p.id}.jpg`,
+      back: !p.image_uris && !!p.card_faces?.[1]?.image_uris ? true : undefined,
+    };
+  } catch {
+    return c;
+  }
 }
 
 interface ScryFace {

@@ -27,6 +27,7 @@ import {
   colorFacet,
   cubeUnion,
   data,
+  fallbackImageUrl,
   frontName,
   hasType,
   historyEvents,
@@ -950,7 +951,18 @@ const Tile = memo(function Tile({
     >
       <div className="relative aspect-[488/680] w-full overflow-hidden rounded-[5%] bg-(--color-bg)">
         {src ? (
-          <img src={src} alt={c.name} loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          <img
+            src={src}
+            alt={c.name}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+            // Offline before the oldest art was saved: show the cube's printing.
+            onError={(e) => {
+              const fb = fallbackImageUrl(c, "small");
+              if (fb && e.currentTarget.src !== fb) e.currentTarget.src = fb;
+            }}
+          />
         ) : (
           <span className="flex h-full items-center justify-center p-2 text-center text-[11px] text-(--color-text-dim)">
             {c.name}
@@ -1209,9 +1221,17 @@ function CardBody({
                     src={big}
                     alt={c.name}
                     className="h-full w-full object-cover"
-                    // Offline without full-size images saved: fall back to the small one.
+                    // Offline: try the saved small image, then the cube's own printing.
                     onError={(e) => {
-                      if (small && e.currentTarget.src !== small) e.currentTarget.src = small;
+                      const img = e.currentTarget;
+                      const tried = (img.dataset.tried ?? "").split("|");
+                      const next = [small, fallbackImageUrl(c, "small", face)].find(
+                        (u) => u && u !== img.src && !tried.includes(u),
+                      );
+                      if (next) {
+                        img.dataset.tried = [...tried, img.src].join("|");
+                        img.src = next;
+                      }
                     }}
                   />
                 )}

@@ -28,6 +28,7 @@ import { createInterface } from "node:readline";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { oldestPrintings } from "./lib/oldest-printings.mjs";
 
 const SOFT = process.argv.includes("--soft");
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "card-db.json");
@@ -92,6 +93,23 @@ async function build() {
     });
   }
   if (cards.length < 20000) throw new Error(`only ${cards.length} cards - refusing to write a partial database`);
+
+  // Show each card's OLDEST regular printing (Ari prefers original art). Best
+  // effort: if this pass fails, keep Scryfall's default printings.
+  try {
+    const oldest = await oldestPrintings({ userAgent: UA });
+    let changed = 0;
+    for (const card of cards) {
+      const o = oldest.get(card.id);
+      if (!o || o.sid === card.s) continue;
+      card.s = o.sid;
+      card.b = o.back ? 1 : undefined;
+      changed++;
+    }
+    console.log(`card-db: oldest artwork chosen for ${changed} cards`);
+  } catch (err) {
+    console.warn(`card-db: oldest-artwork pass failed (${err instanceof Error ? err.message : err}); keeping default printings`);
+  }
 
   const doc = { builtAt: new Date().toISOString(), source: meta.updated_at, count: cards.length, cards };
   mkdirSync(dirname(OUT), { recursive: true });
