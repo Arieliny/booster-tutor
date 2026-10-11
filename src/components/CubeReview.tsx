@@ -1099,7 +1099,7 @@ function PrintingPicker({ c, onPick }: { c: ReviewCard; onPick: (p: Printing | n
   }, [c.id]);
 
   return (
-    <div className="mt-4 border-t border-(--color-border) pt-3">
+    <div className="mt-2 rounded-lg border border-(--color-border) bg-(--color-bg) p-2">
       <div className="mb-2 flex items-center justify-between gap-2 text-xs text-(--color-text-dim)">
         <span>
           {state.kind === "list" ? `${state.printings.length} printings, oldest first` : "Printings"}
@@ -1113,7 +1113,7 @@ function PrintingPicker({ c, onPick }: { c: ReviewCard; onPick: (p: Printing | n
       {state.kind === "loading" && <p className="text-sm text-(--color-text-dim)">Loading printings from Scryfall…</p>}
       {state.kind === "error" && <p className="text-sm text-(--color-text-dim)">{state.message}</p>}
       {state.kind === "list" && (
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        <div className="grid max-h-96 grid-cols-3 gap-1.5 overflow-y-auto">
           {state.printings.map((p) => {
             const isCurrent = current ? p.sid === current : p.sid === c.img?.split("/").pop()?.split(".jpg")[0];
             return (
@@ -1351,6 +1351,17 @@ function CardBody({
                 🎨 {picking ? "Close printings" : "Change printing"}
                 {artChoice(c.id)?.label && <span className="ml-1 text-(--color-accent)">({artChoice(c.id)?.label})</span>}
               </button>
+              {/* Right under the button, so the printings appear where you tapped. */}
+              {picking && (
+                <PrintingPicker
+                  c={c}
+                  onPick={(p) => {
+                    onChooseArt(c.id, p);
+                    setFace("front");
+                    setPicking(false);
+                  }}
+                />
+              )}
               {back && (
                 <button
                   type="button"
@@ -1427,16 +1438,6 @@ function CardBody({
               />
             </div>
           </div>
-          {picking && (
-            <PrintingPicker
-              c={c}
-              onPick={(p) => {
-                onChooseArt(c.id, p);
-                setFace("front");
-                setPicking(false);
-              }}
-            />
-          )}
         </div>
   );
 }
