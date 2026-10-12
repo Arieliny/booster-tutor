@@ -82,7 +82,7 @@ export async function bootstrap(): Promise<{
   // Select first non-archived cube if nothing is selected (or selected was archived/deleted).
   const selectedRaw = await getMeta<string>(META_SELECTED_CUBE);
   const visible = cubes.filter((c) => !c.archived);
-  let selectedCubeId =
+  const selectedCubeId =
     selectedRaw && cubes.some((c) => c.id === selectedRaw && !c.archived)
       ? selectedRaw
       : visible[0]?.id ?? cubes[0]?.id ?? "";

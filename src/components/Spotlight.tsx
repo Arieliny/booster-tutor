@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { CubeCard } from "../types";
 
 interface Props {
@@ -25,10 +25,13 @@ export function Spotlight({
   const card = pack[index];
 
   // If the parent updates initialIndex (e.g. a fresh pack), follow it.
-  useEffect(() => {
+  // Adjusted during render rather than in an effect, so there's no extra pass.
+  const [followed, setFollowed] = useState({ initialIndex, pack });
+  if (followed.initialIndex !== initialIndex || followed.pack !== pack) {
+    setFollowed({ initialIndex, pack });
     setIndex(initialIndex);
     setShowBack(false);
-  }, [initialIndex, pack]);
+  }
 
   if (!card) return null;
   const hasBack = !!card.image_url_back;

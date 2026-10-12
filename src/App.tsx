@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import type { Cube, CubeCard, GenerationMode } from "./types";
 import { DEFAULT_PACK_SIZE, generatePack } from "./lib/pack-generator";
 import {
@@ -11,7 +11,6 @@ import {
 import { Controls } from "./components/Controls";
 import { CubeManager } from "./components/CubeManager";
 import { CubeSelector } from "./components/CubeSelector";
-import { Footer } from "./components/Footer";
 import { Inventory } from "./components/Inventory";
 import { CubeCobraStatus } from "./components/CubeCobraStatus";
 import { isCubeCobraCube } from "./lib/cubecobra";
@@ -20,17 +19,24 @@ import { PackDisplay } from "./components/PackDisplay";
 import { PoolStatus } from "./components/PoolStatus";
 import { Spotlight } from "./components/Spotlight";
 import {
-  NAV_TABS,
+  TAB_TITLES,
+  allowedSections,
   initialTab,
   pathForTab,
+  pathShowsTab,
   rememberTab,
+  sectionOf,
   tabAllowed,
   tabFromPath,
   tabUsesCube,
+  type Section,
   type Tab,
 } from "./lib/routes";
 import { useAuth } from "./lib/auth-context";
 import { AccountMenu } from "./components/AccountMenu";
+import { AppShell } from "./components/AppShell";
+import { PageHeader } from "./components/PageHeader";
+import { SyncChip } from "./components/SyncChip";
 import { startUserSync } from "./lib/user-sync";
 
 // The set-review data file is large and rarely opened; keep it out of the
@@ -42,6 +48,7 @@ const CubeReview = lazy(() =>
   import("./components/CubeReview").then((m) => ({ default: m.CubeReview })),
 );
 const Admin = lazy(() => import("./components/Admin").then((m) => ({ default: m.Admin })));
+const LookUp = lazy(() => import("./components/CubeReview").then((m) => ({ default: m.LookUp })));
 const SetReviewPrint = lazy(() =>
   import("./components/SetReviewPrint").then((m) => ({ default: m.SetReviewPrint })),
 );
@@ -79,12 +86,14 @@ function App() {
     return startUserSync(me.id);
   }, [me.id, me.role]);
   const [requestedTab, setTabState] = useState<Tab>(() => initialTab(window.location.pathname));
-  // Only the tabs this person may use; a tab they can't use (an old link, a
-  // remembered tab, or access since removed) falls back to their first one.
-  const navTabs = NAV_TABS.filter((t) => tabAllowed(t.id, me));
-  const noAccess = navTabs.length === 0;
-  const tab: Tab = tabAllowed(requestedTab, me) ? requestedTab : (navTabs[0]?.id ?? "packs");
-  const navRef = useRef<HTMLElement>(null);
+  // Only the sections this person may use; a screen they can't open (an old
+  // link, a remembered tab, or access since removed) falls back to their first.
+  const sections = allowedSections(me);
+  const noAccess = sections.length === 0;
+  const tab: Tab = tabAllowed(requestedTab, me) ? requestedTab : (sections[0]?.tab ?? "packs");
+  // Bumped by every nav tap, so tapping "My cube" from inside one of its lists
+  // goes back to its home page.
+  const [navCount, setNavCount] = useState(0);
 
   /** Switch tab and reflect it in the URL so each view is linkable. */
   const setTab = (next: Tab) => {
@@ -106,25 +115,11 @@ function App() {
   // unrecognized path, turns a bare "/" into the resumed tab's, and corrects a
   // tab this person can't open (e.g. a guest following an old /admin link).
   useEffect(() => {
-    const want = pathForTab(tab);
-    if (window.location.pathname !== want) window.history.replaceState(null, "", want);
+    if (!pathShowsTab(window.location.pathname, tab)) window.history.replaceState(null, "", pathForTab(tab));
   }, [tab]);
 
   // Reopen on whichever mode was used last.
   useEffect(() => rememberTab(tab), [tab]);
-
-  // On a phone the tab bar scrolls sideways; keep the active tab in view
-  // (otherwise resuming on "Cube review" leaves its tab off-screen).
-  useEffect(() => {
-    const nav = navRef.current;
-    const btn = nav?.querySelector<HTMLElement>('[aria-selected="true"]');
-    if (!nav || !btn) return;
-    const left = btn.offsetLeft;
-    const right = left + btn.offsetWidth;
-    if (left < nav.scrollLeft) nav.scrollLeft = left;
-    else if (right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = right - nav.clientWidth;
-    // view.kind: the tab bar only exists once the startup Loading screen is gone.
-  }, [tab, view.kind]);
 
   // Bootstrap on mount.
   useEffect(() => {
@@ -261,19 +256,42 @@ function App() {
   const inSpotlight = pack !== null && spotlightIndex !== null;
   const onPacksTab = tab === "packs";
 
+  const navigate = (s: Section) => {
+    const target = sections.find((x) => x.id === s)?.tab;
+    if (!target) return;
+    setNavCount((n) => n + 1);
+    setTab(target);
+    window.scrollTo(0, 0);
+  };
+
+  const loading = (what: string) => <p className="text-(--color-text-dim)">Loading {what}…</p>;
+
   return (
-    <div className="flex min-h-screen flex-col print:block print:min-h-0">
-      <div className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 lg:p-8 print:max-w-none print:p-0">
-        <header className="mb-4 flex flex-wrap items-center justify-between gap-4 border-b border-(--color-border) pb-4 print:hidden">
-          <div>
-            <h1 className="text-2xl font-semibold text-(--color-text) sm:text-3xl">
-              Booster Tutor
-            </h1>
-            <p className="text-xs text-(--color-text-dim)">Cube pack simulator</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {tabUsesCube(tab) && (
-              <div className="flex flex-col items-start gap-1 sm:items-end">
+    <AppShell
+      nav={sections}
+      active={sectionOf(tab)}
+      onNavigate={navigate}
+      title={TAB_TITLES[tab]}
+      right={
+        <>
+          {isOwner && (tab === "cubeReview" || tab === "lookup") && <SyncChip />}
+          <AccountMenu
+            onAdmin={() => setTab("admin")}
+            onManageCubes={isOwner ? () => setShowCubeManager(true) : undefined}
+          />
+        </>
+      }
+    >
+      {tabUsesCube(tab) ? (
+        <div className="space-y-4">
+          {!onPacksTab && (
+            <PageHeader title="Collection checklist" onBack={() => setTab("cubeReview")} backLabel="Back to My cube" />
+          )}
+
+          {/* The cube in play, and how much of it is left this match. */}
+          {!inSpotlight && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2">
+              <div className="flex min-w-0 flex-col items-start gap-1">
                 <CubeSelector
                   cubes={visibleCubes}
                   selectedId={selectedCubeId}
@@ -290,58 +308,25 @@ function App() {
                   />
                 )}
               </div>
-            )}
-            {onPacksTab && (
-              <>
-                <PoolStatus
-                  remaining={pool.length}
-                  total={selectedCube?.cards.length ?? 0}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowResetConfirm(true)}
-                  disabled={pickedIds.size === 0}
-                  className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Reset
-                </button>
-              </>
-            )}
-            <AccountMenu onAdmin={() => setTab("admin")} />
-          </div>
-        </header>
+              {onPacksTab && (
+                <div className="ml-auto flex items-center gap-3">
+                  <PoolStatus remaining={pool.length} total={selectedCube?.cards.length ?? 0} />
+                  <button
+                    type="button"
+                    onClick={() => setShowResetConfirm(true)}
+                    disabled={pickedIds.size === 0}
+                    className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
-        {navTabs.length > 1 && (
-        <nav
-          ref={navRef}
-          role="tablist"
-          aria-label="View"
-          className="relative mb-6 flex max-w-full overflow-x-auto rounded-lg border border-(--color-border) bg-(--color-bg-elev) sm:inline-flex print:hidden"
-        >
-          {navTabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-              className={
-                "shrink-0 whitespace-nowrap px-4 py-2 text-sm transition-colors " +
-                (tab === t.id
-                  ? "bg-(--color-accent) text-black font-medium"
-                  : "text-(--color-text-dim) hover:bg-white/5")
-              }
-            >
-              {t.label}
-            </button>
-          ))}
-        </nav>
-        )}
-
-        {onPacksTab ? (
-          <>
-            {!inSpotlight && (
-              <div className="mb-6">
+          {onPacksTab ? (
+            <>
+              {!inSpotlight && (
                 <Controls
                   mode={mode}
                   onModeChange={setMode}
@@ -352,138 +337,123 @@ function App() {
                   poolEmpty={pool.length === 0}
                   hasPickedCards={pickedIds.size > 0}
                 />
-              </div>
-            )}
+              )}
 
-            {inSpotlight && pack ? (
-              <Spotlight
-                pack={pack}
-                initialIndex={spotlightIndex!}
-                onSelectIndex={setSpotlightIndex}
-                onConfirm={handleConfirmPick}
-                onBack={() => setSpotlightIndex(null)}
-              />
-            ) : (
-              <PackDisplay
-                pack={pack}
-                warning={packWarning}
-                onSpotlight={setSpotlightIndex}
-                onOpenPack={handleOpenSameMatch}
-                emptyDisabled={pool.length === 0}
-              />
-            )}
+              {inSpotlight && pack ? (
+                <Spotlight
+                  pack={pack}
+                  initialIndex={spotlightIndex!}
+                  onSelectIndex={setSpotlightIndex}
+                  onConfirm={handleConfirmPick}
+                  onBack={() => setSpotlightIndex(null)}
+                />
+              ) : (
+                <PackDisplay
+                  pack={pack}
+                  warning={packWarning}
+                  onSpotlight={setSpotlightIndex}
+                  onOpenPack={handleOpenSameMatch}
+                  emptyDisabled={pool.length === 0}
+                />
+              )}
 
-            {pickedCards.length > 0 && !inSpotlight && (
-              <div className="mt-8 border-t border-(--color-border) pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowPickedLog((s) => !s)}
-                  className="text-sm text-(--color-text-dim) hover:text-(--color-text)"
-                >
-                  {showPickedLog ? "Hide" : "Show"} picked cards ({pickedCards.length})
-                </button>
-                {showPickedLog && (
-                  <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">
-                    {pickedCards.map((c) => (
-                      <li
-                        key={c.scryfall_id}
-                        className="truncate text-(--color-text-dim)"
-                      >
-                        {c.name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-          </>
-        ) : tab === "review" ? (
-          <Suspense
-            fallback={
-              <p className="text-(--color-text-dim)">Loading set review…</p>
+              {pickedCards.length > 0 && !inSpotlight && (
+                <div className="mt-8 border-t border-(--color-border) pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowPickedLog((s) => !s)}
+                    className="text-sm text-(--color-text-dim) hover:text-(--color-text)"
+                  >
+                    {showPickedLog ? "Hide" : "Show"} picked cards ({pickedCards.length})
+                  </button>
+                  {showPickedLog && (
+                    <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3 lg:grid-cols-4">
+                      {pickedCards.map((c) => (
+                        <li key={c.scryfall_id} className="truncate text-(--color-text-dim)">
+                          {c.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            selectedCube && <Inventory cube={selectedCube} />
+          )}
+        </div>
+      ) : tab === "review" ? (
+        <Suspense fallback={loading("set grades")}>
+          <SetReview onPrintView={() => setTab("reviewPrint")} />
+        </Suspense>
+      ) : tab === "reviewPrint" ? (
+        <Suspense fallback={loading("set grades")}>
+          <SetReviewPrint onBack={() => setTab("review")} />
+        </Suspense>
+      ) : tab === "cubeReview" ? (
+        <Suspense fallback={loading("your cube")}>
+          <CubeReview key={navCount} onOpenChecklist={() => setTab("inventory")} />
+        </Suspense>
+      ) : tab === "lookup" ? (
+        <Suspense fallback={loading("card search")}>
+          <LookUp key={navCount} />
+        </Suspense>
+      ) : (
+        <Suspense fallback={loading("people")}>
+          <Admin />
+        </Suspense>
+      )}
+
+      {showCubeManager && (
+        <CubeManager
+          cubes={cubes}
+          selectedId={selectedCubeId}
+          refreshCubeId={managerRefreshId}
+          canEdit={isOwner}
+          onClose={() => {
+            setShowCubeManager(false);
+            setManagerRefreshId(undefined);
+          }}
+          onCubesChanged={async ({ cubes: nextCubes, selectedId }) => {
+            setCubes(nextCubes);
+            if (selectedId !== selectedCubeId) {
+              setSelectedCubeId(selectedId);
+              await selectCube(selectedId);
+              const session = await loadSession(selectedId);
+              setPickedIds(new Set(session.pickedCardIds));
+              setPack(null);
+              setSpotlightIndex(null);
             }
-          >
-            <SetReview onPrintView={() => setTab("reviewPrint")} />
-          </Suspense>
-        ) : tab === "cubeReview" ? (
-          <Suspense
-            fallback={
-              <p className="text-(--color-text-dim)">Loading cube review…</p>
-            }
-          >
-            <CubeReview />
-          </Suspense>
-        ) : tab === "admin" ? (
-          <Suspense fallback={<p className="text-(--color-text-dim)">Loading…</p>}>
-            <Admin />
-          </Suspense>
-        ) : tab === "reviewPrint" ? (
-          <Suspense
-            fallback={
-              <p className="text-(--color-text-dim)">Loading set review…</p>
-            }
-          >
-            <SetReviewPrint onBack={() => setTab("review")} />
-          </Suspense>
-        ) : (
-          selectedCube && <Inventory cube={selectedCube} />
-        )}
+          }}
+        />
+      )}
 
-        {showCubeManager && (
-          <CubeManager
-            cubes={cubes}
-            selectedId={selectedCubeId}
-            refreshCubeId={managerRefreshId}
-            canEdit={isOwner}
-            onClose={() => {
-              setShowCubeManager(false);
-              setManagerRefreshId(undefined);
-            }}
-            onCubesChanged={async ({ cubes: nextCubes, selectedId }) => {
-              setCubes(nextCubes);
-              if (selectedId !== selectedCubeId) {
-                setSelectedCubeId(selectedId);
-                await selectCube(selectedId);
-                const session = await loadSession(selectedId);
-                setPickedIds(new Set(session.pickedCardIds));
-                setPack(null);
-                setSpotlightIndex(null);
-              }
-            }}
-          />
-        )}
-
-        {showResetConfirm && (
-          <Modal onClose={() => setShowResetConfirm(false)}>
-            <h2 className="mb-2 text-lg font-medium text-(--color-text)">
-              Reset session?
-            </h2>
-            <p className="mb-4 text-(--color-text-dim)">
-              This will return all {pickedIds.size} picked cards in{" "}
-              <span className="text-(--color-text)">{selectedCube?.name}</span> to
-              the pool.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setShowResetConfirm(false)}
-                className="rounded border border-(--color-border) px-4 py-2 text-sm text-(--color-text-dim) hover:bg-white/5"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                className="rounded bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-400"
-              >
-                Reset
-              </button>
-            </div>
-          </Modal>
-        )}
-      </div>
-      <Footer />
-    </div>
+      {showResetConfirm && (
+        <Modal onClose={() => setShowResetConfirm(false)}>
+          <h2 className="mb-2 text-lg font-medium text-(--color-text)">Reset session?</h2>
+          <p className="mb-4 text-(--color-text-dim)">
+            This will return all {pickedIds.size} picked cards in{" "}
+            <span className="text-(--color-text)">{selectedCube?.name}</span> to the pool.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(false)}
+              className="rounded border border-(--color-border) px-4 py-2 text-sm text-(--color-text-dim) hover:bg-white/5"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="rounded bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-400"
+            >
+              Reset
+            </button>
+          </div>
+        </Modal>
+      )}
+    </AppShell>
   );
 }
 

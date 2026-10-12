@@ -12,7 +12,7 @@
 
 import { can, type Me } from "./auth";
 
-export type Tab = "packs" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "admin";
+export type Tab = "packs" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "admin";
 
 export const TAB_PATHS: Record<Tab, string> = {
   packs: "/",
@@ -20,14 +20,25 @@ export const TAB_PATHS: Record<Tab, string> = {
   review: "/set-review",
   // Not a top-level tab — a condensed, printable view of the set review.
   reviewPrint: "/set-review/print",
-  // Owner only, reached from the account menu rather than the tab bar.
+  // Owner only, reached from the account menu rather than the nav.
   admin: "/admin",
-  cubeReview: "/cube-review",
+  // My cube's lists live under it: /my-cube/changelog etc. (see CubeReview).
+  cubeReview: "/my-cube",
+  lookup: "/look-up",
 };
 
-const PATH_TABS = new Map<string, Tab>(
-  (Object.entries(TAB_PATHS) as [Tab, string][]).map(([tab, path]) => [path, tab]),
-);
+/** Paths from before the redesign, so old bookmarks still land. */
+const OLD_PATHS: Record<string, Tab> = {
+  "/cube-review": "cubeReview",
+};
+
+const PATH_TABS = new Map<string, Tab>([
+  ...(Object.entries(TAB_PATHS) as [Tab, string][]).map(([tab, path]) => [path, tab] as [string, Tab]),
+  ...(Object.entries(OLD_PATHS) as [string, Tab][]),
+]);
+
+/** Paths with pages under them (/my-cube/changelog -> My cube). */
+const NESTED: [string, Tab][] = [["/my-cube/", "cubeReview"]];
 
 /** Normalize "/Set-Review/" -> "/set-review". */
 function normalize(pathname: string): string {
@@ -37,12 +48,20 @@ function normalize(pathname: string): string {
 
 /** The tab a path maps to; unknown paths fall back to the default tab. */
 export function tabFromPath(pathname: string): Tab {
-  return PATH_TABS.get(normalize(pathname)) ?? "packs";
+  const p = normalize(pathname);
+  return PATH_TABS.get(p) ?? NESTED.find(([prefix]) => p.startsWith(prefix))?.[1] ?? "packs";
 }
 
 /** True when the path isn't one we recognize (so the URL can be tidied up). */
 export function isKnownPath(pathname: string): boolean {
-  return PATH_TABS.has(normalize(pathname));
+  const p = normalize(pathname);
+  return PATH_TABS.has(p) || NESTED.some(([prefix]) => p.startsWith(prefix));
+}
+
+/** Whether the current URL already shows this tab (possibly a page inside it). */
+export function pathShowsTab(pathname: string, tab: Tab): boolean {
+  const p = normalize(pathname);
+  return p === TAB_PATHS[tab] || (isKnownPath(p) && tabFromPath(p) === tab && !(p in OLD_PATHS));
 }
 
 export function pathForTab(tab: Tab): string {
@@ -84,6 +103,38 @@ export function initialTab(pathname: string): Tab {
   return tabFromPath(pathname);
 }
 
+// ---------------------------------------------------------------- nav sections
+
+export type Section = "play" | "myCube" | "lookup" | "grades";
+
+/**
+ * The nav, in order. Each section holds one or more screens; the first one
+ * this person may open is where tapping the section goes. Admin lives in the
+ * account menu instead. (The judge becomes a fifth section once it's built.)
+ */
+export const SECTIONS: { id: Section; label: string; tabs: Tab[] }[] = [
+  { id: "play", label: "Play", tabs: ["packs"] },
+  // The collection checklist (Inventory) opens from My cube's home page.
+  { id: "myCube", label: "My cube", tabs: ["cubeReview", "inventory"] },
+  { id: "lookup", label: "Look up", tabs: ["lookup"] },
+  { id: "grades", label: "Set grades", tabs: ["review", "reviewPrint"] },
+];
+
+export function sectionOf(tab: Tab): Section | null {
+  return SECTIONS.find((s) => s.tabs.includes(tab))?.id ?? null;
+}
+
+/** Page title for the top bar. */
+export const TAB_TITLES: Record<Tab, string> = {
+  packs: "Play",
+  inventory: "My cube",
+  cubeReview: "My cube",
+  lookup: "Look up",
+  review: "Set grades",
+  reviewPrint: "Set grades",
+  admin: "People and access",
+};
+
 /** Tabs that act on the selected cube, so only they show the cube picker. */
 export function tabUsesCube(tab: Tab): boolean {
   return tab === "packs" || tab === "inventory";
@@ -91,22 +142,22 @@ export function tabUsesCube(tab: Tab): boolean {
 
 // ---------------------------------------------------------------- who sees what
 
-/** The tab bar, in order. Admin lives in the account menu instead. */
-export const NAV_TABS: { id: Tab; label: string }[] = [
-  { id: "packs", label: "Open packs" },
-  { id: "cubeReview", label: "Cube review" },
-  { id: "review", label: "Set review" },
-  { id: "inventory", label: "Inventory" },
-];
-
 /**
  * What each person may open. The owner gets everything; a guest gets only the
- * features the owner granted (Play -> Open packs, Set grades -> Set review).
- * Cube review, Inventory and Admin are the owner's alone.
+ * features the owner granted (Play -> packs, Set grades -> the set review).
+ * My cube (with its checklist), Look up and Admin are the owner's alone for now.
  */
 export function tabAllowed(tab: Tab, me: Me): boolean {
   if (me.role === "owner") return true;
   if (tab === "packs") return can(me, "play");
   if (tab === "review" || tab === "reviewPrint") return can(me, "setReview");
   return false;
+}
+
+/** The nav sections this person sees, each pointing at its first allowed screen. */
+export function allowedSections(me: Me): { id: Section; label: string; tab: Tab }[] {
+  return SECTIONS.flatMap((s) => {
+    const tab = s.tabs.find((t) => t !== "reviewPrint" && t !== "inventory" && tabAllowed(t, me));
+    return tab ? [{ id: s.id, label: s.label, tab }] : [];
+  });
 }

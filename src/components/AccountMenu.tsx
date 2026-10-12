@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../lib/auth-context";
 
-/** Avatar in the header: who's signed in, Admin (owner), and sign out. */
-export function AccountMenu({ onAdmin }: { onAdmin: () => void }) {
+/** Avatar in the top bar: who's signed in, the owner's rarely-used tools, and sign out. */
+export function AccountMenu({ onAdmin, onManageCubes }: { onAdmin: () => void; onManageCubes?: () => void }) {
   const { me, offline, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -36,6 +36,18 @@ export function AccountMenu({ onAdmin }: { onAdmin: () => void }) {
               {offline && " · offline, using this device's saved sign-in"}
             </div>
           </div>
+          {onManageCubes && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onManageCubes();
+              }}
+              className="block w-full rounded px-3 py-2 text-left text-(--color-text) hover:bg-white/5"
+            >
+              Manage cubes
+            </button>
+          )}
           {me.role === "owner" && (
             <button
               type="button"

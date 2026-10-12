@@ -67,9 +67,12 @@ import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
 import { CardDbPanel, CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
 import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
-import { useSyncStatus } from "../lib/use-sync-status";
+import { useBackToClose } from "../lib/use-back-to-close";
+import { Icon, type IconName } from "./Icon";
+import { PageHeader } from "./PageHeader";
+import { Sheet } from "./Sheet";
 
-type View = "compare" | "changelog" | "set" | "all" | "decisions" | "summary";
+type View = "home" | "compare" | "changelog" | "set" | "all" | "decisions" | "summary";
 type Member = "in" | "out" | "any";
 type LogTag = "all" | "current" | "past" | "tried";
 type Layout = "grid" | "list";
@@ -77,7 +80,6 @@ type SortKey = "name" | "cmc" | "recent" | "grade";
 type StatusFilter = Status | "none";
 
 interface Ui {
-  view: View;
   member: Record<CubeKey, Member>;
   log: LogKey;
   logTag: LogTag;
@@ -93,7 +95,6 @@ interface Ui {
 }
 
 const DEFAULT_UI: Ui = {
-  view: "compare",
   member: { mine: "out", lsv: "in", mtgo: "any" },
   log: "lsv",
   logTag: "all",
@@ -119,13 +120,15 @@ function loadUi(): Ui {
   }
 }
 
-const VIEWS: { id: View; label: string }[] = [
-  { id: "compare", label: "Compare cubes" },
-  { id: "changelog", label: "Changelogs" },
-  { id: "set", label: data.set.name },
-  { id: "all", label: "All cards" },
-  { id: "decisions", label: "My decisions" },
-];
+const VIEW_TITLE: Record<View, string> = {
+  home: "My cube",
+  compare: "Compare cubes",
+  changelog: "Changelogs",
+  set: data.set.name,
+  all: "All cards",
+  decisions: "Your decisions",
+  summary: "Summary and export",
+};
 
 const PRESETS: { label: string; m: Record<CubeKey, Member> }[] = [
   { label: "LSV has, I don't", m: { mine: "out", lsv: "in", mtgo: "any" } },
@@ -194,37 +197,26 @@ function matchesMembers(id: string, m: Record<CubeKey, Member>) {
   return CUBE_KEYS.every((k) => m[k] === "any" || (m[k] === "in") === members[k].has(id));
 }
 
-export function CubeReview() {
-  const [ui, setUi] = useState<Ui>(loadUi);
-  const [q, setQ] = useState("");
+/**
+ * Everything the card screens share: your decisions, hand-added cards and
+ * printing choices (kept in step with your other devices), the card database,
+ * and the card popup. Used by My cube and Look up.
+ */
+function useReviewState() {
   const [decisions, setDecisions] = useState<Decisions>(loadDecisions);
   // Tested once: if storage is blocked, every save would fail the same way.
   const [saveFailed] = useState(() => !storageWritable());
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [selId, setSelId] = useState<string | null>(null);
   const [detail, setDetail] = useState<{ ids: string[]; index: number } | null>(null);
-  const [paging, setPaging] = useState({ key: "", n: PAGE });
-  const [fullSize, setFullSize] = useState(false);
   // Bumped when hand-added cards change, so card lists recompute.
   const [extrasVersion, setExtrasVersion] = useState(0);
-  const cardDb = useCardDb();
   // Bumped when a printing is chosen, so images re-render.
   const [artVersion, setArtVersion] = useState(0);
+  const cardDb = useCardDb();
+
   const chooseArt = useCallback((id: string, p: Printing | null) => {
     setArtChoice(id, p ? { sid: p.sid, back: p.back || undefined, label: `${p.set} · ${p.released.slice(0, 4)}` } : null);
     setArtVersion((v) => v + 1);
   }, []);
-  const gridRef = useRef<HTMLDivElement>(null);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const viewBarRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(UI_KEY, JSON.stringify(ui));
-    } catch {
-      // A remembered view is a convenience; nothing to do if storage is blocked.
-    }
-  }, [ui]);
 
   useEffect(() => {
     saveDecisions(decisions);
@@ -243,8 +235,6 @@ export function CubeReview() {
     return () => window.removeEventListener(REMOTE_CHANGE_EVENT, onRemote);
   }, []);
 
-  const patch = useCallback((p: Partial<Ui>) => setUi((u) => ({ ...u, ...p })), []);
-
   const setStatus = useCallback((id: string, s: Status) => {
     // Deciding on a card you only looked up keeps it on your list.
     if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
@@ -254,6 +244,11 @@ export function CubeReview() {
       const status = normalizeStatus(id, prev?.status) === s ? undefined : s;
       return { ...d, [id]: { ...prev, status, t: Date.now() } };
     });
+  }, []);
+
+  const setNote = useCallback((id: string, note: string) => {
+    if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
+    setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
   }, []);
 
   /**
@@ -270,26 +265,108 @@ export function CubeReview() {
     [openLookedUp],
   );
 
-  const setNote = useCallback((id: string, note: string) => {
-    if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
-    setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
+  // Live: what my cube becomes with every Cut and Add applied.
+  const live = useMemo(() => summarize(decisions), [decisions]);
+
+  /** Start loading the card database as soon as a search box is tapped, so the
+   * ~1-2 s parse on a phone overlaps the typing. */
+  const preloadDb = () => {
+    if (cardDb.state.kind === "ready" && !cardDb.state.db) void cardDb.load();
+  };
+
+  return {
+    decisions,
+    setDecisions,
+    saveFailed,
+    detail,
+    setDetail,
+    extrasVersion,
+    setExtrasVersion,
+    artVersion,
+    setArtVersion,
+    cardDb,
+    chooseArt,
+    setStatus,
+    setNote,
+    openLookedUp,
+    openFromScryfall,
+    live,
+    preloadDb,
+  };
+}
+
+const LIST_VIEWS: View[] = ["compare", "changelog", "set", "all", "decisions", "summary"];
+
+/** /my-cube/changelog -> "changelog"; /my-cube -> home. */
+function viewFromPath(pathname: string): View {
+  const m = pathname.toLowerCase().match(/^\/my-cube\/([a-z]+)/);
+  return m && LIST_VIEWS.includes(m[1] as View) ? (m[1] as View) : "home";
+}
+
+function historyTitle(): string | undefined {
+  return (window.history.state as { title?: string } | null)?.title;
+}
+
+/** Facets cleared whenever a list is opened from the home page. */
+const CLEAN: Partial<Ui> = { colors: [], types: [], cmcs: [], rarities: [], statuses: [] };
+
+export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }) {
+  const st = useReviewState();
+  const { decisions, detail, setDetail, extrasVersion, live, setStatus } = st;
+  const [ui, setUi] = useState<Ui>(loadUi);
+  const [q, setQ] = useState("");
+  const [view, setView] = useState<View>(() => viewFromPath(window.location.pathname));
+  // The home-page row a list was opened from ("New in LSV"), shown as its title.
+  const [listTitle, setListTitle] = useState<string | undefined>(() => historyTitle());
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selId, setSelId] = useState<string | null>(null);
+  const [paging, setPaging] = useState({ key: "", n: PAGE });
+  const [fullSize, setFullSize] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(UI_KEY, JSON.stringify(ui));
+    } catch {
+      // A remembered view is a convenience; nothing to do if storage is blocked.
+    }
+  }, [ui]);
+
+  // Each list has its own URL, so the phone's Back button returns home.
+  useEffect(() => {
+    const onPop = () => {
+      setView(viewFromPath(window.location.pathname));
+      setListTitle(historyTitle());
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  const view = ui.view;
+  const patch = useCallback((p: Partial<Ui>) => setUi((u) => ({ ...u, ...p })), []);
 
-  // The view switcher scrolls sideways on a phone; keep the active view in sight
-  // (the app reopens on the last view used, which may be the rightmost).
-  useEffect(() => {
-    const bar = viewBarRef.current;
-    const btn = bar?.querySelector<HTMLElement>('[aria-pressed="true"]');
-    if (!bar || !btn) return;
-    const left = btn.offsetLeft;
-    const right = left + btn.offsetWidth;
-    if (left < bar.scrollLeft) bar.scrollLeft = left;
-    else if (right > bar.scrollLeft + bar.clientWidth) bar.scrollLeft = right - bar.clientWidth;
-  }, [view]);
-  const layout: Layout = ui.layout[view] ?? (view === "changelog" ? "list" : "grid");
-  const sort: SortKey = ui.sort[view] ?? (view === "changelog" ? "recent" : "name");
+  /** Open a list from the home page, starting from a clean set of filters. */
+  const goView = (v: View, preset: Partial<Ui> = {}, title?: string) => {
+    patch({ ...CLEAN, ...preset });
+    setQ("");
+    setSelId(null);
+    setView(v);
+    setListTitle(title);
+    window.history.pushState({ fromHome: true, title }, "", `/my-cube/${v}`);
+    window.scrollTo(0, 0);
+  };
+
+  const goHome = () => {
+    if ((window.history.state as { fromHome?: boolean } | null)?.fromHome) {
+      window.history.back();
+    } else {
+      window.history.pushState(null, "", "/my-cube");
+      setView("home");
+    }
+  };
+
+  const layout: Layout = view === "home" ? "grid" : (ui.layout[view] ?? (view === "changelog" ? "list" : "grid"));
+  const sort: SortKey = view === "home" ? "name" : (ui.sort[view] ?? (view === "changelog" ? "recent" : "name"));
 
   const presetCounts = useMemo(
     () => PRESETS.map((p) => cubeUnion.filter((id) => matchesMembers(id, p.m)).length),
@@ -313,11 +390,10 @@ export function CubeReview() {
     [decisions, extrasVersion],
   );
 
-  // Live: what my cube becomes with every Cut and Add applied.
-  const live = useMemo(() => summarize(decisions), [decisions]);
-
   const baseIds = useMemo((): string[] => {
     switch (view) {
+      case "home":
+        return [];
       case "compare":
         return cubeUnion.filter((id) => matchesMembers(id, ui.member));
       case "changelog":
@@ -363,6 +439,14 @@ export function CubeReview() {
 
   const shownIds = useMemo(() => new Set(ids), [ids]);
 
+  // What's still waiting for a decision, for the home page.
+  const todo = useMemo(() => {
+    const undecided = (id: string) => !normalizeStatus(id, decisions[id]?.status);
+    const fresh = (log: LogKey) =>
+      data.changelogs[log].filter((e) => e.current && !members.mine.has(e.id) && undecided(e.id)).length;
+    return { lsv: fresh("lsv"), mtgo: fresh("mtgo"), set: data.set.cards.filter((id) => hasCard(id) && undecided(id)).length };
+  }, [decisions]);
+
   // Render a page at a time; any change to what's listed starts again at one page.
   const listKey = useMemo(
     () =>
@@ -391,12 +475,12 @@ export function CubeReview() {
       // status filter) doesn't reshuffle what next/previous means.
       setDetail({ ids: [...ids], index });
     },
-    [ids],
+    [ids, setDetail],
   );
 
   // Laptop keyboard: arrows move the cursor, Enter opens, K/C/A/M tag.
   useEffect(() => {
-    if (detail || view === "summary") return;
+    if (detail || filtersOpen || view === "summary" || view === "home") return;
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
@@ -426,7 +510,7 @@ export function CubeReview() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [detail, view, ids, selId, layout, limit, open, setStatus, showAtLeast]);
+  }, [detail, filtersOpen, view, ids, selId, layout, limit, open, setStatus, showAtLeast]);
 
   useEffect(() => {
     if (!selId) return;
@@ -436,82 +520,164 @@ export function CubeReview() {
   const toggle = <T,>(list: T[], v: T): T[] =>
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 
-  const activeFilters =
-    ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length + (q ? 1 : 0);
+  const activeFilters = ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length;
+  const clearFilters = () => patch({ colors: [], types: [], cmcs: [], rarities: [], statuses: [] });
 
   const offlineUrls = useMemo(
     () => (fullSize ? [...allImageUrls("small"), ...allImageUrls("normal")] : allImageUrls("small")),
     // artVersion: a chosen printing is what "Save images" should store.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [fullSize, artVersion],
+    [fullSize, st.artVersion],
   );
+
+  const detailPopup = detail && (
+    <CardDetail
+      ids={detail.ids}
+      index={detail.index}
+      decisions={decisions}
+      live={live}
+      artVersion={st.artVersion}
+      onChooseArt={st.chooseArt}
+      autoAdvance={ui.autoAdvance}
+      onAutoAdvance={(v) => patch({ autoAdvance: v })}
+      onIndex={(index) => {
+        setDetail((d) => (d ? { ...d, index } : d));
+        setSelId(detail.ids[index]);
+      }}
+      onStatus={setStatus}
+      onNote={st.setNote}
+      onClose={() => setDetail(null)}
+    />
+  );
+
+  const saveWarning = st.saveFailed && (
+    <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+      This browser isn't saving your decisions (storage is blocked). Export them before closing the tab.
+    </p>
+  );
+
+  if (view === "home") {
+    const since = shortDate(data.changelogSince);
+    return (
+      <div className="space-y-5">
+        {saveWarning}
+        <HeroCount live={live} />
+
+        <div className="grid gap-5 md:grid-cols-2">
+          <HomeGroup title="To decide">
+            <HomeRow
+              icon="help"
+              label="Maybes"
+              sub={live.counts.maybe ? `${live.maybeCut} cut? · ${live.maybeAdd} add?` : "Cards you marked Maybe"}
+              count={live.counts.maybe}
+              onClick={() => goView("decisions", { statuses: ["maybe"] }, "Maybes")}
+            />
+            <HomeRow
+              icon="history"
+              label={`New in ${data.cubes.lsv.label}`}
+              sub={`Added since ${since}, not in your cube`}
+              count={todo.lsv}
+              onClick={() =>
+                goView("changelog", { log: "lsv", logTag: "current", hideMine: true, statuses: ["none"] }, `New in ${data.cubes.lsv.label}`)
+              }
+            />
+            <HomeRow
+              icon="history"
+              label={`New in ${data.cubes.mtgo.label}`}
+              sub={`Added since ${since}, not in your cube`}
+              count={todo.mtgo}
+              onClick={() =>
+                goView("changelog", { log: "mtgo", logTag: "current", hideMine: true, statuses: ["none"] }, `New in ${data.cubes.mtgo.label}`)
+              }
+            />
+            <HomeRow
+              icon="sparkle"
+              label={data.set.name}
+              sub="Cards you haven't decided on"
+              count={todo.set}
+              onClick={() => goView("set", { statuses: ["none"] }, `${data.set.name}: undecided`)}
+            />
+          </HomeGroup>
+
+          <HomeGroup title="Browse">
+            <HomeRow
+              icon="columns"
+              label="Compare cubes"
+              sub={`Yours, ${data.cubes.lsv.label} and ${data.cubes.mtgo.label}`}
+              onClick={() => goView("compare")}
+            />
+            <HomeRow
+              icon="history"
+              label="Changelogs"
+              sub={`Every change since ${since}`}
+              onClick={() => goView("changelog", { logTag: "all", hideMine: false })}
+            />
+            <HomeRow icon="sparkle" label={`${data.set.name}, whole set`} onClick={() => goView("set")} />
+            <HomeRow icon="cards" label="All cards" onClick={() => goView("all")} />
+            <HomeRow icon="list" label="Your decisions" count={decided.length} onClick={() => goView("decisions")} />
+            <HomeRow icon="summary" label="Summary and export" onClick={() => goView("summary")} />
+            {onOpenChecklist && (
+              <HomeRow icon="check" label="Collection checklist" sub="Cards you've received" onClick={onOpenChecklist} />
+            )}
+          </HomeGroup>
+        </div>
+
+        <HomeGroup title="Offline">
+          <div className="space-y-3 p-3">
+            <CardDbPanel db={st.cardDb} />
+            <OfflinePanel
+              urls={offlineUrls}
+              title="Save card images"
+              intro="Every card's text already works with no connection."
+              avgBytes={fullSize ? 53 * 1024 : 13 * 1024}
+            >
+              <label className="mb-3 flex items-center gap-2 text-(--color-text-dim)">
+                <input type="checkbox" checked={fullSize} onChange={(e) => setFullSize(e.target.checked)} />
+                Also save full-size images for the enlarged view (much bigger)
+              </label>
+            </OfflinePanel>
+          </div>
+        </HomeGroup>
+
+        <p className="text-xs text-(--color-text-dim)" title="Refresh: node --use-system-ca scripts/build-cube-review.mjs, then deploy">
+          Data from {shortDate(data.builtAt.slice(0, 10))} · {data.cubes.lsv.label} updated {shortDate(data.cubes.lsv.updated)} ·{" "}
+          {data.cubes.mtgo.label} {shortDate(data.cubes.mtgo.updated)}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      {/* Data freshness + device sync */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-(--color-text-dim)">
-        <span title="Refresh: node --use-system-ca scripts/build-cube-review.mjs, then deploy">
-          Data from {shortDate(data.builtAt.slice(0, 10))} · LSV updated {shortDate(data.cubes.lsv.updated)} ·
-          MTGO {shortDate(data.cubes.mtgo.updated)} · changelogs since {shortDate(data.changelogSince)}
-        </span>
-        <span className="ml-auto flex flex-wrap items-center gap-2">
-          <SyncBadge />
-          <DecisionsSync
-            decisions={decisions}
-            onImport={(d) => {
-              setDecisions(d);
-              setExtrasVersion((v) => v + 1);
-              setArtVersion((v) => v + 1);
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => patch({ view: view === "summary" ? "compare" : "summary" })}
-            className={
-              "rounded border px-3 py-1.5 text-sm " +
-              (view === "summary"
-                ? "border-(--color-accent) bg-(--color-accent) font-medium text-black"
-                : "border-(--color-border) text-(--color-text) hover:bg-white/5")
-            }
+      <PageHeader
+        title={listTitle ?? VIEW_TITLE[view]}
+        onBack={goHome}
+        backLabel="Back to My cube"
+        right={
+          <span
+            className="shrink-0 text-sm text-(--color-text-dim)"
+            title={`${live.current} now − ${live.cuts.length} cut + ${live.adds.length} added`}
           >
-            Summary · {decided.length}
-          </button>
-        </span>
-      </div>
-
-      <LiveCount live={live} />
-
-      {saveFailed && (
-        <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
-          This browser isn't saving your decisions (storage is blocked). Export them before closing the tab.
-        </p>
-      )}
-
-      {/* View switcher — scrolls sideways on a phone rather than wrapping. */}
-      <div ref={viewBarRef} className="relative -mx-1 flex gap-1 overflow-x-auto px-1 pb-1">
-        {VIEWS.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            aria-pressed={view === v.id}
-            onClick={() => patch({ view: v.id })}
-            className={
-              "shrink-0 rounded-lg border px-3 py-2 text-sm whitespace-nowrap " +
-              (view === v.id
-                ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)"
-                : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
-            }
-          >
-            {v.label}
-            {v.id === "decisions" && decided.length > 0 && (
-              <span className="ml-1.5 text-(--color-text-dim)">{decided.length}</span>
-            )}
-          </button>
-        ))}
-      </div>
+            My cube <span className="font-semibold tabular-nums text-(--color-text)">{live.result}</span>
+          </span>
+        }
+      />
+      {saveWarning}
 
       {view === "summary" ? (
-        <CubeReviewSummary decisions={decisions} onOpenCard={(id) => setDetail({ ids: [id], index: 0 })} />
+        <>
+          <div className="flex justify-end">
+            <DecisionsSync
+              decisions={decisions}
+              onImport={(d) => {
+                st.setDecisions(d);
+                st.setExtrasVersion((v) => v + 1);
+                st.setArtVersion((v) => v + 1);
+              }}
+            />
+          </div>
+          <CubeReviewSummary decisions={decisions} onOpenCard={(id) => setDetail({ ids: [id], index: 0 })} />
+        </>
       ) : (
         <>
           {/* View-specific controls */}
@@ -617,104 +783,121 @@ export function CubeReview() {
               })}
               {decided.length === 0 && (
                 <span className="self-center text-sm text-(--color-text-dim)">
-                  Tag cards in any view (Keep / Cut for your cube, Add / No for the rest, or Maybe) and they collect here.
+                  Tag cards in any list (Keep / Cut for your cube, Add / No for the rest, or Maybe) and they collect here.
                 </span>
               )}
             </div>
           )}
 
-          {/* Shared filters — collapsed behind one button on a phone. */}
-          <div className="rounded-lg border border-(--color-border) bg-(--color-bg-elev)">
-            <div className="flex items-center gap-2 p-2">
-              <input
-                type="search"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                // Start loading the card database as soon as you tap in, so the
-                // ~1-2 s parse on a phone overlaps your typing.
-                onFocus={() => {
-                  if (cardDb.state.kind === "ready" && !cardDb.state.db) void cardDb.load();
-                }}
-                placeholder="Search name or rules text"
-                className="min-w-0 flex-1 rounded border border-(--color-border) bg-(--color-bg) px-3 py-2 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
-              />
-              <button
-                type="button"
-                onClick={() => setFiltersOpen((o) => !o)}
-                className="shrink-0 rounded border border-(--color-border) px-3 py-2 text-sm text-(--color-text-dim) hover:bg-white/5 md:hidden"
-              >
-                Filters{activeFilters ? ` · ${activeFilters}` : ""}
-              </button>
-            </div>
-            <div className={(filtersOpen ? "block" : "hidden") + " space-y-2 border-t border-(--color-border) p-3 md:block"}>
-              <FacetRow label="Color">
-                {COLOR_FACETS.map((f) => (
-                  <ColorChip
-                    key={f}
-                    facet={f}
-                    on={ui.colors.includes(f)}
-                    onClick={() => patch({ colors: toggle(ui.colors, f) })}
-                  />
-                ))}
-              </FacetRow>
-              <FacetRow label="Type">
-                {TYPE_FACETS.map((t) => (
-                  <Chip key={t} on={ui.types.includes(t)} onClick={() => patch({ types: toggle(ui.types, t) })}>
-                    {t}
-                  </Chip>
-                ))}
-              </FacetRow>
-              <FacetRow label="Mana value">
-                {CMC_FACETS.map((m) => (
-                  <Chip key={m} on={ui.cmcs.includes(m)} onClick={() => patch({ cmcs: toggle(ui.cmcs, m) })}>
-                    {m}
-                  </Chip>
-                ))}
-              </FacetRow>
-              <FacetRow label="Rarity">
-                {RARITY_FACETS.map((r) => (
-                  <Chip
-                    key={r}
-                    on={ui.rarities.includes(r)}
-                    onClick={() => patch({ rarities: toggle(ui.rarities, r) })}
-                  >
-                    {r[0].toUpperCase() + r.slice(1)}
-                  </Chip>
-                ))}
-              </FacetRow>
-              <FacetRow label="Decision">
-                {([...STATUSES, "none"] as StatusFilter[]).map((s) => (
-                  <Chip
-                    key={s}
-                    on={ui.statuses.includes(s)}
-                    onClick={() => patch({ statuses: toggle(ui.statuses, s) })}
-                  >
-                    {s === "none" ? "Undecided" : STATUS_LABEL[s]}
-                  </Chip>
-                ))}
-              </FacetRow>
-              {activeFilters > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    patch({ colors: [], types: [], cmcs: [], rarities: [], statuses: [] });
-                    setQ("");
-                  }}
-                  className="text-xs text-(--color-accent) hover:underline"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
+          {/* Search, with the filters one tap away in a sheet. */}
+          <div className="flex items-center gap-2">
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onFocus={st.preloadDb}
+              placeholder="Search name or rules text"
+              className="min-w-0 flex-1 rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
+            />
+            <button
+              type="button"
+              onClick={() => setFiltersOpen(true)}
+              className={
+                "flex shrink-0 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm " +
+                (activeFilters
+                  ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)"
+                  : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+              }
+            >
+              <Icon name="filter" className="h-4 w-4" />
+              Filters{activeFilters ? ` · ${activeFilters}` : ""}
+            </button>
           </div>
 
-          <CardLookup q={q} exclude={shownIds} db={cardDb} onOpenCard={openLookedUp} onScryfall={openFromScryfall} />
+          {filtersOpen && (
+            <Sheet
+              title="Filters"
+              onClose={() => setFiltersOpen(false)}
+              action={
+                activeFilters > 0 && (
+                  <button type="button" onClick={clearFilters} className="text-sm text-(--color-accent) hover:underline">
+                    Clear all
+                  </button>
+                )
+              }
+              footer={
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(false)}
+                  className="w-full rounded-lg bg-(--color-accent) py-2.5 text-sm font-semibold text-black hover:bg-(--color-accent-bright)"
+                >
+                  Show {ids.length} card{ids.length === 1 ? "" : "s"}
+                </button>
+              }
+            >
+              <div className="space-y-4">
+                <FacetRow label="Color">
+                  {COLOR_FACETS.map((f) => (
+                    <ColorChip
+                      key={f}
+                      facet={f}
+                      on={ui.colors.includes(f)}
+                      onClick={() => patch({ colors: toggle(ui.colors, f) })}
+                    />
+                  ))}
+                </FacetRow>
+                <FacetRow label="Type">
+                  {TYPE_FACETS.map((t) => (
+                    <Chip key={t} on={ui.types.includes(t)} onClick={() => patch({ types: toggle(ui.types, t) })}>
+                      {t}
+                    </Chip>
+                  ))}
+                </FacetRow>
+                <FacetRow label="Mana value">
+                  {CMC_FACETS.map((m) => (
+                    <Chip key={m} on={ui.cmcs.includes(m)} onClick={() => patch({ cmcs: toggle(ui.cmcs, m) })}>
+                      {m}
+                    </Chip>
+                  ))}
+                </FacetRow>
+                <FacetRow label="Rarity">
+                  {RARITY_FACETS.map((r) => (
+                    <Chip
+                      key={r}
+                      on={ui.rarities.includes(r)}
+                      onClick={() => patch({ rarities: toggle(ui.rarities, r) })}
+                    >
+                      {r[0].toUpperCase() + r.slice(1)}
+                    </Chip>
+                  ))}
+                </FacetRow>
+                <FacetRow label="Your decision">
+                  {([...STATUSES, "none"] as StatusFilter[]).map((s) => (
+                    <Chip
+                      key={s}
+                      on={ui.statuses.includes(s)}
+                      onClick={() => patch({ statuses: toggle(ui.statuses, s) })}
+                    >
+                      {s === "none" ? "Undecided" : STATUS_LABEL[s]}
+                    </Chip>
+                  ))}
+                </FacetRow>
+              </div>
+            </Sheet>
+          )}
+
+          <CardLookup q={q} exclude={shownIds} db={st.cardDb} onOpenCard={st.openLookedUp} onScryfall={st.openFromScryfall} />
 
           {/* Result bar */}
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-(--color-text)">
               {ids.length} card{ids.length === 1 ? "" : "s"}
             </span>
+            {activeFilters > 0 && (
+              <button type="button" onClick={clearFilters} className="text-xs text-(--color-accent) hover:underline">
+                Clear filters
+              </button>
+            )}
             <span className="hidden text-xs text-(--color-text-dim) lg:inline">
               Arrows move · Enter opens · K/A yes · C/N no · M maybe
             </span>
@@ -743,7 +926,7 @@ export function CubeReview() {
 
           {ids.length === 0 ? (
             <p className="rounded-lg border border-dashed border-(--color-border) p-8 text-center text-sm text-(--color-text-dim)">
-              No cards match. Loosen a filter or the cube toggles.
+              {activeFilters || q ? "No cards match. Loosen a filter or the search." : "Nothing here — all done."}
             </p>
           ) : (
             sectionsFor(view, ids, limit).map((section, si) => (
@@ -789,43 +972,173 @@ export function CubeReview() {
             ))
           )}
           {limit < ids.length && <div ref={sentinelRef} className="h-10" />}
-
-          <CardDbPanel db={cardDb} />
-
-          <OfflinePanel
-            urls={offlineUrls}
-            title="Offline — save cube review images"
-            intro="Every card's data and Oracle text already work with no connection."
-            avgBytes={fullSize ? 53 * 1024 : 13 * 1024}
-          >
-            <label className="mb-3 flex items-center gap-2 text-(--color-text-dim)">
-              <input type="checkbox" checked={fullSize} onChange={(e) => setFullSize(e.target.checked)} />
-              Also save full-size images for the enlarged view (much bigger)
-            </label>
-          </OfflinePanel>
         </>
       )}
+
+      {detailPopup}
+    </div>
+  );
+}
+
+/** Cards in the review data whose name (first) or rules text matches. */
+function searchReviewCards(needle: string, max: number): string[] {
+  const tiers: string[][] = [[], [], []];
+  for (const id of allCardIds()) {
+    const c = card(id);
+    const name = c.name.toLowerCase();
+    if (name.startsWith(needle)) tiers[0].push(id);
+    else if (name.includes(needle)) tiers[1].push(id);
+    else if (searchText(c).includes(needle)) tiers[2].push(id);
+  }
+  const byName = (a: string, b: string) => card(a).name.localeCompare(card(b).name);
+  return tiers.flatMap((t) => t.sort(byName)).slice(0, max);
+}
+
+/**
+ * Look up: one search for any card. Cards in the three cubes (and ones you
+ * added) come first and work offline; every other card comes from the card
+ * database, or Scryfall when that isn't downloaded.
+ */
+export function LookUp() {
+  const st = useReviewState();
+  const { decisions, detail, setDetail } = st;
+  const [q, setQ] = useState("");
+  const [autoAdvance, setAutoAdvance] = useState(false);
+  const needle = q.trim().toLowerCase();
+
+  const local = useMemo(
+    () => (needle.length < 2 ? [] : searchReviewCards(needle, 50)),
+    // extrasVersion: a card you just added becomes a local result.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [needle, st.extrasVersion],
+  );
+  const localSet = useMemo(() => new Set(local), [local]);
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-4">
+      {st.saveFailed && (
+        <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+          This browser isn't saving your decisions (storage is blocked).
+        </p>
+      )}
+      <div className="relative">
+        <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-(--color-text-dim)" />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onFocus={st.preloadDb}
+          placeholder="Any card — name or rules text"
+          aria-label="Search for a card"
+          className="w-full rounded-lg border border-(--color-border) bg-(--color-bg-elev) py-3 pr-3 pl-10 text-base text-(--color-text) placeholder:text-(--color-text-dim)"
+        />
+      </div>
+
+      {needle.length < 2 ? (
+        <p className="text-sm text-(--color-text-dim)">
+          Open any card to see its text, which cubes have it, and your call on it.
+        </p>
+      ) : (
+        <>
+          {local.length > 0 && (
+            <section className="space-y-1.5">
+              <h3 className="px-1 text-xs font-medium text-(--color-text-dim)">
+                In the cubes{local.length >= 50 ? " · first 50" : ` · ${local.length}`}
+              </h3>
+              <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
+                {local.map((id) => (
+                  <Row
+                    key={id}
+                    c={card(id)}
+                    log={null}
+                    status={normalizeStatus(id, decisions[id]?.status)}
+                    selected={false}
+                    onOpen={(cid) => setDetail({ ids: local, index: local.indexOf(cid) })}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+          <CardLookup q={q} exclude={localSet} db={st.cardDb} onOpenCard={st.openLookedUp} onScryfall={st.openFromScryfall} />
+        </>
+      )}
+
+      {/* While searching, the results already offer the download. */}
+      {needle.length < 2 && <CardDbPanel db={st.cardDb} />}
 
       {detail && (
         <CardDetail
           ids={detail.ids}
           index={detail.index}
           decisions={decisions}
-          live={live}
-          artVersion={artVersion}
-          onChooseArt={chooseArt}
-          autoAdvance={ui.autoAdvance}
-          onAutoAdvance={(v) => patch({ autoAdvance: v })}
-          onIndex={(index) => {
-            setDetail((d) => (d ? { ...d, index } : d));
-            setSelId(detail.ids[index]);
-          }}
-          onStatus={setStatus}
-          onNote={setNote}
+          live={st.live}
+          artVersion={st.artVersion}
+          onChooseArt={st.chooseArt}
+          autoAdvance={autoAdvance}
+          onAutoAdvance={setAutoAdvance}
+          onIndex={(index) => setDetail((d) => (d ? { ...d, index } : d))}
+          onStatus={st.setStatus}
+          onNote={st.setNote}
           onClose={() => setDetail(null)}
         />
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------- home page
+
+/** My cube's size with every Cut and Add applied. */
+function HeroCount({ live }: { live: Summary }) {
+  return (
+    <div className="rounded-xl border border-(--color-border) bg-(--color-bg-elev) p-4">
+      <div className="text-xs text-(--color-text-dim)">Your cube after your decisions</div>
+      <div className="text-3xl font-semibold tabular-nums text-(--color-text)">{live.result} cards</div>
+      <div className="mt-0.5 text-sm tabular-nums text-(--color-text-dim)">
+        {live.current} now · <span className="text-red-300">{live.cuts.length} cut</span> ·{" "}
+        <span className="text-emerald-300">{live.adds.length} added</span>
+        {live.counts.maybe > 0 && <span className="text-amber-300"> · {live.counts.maybe} maybe</span>}
+      </div>
+    </div>
+  );
+}
+
+function HomeGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h3 className="mb-1.5 px-1 text-xs font-medium text-(--color-text-dim)">{title}</h3>
+      <div className="divide-y divide-(--color-border) overflow-hidden rounded-xl border border-(--color-border) bg-(--color-bg-elev)">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function HomeRow({
+  icon,
+  label,
+  sub,
+  count,
+  onClick,
+}: {
+  icon: IconName;
+  label: string;
+  sub?: string;
+  count?: number;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" onClick={onClick} className="flex w-full items-center gap-3 px-3 py-3 text-left hover:bg-white/5">
+      <Icon name={icon} className="h-5 w-5 shrink-0 text-(--color-text-dim)" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm text-(--color-text)">{label}</span>
+        {sub && <span className="block truncate text-xs text-(--color-text-dim)">{sub}</span>}
+      </span>
+      {count !== undefined && (
+        <span className="shrink-0 text-sm tabular-nums text-(--color-text-dim)">{count}</span>
+      )}
+      <Icon name="chevron" className="h-4 w-4 shrink-0 text-(--color-text-dim)" />
+    </button>
   );
 }
 
@@ -845,64 +1158,6 @@ function sectionsFor(view: View, ids: string[], limit: number) {
   ].filter((sec) => sec.total > 0);
 }
 
-/** Whether this device's decisions are on the server yet. */
-function SyncBadge() {
-  const s = useSyncStatus();
-  const tone =
-    s.state === "synced"
-      ? "text-emerald-300"
-      : s.state === "offline"
-        ? "text-amber-300"
-        : s.state === "error"
-          ? "text-red-300"
-          : "text-(--color-text-dim)";
-  const label =
-    s.state === "synced"
-      ? s.pending
-        ? `Syncing ${s.pending}…`
-        : "✓ Synced"
-      : s.state === "offline"
-        ? s.pending
-          ? `Offline · ${s.pending} to sync`
-          : "Offline"
-        : s.state === "error"
-          ? "Sync problem"
-          : "Syncing…";
-  return (
-    <span className={"text-xs " + tone} title={s.message ?? (s.lastSynced ? `Last synced ${new Date(s.lastSynced).toLocaleTimeString()}` : undefined)}>
-      {label}
-    </span>
-  );
-}
-
-/** Always-visible: my cube's size with every Cut and Add applied. */
-function LiveCount({ live }: { live: Summary }) {
-  const delta = live.result - live.current;
-  return (
-    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2 text-sm">
-      <span className="text-(--color-text-dim)">My cube</span>
-      <span className="text-xl font-semibold tabular-nums text-(--color-text)">{live.result}</span>
-      <span className="tabular-nums text-(--color-text-dim)">
-        {live.current}
-        <span className="text-red-300"> − {live.cuts.length}</span>
-        <span className="text-emerald-300"> + {live.adds.length}</span>
-        {delta !== 0 && (
-          <span className={delta > 0 ? "text-amber-300" : "text-sky-300"}>
-            {" "}
-            ({delta > 0 ? "+" : ""}
-            {delta})
-          </span>
-        )}
-      </span>
-      {live.counts.maybe > 0 && (
-        <span className="text-amber-300">
-          · maybe: {live.maybeCut} cut?, {live.maybeAdd} add?
-        </span>
-      )}
-    </div>
-  );
-}
-
 function OfflineHint({ text }: { text: string }) {
   return <p className="text-xs text-(--color-text-dim)">{text}</p>;
 }
@@ -917,14 +1172,14 @@ function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <span className="inline-flex shrink-0 overflow-hidden rounded border border-(--color-border)">
+    <span className="inline-flex max-w-full overflow-x-auto rounded border border-(--color-border)">
       {options.map(([v, label]) => (
         <button
           key={v}
           type="button"
           onClick={() => onChange(v)}
           className={
-            "px-2.5 py-1.5 text-xs whitespace-nowrap " +
+            "shrink-0 px-2.5 py-1.5 text-xs whitespace-nowrap " +
             (value === v
               ? "bg-(--color-accent) font-medium text-black"
               : "text-(--color-text-dim) hover:bg-white/5")
@@ -939,9 +1194,9 @@ function Segmented<T extends string>({
 
 function FacetRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="w-20 shrink-0 text-xs text-(--color-text-dim)">{label}</span>
-      {children}
+    <div>
+      <div className="mb-1.5 text-xs text-(--color-text-dim)">{label}</div>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
   );
 }
@@ -952,7 +1207,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
       type="button"
       onClick={onClick}
       className={
-        "rounded-full border px-2.5 py-1 text-xs " +
+        "rounded-full border px-3 py-1.5 text-sm " +
         (on
           ? "border-(--color-accent) bg-(--color-accent)/20 text-(--color-text)"
           : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
@@ -983,14 +1238,14 @@ function ColorChip({ facet, on, onClick }: { facet: ColorFacet; on: boolean; onC
       aria-label={COLOR_LABEL[facet]}
       aria-pressed={on}
       className={
-        "flex h-8 w-8 items-center justify-center rounded-full border-2 " +
+        "flex h-10 w-10 items-center justify-center rounded-full border-2 " +
         (on ? "border-(--color-accent)" : "border-transparent opacity-60 hover:opacity-100")
       }
     >
       {uri ? (
-        <img src={uri} alt="" className="h-6 w-6" />
+        <img src={uri} alt="" className="h-7 w-7" />
       ) : (
-        <span className={"flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-semibold " + PIP_STYLE[facet]}>
+        <span className={"flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold " + PIP_STYLE[facet]}>
           {facet === "M" ? "" : "C"}
         </span>
       )}
@@ -1264,6 +1519,8 @@ function CardDetail({
 }) {
   const c = card(ids[index]);
   const status = normalizeStatus(c.id, decisions[c.id]?.status);
+  const stepping = ids.length > 1;
+  useBackToClose(onClose);
 
   const go = useCallback(
     (delta: number) => {
@@ -1306,22 +1563,28 @@ function CardDetail({
   }, [go, tag, onClose, c.id]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-center bg-black/80 sm:items-center sm:p-4" onClick={onClose}>
+    // h-dvh, not inset-0: see Sheet.tsx (keeps the review bar over the bottom nav).
+    <div
+      className="fixed inset-x-0 top-0 z-50 flex h-dvh items-stretch justify-center bg-black/80 sm:items-center sm:p-4"
+      onClick={onClose}
+    >
       <div
         className="flex w-full max-w-3xl flex-col overflow-hidden bg-(--color-bg-elev) sm:max-h-[92vh] sm:rounded-xl sm:border sm:border-(--color-border)"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2 border-b border-(--color-border) px-3 py-2 text-xs text-(--color-text-dim)">
-          <span>
-            {index + 1} / {ids.length}
-          </span>
+          <span>{stepping ? `${index + 1} / ${ids.length}` : ""}</span>
           <span className="text-(--color-text)" title={`${live.current} now − ${live.cuts.length} cut + ${live.adds.length} added`}>
             My cube <span className="font-semibold">{live.result}</span>
           </span>
-          <label className="flex items-center gap-1.5">
-            <input type="checkbox" checked={autoAdvance} onChange={(e) => onAutoAdvance(e.target.checked)} />
-            Next card after tagging
-          </label>
+          {stepping ? (
+            <label className="flex items-center gap-1.5">
+              <input type="checkbox" checked={autoAdvance} onChange={(e) => onAutoAdvance(e.target.checked)} />
+              Next card after tagging
+            </label>
+          ) : (
+            <span />
+          )}
           <button type="button" onClick={onClose} className="rounded px-2 py-1 text-base hover:bg-white/10" aria-label="Close">
             ✕
           </button>
