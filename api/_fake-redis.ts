@@ -66,6 +66,19 @@ export function fakeRedis() {
       kv.set(k, { v: enc(n), exp: e?.exp ?? null });
       return n;
     },
+    async decr(k: string) {
+      const e = live(k);
+      const n = Number(e ? dec(e.v) : 0) - 1;
+      kv.set(k, { v: enc(n), exp: e?.exp ?? null });
+      return n;
+    },
+    async hincrby(k: string, f: string, by: number) {
+      const h = hashes.get(k) ?? new Map<string, string>();
+      const n = Number(dec(h.get(f)) ?? 0) + by;
+      h.set(f, enc(n));
+      hashes.set(k, h);
+      return n;
+    },
     async expire(k: string, seconds: number) {
       const e = live(k);
       if (!e) return 0;

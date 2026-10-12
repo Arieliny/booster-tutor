@@ -14,14 +14,15 @@ import {
   saveUser,
   sessionCount,
 } from "./_auth.js";
+import { DEFAULT_GUEST_LIMIT, usageFor } from "./_judge-usage.js";
 
 /**
  * Admin (owner only): people and what they can use.
  *
- *   GET  /api/admin -> { features, users: [{ ...user, devices, lastSeen, pendingLink }] }
+ *   GET  /api/admin -> { features, defaultJudgeLimit, users: [{ ...user, devices, lastSeen, pendingLink, judge }] }
  *   POST /api/admin
  *     { action: "create", name, features }  -> { user, token }   new guest + their link
- *     { action: "update", id, name?, features? }
+ *     { action: "update", id, name?, features?, judgeLimit? }   judgeLimit null = default
  *     { action: "link", id }                -> { token }         new one-time link (replaces any unused one)
  *     { action: "signOutEverywhere", id }
  *     { action: "remove", id }              guests only
@@ -40,11 +41,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const rows = await Promise.all(
         users.map(async (u) => {
           const s = await sessionCount(u.id);
-          return { ...u, devices: s.count, lastSeen: s.lastSeen, pendingLink: await hasPendingInvite(u.id) };
+          return {
+            ...u,
+            devices: s.count,
+            lastSeen: s.lastSeen,
+            pendingLink: await hasPendingInvite(u.id),
+            judge: await usageFor(u),
+          };
         }),
       );
       rows.sort((a, b) => (a.role === b.role ? a.name.localeCompare(b.name) : a.role === "owner" ? -1 : 1));
-      res.status(200).json({ features: FEATURES, users: rows });
+      res.status(200).json({ features: FEATURES, defaultJudgeLimit: DEFAULT_GUEST_LIMIT, users: rows });
       return;
     }
     if (req.method !== "POST") {
@@ -77,6 +84,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (name) target.name = name;
       // The owner always has everything; only guests' access is editable.
       if (features && target.role === "guest") target.features = features;
+      if (body.judgeLimit === null) delete target.judgeLimit;
+      else if (typeof body.judgeLimit === "number" && Number.isFinite(body.judgeLimit))
+        target.judgeLimit = Math.max(0, Math.min(500, Math.round(body.judgeLimit)));
       await saveUser(target);
       res.status(200).json({ user: target });
       return;

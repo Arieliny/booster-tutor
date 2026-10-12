@@ -25,3 +25,6 @@ dist-ssr
 
 # Offline card database: generated at build time (scripts/build-card-db.mjs), never committed
 public/card-db.json
+
+# Comprehensive Rules for the judge: downloaded at build time (scripts/fetch-cr.mjs), never committed
+data/cr.json

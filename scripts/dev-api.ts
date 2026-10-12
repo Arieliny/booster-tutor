@@ -16,8 +16,21 @@ import { pathToFileURL } from "node:url";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
+import tls from "node:tls";
+
+// This machine needs the Windows certificate store for outgoing HTTPS (what
+// `node --use-system-ca` does), e.g. for the judge's Scryfall lookups.
+try {
+  tls.setDefaultCACertificates([...tls.getCACertificates("default"), ...tls.getCACertificates("system")]);
+} catch {
+  // Older Node: HTTPS calls from handlers may fail locally; production is unaffected.
+}
 
 process.env.BT_FAKE_REDIS = "1";
+// Your own secrets for local testing (e.g. ANTHROPIC_API_KEY for the judge) go
+// in .env.local, which git ignores. Without a key the judge uses a stand-in.
+const ENV_FILE = join(dirname(fileURLToPath(import.meta.url)), "..", ".env.local");
+if (existsSync(ENV_FILE)) process.loadEnvFile(ENV_FILE);
 process.env.EDIT_PIN = process.env.EDIT_PIN ?? "424242"; // local test value only
 
 const PORT = Number(process.env.PORT ?? 5186);

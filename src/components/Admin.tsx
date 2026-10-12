@@ -71,6 +71,44 @@ function LinkBox({ name, token, onDone }: { name: string; token: string; onDone:
 }
 
 /** Owner only: the people who can use the app and what each one can use. */
+/** A guest's judge allowance (each ruling is billed to the owner's API key). */
+function JudgeLimit({
+  u,
+  defaultLimit,
+  onSave,
+}: {
+  u: AdminUser;
+  defaultLimit: number;
+  onSave: (limit: number | null) => void;
+}) {
+  const current = u.judgeLimit ?? defaultLimit;
+  const [draft, setDraft] = useState(String(current));
+  const save = () => {
+    const n = Math.max(0, Math.min(500, Math.round(Number(draft))));
+    if (!Number.isFinite(n) || n === current) return setDraft(String(current));
+    onSave(n === defaultLimit ? null : n);
+  };
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-(--color-text-dim)">
+      <span>Judge: {u.judge.today} used today of</span>
+      <input
+        type="number"
+        min={0}
+        max={500}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+        aria-label={`${u.name}'s rulings a day`}
+        className="w-16 rounded border border-(--color-border) bg-(--color-bg) px-2 py-1 text-center text-(--color-text)"
+      />
+      <span>
+        a day · {u.judge.month.rulings} this month{u.judgeLimit === undefined ? "" : ` · default is ${defaultLimit}`}
+      </span>
+    </div>
+  );
+}
+
 export function Admin() {
   const [users, setUsers] = useState<AdminUser[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,10 +116,13 @@ export function Admin() {
   const [newName, setNewName] = useState("");
   const [newFeatures, setNewFeatures] = useState<Feature[]>(["setReview"]);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [defaultLimit, setDefaultLimit] = useState(20);
 
   const reload = useCallback(async () => {
     try {
-      setUsers(await adminList());
+      const d = await adminList();
+      setUsers(d.users);
+      setDefaultLimit(d.defaultJudgeLimit);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -91,8 +132,10 @@ export function Admin() {
   useEffect(() => {
     let live = true;
     adminList()
-      .then((list) => {
-        if (live) setUsers(list);
+      .then((d) => {
+        if (!live) return;
+        setUsers(d.users);
+        setDefaultLimit(d.defaultJudgeLimit);
       })
       .catch((err) => {
         if (live) setError(err instanceof Error ? err.message : String(err));
@@ -123,12 +166,9 @@ export function Admin() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-(--color-text)">People and access</h2>
-        <p className="text-sm text-(--color-text-dim)">
-          Guests see only what you tick. Sign-in links work once and expire after 7 days.
-        </p>
-      </div>
+      <p className="text-sm text-(--color-text-dim)">
+        Guests see only what you tick. Sign-in links work once and expire after 7 days.
+      </p>
 
       {error && <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</p>}
 
@@ -139,6 +179,9 @@ export function Admin() {
               <div className="font-medium text-(--color-text)">{owner.name} (you)</div>
               <div className="text-xs text-(--color-text-dim)">
                 Owner · everything · {owner.devices} device{owner.devices === 1 ? "" : "s"} signed in
+              </div>
+              <div className="text-xs text-(--color-text-dim)">
+                Judge: {owner.judge.today} today · {owner.judge.month.rulings} this month · no limit
               </div>
             </div>
             <button
@@ -181,6 +224,14 @@ export function Admin() {
                 </label>
               ))}
             </div>
+            {u.features.includes("judge") && (
+              <JudgeLimit
+                key={`${u.id}:${u.judgeLimit ?? "default"}`}
+                u={u}
+                defaultLimit={defaultLimit}
+                onSave={(judgeLimit) => act(() => adminUpdate(u.id, { judgeLimit }))}
+              />
+            )}
             <div className="mt-3 flex flex-wrap gap-2 text-sm">
               <button
                 type="button"

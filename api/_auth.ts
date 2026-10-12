@@ -31,9 +31,9 @@ import { redis } from "./_redis.js";
 
 /**
  * Features the owner can grant to a guest. Only features that exist get listed
- * here; Judge, Card lookup and Life counter join as they're built.
+ * here; Card lookup and Life counter join as they're built.
  */
-export const FEATURES = ["play", "setReview"] as const;
+export const FEATURES = ["play", "setReview", "judge"] as const;
 export type Feature = (typeof FEATURES)[number];
 
 export interface User {
@@ -42,6 +42,8 @@ export interface User {
   role: "owner" | "guest";
   features: Feature[];
   createdAt: string;
+  /** Judge rulings a day; unset = the default (see _judge-usage.ts). Guests only. */
+  judgeLimit?: number;
 }
 
 interface Session {

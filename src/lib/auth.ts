@@ -11,7 +11,7 @@
  * The session itself lives in an HttpOnly cookie that scripts can't read.
  */
 
-export type Feature = "play" | "setReview";
+export type Feature = "play" | "setReview" | "judge";
 
 export interface Me {
   id: string;
@@ -23,6 +23,7 @@ export interface Me {
 export const FEATURE_LABELS: Record<Feature, { label: string; hint: string }> = {
   play: { label: "Play", hint: "Open packs from your cubes" },
   setReview: { label: "Set grades", hint: "Limited Resources set reviews" },
+  judge: { label: "Judge", hint: "Ask rules questions (a daily number of rulings, billed to you)" },
 };
 
 const ME_KEY = "booster-tutor-me";
@@ -176,6 +177,13 @@ export interface AdminUser extends Me {
   devices: number;
   lastSeen: string | null;
   pendingLink: boolean;
+  /** Guests only: rulings a day, when not the default. */
+  judgeLimit?: number;
+  judge: {
+    today: number;
+    limit: number | null;
+    month: { rulings: number; input: number; output: number; cacheRead: number; cacheWrite: number };
+  };
 }
 
 async function admin<T>(method: "GET" | "POST", body?: Record<string, unknown>): Promise<T> {
@@ -190,13 +198,14 @@ async function admin<T>(method: "GET" | "POST", body?: Record<string, unknown>):
   return data;
 }
 
-export const adminList = () => admin<{ users: AdminUser[] }>("GET").then((d) => d.users);
+export const adminList = () =>
+  admin<{ users: AdminUser[]; defaultJudgeLimit: number }>("GET").then((d) => ({ users: d.users, defaultJudgeLimit: d.defaultJudgeLimit }));
 export const adminCreate = (name: string, features: Feature[]) =>
   admin<{ token: string; user: { id: string } }>("POST", { action: "create", name, features }).then((d) => ({
     token: d.token,
     userId: d.user.id,
   }));
-export const adminUpdate = (id: string, patch: { name?: string; features?: Feature[] }) =>
+export const adminUpdate = (id: string, patch: { name?: string; features?: Feature[]; judgeLimit?: number | null }) =>
   admin("POST", { action: "update", id, ...patch });
 export const adminNewLink = (id: string) => admin<{ token: string }>("POST", { action: "link", id }).then((d) => d.token);
 export const adminSignOutEverywhere = (id: string) => admin("POST", { action: "signOutEverywhere", id });

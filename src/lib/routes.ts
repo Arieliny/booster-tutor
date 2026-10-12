@@ -12,7 +12,7 @@
 
 import { can, type Me } from "./auth";
 
-export type Tab = "packs" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "admin";
+export type Tab = "packs" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "judge" | "admin";
 
 export const TAB_PATHS: Record<Tab, string> = {
   packs: "/",
@@ -25,6 +25,7 @@ export const TAB_PATHS: Record<Tab, string> = {
   // My cube's lists live under it: /my-cube/changelog etc. (see CubeReview).
   cubeReview: "/my-cube",
   lookup: "/look-up",
+  judge: "/judge",
 };
 
 /** Paths from before the redesign, so old bookmarks still land. */
@@ -105,18 +106,19 @@ export function initialTab(pathname: string): Tab {
 
 // ---------------------------------------------------------------- nav sections
 
-export type Section = "play" | "myCube" | "lookup" | "grades";
+export type Section = "play" | "myCube" | "lookup" | "judge" | "grades";
 
 /**
  * The nav, in order. Each section holds one or more screens; the first one
  * this person may open is where tapping the section goes. Admin lives in the
- * account menu instead. (The judge becomes a fifth section once it's built.)
+ * account menu instead.
  */
 export const SECTIONS: { id: Section; label: string; tabs: Tab[] }[] = [
   { id: "play", label: "Play", tabs: ["packs"] },
   // The collection checklist (Inventory) opens from My cube's home page.
   { id: "myCube", label: "My cube", tabs: ["cubeReview", "inventory"] },
   { id: "lookup", label: "Look up", tabs: ["lookup"] },
+  { id: "judge", label: "Judge", tabs: ["judge"] },
   { id: "grades", label: "Set grades", tabs: ["review", "reviewPrint"] },
 ];
 
@@ -130,6 +132,7 @@ export const TAB_TITLES: Record<Tab, string> = {
   inventory: "My cube",
   cubeReview: "My cube",
   lookup: "Look up",
+  judge: "Judge",
   review: "Set grades",
   reviewPrint: "Set grades",
   admin: "People and access",
@@ -151,6 +154,7 @@ export function tabAllowed(tab: Tab, me: Me): boolean {
   if (me.role === "owner") return true;
   if (tab === "packs") return can(me, "play");
   if (tab === "review" || tab === "reviewPrint") return can(me, "setReview");
+  if (tab === "judge") return can(me, "judge");
   return false;
 }
 

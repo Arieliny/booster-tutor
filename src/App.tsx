@@ -48,6 +48,7 @@ const CubeReview = lazy(() =>
   import("./components/CubeReview").then((m) => ({ default: m.CubeReview })),
 );
 const Admin = lazy(() => import("./components/Admin").then((m) => ({ default: m.Admin })));
+const Judge = lazy(() => import("./components/Judge").then((m) => ({ default: m.Judge })));
 const LookUp = lazy(() => import("./components/CubeReview").then((m) => ({ default: m.LookUp })));
 const SetReviewPrint = lazy(() =>
   import("./components/SetReviewPrint").then((m) => ({ default: m.SetReviewPrint })),
@@ -393,6 +394,10 @@ function App() {
       ) : tab === "cubeReview" ? (
         <Suspense fallback={loading("your cube")}>
           <CubeReview key={navCount} onOpenChecklist={() => setTab("inventory")} />
+        </Suspense>
+      ) : tab === "judge" ? (
+        <Suspense fallback={loading("the judge")}>
+          <Judge />
         </Suspense>
       ) : tab === "lookup" ? (
         <Suspense fallback={loading("card search")}>

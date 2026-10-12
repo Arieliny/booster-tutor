@@ -6,6 +6,7 @@ const SECTION_ICON: Record<Section, IconName> = {
   play: "play",
   myCube: "cube",
   lookup: "search",
+  judge: "gavel",
   grades: "star",
 };
 
