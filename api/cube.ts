@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { canUse, requireUser } from "./_auth.js";
 import { cubeKey, redis, validateSyncCode } from "./_redis.js";
 
 /**
@@ -15,6 +16,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ error: "Method not allowed" });
     return;
   }
+
+  // Same access as reading the library: signed in, with Play (or the owner).
+  if (!(await requireUser(req, res, (u) => canUse(u, "play")))) return;
 
   const code = validateSyncCode(req.query.code);
   if (!code) {

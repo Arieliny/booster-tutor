@@ -10,34 +10,31 @@ import {
   saveCube,
   uniqueCubeName,
 } from "../lib/cube-store";
-import { EditAccess } from "./EditAccess";
 import { CubeCobraImport, type CubeCobraMode } from "./CubeCobraImport";
 import { CubeExport } from "./CubeExport";
 import { isCubeCobraCube } from "../lib/cubecobra";
-import { hasEditPin } from "../lib/sync";
 
 interface Props {
   cubes: Cube[];
   selectedId: string;
   onClose: () => void;
   onCubesChanged: (next: { cubes: Cube[]; selectedId: string }) => void;
-  /** Open straight into "Refresh from Cube Cobra" for this cube (if editing is unlocked). */
+  /** Open straight into "Refresh from Cube Cobra" for this cube (owner only). */
   refreshCubeId?: string;
+  /** Only the owner can change the library; everyone else gets a read-only view. */
+  canEdit: boolean;
 }
 
-export function CubeManager({ cubes, selectedId, onClose, onCubesChanged, refreshCubeId }: Props) {
+export function CubeManager({ cubes, selectedId, onClose, onCubesChanged, refreshCubeId, canEdit }: Props) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [syncOpen, setSyncOpen] = useState(false);
   const [cobraMode, setCobraMode] = useState<CubeCobraMode | null>(() => {
-    // Locked: open the normal manager instead, where the PIN can be entered.
-    const cube = refreshCubeId && hasEditPin() ? cubes.find((c) => c.id === refreshCubeId) : undefined;
+    const cube = refreshCubeId && canEdit ? cubes.find((c) => c.id === refreshCubeId) : undefined;
     return cube ? { kind: "refresh", cube } : null;
   });
-  const [canEdit, setCanEdit] = useState(hasEditPin());
   const [exportCube, setExportCube] = useState<Cube | null>(null);
 
   const activeCubes = cubes.filter((c) => !c.archived);
@@ -90,15 +87,6 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged, refres
           });
           setUploadOpen(false);
         }}
-      />
-    );
-  }
-
-  if (syncOpen) {
-    return (
-      <EditAccess
-        onClose={() => setSyncOpen(false)}
-        onChanged={() => setCanEdit(hasEditPin())}
       />
     );
   }
@@ -164,13 +152,6 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged, refres
       <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
         <h2 className="text-lg font-medium text-(--color-text)">Manage cubes</h2>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setSyncOpen(true)}
-            className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5"
-          >
-            {canEdit ? "🔓 Editing" : "🔒 Locked"}
-          </button>
           {canEdit && (
             <>
               <button
@@ -218,8 +199,7 @@ export function CubeManager({ cubes, selectedId, onClose, onCubesChanged, refres
 
       {!canEdit && (
         <p className="mt-3 rounded border border-(--color-border) bg-black/30 p-2 text-xs text-(--color-text-dim)">
-          This shared library is read-only. Opening packs and drafting work
-          normally — unlock editing to change the cubes.
+          Only the owner can change these cubes. Opening packs works normally.
         </p>
       )}
 

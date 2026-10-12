@@ -18,9 +18,19 @@ import { isCubeCobraCube } from "./lib/cubecobra";
 import { Modal } from "./components/Modal";
 import { PackDisplay } from "./components/PackDisplay";
 import { PoolStatus } from "./components/PoolStatus";
-import { Rotisserie } from "./components/Rotisserie";
 import { Spotlight } from "./components/Spotlight";
-import { pathForTab, tabFromPath, type Tab, initialTab, rememberTab, tabUsesCube } from "./lib/routes";
+import {
+  NAV_TABS,
+  initialTab,
+  pathForTab,
+  rememberTab,
+  tabAllowed,
+  tabFromPath,
+  tabUsesCube,
+  type Tab,
+} from "./lib/routes";
+import { useAuth } from "./lib/auth-context";
+import { AccountMenu } from "./components/AccountMenu";
 
 // The set-review data file is large and rarely opened; keep it out of the
 // initial bundle and fetch it only when the tab is selected.
@@ -30,6 +40,7 @@ const SetReview = lazy(() =>
 const CubeReview = lazy(() =>
   import("./components/CubeReview").then((m) => ({ default: m.CubeReview })),
 );
+const Admin = lazy(() => import("./components/Admin").then((m) => ({ default: m.Admin })));
 const SetReviewPrint = lazy(() =>
   import("./components/SetReviewPrint").then((m) => ({ default: m.SetReviewPrint })),
 );
@@ -57,7 +68,14 @@ function App() {
   /** Set when the manager should open straight into a Cube Cobra refresh. */
   const [managerRefreshId, setManagerRefreshId] = useState<string | undefined>();
   const [showPickedLog, setShowPickedLog] = useState(false);
-  const [tab, setTabState] = useState<Tab>(() => initialTab(window.location.pathname));
+  const { me } = useAuth();
+  const isOwner = me.role === "owner";
+  const [requestedTab, setTabState] = useState<Tab>(() => initialTab(window.location.pathname));
+  // Only the tabs this person may use; a tab they can't use (an old link, a
+  // remembered tab, or access since removed) falls back to their first one.
+  const navTabs = NAV_TABS.filter((t) => tabAllowed(t.id, me));
+  const noAccess = navTabs.length === 0;
+  const tab: Tab = tabAllowed(requestedTab, me) ? requestedTab : (navTabs[0]?.id ?? "packs");
   const navRef = useRef<HTMLElement>(null);
 
   /** Switch tab and reflect it in the URL so each view is linkable. */
@@ -76,12 +94,13 @@ function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
 
-  // On load, make the URL match the tab we opened on, without adding history:
-  // tidies an unrecognized path, and turns a bare "/" into the resumed tab's.
+  // Keep the URL on the tab actually shown, without adding history: tidies an
+  // unrecognized path, turns a bare "/" into the resumed tab's, and corrects a
+  // tab this person can't open (e.g. a guest following an old /admin link).
   useEffect(() => {
-    const want = pathForTab(initialTab(window.location.pathname));
+    const want = pathForTab(tab);
     if (window.location.pathname !== want) window.history.replaceState(null, "", want);
-  }, []);
+  }, [tab]);
 
   // Reopen on whichever mode was used last.
   useEffect(() => rememberTab(tab), [tab]);
@@ -215,6 +234,22 @@ function App() {
     );
   }
 
+  if (noAccess) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="max-w-sm space-y-3 rounded-xl border border-(--color-border) bg-(--color-bg-elev) p-6 text-center">
+          <div className="text-lg font-semibold text-(--color-text)">Hi {me.name}</div>
+          <p className="text-sm text-(--color-text-dim)">
+            You're signed in, but nothing has been switched on for you yet. Ask Ari to give you access.
+          </p>
+          <div className="flex justify-center">
+            <AccountMenu onAdmin={() => {}} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const inSpotlight = pack !== null && spotlightIndex !== null;
   const onPacksTab = tab === "packs";
 
@@ -235,9 +270,9 @@ function App() {
                   cubes={visibleCubes}
                   selectedId={selectedCubeId}
                   onSelect={handleSelectCube}
-                  onManage={() => setShowCubeManager(true)}
+                  onManage={isOwner ? () => setShowCubeManager(true) : undefined}
                 />
-                {selectedCube && isCubeCobraCube(selectedCube) && (
+                {isOwner && selectedCube && isCubeCobraCube(selectedCube) && (
                   <CubeCobraStatus
                     cube={selectedCube}
                     onRefresh={() => {
@@ -264,22 +299,18 @@ function App() {
                 </button>
               </>
             )}
+            <AccountMenu onAdmin={() => setTab("admin")} />
           </div>
         </header>
 
+        {navTabs.length > 1 && (
         <nav
           ref={navRef}
           role="tablist"
           aria-label="View"
           className="relative mb-6 flex max-w-full overflow-x-auto rounded-lg border border-(--color-border) bg-(--color-bg-elev) sm:inline-flex print:hidden"
         >
-          {([
-            { id: "packs", label: "Open packs" },
-            { id: "cubeReview", label: "Cube review" },
-            { id: "rotisserie", label: "Rotisserie" },
-            { id: "review", label: "Set review" },
-            { id: "inventory", label: "Inventory" },
-          ] as { id: Tab; label: string }[]).map((t) => (
+          {navTabs.map((t) => (
             <button
               key={t.id}
               type="button"
@@ -297,6 +328,7 @@ function App() {
             </button>
           ))}
         </nav>
+        )}
 
         {onPacksTab ? (
           <>
@@ -373,6 +405,10 @@ function App() {
           >
             <CubeReview />
           </Suspense>
+        ) : tab === "admin" ? (
+          <Suspense fallback={<p className="text-(--color-text-dim)">Loading…</p>}>
+            <Admin />
+          </Suspense>
         ) : tab === "reviewPrint" ? (
           <Suspense
             fallback={
@@ -381,8 +417,6 @@ function App() {
           >
             <SetReviewPrint onBack={() => setTab("review")} />
           </Suspense>
-        ) : tab === "rotisserie" ? (
-          selectedCube && <Rotisserie key={selectedCube.id} cube={selectedCube} />
         ) : (
           selectedCube && <Inventory cube={selectedCube} />
         )}
@@ -392,6 +426,7 @@ function App() {
             cubes={cubes}
             selectedId={selectedCubeId}
             refreshCubeId={managerRefreshId}
+            canEdit={isOwner}
             onClose={() => {
               setShowCubeManager(false);
               setManagerRefreshId(undefined);

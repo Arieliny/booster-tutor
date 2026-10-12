@@ -4,7 +4,8 @@ interface Props {
   cubes: Cube[];
   selectedId: string;
   onSelect: (id: string) => void;
-  onManage: () => void;
+  /** Owner only - omitted for guests, who can switch cubes but not change them. */
+  onManage?: () => void;
 }
 
 export function CubeSelector({ cubes, selectedId, onSelect, onManage }: Props) {
@@ -25,14 +26,16 @@ export function CubeSelector({ cubes, selectedId, onSelect, onManage }: Props) {
           </option>
         ))}
       </select>
+      {onManage && (
       <button
-        type="button"
-        onClick={onManage}
-        title="Manage cubes"
-        className="rounded border border-(--color-border) px-2 py-1.5 text-xs text-(--color-text-dim) hover:bg-white/5"
-      >
-        Manage
-      </button>
+          type="button"
+          onClick={onManage}
+          title="Manage cubes"
+          className="rounded border border-(--color-border) px-2 py-1.5 text-xs text-(--color-text-dim) hover:bg-white/5"
+        >
+          Manage
+        </button>
+      )}
     </div>
   );
 }

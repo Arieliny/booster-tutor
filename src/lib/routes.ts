@@ -10,15 +10,18 @@
  *   - the service worker's navigateFallback does the same offline
  */
 
-export type Tab = "packs" | "rotisserie" | "inventory" | "review" | "reviewPrint" | "cubeReview";
+import { can, type Me } from "./auth";
+
+export type Tab = "packs" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "admin";
 
 export const TAB_PATHS: Record<Tab, string> = {
   packs: "/",
-  rotisserie: "/rotisserie",
   inventory: "/inventory",
   review: "/set-review",
   // Not a top-level tab — a condensed, printable view of the set review.
   reviewPrint: "/set-review/print",
+  // Owner only, reached from the account menu rather than the tab bar.
+  admin: "/admin",
   cubeReview: "/cube-review",
 };
 
@@ -52,6 +55,8 @@ const LAST_TAB_KEY = "booster-tutor-last-tab";
 
 /** Remember the mode in use, so the app reopens on it. */
 export function rememberTab(tab: Tab): void {
+  // Admin is a place you visit, not a mode to reopen the app in.
+  if (tab === "admin") return;
   try {
     // The print view is a sub-page; reopening on it would be odd.
     localStorage.setItem(LAST_TAB_KEY, tab === "reviewPrint" ? "review" : tab);
@@ -81,5 +86,27 @@ export function initialTab(pathname: string): Tab {
 
 /** Tabs that act on the selected cube, so only they show the cube picker. */
 export function tabUsesCube(tab: Tab): boolean {
-  return tab === "packs" || tab === "rotisserie" || tab === "inventory";
+  return tab === "packs" || tab === "inventory";
+}
+
+// ---------------------------------------------------------------- who sees what
+
+/** The tab bar, in order. Admin lives in the account menu instead. */
+export const NAV_TABS: { id: Tab; label: string }[] = [
+  { id: "packs", label: "Open packs" },
+  { id: "cubeReview", label: "Cube review" },
+  { id: "review", label: "Set review" },
+  { id: "inventory", label: "Inventory" },
+];
+
+/**
+ * What each person may open. The owner gets everything; a guest gets only the
+ * features the owner granted (Play -> Open packs, Set grades -> Set review).
+ * Cube review, Inventory and Admin are the owner's alone.
+ */
+export function tabAllowed(tab: Tab, me: Me): boolean {
+  if (me.role === "owner") return true;
+  if (tab === "packs") return can(me, "play");
+  if (tab === "review" || tab === "reviewPrint") return can(me, "setReview");
+  return false;
 }

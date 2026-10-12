@@ -4,7 +4,14 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
+// Local only: /api goes to scripts/dev-api.ts (in-memory Redis). Vercel serves
+// the built app itself and never uses this. If the dev API isn't running, API
+// calls simply fail, which the app already treats as "offline".
+const devApi = { '/api': { target: 'http://localhost:5186', changeOrigin: false } }
+
 export default defineConfig({
+  server: { proxy: devApi },
+  preview: { proxy: devApi },
   plugins: [
     react(),
     tailwindcss(),

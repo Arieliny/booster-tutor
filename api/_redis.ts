@@ -1,14 +1,18 @@
 import { Redis } from "@upstash/redis";
+import { fakeRedis } from "./_fake-redis.js";
 
 /**
  * Single Redis client. Uses Vercel-set env vars (KV_REST_API_URL/TOKEN).
  * Module-level instantiation is fine for serverless: the runtime keeps the
  * instance warm between invocations within a single function instance.
  */
-export const redis = new Redis({
-  url: process.env.KV_REST_API_URL!,
-  token: process.env.KV_REST_API_TOKEN!,
-});
+export const redis: Redis = process.env.BT_FAKE_REDIS
+  ? // Local testing only (scripts/dev-api.ts): never set in production.
+    (fakeRedis() as unknown as Redis)
+  : new Redis({
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+    });
 
 const SYNC_CODE_REGEX = /^[a-z0-9]{6,16}$/;
 
@@ -61,55 +65,4 @@ export async function loadMeta(code: string): Promise<SyncMeta> {
 
 export async function saveMeta(code: string, meta: SyncMeta): Promise<void> {
   await redis.set(metaKey(code), meta);
-}
-
-// ---------------------------------------------------------------------------
-// Rotisserie draft (Phase 2, networked). Server-authoritative — unlike the
-// sync feature above, the draft's canonical state lives here in Redis and
-// clients poll it. The pick is applied by an atomic Lua script (see
-// api/draft.ts) so two players can't claim the same card or pick out of turn.
-//
-// Keys under a per-draft code (same alphanumeric shape as a sync code):
-//   draft:{code}:meta    JSON  DraftMeta (seats, cube ref, cardsPerSeat, total)
-//   draft:{code}:cube    JSON  the full enriched cube (fetched once by joiners)
-//   draft:{code}:claims  HASH  cardId -> seatId (every claimed card)
-//   draft:{code}:order   LIST  append-only "cardId:seatId:pickNo" pick log
-//   draft:{code}:cursor  STR   integer: number of completed picks (= next pick)
-
-export function draftMetaKey(code: string): string {
-  return `draft:${code}:meta`;
-}
-export function draftCubeKey(code: string): string {
-  return `draft:${code}:cube`;
-}
-export function draftClaimsKey(code: string): string {
-  return `draft:${code}:claims`;
-}
-export function draftOrderKey(code: string): string {
-  return `draft:${code}:order`;
-}
-export function draftCursorKey(code: string): string {
-  return `draft:${code}:cursor`;
-}
-
-export interface DraftSeat {
-  id: string;
-  name: string;
-}
-
-export interface DraftMeta {
-  cubeId: string;
-  cubeName: string;
-  cardCount: number;
-  seats: DraftSeat[];
-  cardsPerSeat: number;
-  /** Precomputed min(cardsPerSeat * seats, cardCount) — the Lua script's end bound. */
-  totalPicks: number;
-  createdAt: string;
-}
-
-export async function loadDraftMeta(code: string): Promise<DraftMeta | null> {
-  const raw = await redis.get<DraftMeta>(draftMetaKey(code));
-  if (!raw || typeof raw !== "object" || !Array.isArray(raw.seats)) return null;
-  return raw;
 }
