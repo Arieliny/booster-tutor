@@ -36,6 +36,7 @@ import {
   hasType,
   historyEvents,
   imageUrl,
+  inMyCube,
   lastChange,
   loadDecisions,
   logById,
@@ -336,6 +337,10 @@ export function CubeReview() {
       const log = logById[ui.log];
       list.sort((a, b) => lastChange(log.get(b)!).localeCompare(lastChange(log.get(a)!)) || byName(a, b));
     } else list.sort(byName);
+    // My decisions holds two different questions: cards in my cube (keep or
+    // cut?) and new cards (add or not?). Group them so they're reviewed - and
+    // stepped through in the popup - one question at a time.
+    if (view === "decisions") return [...list.filter(inMyCube), ...list.filter((id) => !inMyCube(id))];
     return list;
   }, [baseIds, ui, q, decisions, sort, view]);
 
@@ -584,6 +589,11 @@ export function CubeReview() {
                     }
                   >
                     {STATUS_LABEL[s]} · {n}
+                    {s === "maybe" && n > 0 && (
+                      <span className="ml-1 text-xs opacity-80">
+                        ({live.maybeCut} cut? · {live.maybeAdd} add?)
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -717,36 +727,48 @@ export function CubeReview() {
             <p className="rounded-lg border border-dashed border-(--color-border) p-8 text-center text-sm text-(--color-text-dim)">
               No cards match. Loosen a filter or the cube toggles.
             </p>
-          ) : layout === "grid" ? (
-            <div
-              ref={gridRef}
-              className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
-            >
-              {ids.slice(0, limit).map((id) => (
-                <Tile
-                  key={id}
-                  c={card(id)}
-                  src={imageUrl(card(id), "small")}
-                  status={normalizeStatus(id, decisions[id]?.status)}
-                  hasNote={!!decisions[id]?.note}
-                  selected={selId === id}
-                  onOpen={open}
-                />
-              ))}
-            </div>
           ) : (
-            <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
-              {ids.slice(0, limit).map((id) => (
-                <Row
-                  key={id}
-                  c={card(id)}
-                  log={view === "changelog" ? ui.log : null}
-                  status={normalizeStatus(id, decisions[id]?.status)}
-                  selected={selId === id}
-                  onOpen={open}
-                />
-              ))}
-            </div>
+            sectionsFor(view, ids, limit).map((section, si) => (
+              <div key={section.key} className="space-y-2">
+                {section.title && (
+                  <h3 className="flex items-baseline gap-2 border-b border-(--color-border) pb-1 pt-2 text-sm font-semibold text-(--color-text)">
+                    {section.title}
+                    <span className="font-normal text-(--color-text-dim)">{section.total}</span>
+                  </h3>
+                )}
+                {layout === "grid" ? (
+                  <div
+                    ref={si === 0 ? gridRef : undefined}
+                    className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
+                  >
+                    {section.ids.map((id) => (
+                      <Tile
+                        key={id}
+                        c={card(id)}
+                        src={imageUrl(card(id), "small")}
+                        status={normalizeStatus(id, decisions[id]?.status)}
+                        hasNote={!!decisions[id]?.note}
+                        selected={selId === id}
+                        onOpen={open}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
+                    {section.ids.map((id) => (
+                      <Row
+                        key={id}
+                        c={card(id)}
+                        log={view === "changelog" ? ui.log : null}
+                        status={normalizeStatus(id, decisions[id]?.status)}
+                        selected={selId === id}
+                        onOpen={open}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))
           )}
           {limit < ids.length && <div ref={sentinelRef} className="h-10" />}
 
@@ -791,6 +813,20 @@ export function CubeReview() {
 
 // ---------------------------------------------------------------- pieces
 
+/**
+ * My decisions splits into "in my cube - keep or cut?" and "new - add or not?"
+ * sections (ids are already ordered that way); other views are one list.
+ */
+function sectionsFor(view: View, ids: string[], limit: number) {
+  const shown = ids.slice(0, limit);
+  if (view !== "decisions") return [{ key: "all", title: null as string | null, ids: shown, total: ids.length }];
+  const mineTotal = ids.filter(inMyCube).length;
+  return [
+    { key: "mine", title: "In your cube — keep or cut?", ids: shown.filter(inMyCube), total: mineTotal },
+    { key: "new", title: "Not in your cube — add or not?", ids: shown.filter((id) => !inMyCube(id)), total: ids.length - mineTotal },
+  ].filter((sec) => sec.total > 0);
+}
+
 /** Always-visible: my cube's size with every Cut and Add applied. */
 function LiveCount({ live }: { live: Summary }) {
   const delta = live.result - live.current;
@@ -810,7 +846,11 @@ function LiveCount({ live }: { live: Summary }) {
           </span>
         )}
       </span>
-      {live.counts.maybe > 0 && <span className="text-amber-300">· {live.counts.maybe} maybe</span>}
+      {live.counts.maybe > 0 && (
+        <span className="text-amber-300">
+          · maybe: {live.maybeCut} cut?, {live.maybeAdd} add?
+        </span>
+      )}
     </div>
   );
 }

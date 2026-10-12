@@ -538,6 +538,9 @@ export function mergeImport(
 
 export interface Summary {
   counts: Record<Status, number>;
+  /** Maybes split by the question they pose: cut it (in my cube) or add it (new). */
+  maybeCut: number;
+  maybeAdd: number;
   cuts: ReviewCard[];
   adds: ReviewCard[];
   current: number;
@@ -547,12 +550,18 @@ export interface Summary {
 
 export function summarize(d: Decisions): Summary {
   const counts: Record<Status, number> = { keep: 0, cut: 0, add: 0, no: 0, maybe: 0 };
+  let maybeCut = 0;
+  let maybeAdd = 0;
   const cuts: ReviewCard[] = [];
   const adds: ReviewCard[] = [];
   for (const [id, v] of Object.entries(d)) {
     const status = normalizeStatus(id, v.status);
     if (!status || !hasCard(id)) continue;
     counts[status]++;
+    if (status === "maybe") {
+      if (inMyCube(id)) maybeCut++;
+      else maybeAdd++;
+    }
     if (status === "cut") cuts.push(card(id));
     if (status === "add") adds.push(card(id));
   }
@@ -567,7 +576,7 @@ export function summarize(d: Decisions): Summary {
   for (const c of adds) row(c).plus++;
 
   const current = members.mine.size;
-  return { counts, cuts, adds, current, result: current - cuts.length + adds.length, balance };
+  return { counts, maybeCut, maybeAdd, cuts, adds, current, result: current - cuts.length + adds.length, balance };
 }
 
 // ---------------------------------------------------------------- Scryfall (online only)
