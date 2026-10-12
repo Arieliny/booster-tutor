@@ -31,6 +31,7 @@ import {
 } from "./lib/routes";
 import { useAuth } from "./lib/auth-context";
 import { AccountMenu } from "./components/AccountMenu";
+import { startUserSync } from "./lib/user-sync";
 
 // The set-review data file is large and rarely opened; keep it out of the
 // initial bundle and fetch it only when the tab is selected.
@@ -70,6 +71,13 @@ function App() {
   const [showPickedLog, setShowPickedLog] = useState(false);
   const { me } = useAuth();
   const isOwner = me.role === "owner";
+
+  // Cube review data follows the owner across devices (lib/user-sync.ts).
+  // Guests can't use Cube review, so there's nothing of theirs to sync yet.
+  useEffect(() => {
+    if (me.role !== "owner") return;
+    return startUserSync(me.id);
+  }, [me.id, me.role]);
   const [requestedTab, setTabState] = useState<Tab>(() => initialTab(window.location.pathname));
   // Only the tabs this person may use; a tab they can't use (an old link, a
   // remembered tab, or access since removed) falls back to their first one.

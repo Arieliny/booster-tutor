@@ -9,6 +9,10 @@
  */
 
 import raw from "../data/cube-review.json";
+import { LOCAL_CHANGE_EVENT } from "./user-sync";
+
+/** Tell the sync engine (lib/user-sync.ts) that something changed on this device. */
+const announceLocalChange = () => window.dispatchEvent(new Event(LOCAL_CHANGE_EVENT));
 
 export type CubeKey = "mine" | "lsv" | "mtgo";
 export type LogKey = "lsv" | "mtgo";
@@ -123,6 +127,7 @@ function saveExtras(): void {
   } catch {
     // Blocked storage: the card still works this session.
   }
+  announceLocalChange();
 }
 
 /** Cards added by hand that aren't already in the baked data. */
@@ -221,6 +226,20 @@ function saveArt(): void {
     localStorage.setItem(ART_KEY, JSON.stringify(artChoices));
   } catch {
     // Blocked storage: the choice still applies this session.
+  }
+  announceLocalChange();
+}
+
+/**
+ * After the sync engine merged another device's changes into storage, fold
+ * them into this page's in-memory copies: extra cards are add-only, printing
+ * choices go newest-wins (never blindly replaced, so an edit made a moment ago
+ * here can't be lost).
+ */
+export function reloadSyncedData(): void {
+  for (const [id, c] of Object.entries(loadExtras())) if (!extras[id]) extras[id] = c;
+  for (const [id, a] of Object.entries(loadArt())) {
+    if (!artChoices[id] || artChoices[id].t < a.t) artChoices[id] = a;
   }
 }
 
@@ -463,10 +482,24 @@ export function loadDecisions(): Decisions {
 export function saveDecisions(d: Decisions): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+    announceLocalChange();
     return true;
   } catch {
     return false;
   }
+}
+
+/** Per card, the newer edit wins. Used to fold synced changes into the page. */
+export function mergeDecisions(current: Decisions, incoming: Decisions): Decisions {
+  let changed = false;
+  const out: Decisions = { ...current };
+  for (const [id, v] of Object.entries(incoming)) {
+    if (v && typeof v.t === "number" && (!out[id] || out[id].t < v.t)) {
+      out[id] = v;
+      changed = true;
+    }
+  }
+  return changed ? out : current;
 }
 
 /** Drop entries with neither a status nor a note. */

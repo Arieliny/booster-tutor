@@ -81,6 +81,12 @@ export function fakeRedis() {
       hashes.set(k, h);
       return Object.keys(fields).length;
     },
+    /** Like Upstash: {field: value | null}, or null when none of the fields exist. */
+    async hmget<T>(k: string, ...fields: string[]) {
+      const h = hashes.get(k);
+      const out = Object.fromEntries(fields.map((f) => [f, dec(h?.get(f))]));
+      return (Object.values(out).every((v) => v === null) ? null : out) as T;
+    },
     async hgetall<T>(k: string) {
       const h = hashes.get(k);
       if (!h) return null as T;

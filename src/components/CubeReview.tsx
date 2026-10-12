@@ -39,6 +39,8 @@ import {
   inMyCube,
   lastChange,
   loadDecisions,
+  mergeDecisions,
+  reloadSyncedData,
   logById,
   members,
   saveDecisions,
@@ -64,6 +66,8 @@ import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
 import { CardDbPanel, CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
+import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
+import { useSyncStatus } from "../lib/use-sync-status";
 
 type View = "compare" | "changelog" | "set" | "all" | "decisions" | "summary";
 type Member = "in" | "out" | "any";
@@ -225,6 +229,19 @@ export function CubeReview() {
   useEffect(() => {
     saveDecisions(decisions);
   }, [decisions]);
+
+  // Another device's changes arrived (lib/user-sync.ts): fold them in, newest
+  // edit per card wins, so nothing tapped here a moment ago is lost.
+  useEffect(() => {
+    const onRemote = () => {
+      reloadSyncedData();
+      setDecisions((cur) => mergeDecisions(cur, loadDecisions()));
+      setExtrasVersion((v) => v + 1);
+      setArtVersion((v) => v + 1);
+    };
+    window.addEventListener(REMOTE_CHANGE_EVENT, onRemote);
+    return () => window.removeEventListener(REMOTE_CHANGE_EVENT, onRemote);
+  }, []);
 
   const patch = useCallback((p: Partial<Ui>) => setUi((u) => ({ ...u, ...p })), []);
 
@@ -438,6 +455,7 @@ export function CubeReview() {
           MTGO {shortDate(data.cubes.mtgo.updated)} · changelogs since {shortDate(data.changelogSince)}
         </span>
         <span className="ml-auto flex flex-wrap items-center gap-2">
+          <SyncBadge />
           <DecisionsSync
             decisions={decisions}
             onImport={(d) => {
@@ -825,6 +843,36 @@ function sectionsFor(view: View, ids: string[], limit: number) {
     { key: "mine", title: "In your cube — keep or cut?", ids: shown.filter(inMyCube), total: mineTotal },
     { key: "new", title: "Not in your cube — add or not?", ids: shown.filter((id) => !inMyCube(id)), total: ids.length - mineTotal },
   ].filter((sec) => sec.total > 0);
+}
+
+/** Whether this device's decisions are on the server yet. */
+function SyncBadge() {
+  const s = useSyncStatus();
+  const tone =
+    s.state === "synced"
+      ? "text-emerald-300"
+      : s.state === "offline"
+        ? "text-amber-300"
+        : s.state === "error"
+          ? "text-red-300"
+          : "text-(--color-text-dim)";
+  const label =
+    s.state === "synced"
+      ? s.pending
+        ? `Syncing ${s.pending}…`
+        : "✓ Synced"
+      : s.state === "offline"
+        ? s.pending
+          ? `Offline · ${s.pending} to sync`
+          : "Offline"
+        : s.state === "error"
+          ? "Sync problem"
+          : "Syncing…";
+  return (
+    <span className={"text-xs " + tone} title={s.message ?? (s.lastSynced ? `Last synced ${new Date(s.lastSynced).toLocaleTimeString()}` : undefined)}>
+      {label}
+    </span>
+  );
 }
 
 /** Always-visible: my cube's size with every Cut and Add applied. */
