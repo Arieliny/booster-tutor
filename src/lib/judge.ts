@@ -8,6 +8,7 @@ export interface JudgeMessage {
   content: string;
 }
 
+/** This month's rulings. */
 export interface Allowance {
   remaining: number | null; // null = unlimited
   limit: number | null;

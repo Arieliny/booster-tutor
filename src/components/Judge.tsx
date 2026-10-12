@@ -119,8 +119,8 @@ export function Judge() {
         <span>
           {allowance
             ? allowance.limit === null
-              ? "No daily limit"
-              : `${allowance.remaining} of ${allowance.limit} rulings left today`
+              ? "No limit"
+              : `${allowance.remaining} of ${allowance.limit} rulings left this month`
             : " "}
         </span>
         {allowance?.cr && <span>· Rules effective {allowance.cr}</span>}
@@ -237,7 +237,7 @@ export function Judge() {
               }
             }}
             rows={2}
-            placeholder={outOfRulings ? "No rulings left today" : messages.length ? "Follow-up question…" : "Ask a rules question…"}
+            placeholder={outOfRulings ? "No rulings left this month" : messages.length ? "Follow-up question…" : "Ask a rules question…"}
             disabled={outOfRulings}
             className="min-h-[2.75rem] flex-1 resize-none rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2 text-sm text-(--color-text) placeholder:text-(--color-text-dim) disabled:opacity-50"
           />

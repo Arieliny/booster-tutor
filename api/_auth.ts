@@ -42,7 +42,7 @@ export interface User {
   role: "owner" | "guest";
   features: Feature[];
   createdAt: string;
-  /** Judge rulings a day; unset = the default (see _judge-usage.ts). Guests only. */
+  /** Judge rulings a month; unset = the default (see _judge-usage.ts). Guests only. */
   judgeLimit?: number;
 }
 

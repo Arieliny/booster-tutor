@@ -10,7 +10,7 @@ import { judgePrompt } from "./_judge-prompt.js";
 /**
  * The rules judge (Claude, billed to the owner's API key).
  *
- *   GET  /api/judge -> { today, limit, remaining, cr }            allowance + CR date
+ *   GET  /api/judge -> { used, limit, remaining, cr }             this month's allowance + CR date
  *   POST /api/judge { messages: [{role, content}], cards?: string[] }
  *        -> a stream of JSON lines:
  *           {type:"status", text}   what it's looking up ("Looking up Spell Queller")
@@ -19,7 +19,7 @@ import { judgePrompt } from "./_judge-prompt.js";
  *           {type:"done", remaining}
  *           {type:"error", message}
  *
- * Each question uses one of the person's daily rulings (refunded if it fails
+ * Each question uses one of the person's monthly rulings (refunded if it fails
  * before answering). The conversation lives in the browser and is sent whole,
  * so there's nothing to store here but the counts.
  */
@@ -118,9 +118,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "GET") {
     const [u, cr] = await Promise.all([usageFor(me), loadCr()]);
     res.status(200).json({
-      today: u.today,
+      used: u.used,
       limit: u.limit,
-      remaining: u.limit === null ? null : Math.max(0, u.limit - u.today),
+      remaining: u.limit === null ? null : Math.max(0, u.limit - u.used),
       cr: cr?.effective ?? null,
     });
     return;
@@ -137,7 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   const remaining = await claimRuling(me);
   if (remaining === false) {
-    res.status(429).json({ error: "That's all your rulings for today. They reset at midnight UTC." });
+    res.status(429).json({ error: "That's all your rulings for this month. They reset on the 1st." });
     return;
   }
 
@@ -159,7 +159,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const cr = await loadCr();
-    if (!process.env.ANTHROPIC_API_KEY) {
+    // BT_FAKE_JUDGE: local tests that shouldn't spend real rulings, even with a key set.
+    if (!process.env.ANTHROPIC_API_KEY || (process.env.BT_FAKE_REDIS && process.env.BT_FAKE_JUDGE)) {
       if (process.env.BT_FAKE_REDIS) await fakeJudge(history, cr, send);
       else throw new Error("The judge isn't set up yet: ANTHROPIC_API_KEY is missing on the server.");
       answered = true;

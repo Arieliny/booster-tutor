@@ -23,7 +23,7 @@ export interface Me {
 export const FEATURE_LABELS: Record<Feature, { label: string; hint: string }> = {
   play: { label: "Play", hint: "Open packs from your cubes" },
   setReview: { label: "Set grades", hint: "Limited Resources set reviews" },
-  judge: { label: "Judge", hint: "Ask rules questions (a daily number of rulings, billed to you)" },
+  judge: { label: "Judge", hint: "Ask rules questions (a monthly number of rulings, billed to you)" },
 };
 
 const ME_KEY = "booster-tutor-me";
@@ -177,12 +177,13 @@ export interface AdminUser extends Me {
   devices: number;
   lastSeen: string | null;
   pendingLink: boolean;
-  /** Guests only: rulings a day, when not the default. */
+  /** Guests only: rulings a month, when not the default. */
   judgeLimit?: number;
   judge: {
-    today: number;
+    /** Rulings this month. */
+    used: number;
     limit: number | null;
-    month: { rulings: number; input: number; output: number; cacheRead: number; cacheWrite: number };
+    tokens: { input: number; output: number; cacheRead: number; cacheWrite: number };
   };
 }
 

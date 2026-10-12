@@ -71,7 +71,7 @@ function LinkBox({ name, token, onDone }: { name: string; token: string; onDone:
 }
 
 /** Owner only: the people who can use the app and what each one can use. */
-/** A guest's judge allowance (each ruling is billed to the owner's API key). */
+/** A guest's monthly judge allowance (each ruling is billed to the owner's API key). */
 function JudgeLimit({
   u,
   defaultLimit,
@@ -90,7 +90,7 @@ function JudgeLimit({
   };
   return (
     <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-(--color-text-dim)">
-      <span>Judge: {u.judge.today} used today of</span>
+      <span>Judge: {u.judge.used} used this month of</span>
       <input
         type="number"
         min={0}
@@ -99,11 +99,11 @@ function JudgeLimit({
         onChange={(e) => setDraft(e.target.value)}
         onBlur={save}
         onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-        aria-label={`${u.name}'s rulings a day`}
+        aria-label={`${u.name}'s rulings a month`}
         className="w-16 rounded border border-(--color-border) bg-(--color-bg) px-2 py-1 text-center text-(--color-text)"
       />
       <span>
-        a day · {u.judge.month.rulings} this month{u.judgeLimit === undefined ? "" : ` · default is ${defaultLimit}`}
+        a month{u.judgeLimit === undefined ? "" : ` · default is ${defaultLimit}`}
       </span>
     </div>
   );
@@ -116,7 +116,7 @@ export function Admin() {
   const [newName, setNewName] = useState("");
   const [newFeatures, setNewFeatures] = useState<Feature[]>(["setReview"]);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
-  const [defaultLimit, setDefaultLimit] = useState(20);
+  const [defaultLimit, setDefaultLimit] = useState(50);
 
   const reload = useCallback(async () => {
     try {
@@ -181,7 +181,7 @@ export function Admin() {
                 Owner · everything · {owner.devices} device{owner.devices === 1 ? "" : "s"} signed in
               </div>
               <div className="text-xs text-(--color-text-dim)">
-                Judge: {owner.judge.today} today · {owner.judge.month.rulings} this month · no limit
+                Judge: {owner.judge.used} this month · no limit
               </div>
             </div>
             <button
