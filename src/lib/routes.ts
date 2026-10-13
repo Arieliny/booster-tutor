@@ -104,6 +104,22 @@ export function initialTab(pathname: string): Tab {
   return tabFromPath(pathname);
 }
 
+// ---------------------------------------------------------------- jumping between screens
+
+const NAVIGATE_EVENT = "bt-navigate";
+
+/** Open another screen from deep inside one (e.g. "Ask the judge" in a card popup). */
+export function navigateTo(tab: Tab): void {
+  window.dispatchEvent(new CustomEvent<Tab>(NAVIGATE_EVENT, { detail: tab }));
+}
+
+/** App listens here; returns the unsubscribe. */
+export function onNavigate(fn: (tab: Tab) => void): () => void {
+  const handler = (e: Event) => fn((e as CustomEvent<Tab>).detail);
+  window.addEventListener(NAVIGATE_EVENT, handler);
+  return () => window.removeEventListener(NAVIGATE_EVENT, handler);
+}
+
 // ---------------------------------------------------------------- nav sections
 
 export type Section = "play" | "myCube" | "lookup" | "judge" | "grades";

@@ -42,6 +42,11 @@ export function saveConversation(messages: JudgeMessage[], cards: string[]): voi
   }
 }
 
+/** Start a fresh question with this card on the table (the Judge screen picks it up when it opens). */
+export function startQuestionAbout(cardName: string): void {
+  saveConversation([], [cardName]);
+}
+
 export async function getAllowance(): Promise<Allowance> {
   const res = await fetch("/api/judge", { cache: "no-store" });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);

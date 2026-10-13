@@ -22,6 +22,7 @@ import {
   TAB_TITLES,
   allowedSections,
   initialTab,
+  onNavigate,
   pathForTab,
   pathShowsTab,
   rememberTab,
@@ -118,6 +119,19 @@ function App() {
   useEffect(() => {
     if (!pathShowsTab(window.location.pathname, tab)) window.history.replaceState(null, "", pathForTab(tab));
   }, [tab]);
+
+  // A screen asked to open another (e.g. a card popup's "Ask the judge").
+  useEffect(
+    () =>
+      onNavigate((next) => {
+        setNavCount((n) => n + 1);
+        setTabState(next);
+        const path = pathForTab(next);
+        if (window.location.pathname !== path) window.history.pushState(null, "", path);
+        window.scrollTo(0, 0);
+      }),
+    [],
+  );
 
   // Reopen on whichever mode was used last.
   useEffect(() => rememberTab(tab), [tab]);

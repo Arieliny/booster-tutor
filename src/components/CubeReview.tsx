@@ -68,6 +68,11 @@ import { CardDbPanel, CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
 import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
 import { useBackToClose } from "../lib/use-back-to-close";
+import { useAuth } from "../lib/auth-context";
+import { can } from "../lib/auth";
+import { startQuestionAbout } from "../lib/judge";
+import { navigateTo } from "../lib/routes";
+import { Rulings } from "./Rulings";
 import { Icon, type IconName } from "./Icon";
 import { PageHeader } from "./PageHeader";
 import { Sheet } from "./Sheet";
@@ -994,17 +999,55 @@ function searchReviewCards(needle: string, max: number): string[] {
   return tiers.flatMap((t) => t.sort(byName)).slice(0, max);
 }
 
+/** A Scryfall search result, just what the list needs. */
+interface ScryHit {
+  name: string;
+  oracle_id?: string;
+  type_line?: string;
+  mana_cost?: string;
+  card_faces?: { oracle_id?: string; type_line?: string; mana_cost?: string }[];
+}
+
+type DescribeState =
+  | { kind: "idle" }
+  | { kind: "busy"; what: string }
+  | { kind: "error"; message: string }
+  | { kind: "results"; query: string; cards: ScryHit[]; total: number; next?: string; more?: boolean };
+
+const LOOKUP_MODE_KEY = "booster-tutor-lookup-mode";
+
 /**
- * Look up: one search for any card. Cards in the three cubes (and ones you
- * added) come first and work offline; every other card comes from the card
- * database, or Scryfall when that isn't downloaded.
+ * Look up: one search for any card.
+ * - By name: cards in the three cubes (and ones you added) come first and work
+ *   offline; every other card comes from the card database, or Scryfall.
+ * - Describe it: plain English becomes a Scryfall query (api/card-search.ts),
+ *   shown and editable, run against Scryfall. Needs a connection.
  */
 export function LookUp() {
   const st = useReviewState();
   const { decisions, detail, setDetail } = st;
+  const [mode, setModeState] = useState<"name" | "describe">(() => {
+    try {
+      return localStorage.getItem(LOOKUP_MODE_KEY) === "describe" ? "describe" : "name";
+    } catch {
+      return "name";
+    }
+  });
   const [q, setQ] = useState("");
   const [autoAdvance, setAutoAdvance] = useState(false);
+  const [desc, setDesc] = useState("");
+  const [query, setQuery] = useState("");
+  const [found, setFound] = useState<DescribeState>({ kind: "idle" });
   const needle = q.trim().toLowerCase();
+
+  const setMode = (m: "name" | "describe") => {
+    setModeState(m);
+    try {
+      localStorage.setItem(LOOKUP_MODE_KEY, m);
+    } catch {
+      // Just a remembered preference.
+    }
+  };
 
   const local = useMemo(
     () => (needle.length < 2 ? [] : searchReviewCards(needle, 50)),
@@ -1014,6 +1057,57 @@ export function LookUp() {
   );
   const localSet = useMemo(() => new Set(local), [local]);
 
+  /** Run a Scryfall query (or fetch its next page). */
+  const runQuery = async (scryQuery: string, nextPage?: string) => {
+    const prev = found.kind === "results" && nextPage ? found : null;
+    if (prev) setFound({ ...prev, more: true });
+    else setFound({ kind: "busy", what: "Searching Scryfall…" });
+    try {
+      const url = nextPage ?? `https://api.scryfall.com/cards/search?q=${encodeURIComponent(scryQuery)}&order=edhrec`;
+      const res = await fetch(url);
+      const j = (await res.json()) as { data?: ScryHit[]; total_cards?: number; next_page?: string; has_more?: boolean; details?: string };
+      if (res.status === 404) return setFound({ kind: "results", query: scryQuery, cards: [], total: 0 });
+      if (!res.ok) return setFound({ kind: "error", message: `Scryfall didn't understand that search: ${j.details ?? res.status}` });
+      setFound({
+        kind: "results",
+        query: scryQuery,
+        cards: [...(prev?.cards ?? []), ...(j.data ?? [])],
+        total: j.total_cards ?? 0,
+        next: j.has_more ? j.next_page : undefined,
+      });
+    } catch {
+      setFound({ kind: "error", message: navigator.onLine ? "Scryfall didn't answer. Try again." : "Describe it needs a connection." });
+    }
+  };
+
+  const describe = async () => {
+    const text = desc.trim();
+    if (!text) return;
+    setFound({ kind: "busy", what: "Working out the search…" });
+    try {
+      const res = await fetch("/api/card-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const j = (await res.json().catch(() => ({}))) as { query?: string; error?: string };
+      if (!res.ok || !j.query) return setFound({ kind: "error", message: j.error ?? `Couldn't search (HTTP ${res.status}).` });
+      setQuery(j.query);
+      await runQuery(j.query);
+    } catch {
+      setFound({ kind: "error", message: navigator.onLine ? "Couldn't reach the server. Try again." : "Describe it needs a connection." });
+    }
+  };
+
+  const openHit = (h: ScryHit) => {
+    const id = h.oracle_id ?? h.card_faces?.[0]?.oracle_id;
+    if (id && hasCard(id)) setDetail({ ids: [id], index: 0 });
+    else void st.openFromScryfall(h.name).catch(() => setFound({ kind: "error", message: `Couldn't open ${h.name}.` }));
+  };
+
+  const inputClass =
+    "w-full rounded-lg border border-(--color-border) bg-(--color-bg-elev) py-3 pr-3 pl-10 text-base text-(--color-text) placeholder:text-(--color-text-dim)";
+
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       {st.saveFailed && (
@@ -1021,50 +1115,175 @@ export function LookUp() {
           This browser isn't saving your decisions (storage is blocked).
         </p>
       )}
-      <div className="relative">
-        <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-(--color-text-dim)" />
-        <input
-          type="search"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          onFocus={st.preloadDb}
-          placeholder="Any card — name or rules text"
-          aria-label="Search for a card"
-          className="w-full rounded-lg border border-(--color-border) bg-(--color-bg-elev) py-3 pr-3 pl-10 text-base text-(--color-text) placeholder:text-(--color-text-dim)"
-        />
-      </div>
 
-      {needle.length < 2 ? (
-        <p className="text-sm text-(--color-text-dim)">
-          Open any card to see its text, which cubes have it, and your call on it.
-        </p>
+      <Segmented
+        value={mode}
+        options={[
+          ["name", "By name"],
+          ["describe", "Describe it"],
+        ]}
+        onChange={setMode}
+      />
+
+      {mode === "name" ? (
+        <>
+          <div className="relative">
+            <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-(--color-text-dim)" />
+            <input
+              type="search"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              onFocus={st.preloadDb}
+              placeholder="Any card — name or rules text"
+              aria-label="Search for a card"
+              className={inputClass}
+            />
+          </div>
+
+          {needle.length < 2 ? (
+            <p className="text-sm text-(--color-text-dim)">
+              Open any card to see its text, official rulings, which cubes have it, and your call on it.
+            </p>
+          ) : (
+            <>
+              {local.length > 0 && (
+                <section className="space-y-1.5">
+                  <h3 className="px-1 text-xs font-medium text-(--color-text-dim)">
+                    In the cubes{local.length >= 50 ? " · first 50" : ` · ${local.length}`}
+                  </h3>
+                  <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
+                    {local.map((id) => (
+                      <Row
+                        key={id}
+                        c={card(id)}
+                        log={null}
+                        status={normalizeStatus(id, decisions[id]?.status)}
+                        selected={false}
+                        onOpen={(cid) => setDetail({ ids: local, index: local.indexOf(cid) })}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+              <CardLookup q={q} exclude={localSet} db={st.cardDb} onOpenCard={st.openLookedUp} onScryfall={st.openFromScryfall} />
+            </>
+          )}
+
+          {/* While searching, the results already offer the download. */}
+          {needle.length < 2 && <CardDbPanel db={st.cardDb} />}
+        </>
       ) : (
         <>
-          {local.length > 0 && (
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void describe();
+            }}
+          >
+            <div className="relative flex-1">
+              <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-(--color-text-dim)" />
+              <input
+                type="search"
+                value={desc}
+                onChange={(e) => setDesc(e.target.value)}
+                placeholder="A blue-white creature with an enters ability"
+                aria-label="Describe the card"
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={!desc.trim() || found.kind === "busy"}
+              className="shrink-0 rounded-lg bg-(--color-accent) px-4 text-sm font-semibold text-black hover:bg-(--color-accent-bright) disabled:opacity-40"
+            >
+              Search
+            </button>
+          </form>
+
+          {found.kind === "idle" && (
+            <p className="text-sm text-(--color-text-dim)">
+              Describe the card in your own words: colors, type, what it does, mana value. You'll see the Scryfall search it
+              becomes and can tweak it. Needs a connection.
+            </p>
+          )}
+          {found.kind === "busy" && (
+            <p className="flex items-center gap-2 text-sm text-(--color-text-dim)">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-(--color-accent) border-t-transparent" />
+              {found.what}
+            </p>
+          )}
+
+          {query && found.kind !== "busy" && (
+            <form
+              className="space-y-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (query.trim()) void runQuery(query.trim());
+              }}
+            >
+              <label className="block px-1 text-xs text-(--color-text-dim)" htmlFor="scryfall-query">
+                Scryfall search — edit it and press Enter to refine
+              </label>
+              <input
+                id="scryfall-query"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                spellCheck={false}
+                className="w-full rounded-lg border border-(--color-border) bg-(--color-bg) px-3 py-2 font-mono text-sm text-(--color-text)"
+              />
+            </form>
+          )}
+
+          {found.kind === "error" && <p className="text-sm text-amber-300">{found.message}</p>}
+
+          {found.kind === "results" && (
             <section className="space-y-1.5">
               <h3 className="px-1 text-xs font-medium text-(--color-text-dim)">
-                In the cubes{local.length >= 50 ? " · first 50" : ` · ${local.length}`}
+                {found.total === 0
+                  ? "No cards match. Loosen the search above."
+                  : `${found.total} card${found.total === 1 ? "" : "s"}, most played first`}
               </h3>
-              <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
-                {local.map((id) => (
-                  <Row
-                    key={id}
-                    c={card(id)}
-                    log={null}
-                    status={normalizeStatus(id, decisions[id]?.status)}
-                    selected={false}
-                    onOpen={(cid) => setDetail({ ids: local, index: local.indexOf(cid) })}
-                  />
-                ))}
-              </div>
+              {found.cards.length > 0 && (
+                <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
+                  {found.cards.map((h) => {
+                    const id = h.oracle_id ?? h.card_faces?.[0]?.oracle_id ?? h.name;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => openHit(h)}
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm hover:bg-white/5"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-(--color-text)">{h.name}</span>
+                          <span className="block truncate text-xs text-(--color-text-dim)">
+                            {h.type_line ?? h.card_faces?.map((f) => f.type_line).join(" // ")}
+                          </span>
+                        </span>
+                        <span className="hidden shrink-0 sm:inline-flex">
+                          <ManaCost cost={h.mana_cost ?? h.card_faces?.[0]?.mana_cost ?? ""} size={13} />
+                        </span>
+                        {hasCard(id) && cubeUnion.includes(id) && <MemberDots id={id} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {found.next && (
+                <button
+                  type="button"
+                  disabled={found.more}
+                  onClick={() => void runQuery(found.query, found.next)}
+                  className="w-full rounded-lg border border-(--color-border) py-2 text-sm text-(--color-text-dim) hover:bg-white/5 disabled:opacity-50"
+                >
+                  {found.more ? "Loading…" : `Show more (${found.total - found.cards.length} left)`}
+                </button>
+              )}
             </section>
           )}
-          <CardLookup q={q} exclude={localSet} db={st.cardDb} onOpenCard={st.openLookedUp} onScryfall={st.openFromScryfall} />
         </>
       )}
-
-      {/* While searching, the results already offer the download. */}
-      {needle.length < 2 && <CardDbPanel db={st.cardDb} />}
 
       {detail && (
         <CardDetail
@@ -1656,6 +1875,7 @@ function CardBody({
   const [noteDraft, setNoteDraft] = useState(savedNote);
   const [picking, setPicking] = useState(false);
   const back = hasBackImage(c);
+  const { me } = useAuth();
 
   // F flips double-faced cards.
   useEffect(() => {
@@ -1775,6 +1995,21 @@ function CardBody({
                   <div className="text-(--color-accent)">Looked up — tag it or add a note to keep it on your list</div>
                 )}
               </div>
+
+              <Rulings sid={c.sid} oracleId={c.id} />
+
+              {can(me, "judge") && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    startQuestionAbout(c.name);
+                    navigateTo("judge");
+                  }}
+                  className="w-full rounded-lg border border-(--color-accent)/60 py-2 text-sm text-(--color-text) hover:bg-(--color-accent)/10"
+                >
+                  Ask the judge about this card
+                </button>
+              )}
 
               <textarea
                 id="cube-review-note"

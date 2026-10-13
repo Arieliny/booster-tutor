@@ -10,7 +10,9 @@ import {
   type JudgeMessage,
 } from "../lib/judge";
 import { Icon } from "./Icon";
+import { ManaCost } from "./ManaCost";
 import { Markdown } from "./Markdown";
+import { Rulings } from "./Rulings";
 import { Sheet } from "./Sheet";
 
 const EXAMPLES = [
@@ -32,6 +34,7 @@ export function Judge() {
   const [error, setError] = useState<string | null>(null);
   const [allowance, setAllowance] = useState<Allowance | null>(null);
   const [adding, setAdding] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
   const [online, setOnline] = useState(() => navigator.onLine);
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -200,7 +203,9 @@ export function Judge() {
               key={c}
               className="inline-flex items-center gap-1 rounded-full bg-(--color-accent)/15 py-1 pr-1 pl-3 text-xs text-(--color-text)"
             >
-              {c}
+              <button type="button" onClick={() => setViewing(c)} title="See the card and its rulings" className="hover:underline">
+                {c}
+              </button>
               <button
                 type="button"
                 onClick={() => setCards(cards.filter((x) => x !== c))}
@@ -261,6 +266,17 @@ export function Judge() {
         </form>
       </div>
 
+      {viewing && (
+        <CardPreview
+          name={viewing}
+          onRemove={() => {
+            setCards(cards.filter((x) => x !== viewing));
+            setViewing(null);
+          }}
+          onClose={() => setViewing(null)}
+        />
+      )}
+
       {adding && (
         <CardPicker
           onPick={(name) => {
@@ -271,6 +287,94 @@ export function Judge() {
         />
       )}
     </div>
+  );
+}
+
+interface ScryFace {
+  name: string;
+  mana_cost?: string;
+  type_line?: string;
+  oracle_text?: string;
+  power?: string;
+  toughness?: string;
+  loyalty?: string;
+  image_uris?: { normal?: string };
+}
+interface ScryCard extends ScryFace {
+  id: string;
+  oracle_id?: string;
+  card_faces?: (ScryFace & { oracle_id?: string })[];
+}
+
+type Preview = { name: string; card?: ScryCard; error?: string };
+
+/** One card's current Oracle text and official rulings, straight from Scryfall. */
+function CardPreview({ name, onRemove, onClose }: { name: string; onRemove: () => void; onClose: () => void }) {
+  const [state, setState] = useState<Preview>({ name });
+  const shown = state.name === name ? state : { name };
+
+  useEffect(() => {
+    const ac = new AbortController();
+    fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`, { signal: ac.signal })
+      .then((r) => (r.ok ? (r.json() as Promise<ScryCard>) : Promise.reject(new Error(String(r.status)))))
+      .then(
+        (card) => setState({ name, card }),
+        () => {
+          if (!ac.signal.aborted)
+            setState({ name, error: navigator.onLine ? "Couldn't load this card from Scryfall." : "You're offline." });
+        },
+      );
+    return () => ac.abort();
+  }, [name]);
+
+  const c = shown.card;
+  const faces: ScryFace[] = c ? (c.card_faces?.length && !c.oracle_text ? c.card_faces : [c]) : [];
+  const img = c?.image_uris?.normal ?? c?.card_faces?.[0]?.image_uris?.normal;
+  const oracleId = c?.oracle_id ?? c?.card_faces?.[0]?.oracle_id ?? "";
+
+  return (
+    <Sheet
+      title={name}
+      onClose={onClose}
+      footer={
+        <button
+          type="button"
+          onClick={onRemove}
+          className="w-full rounded-lg border border-(--color-border) py-2 text-sm text-(--color-text-dim) hover:bg-white/5"
+        >
+          Take it off this question
+        </button>
+      }
+    >
+      {!c && !shown.error && <p className="text-sm text-(--color-text-dim)">Loading…</p>}
+      {shown.error && <p className="text-sm text-amber-300">{shown.error}</p>}
+      {c && (
+        <div className="space-y-3 text-sm">
+          {img && <img src={img} alt={c.name} className="mx-auto w-full max-w-[260px] rounded-[4.5%]" />}
+          {faces.map((f, i) => (
+            <div key={i} className={i > 0 ? "border-t border-(--color-border) pt-3" : ""}>
+              <div className="flex flex-wrap items-center gap-2 font-semibold text-(--color-text)">
+                {f.name}
+                {f.mana_cost && <ManaCost cost={f.mana_cost} size={14} />}
+              </div>
+              <div className="text-xs text-(--color-text-dim)">
+                {f.type_line}
+                {f.power !== undefined && ` · ${f.power}/${f.toughness}`}
+                {f.loyalty !== undefined && ` · loyalty ${f.loyalty}`}
+              </div>
+              {f.oracle_text && (
+                <div className="mt-1.5 space-y-1 leading-relaxed text-(--color-text)">
+                  {f.oracle_text.split("\n").map((line, j) => (
+                    <p key={j}>{line}</p>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+          {oracleId && <Rulings sid={c.id} oracleId={oracleId} />}
+        </div>
+      )}
+    </Sheet>
   );
 }
 
