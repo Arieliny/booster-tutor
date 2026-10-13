@@ -13,10 +13,14 @@ const PATHS = {
       <path d="m20 20-3.5-3.5" />
     </>
   ),
+  // After Lucide's "gavel" (ISC licence): head, handle, and the two strike lines.
   gavel: (
     <>
-      <path d="m14 4 6 6M11.5 6.5l6 6M9 9l6 6M16.5 3.5l4 4-6.5 6.5-4-4z" />
-      <path d="m10 14-6 6M3 21h8" />
+      <path d="m14.5 12.5-8 8a2.12 2.12 0 1 1-3-3l8-8" />
+      <path d="m16 16 6-6" />
+      <path d="m8 8 6-6" />
+      <path d="m9 7 8 8" />
+      <path d="m21 11-8-8" />
     </>
   ),
   star: <polygon points="12 2.5 14.9 8.8 21.5 9.4 16.5 13.9 18 20.5 12 17 6 20.5 7.5 13.9 2.5 9.4 9.1 8.8" />,
