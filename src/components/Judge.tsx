@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import {
   askJudge,
+  cachedHistory,
+  clearHistory,
+  deleteThread,
+  fetchHistory,
   getAllowance,
   loadConversation,
+  openThread,
+  rememberThread,
   saveConversation,
   suggestCards,
   type Allowance,
+  type Conversation,
   type JudgeEvent,
   type JudgeMessage,
+  type ThreadSummary,
 } from "../lib/judge";
 import { Icon } from "./Icon";
 import { ManaCost } from "./ManaCost";
@@ -25,10 +33,13 @@ type Busy = { status: string | null; draft: string } | null;
 
 /**
  * Ask the rules judge. Cards "on the table" go with every question until
- * removed; the conversation stays on this device until "New question".
+ * removed. Every answered thread goes into History (last 50, synced across
+ * your devices), where it can be reread or continued.
  */
 export function Judge() {
-  const [{ messages, cards }, setConvo] = useState(loadConversation);
+  const [convo, setConvo] = useState<Conversation>(loadConversation);
+  const { messages, cards } = convo;
+  const [showHistory, setShowHistory] = useState(false);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +50,7 @@ export function Judge() {
   const abortRef = useRef<AbortController | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => saveConversation(messages, cards), [messages, cards]);
+  useEffect(() => saveConversation(convo), [convo]);
 
   useEffect(() => {
     getAllowance().then(setAllowance, () => {});
@@ -65,7 +76,8 @@ export function Judge() {
     const q = question.trim();
     if (!q || busy) return;
     const history: JudgeMessage[] = [...messages, { role: "user", content: q }];
-    setConvo((c) => ({ ...c, messages: history }));
+    const asked = { messages: history, cards, threadId: convo.threadId };
+    setConvo(asked);
     setInput("");
     setError(null);
     setBusy({ status: "Reading the question", draft: "" });
@@ -73,8 +85,11 @@ export function Judge() {
     abortRef.current = ac;
     let draft = "";
     let failed = false;
+    let refused = false;
+    let threadId = convo.threadId;
     const onEvent = (e: JudgeEvent) => {
-      if (e.type === "status") setBusy({ status: e.text, draft: "" });
+      if (e.type === "thread") threadId = e.id;
+      else if (e.type === "status") setBusy({ status: e.text, draft: "" });
       else if (e.type === "reset") {
         draft = "";
         setBusy((b) => (b ? { ...b, draft: "" } : b));
@@ -82,6 +97,7 @@ export function Judge() {
         draft += e.delta;
         setBusy({ status: null, draft });
       } else if (e.type === "done") {
+        refused = !!e.refused;
         setAllowance((a) => (a ? { ...a, remaining: e.remaining } : a));
       } else if (e.type === "error") {
         failed = true;
@@ -89,7 +105,7 @@ export function Judge() {
       }
     };
     try {
-      await askJudge(history, cards, onEvent, ac.signal);
+      await askJudge(asked, onEvent, ac.signal);
     } catch (err) {
       if (!ac.signal.aborted) {
         failed = true;
@@ -98,10 +114,15 @@ export function Judge() {
     } finally {
       setBusy(null);
       abortRef.current = null;
-      if (draft.trim()) setConvo((c) => ({ ...c, messages: [...c.messages, { role: "assistant", content: draft }] }));
+      if (draft.trim()) {
+        const answered: Conversation = { ...asked, messages: [...history, { role: "assistant", content: draft }], threadId };
+        setConvo(answered);
+        // The server saved it to History; keep this device's copy in step (refusals aren't saved).
+        if (!refused) rememberThread(answered);
+      }
       // Nothing came back: take the question off again so it can be re-sent.
       else if (failed || ac.signal.aborted) {
-        setConvo((c) => ({ ...c, messages: c.messages.slice(0, -1) }));
+        setConvo({ ...asked, messages: messages });
         setInput(q);
       }
     }
@@ -127,15 +148,24 @@ export function Judge() {
             : " "}
         </span>
         {allowance?.cr && <span>· Rules effective {allowance.cr}</span>}
-        {(messages.length > 0 || cards.length > 0) && (
+        <span className="ml-auto flex gap-2">
           <button
             type="button"
-            onClick={newQuestion}
-            className="ml-auto rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text) hover:bg-white/5"
+            onClick={() => setShowHistory(true)}
+            className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text) hover:bg-white/5"
           >
-            New question
+            History
           </button>
-        )}
+          {(messages.length > 0 || cards.length > 0) && (
+            <button
+              type="button"
+              onClick={newQuestion}
+              className="rounded border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text) hover:bg-white/5"
+            >
+              New question
+            </button>
+          )}
+        </span>
       </div>
 
       {!online && (
@@ -266,6 +296,20 @@ export function Judge() {
         </form>
       </div>
 
+      {showHistory && (
+        <HistorySheet
+          currentId={convo.threadId}
+          onOpen={(c) => {
+            abortRef.current?.abort();
+            setConvo(c);
+            setError(null);
+            setInput("");
+            setShowHistory(false);
+          }}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
+
       {viewing && (
         <CardPreview
           name={viewing}
@@ -287,6 +331,142 @@ export function Judge() {
         />
       )}
     </div>
+  );
+}
+
+function when(iso: string): string {
+  const d = new Date(iso);
+  const days = Math.floor((Date.now() - d.getTime()) / 86_400_000);
+  if (days < 1 && new Date().getDate() === d.getDate()) return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  if (days < 7) return d.toLocaleDateString([], { weekday: "short" });
+  return d.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+/** Your past questions (last 50, synced across your devices). Tap one to reread or continue it. */
+function HistorySheet({
+  currentId,
+  onOpen,
+  onClose,
+}: {
+  currentId?: string;
+  onOpen: (c: Conversation) => void;
+  onClose: () => void;
+}) {
+  const [threads, setThreads] = useState<ThreadSummary[]>(cachedHistory);
+  const [fresh, setFresh] = useState(false);
+  const [q, setQ] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [confirmClear, setConfirmClear] = useState(false);
+
+  useEffect(() => {
+    fetchHistory().then(
+      (t) => {
+        setThreads(t);
+        setFresh(true);
+      },
+      () => setError(navigator.onLine ? "Couldn't load your history. Showing what this device saved." : null),
+    );
+  }, []);
+
+  const needle = q.trim().toLowerCase();
+  const shown = needle
+    ? threads.filter((t) => (t.title + " " + t.cards.join(" ")).toLowerCase().includes(needle))
+    : threads;
+
+  const run = async (fn: () => Promise<void>) => {
+    setError(null);
+    try {
+      await fn();
+    } catch (err) {
+      setError(navigator.onLine ? (err instanceof Error ? err.message : String(err)) : "That needs a connection.");
+    }
+  };
+
+  return (
+    <Sheet
+      title="History"
+      onClose={onClose}
+      action={
+        threads.length > 0 &&
+        (confirmClear ? (
+          <span className="flex items-center gap-2 text-sm">
+            <button
+              type="button"
+              onClick={() =>
+                run(async () => {
+                  await clearHistory();
+                  setThreads([]);
+                  setConfirmClear(false);
+                })
+              }
+              className="rounded bg-red-500/80 px-2 py-1 text-white hover:bg-red-500"
+            >
+              Clear all
+            </button>
+            <button type="button" onClick={() => setConfirmClear(false)} className="text-(--color-text-dim)">
+              Cancel
+            </button>
+          </span>
+        ) : (
+          <button type="button" onClick={() => setConfirmClear(true)} className="text-sm text-(--color-text-dim) hover:text-red-300">
+            Clear all
+          </button>
+        ))
+      }
+    >
+      {threads.length > 0 && (
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search your questions or cards"
+          aria-label="Search history"
+          className="mb-3 w-full rounded-lg border border-(--color-border) bg-(--color-bg) px-3 py-2 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
+        />
+      )}
+      {error && <p className="mb-2 text-sm text-amber-300">{error}</p>}
+      {threads.length === 0 ? (
+        <p className="text-sm text-(--color-text-dim)">
+          {fresh || !navigator.onLine ? "No questions yet. Every answered question lands here." : "Loading…"}
+        </p>
+      ) : shown.length === 0 ? (
+        <p className="text-sm text-(--color-text-dim)">Nothing matches “{q}”.</p>
+      ) : (
+        <ul className="divide-y divide-(--color-border)">
+          {shown.map((t) => (
+            <li key={t.id} className="flex items-start gap-2 py-2.5">
+              <button
+                type="button"
+                onClick={() => run(async () => onOpen(await openThread(t.id)))}
+                className="min-w-0 flex-1 text-left"
+              >
+                <span className={"line-clamp-2 text-sm " + (t.id === currentId ? "text-(--color-accent-bright)" : "text-(--color-text)")}>
+                  {t.title}
+                </span>
+                <span className="mt-0.5 block truncate text-xs text-(--color-text-dim)">
+                  {when(t.updatedAt)}
+                  {t.questions > 1 && ` · ${t.questions} questions`}
+                  {t.cards.length > 0 && ` · ${t.cards.join(", ")}`}
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  run(async () => {
+                    await deleteThread(t.id);
+                    setThreads((list) => list.filter((x) => x.id !== t.id));
+                  })
+                }
+                aria-label={`Delete “${t.title}”`}
+                className="shrink-0 rounded p-1.5 text-(--color-text-dim) hover:bg-white/5 hover:text-red-300"
+              >
+                <Icon name="close" className="h-4 w-4" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Sheet>
   );
 }
 

@@ -6,22 +6,41 @@ import { glossChunks, loadCr, numsList, refsChunks, ruleChunks, searchChunks, ty
 import { lookupCards } from "./_scryfall.js";
 import { claimRuling, recordUsage, refundRuling, usageFor, type TokenUsage } from "./_judge-usage.js";
 import { judgePrompt } from "./_judge-prompt.js";
+import { OFF_TOPIC_REPLY, checkTopic, noteRefusal, refusedTooOften } from "./_judge-guard.js";
+import {
+  clearHistory,
+  deleteThread,
+  getThread,
+  isThreadId,
+  listThreads,
+  newThreadId,
+  saveThread,
+  type ThreadMessage,
+} from "./_judge-history.js";
 
 /**
  * The rules judge (Claude, billed to the owner's API key).
  *
  *   GET  /api/judge -> { used, limit, remaining, cr }             this month's allowance + CR date
- *   POST /api/judge { messages: [{role, content}], cards?: string[] }
+ *   GET  /api/judge?history=1 -> { threads }                    your last 50 threads (newest first)
+ *   GET  /api/judge?thread=ID -> { thread }                     one thread, to reread or continue
+ *   POST /api/judge { action: "deleteThread", id } | { action: "clearHistory" }
+ *   POST /api/judge { messages: [{role, content}], cards?: string[], threadId? }
  *        -> a stream of JSON lines:
+ *           {type:"thread", id}     the thread this question was saved to
  *           {type:"status", text}   what it's looking up ("Looking up Spell Queller")
  *           {type:"text", delta}    the answer, as it's written
  *           {type:"reset"}          drop any text so far (it went back to look something up)
  *           {type:"done", remaining}
  *           {type:"error", message}
  *
+ * Magic only: a small model screens every question first (_judge-guard.ts);
+ * anything else gets a fixed refusal and uses no ruling.
+ *
  * Each question uses one of the person's monthly rulings (refunded if it fails
- * before answering). The conversation lives in the browser and is sent whole,
- * so there's nothing to store here but the counts.
+ * before answering). The browser sends the conversation whole; after each
+ * answer the thread is saved to the person's history (_judge-history.ts),
+ * which only they can read.
  */
 
 const MODEL = "claude-opus-5-5";
@@ -88,8 +107,11 @@ async function runBrief(input: BriefInput, cr: Cr | null): Promise<string> {
   return out.join("\n") || "Nothing requested.";
 }
 
-/** The conversation as sent by the browser, checked and trimmed. */
-function readHistory(body: Record<string, unknown>): MessageParam[] | null {
+/**
+ * The conversation as sent by the browser, checked and trimmed: `msgs` for the
+ * model (the cards prefixed to the latest question), `plain` as asked (for history).
+ */
+function readHistory(body: Record<string, unknown>): { msgs: MessageParam[]; plain: ThreadMessage[]; cards: string[] } | null {
   if (!Array.isArray(body.messages)) return null;
   const msgs = body.messages
     .filter(
@@ -103,11 +125,12 @@ function readHistory(body: Record<string, unknown>): MessageParam[] | null {
   const cards = Array.isArray(body.cards)
     ? body.cards.filter((c): c is string => typeof c === "string" && !!c.trim()).slice(0, 10)
     : [];
+  const plain = msgs.map((m) => ({ ...m }));
   if (cards.length) {
     const last = msgs[msgs.length - 1];
     last.content = `Cards on the table: ${cards.join("; ")}\n\n${last.content}`;
   }
-  return msgs;
+  return { msgs, plain, cards };
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -115,6 +138,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const me = await requireUser(req, res, (u) => canUse(u, "judge"));
   if (!me) return;
 
+  if (req.method === "GET" && req.query.history) {
+    res.status(200).json({ threads: await listThreads(me.id) });
+    return;
+  }
+  if (req.method === "GET" && req.query.thread) {
+    const id = String(req.query.thread);
+    const thread = isThreadId(id) ? await getThread(me.id, id) : null;
+    if (!thread) res.status(404).json({ error: "That thread isn't in your history any more." });
+    else res.status(200).json({ thread });
+    return;
+  }
   if (req.method === "GET") {
     const [u, cr] = await Promise.all([usageFor(me), loadCr()]);
     res.status(200).json({
@@ -130,11 +164,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const history = readHistory((req.body ?? {}) as Record<string, unknown>);
-  if (!history) {
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  if (body.action === "deleteThread") {
+    if (isThreadId(body.id)) await deleteThread(me.id, body.id);
+    res.status(200).json({ ok: true });
+    return;
+  }
+  if (body.action === "clearHistory") {
+    await clearHistory(me.id);
+    res.status(200).json({ ok: true });
+    return;
+  }
+
+  const asked = readHistory(body);
+  if (!asked) {
     res.status(400).json({ error: "Ask a question." });
     return;
   }
+  const history = asked.msgs;
+  const threadId = isThreadId(body.threadId) ? body.threadId : newThreadId();
+
+  // Magic only. Checked before a ruling is used or the judge is called.
+  if (await refusedTooOften(me.id)) {
+    res.status(429).json({ error: "The judge is paused for you until tomorrow: it only answers Magic questions." });
+    return;
+  }
+  let topic: "other" | null;
+  try {
+    topic = await checkTopic(history);
+  } catch (err) {
+    console.error("judge topic check failed:", err);
+    res.status(503).json({ error: "The judge couldn't check your question just now. Try again in a moment." });
+    return;
+  }
+  if (topic) {
+    await noteRefusal(me.id);
+    const u = await usageFor(me);
+    res.status(200).setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+    res.write(JSON.stringify({ type: "text", delta: OFF_TOPIC_REPLY }) + "\n");
+    res.end(JSON.stringify({ type: "done", remaining: u.limit === null ? null : Math.max(0, u.limit - u.used), refused: true }) + "\n");
+    return;
+  }
+
   const remaining = await claimRuling(me);
   if (remaining === false) {
     res.status(429).json({ error: "That's all your rulings for this month. They reset on the 1st." });
@@ -144,7 +215,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.status(200);
   res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
   res.setHeader("X-Accel-Buffering", "no");
-  const send = (e: Record<string, unknown>) => res.write(JSON.stringify(e) + "\n");
+  // The answer as it's written (dropped when it goes back to look something up), for history.
+  let answer = "";
+  const send = (e: Record<string, unknown>) => {
+    if (e.type === "text") answer += String(e.delta);
+    else if (e.type === "reset") answer = "";
+    res.write(JSON.stringify(e) + "\n");
+  };
+  send({ type: "thread", id: threadId });
 
   const abort = new AbortController();
   res.on("close", () => abort.abort());
@@ -212,6 +290,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
     await recordUsage(me, tokens);
+    if (answer.trim()) {
+      await saveThread(me.id, {
+        id: threadId,
+        cards: asked.cards,
+        messages: [...asked.plain, { role: "assistant", content: answer }],
+      });
+    }
     send({ type: "done", remaining });
   } catch (err) {
     if (!answered) await refundRuling(me);
