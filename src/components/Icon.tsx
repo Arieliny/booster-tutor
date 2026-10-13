@@ -13,14 +13,12 @@ const PATHS = {
       <path d="m20 20-3.5-3.5" />
     </>
   ),
-  // After Lucide's "gavel" (ISC licence): head, handle, and the two strike lines.
-  gavel: (
+  // Scales of justice, after Lucide's "scale" (ISC licence). Ari picked it for the Judge.
+  scales: (
     <>
-      <path d="m14.5 12.5-8 8a2.12 2.12 0 1 1-3-3l8-8" />
-      <path d="m16 16 6-6" />
-      <path d="m8 8 6-6" />
-      <path d="m9 7 8 8" />
-      <path d="m21 11-8-8" />
+      <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+      <path d="M7 21h10M12 3v18M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
     </>
   ),
   star: <polygon points="12 2.5 14.9 8.8 21.5 9.4 16.5 13.9 18 20.5 12 17 6 20.5 7.5 13.9 2.5 9.4 9.1 8.8" />,
