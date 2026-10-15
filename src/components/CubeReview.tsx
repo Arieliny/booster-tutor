@@ -1014,40 +1014,27 @@ type DescribeState =
   | { kind: "error"; message: string }
   | { kind: "results"; query: string; cards: ScryHit[]; total: number; next?: string; more?: boolean };
 
-const LOOKUP_MODE_KEY = "booster-tutor-lookup-mode";
+/** Text that's already a Scryfall search ("t:creature c:wu", "o:flash mv<=2") goes straight to Scryfall. */
+const SCRYFALL_SYNTAX = /(^|\s)-?[a-z]+(:|<=|>=|=|<|>)\S/i;
 
 /**
- * Look up: one search for any card.
- * - By name: cards in the three cubes (and ones you added) come first and work
- *   offline; every other card comes from the card database, or Scryfall.
- * - Describe it: plain English becomes a Scryfall query (api/card-search.ts),
- *   shown and editable, run against Scryfall. Needs a connection.
+ * Look up: one search box for any card in Magic.
+ * - As you type: cards in the three cubes (and ones you added) come first and
+ *   work offline; every other card comes from the card database, or Scryfall.
+ * - Enter (or "Describe it"): plain English becomes a Scryfall query
+ *   (api/card-search.ts), shown and editable, run against Scryfall. Text that's
+ *   already Scryfall syntax skips that step. Needs a connection.
  */
 export function LookUp() {
   const st = useReviewState();
   const { decisions, detail, setDetail } = st;
-  const [mode, setModeState] = useState<"name" | "describe">(() => {
-    try {
-      return localStorage.getItem(LOOKUP_MODE_KEY) === "describe" ? "describe" : "name";
-    } catch {
-      return "name";
-    }
-  });
   const [q, setQ] = useState("");
   const [autoAdvance, setAutoAdvance] = useState(false);
-  const [desc, setDesc] = useState("");
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<DescribeState>({ kind: "idle" });
   const needle = q.trim().toLowerCase();
-
-  const setMode = (m: "name" | "describe") => {
-    setModeState(m);
-    try {
-      localStorage.setItem(LOOKUP_MODE_KEY, m);
-    } catch {
-      // Just a remembered preference.
-    }
-  };
+  // A described search stays up until the text changes.
+  const describing = found.kind !== "idle";
 
   const local = useMemo(
     () => (needle.length < 2 ? [] : searchReviewCards(needle, 50)),
@@ -1056,6 +1043,14 @@ export function LookUp() {
     [needle, st.extrasVersion],
   );
   const localSet = useMemo(() => new Set(local), [local]);
+
+  const onType = (text: string) => {
+    setQ(text);
+    if (describing) {
+      setFound({ kind: "idle" });
+      setQuery("");
+    }
+  };
 
   /** Run a Scryfall query (or fetch its next page). */
   const runQuery = async (scryQuery: string, nextPage?: string) => {
@@ -1076,13 +1071,17 @@ export function LookUp() {
         next: j.has_more ? j.next_page : undefined,
       });
     } catch {
-      setFound({ kind: "error", message: navigator.onLine ? "Scryfall didn't answer. Try again." : "Describe it needs a connection." });
+      setFound({ kind: "error", message: navigator.onLine ? "Scryfall didn't answer. Try again." : "Searching by description needs a connection." });
     }
   };
 
   const describe = async () => {
-    const text = desc.trim();
-    if (!text) return;
+    const text = q.trim();
+    if (!text || found.kind === "busy") return;
+    if (SCRYFALL_SYNTAX.test(text)) {
+      setQuery(text);
+      return runQuery(text);
+    }
     setFound({ kind: "busy", what: "Working out the search…" });
     try {
       const res = await fetch("/api/card-search", {
@@ -1095,7 +1094,7 @@ export function LookUp() {
       setQuery(j.query);
       await runQuery(j.query);
     } catch {
-      setFound({ kind: "error", message: navigator.onLine ? "Couldn't reach the server. Try again." : "Describe it needs a connection." });
+      setFound({ kind: "error", message: navigator.onLine ? "Couldn't reach the server. Try again." : "Searching by description needs a connection." });
     }
   };
 
@@ -1105,8 +1104,8 @@ export function LookUp() {
     else void st.openFromScryfall(h.name).catch(() => setFound({ kind: "error", message: `Couldn't open ${h.name}.` }));
   };
 
-  const inputClass =
-    "w-full rounded-lg border border-(--color-border) bg-(--color-bg-elev) py-3 pr-3 pl-10 text-base text-(--color-text) placeholder:text-(--color-text-dim)";
+  // Several words and no cube card matches: probably a description.
+  const looksDescribed = needle.split(/\s+/).length >= 3 && local.length === 0;
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -1116,97 +1115,79 @@ export function LookUp() {
         </p>
       )}
 
-      <Segmented
-        value={mode}
-        options={[
-          ["name", "By name"],
-          ["describe", "Describe it"],
-        ]}
-        onChange={setMode}
-      />
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void describe();
+        }}
+      >
+        <div className="relative flex-1">
+          <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-(--color-text-dim)" />
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => onType(e.target.value)}
+            onFocus={st.preloadDb}
+            placeholder="A card name, rules text, or describe it"
+            aria-label="Search for a card"
+            enterKeyHint="search"
+            className="w-full rounded-lg border border-(--color-border) bg-(--color-bg-elev) py-3 pr-3 pl-10 text-base text-(--color-text) placeholder:text-(--color-text-dim)"
+          />
+        </div>
+        {needle.length >= 2 && (
+          <button
+            type="submit"
+            disabled={found.kind === "busy"}
+            title="Search by what the card does (Enter)"
+            className={`shrink-0 rounded-lg px-4 text-sm font-semibold disabled:opacity-40 ${
+              looksDescribed && !describing
+                ? "bg-(--color-accent) text-black hover:bg-(--color-accent-bright)"
+                : "border border-(--color-border) text-(--color-text) hover:bg-white/5"
+            }`}
+          >
+            Describe it
+          </button>
+        )}
+      </form>
 
-      {mode === "name" ? (
+      {needle.length < 2 ? (
         <>
-          <div className="relative">
-            <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-(--color-text-dim)" />
-            <input
-              type="search"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              onFocus={st.preloadDb}
-              placeholder="Any card — name or rules text"
-              aria-label="Search for a card"
-              className={inputClass}
-            />
-          </div>
-
-          {needle.length < 2 ? (
-            <p className="text-sm text-(--color-text-dim)">
-              Open any card to see its text, official rulings, which cubes have it, and your call on it.
-            </p>
-          ) : (
-            <>
-              {local.length > 0 && (
-                <section className="space-y-1.5">
-                  <h3 className="px-1 text-xs font-medium text-(--color-text-dim)">
-                    In the cubes{local.length >= 50 ? " · first 50" : ` · ${local.length}`}
-                  </h3>
-                  <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
-                    {local.map((id) => (
-                      <Row
-                        key={id}
-                        c={card(id)}
-                        log={null}
-                        status={normalizeStatus(id, decisions[id]?.status)}
-                        selected={false}
-                        onOpen={(cid) => setDetail({ ids: local, index: local.indexOf(cid) })}
-                      />
-                    ))}
-                  </div>
-                </section>
-              )}
-              <CardLookup q={q} exclude={localSet} db={st.cardDb} onOpenCard={st.openLookedUp} onScryfall={st.openFromScryfall} />
-            </>
+          <p className="text-sm text-(--color-text-dim)">
+            Type a name to find any card in Magic, or describe one in your own words (“a blue-white creature with an enters
+            ability”) and press Enter. Open a card to see its text, official rulings, which cubes have it, and your call on it.
+          </p>
+          <CardDbPanel db={st.cardDb} />
+        </>
+      ) : !describing ? (
+        <>
+          {local.length > 0 && (
+            <section className="space-y-1.5">
+              <h3 className="px-1 text-xs font-medium text-(--color-text-dim)">
+                In the cubes{local.length >= 50 ? " · first 50" : ` · ${local.length}`}
+              </h3>
+              <div className="divide-y divide-(--color-border) rounded-lg border border-(--color-border)">
+                {local.map((id) => (
+                  <Row
+                    key={id}
+                    c={card(id)}
+                    log={null}
+                    status={normalizeStatus(id, decisions[id]?.status)}
+                    selected={false}
+                    onOpen={(cid) => setDetail({ ids: local, index: local.indexOf(cid) })}
+                  />
+                ))}
+              </div>
+            </section>
           )}
-
-          {/* While searching, the results already offer the download. */}
-          {needle.length < 2 && <CardDbPanel db={st.cardDb} />}
+          <CardLookup q={q} exclude={localSet} db={st.cardDb} onOpenCard={st.openLookedUp} onScryfall={st.openFromScryfall} />
         </>
       ) : (
         <>
-          <form
-            className="flex gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void describe();
-            }}
-          >
-            <div className="relative flex-1">
-              <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-(--color-text-dim)" />
-              <input
-                type="search"
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                placeholder="A blue-white creature with an enters ability"
-                aria-label="Describe the card"
-                className={inputClass}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={!desc.trim() || found.kind === "busy"}
-              className="shrink-0 rounded-lg bg-(--color-accent) px-4 text-sm font-semibold text-black hover:bg-(--color-accent-bright) disabled:opacity-40"
-            >
-              Search
-            </button>
-          </form>
+          <button type="button" onClick={() => onType(q)} className="px-1 text-sm text-(--color-accent) hover:underline">
+            ← Back to name search
+          </button>
 
-          {found.kind === "idle" && (
-            <p className="text-sm text-(--color-text-dim)">
-              Describe the card in your own words: colors, type, what it does, mana value. You'll see the Scryfall search it
-              becomes and can tweak it. Needs a connection.
-            </p>
-          )}
           {found.kind === "busy" && (
             <p className="flex items-center gap-2 text-sm text-(--color-text-dim)">
               <span className="h-3 w-3 animate-spin rounded-full border-2 border-(--color-accent) border-t-transparent" />
