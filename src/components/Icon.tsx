@@ -39,6 +39,14 @@ const PATHS = {
       <path d="M3 3v5h5M12 7v5l3 2" />
     </>
   ),
+  undo: <path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />,
+  dice: (
+    <>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="3" />
+      <path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01" strokeWidth={2.6} strokeLinecap="round" />
+    </>
+  ),
+  more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={2.8} strokeLinecap="round" />,
   sparkle: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
   columns: (
     <>
