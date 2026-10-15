@@ -2,10 +2,15 @@
 /**
  * Builds the Cube review data file: src/data/cube-review.json
  *
- *   node --use-system-ca scripts/build-cube-review.mjs [--since YYYY-MM-DD]
+ *   node --use-system-ca scripts/build-cube-review.mjs [--since YYYY-MM-DD] [--soft]
  *
- * Re-run any time to refresh, then commit + deploy (the app precaches the data,
- * so it works offline after one visit).
+ * Runs on every Vercel deploy (vercel.json buildCommand, with --soft), so the
+ * live app always has the cubes and changelogs as of its last deploy. Run it
+ * locally too, to refresh the committed copy. The app precaches the data, so
+ * it works offline after one visit.
+ *
+ * --soft: if Cube Cobra or Scryfall fail, or the result looks wrong, keep the
+ * committed src/data/cube-review.json and let the build carry on.
  *
  * Sources:
  *  - Cube lists: Cube Cobra /cube/api/cubeJSON/{id}
@@ -34,6 +39,15 @@ const CONFIG = {
   changelogSince: "2026-01-01",
   set: "fra",
 };
+
+const SOFT = process.argv.includes("--soft");
+if (SOFT) {
+  process.on("uncaughtException", (err) => {
+    console.error(`cube-review: ${err.message}`);
+    console.error("cube-review: --soft, keeping the committed src/data/cube-review.json");
+    process.exit(0);
+  });
+}
 
 const argSince = process.argv.indexOf("--since");
 if (argSince > 0) CONFIG.changelogSince = process.argv[argSince + 1];
@@ -207,6 +221,12 @@ const allSids = Object.values(cubes).flatMap((c) => [
     return [...x.adds, ...x.removes];
   }),
 ]);
+// A cube that comes back nearly empty means Cube Cobra changed or failed, not
+// that the cube was emptied: never overwrite good data with it.
+for (const c of Object.values(cubes)) {
+  if (c.sids.length < 200) throw new Error(`${c.label} came back with only ${c.sids.length} cards`);
+}
+
 const { found, missing } = await fetchCollection(allSids);
 const fra = await fetchSet(CONFIG.set);
 console.log(`  Scryfall      ${found.size} printings resolved, ${missing.length} not found`);
@@ -294,6 +314,7 @@ for (const [key, c] of Object.entries(cubes)) {
   }));
 }
 
+if (missing.length > allSids.length * 0.05) throw new Error(`Scryfall couldn't find ${missing.length} of ${allSids.length} printings`);
 writeFileSync(OUT, JSON.stringify(out));
 
 // ---------------------------------------------------------------- counts
