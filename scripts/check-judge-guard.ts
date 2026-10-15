@@ -29,7 +29,7 @@ for (const c of CASES) {
     ...(c.prev ? [{ role: "user" as const, content: "earlier question" }, { role: "assistant" as const, content: c.prev }] : []),
     { role: "user" as const, content: c.q },
   ];
-  const got = (await checkTopic(history)) ? "OTHER" : "MAGIC";
+  const got = (await checkTopic(history)).topic ? "OTHER" : "MAGIC";
   if (got === c.expect) pass++;
   console.log(`${got === c.expect ? "PASS" : "FAIL"}  ${got.padEnd(5)}  ${c.q}`);
 }

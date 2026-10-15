@@ -5,6 +5,7 @@ import {
   clearHistory,
   deleteThread,
   fetchHistory,
+  formatCost,
   getAllowance,
   loadConversation,
   openThread,
@@ -86,6 +87,7 @@ export function Judge() {
     let draft = "";
     let failed = false;
     let refused = false;
+    let cost: number | undefined;
     let threadId = convo.threadId;
     const onEvent = (e: JudgeEvent) => {
       if (e.type === "thread") threadId = e.id;
@@ -98,6 +100,7 @@ export function Judge() {
         setBusy({ status: null, draft });
       } else if (e.type === "done") {
         refused = !!e.refused;
+        cost = e.cost;
         setAllowance((a) => (a ? { ...a, remaining: e.remaining } : a));
       } else if (e.type === "error") {
         failed = true;
@@ -115,7 +118,8 @@ export function Judge() {
       setBusy(null);
       abortRef.current = null;
       if (draft.trim()) {
-        const answered: Conversation = { ...asked, messages: [...history, { role: "assistant", content: draft }], threadId };
+        const answer: JudgeMessage = cost === undefined ? { role: "assistant", content: draft } : { role: "assistant", content: draft, cost };
+        const answered: Conversation = { ...asked, messages: [...history, answer], threadId };
         setConvo(answered);
         // The server saved it to History; keep this device's copy in step (refusals aren't saved).
         if (!refused) rememberThread(answered);
@@ -206,6 +210,11 @@ export function Judge() {
           ) : (
             <div key={i} className="rounded-xl border border-(--color-border) px-3 py-3 text-sm text-(--color-text-dim)">
               <Markdown text={m.content} />
+              {m.cost !== undefined && (
+                <div className="mt-2 text-right text-xs text-(--color-text-dim)/70" title="Estimated from Anthropic's list prices. Only you see this.">
+                  {formatCost(m.cost)}
+                </div>
+              )}
             </div>
           ),
         )}

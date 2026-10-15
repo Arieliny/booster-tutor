@@ -9,6 +9,13 @@
 export interface JudgeMessage {
   role: "user" | "assistant";
   content: string;
+  /** Answers only, and only for the owner: what it cost, estimated US dollars. */
+  cost?: number;
+}
+
+/** "≈ 7.4¢" under a dollar, "≈ $1.23" over. */
+export function formatCost(dollars: number): string {
+  return dollars < 1 ? `≈ ${(dollars * 100).toFixed(1)}¢` : `≈ $${dollars.toFixed(2)}`;
 }
 
 /** This month's rulings. */
@@ -23,7 +30,7 @@ export type JudgeEvent =
   | { type: "status"; text: string }
   | { type: "text"; delta: string }
   | { type: "reset" }
-  | { type: "done"; remaining: number | null; refused?: boolean }
+  | { type: "done"; remaining: number | null; refused?: boolean; cost?: number }
   | { type: "error"; message: string };
 
 export interface Conversation {

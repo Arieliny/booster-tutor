@@ -14,6 +14,9 @@ import {
 
 const FEATURES = Object.keys(FEATURE_LABELS) as Feature[];
 
+/** Judge spend, estimated from Anthropic's list prices. */
+const spend = (dollars: number) => `≈ $${dollars.toFixed(2)}`;
+
 function ago(iso: string | null): string {
   if (!iso) return "never";
   const mins = Math.round((Date.now() - Date.parse(iso)) / 60000);
@@ -103,7 +106,7 @@ function JudgeLimit({
         className="w-16 rounded border border-(--color-border) bg-(--color-bg) px-2 py-1 text-center text-(--color-text)"
       />
       <span>
-        a month{u.judgeLimit === undefined ? "" : ` · default is ${defaultLimit}`}
+        a month{u.judgeLimit === undefined ? "" : ` · default is ${defaultLimit}`} · {spend(u.judge.dollars)} this month
       </span>
     </div>
   );
@@ -169,6 +172,12 @@ export function Admin() {
       <p className="text-sm text-(--color-text-dim)">
         Guests see only what you tick. Sign-in links work once and expire after 7 days.
       </p>
+      <p className="text-sm text-(--color-text-dim)">
+        Judge spend this month, everyone: <b className="font-medium text-(--color-text)">{spend(users.reduce((sum, u) => sum + u.judge.dollars, 0))}</b>
+        <span className="block text-xs">
+          Estimated from Anthropic's list prices (rulings, web searches and the Magic-only check). The Anthropic Console has the real bill.
+        </span>
+      </p>
 
       {error && <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</p>}
 
@@ -181,7 +190,7 @@ export function Admin() {
                 Owner · everything · {owner.devices} device{owner.devices === 1 ? "" : "s"} signed in
               </div>
               <div className="text-xs text-(--color-text-dim)">
-                Judge: {owner.judge.used} this month · no limit
+                Judge: {owner.judge.used} this month · no limit · {spend(owner.judge.dollars)}
               </div>
             </div>
             <button
@@ -311,7 +320,7 @@ export function Admin() {
             ))}
           </div>
           <p className="text-xs text-(--color-text-dim)">
-            The judge, card lookup and life counter will appear here once they're built.
+            My cube and Look up are just for you.
           </p>
           <button
             type="submit"

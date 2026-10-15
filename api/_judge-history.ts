@@ -15,6 +15,8 @@ const MAX_MESSAGES = 30;
 export interface ThreadMessage {
   role: "user" | "assistant";
   content: string;
+  /** Answers only, owner only: estimated US dollars. */
+  cost?: number;
 }
 
 export interface Thread {

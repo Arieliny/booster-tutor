@@ -4,7 +4,8 @@ import type { MessageParam, Tool, ToolResultBlockParam, ToolUnion, Usage } from 
 import { canUse, requireUser } from "./_auth.js";
 import { glossChunks, loadCr, numsList, refsChunks, ruleChunks, searchChunks, type Cr } from "./_cr.js";
 import { lookupCards } from "./_scryfall.js";
-import { claimRuling, recordUsage, refundRuling, usageFor, type TokenUsage } from "./_judge-usage.js";
+import { claimRuling, recordGuard, recordUsage, refundRuling, usageFor, type TokenUsage } from "./_judge-usage.js";
+import { dollarsFor, tokensOf } from "./_judge-cost.js";
 import { judgePrompt } from "./_judge-prompt.js";
 import { OFF_TOPIC_REPLY, checkTopic, noteRefusal, refusedTooOften } from "./_judge-guard.js";
 import {
@@ -31,7 +32,7 @@ import {
  *           {type:"status", text}   what it's looking up ("Looking up Spell Queller")
  *           {type:"text", delta}    the answer, as it's written
  *           {type:"reset"}          drop any text so far (it went back to look something up)
- *           {type:"done", remaining}
+ *           {type:"done", remaining, cost?}   cost: estimated US dollars, sent to the owner only
  *           {type:"error", message}
  *
  * Magic only: a small model screens every question first (_judge-guard.ts);
@@ -113,19 +114,23 @@ async function runBrief(input: BriefInput, cr: Cr | null): Promise<string> {
  */
 function readHistory(body: Record<string, unknown>): { msgs: MessageParam[]; plain: ThreadMessage[]; cards: string[] } | null {
   if (!Array.isArray(body.messages)) return null;
-  const msgs = body.messages
+  const sent = body.messages
     .filter(
-      (m): m is { role: "user" | "assistant"; content: string } =>
+      (m): m is { role: "user" | "assistant"; content: string; cost?: unknown } =>
         !!m && typeof m === "object" && (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && !!m.content.trim(),
     )
-    .slice(-MAX_HISTORY)
-    .map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
-  while (msgs.length && msgs[0].role !== "user") msgs.shift();
-  if (!msgs.length || msgs[msgs.length - 1].role !== "user") return null;
+    .slice(-MAX_HISTORY);
+  while (sent.length && sent[0].role !== "user") sent.shift();
+  if (!sent.length || sent[sent.length - 1].role !== "user") return null;
+  const msgs: MessageParam[] = sent.map((m) => ({ role: m.role, content: m.content.slice(0, MAX_CHARS) }));
   const cards = Array.isArray(body.cards)
     ? body.cards.filter((c): c is string => typeof c === "string" && !!c.trim()).slice(0, 10)
     : [];
-  const plain = msgs.map((m) => ({ ...m }));
+  // Earlier answers keep their cost in history (the model never sees it).
+  const plain: ThreadMessage[] = sent.map((m) => {
+    const content = m.content.slice(0, MAX_CHARS);
+    return typeof m.cost === "number" && Number.isFinite(m.cost) ? { role: m.role, content, cost: m.cost } : { role: m.role, content };
+  });
   if (cards.length) {
     const last = msgs[msgs.length - 1];
     last.content = `Cards on the table: ${cards.join("; ")}\n\n${last.content}`;
@@ -189,9 +194,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(429).json({ error: "The judge is paused for you until tomorrow: it only answers Magic questions." });
     return;
   }
+  // Costs are shown to the owner only.
+  const showCost = me.role === "owner";
   let topic: "other" | null;
+  let guardDollars: number;
   try {
-    topic = await checkTopic(history);
+    ({ topic, dollars: guardDollars } = await checkTopic(history));
+    await recordGuard(me, guardDollars);
   } catch (err) {
     console.error("judge topic check failed:", err);
     res.status(503).json({ error: "The judge couldn't check your question just now. Try again in a moment." });
@@ -202,7 +211,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const u = await usageFor(me);
     res.status(200).setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
     res.write(JSON.stringify({ type: "text", delta: OFF_TOPIC_REPLY }) + "\n");
-    res.end(JSON.stringify({ type: "done", remaining: u.limit === null ? null : Math.max(0, u.limit - u.used), refused: true }) + "\n");
+    const left = u.limit === null ? null : Math.max(0, u.limit - u.used);
+    res.end(JSON.stringify({ type: "done", remaining: left, refused: true, ...(showCost && { cost: guardDollars }) }) + "\n");
     return;
   }
 
@@ -227,12 +237,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const abort = new AbortController();
   res.on("close", () => abort.abort());
   const tokens: TokenUsage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+  let searches = 0;
   const count = (u: Usage) => {
-    tokens.input += u.input_tokens;
-    tokens.output += u.output_tokens;
-    tokens.cacheRead += u.cache_read_input_tokens ?? 0;
-    tokens.cacheWrite += u.cache_creation_input_tokens ?? 0;
+    const t = tokensOf(u);
+    tokens.input += t.input;
+    tokens.output += t.output;
+    tokens.cacheRead += t.cacheRead;
+    tokens.cacheWrite += t.cacheWrite;
+    searches += u.server_tool_use?.web_search_requests ?? 0;
   };
+  const cost = () => dollarsFor(MODEL, tokens, searches) + guardDollars;
   let answered = false;
 
   try {
@@ -289,18 +303,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         messages.push({ role: "user", content: results });
       }
     }
-    await recordUsage(me, tokens);
+    await recordUsage(me, tokens, searches);
     if (answer.trim()) {
       await saveThread(me.id, {
         id: threadId,
         cards: asked.cards,
-        messages: [...asked.plain, { role: "assistant", content: answer }],
+        messages: [...asked.plain, { role: "assistant", content: answer, ...(showCost && { cost: cost() }) }],
       });
     }
-    send({ type: "done", remaining });
+    send({ type: "done", remaining, ...(showCost && { cost: cost() }) });
   } catch (err) {
     if (!answered) await refundRuling(me);
-    if (tokens.input) await recordUsage(me, tokens);
+    if (tokens.input) await recordUsage(me, tokens, searches);
     console.error("judge error:", err);
     const message =
       err instanceof Anthropic.APIError

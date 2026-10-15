@@ -184,6 +184,9 @@ export interface AdminUser extends Me {
     used: number;
     limit: number | null;
     tokens: { input: number; output: number; cacheRead: number; cacheWrite: number };
+    searches: number;
+    /** Estimated spend this month, US dollars. */
+    dollars: number;
   };
 }
 
