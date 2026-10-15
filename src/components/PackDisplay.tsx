@@ -5,7 +5,7 @@ interface Props {
   pack: CubeCard[] | null;
   warning?: string;
   onSpotlight: (index: number) => void;
-  onOpenPack: () => void;
+  /** No cards left in the cube this match. */
   emptyDisabled?: boolean;
 }
 
@@ -13,19 +13,15 @@ export function PackDisplay({
   pack,
   warning,
   onSpotlight,
-  onOpenPack,
   emptyDisabled,
 }: Props) {
   if (!pack) {
     return (
-      <button
-        type="button"
-        onClick={onOpenPack}
-        disabled={emptyDisabled}
-        className="flex min-h-[300px] w-full items-center justify-center rounded-xl border border-dashed border-(--color-border) p-8 text-center text-(--color-text-dim) transition-colors hover:border-(--color-accent) hover:bg-(--color-accent)/5 hover:text-(--color-text) disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-(--color-border) disabled:hover:bg-transparent disabled:hover:text-(--color-text-dim)"
-      >
-        Tap here to open pack and see cards.
-      </button>
+      <p className="rounded-xl border border-dashed border-(--color-border) px-4 py-10 text-center text-sm text-(--color-text-dim)">
+        {emptyDisabled
+          ? "Every card in this cube has been picked. Start a new match to put them all back."
+          : "Your pack shows up here. Tap a card to look at it, then pick it."}
+      </p>
     );
   }
 

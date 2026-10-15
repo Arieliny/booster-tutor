@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../lib/auth-context";
+import { AboutSheet } from "./Footer";
 
 /** Avatar in the top bar: who's signed in, the owner's rarely-used tools, and sign out. */
 export function AccountMenu({ onAdmin, onManageCubes }: { onAdmin: () => void; onManageCubes?: () => void }) {
   const { me, offline, signOut } = useAuth();
   const [open, setOpen] = useState(false);
+  const [about, setAbout] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -62,6 +65,16 @@ export function AccountMenu({ onAdmin, onManageCubes }: { onAdmin: () => void; o
           )}
           <button
             type="button"
+            onClick={() => {
+              setOpen(false);
+              setAbout(true);
+            }}
+            className="block w-full rounded px-3 py-2 text-left text-(--color-text) hover:bg-white/5"
+          >
+            About
+          </button>
+          <button
+            type="button"
             onClick={() => void signOut()}
             className="block w-full rounded px-3 py-2 text-left text-red-300 hover:bg-red-500/10"
           >
@@ -69,6 +82,8 @@ export function AccountMenu({ onAdmin, onManageCubes }: { onAdmin: () => void; o
           </button>
         </div>
       )}
+      {/* At the page root: inside the sticky header it would sit under the bottom nav. */}
+      {about && createPortal(<AboutSheet onClose={() => setAbout(false)} />, document.body)}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { GenerationMode } from "../types";
 import { MAX_PACK_SIZE, MIN_PACK_SIZE } from "../lib/pack-generator";
 import { HelpTip } from "./HelpTip";
@@ -14,15 +15,16 @@ interface Props {
 }
 
 const MODE_LABELS: Record<GenerationMode, string> = {
-  random: "Pure Random",
-  "color-balanced": "Color-Balanced",
+  random: "Random",
+  "color-balanced": "Color-balanced",
 };
 
 const MODES: GenerationMode[] = ["random", "color-balanced"];
 
 const NEW_MATCH_TOOLTIP =
-  "Booster Tutor only removes cards from your cube for the rest of the current match. Use \"new match\" when you start a fresh game against a different opponent (or a new round) and want the full cube available again.";
+  "Booster Tutor only removes cards from your cube for the rest of the current match. Start a new match when you play a different opponent (or a new round) and want the full cube available again.";
 
+/** Play: one big "Open a pack", with the pack settings and "new match" tucked underneath. */
 export function Controls({
   mode,
   onModeChange,
@@ -33,85 +35,114 @@ export function Controls({
   poolEmpty,
   hasPickedCards,
 }: Props) {
-  const clampSize = (n: number) =>
-    Math.min(MAX_PACK_SIZE, Math.max(MIN_PACK_SIZE, Math.round(n) || MIN_PACK_SIZE));
+  const [showSettings, setShowSettings] = useState(false);
+  const clampSize = (n: number) => Math.min(MAX_PACK_SIZE, Math.max(MIN_PACK_SIZE, Math.round(n) || MIN_PACK_SIZE));
+  const stepClass =
+    "flex h-9 w-9 items-center justify-center rounded-lg border border-(--color-border) text-lg text-(--color-text) hover:bg-white/5 disabled:opacity-30";
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-3">
-        <div
-          role="radiogroup"
-          aria-label="Generation mode"
-          className="inline-flex overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg-elev)"
-        >
-          {MODES.map((m) => {
-            const active = mode === m;
-            return (
-              <button
-                key={m}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                onClick={() => onModeChange(m)}
-                title={MODE_LABELS[m]}
-                className={
-                  "px-3 py-2 text-sm transition-colors " +
-                  (active
-                    ? "bg-(--color-accent) text-black font-medium"
-                    : "text-(--color-text-dim) hover:bg-white/5")
-                }
-              >
-                {MODE_LABELS[m]}
-              </button>
-            );
-          })}
-        </div>
+    <div className="space-y-2">
+      <button
+        type="button"
+        onClick={onOpenSameMatch}
+        disabled={poolEmpty}
+        className="w-full rounded-xl bg-(--color-accent) px-4 py-4 text-base font-semibold text-black transition-colors hover:bg-(--color-accent-bright) disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {poolEmpty ? "No cards left this match" : "Open a pack"}
+      </button>
 
-        <div className="flex items-center gap-1">
-          <label
-            htmlFor="pack-size"
-            className="text-xs uppercase tracking-wide text-(--color-text-dim)"
-          >
-            Pack size
-          </label>
-          <input
-            id="pack-size"
-            type="number"
-            min={MIN_PACK_SIZE}
-            max={MAX_PACK_SIZE}
-            value={packSize}
-            onChange={(e) => onPackSizeChange(clampSize(Number(e.target.value)))}
-            className="w-16 rounded border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-center text-sm text-(--color-text)"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
+      <div className="flex items-center justify-between gap-2">
         <button
           type="button"
-          onClick={onOpenSameMatch}
-          disabled={poolEmpty}
-          className="flex-1 rounded-lg bg-(--color-accent) px-4 py-3 text-sm font-semibold text-black transition-colors hover:bg-(--color-accent-bright) disabled:cursor-not-allowed disabled:opacity-40 sm:flex-initial"
+          onClick={() => setShowSettings((s) => !s)}
+          aria-expanded={showSettings}
+          className="inline-flex items-center gap-1.5 rounded-full border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-white/5 hover:text-(--color-text)"
         >
-          Open pack — same match
+          {MODE_LABELS[mode]} · {packSize} cards
+          <span aria-hidden="true" className={"text-xs transition-transform " + (showSettings ? "rotate-180" : "")}>
+            ▾
+          </span>
         </button>
-        <div className="flex flex-1 items-center gap-1 sm:flex-initial">
+        <span className="flex items-center gap-1">
           <button
             type="button"
             onClick={onOpenNewMatch}
-            disabled={false /* always allowed */}
             className={
-              "flex-1 rounded-lg border px-4 py-3 text-sm font-semibold transition-colors sm:flex-initial " +
-              (hasPickedCards
-                ? "border-(--color-accent) text-(--color-accent) hover:bg-(--color-accent)/10"
-                : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+              "rounded px-2 py-1.5 text-sm hover:underline " + (hasPickedCards ? "text-(--color-accent)" : "text-(--color-text-dim)")
             }
           >
-            Open pack — new match
+            Start a new match
           </button>
           <HelpTip text={NEW_MATCH_TOOLTIP} label="What is a new match?" />
-        </div>
+        </span>
       </div>
+
+      {showSettings && (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
+          <div
+            role="radiogroup"
+            aria-label="How packs are made"
+            className="inline-flex overflow-hidden rounded-lg border border-(--color-border) bg-(--color-bg)"
+          >
+            {MODES.map((m) => {
+              const active = mode === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => onModeChange(m)}
+                  className={
+                    "px-3 py-2 text-sm transition-colors " +
+                    (active ? "bg-(--color-accent) font-medium text-black" : "text-(--color-text-dim) hover:bg-white/5")
+                  }
+                >
+                  {MODE_LABELS[m]}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-(--color-text-dim)">Cards a pack</span>
+            <button
+              type="button"
+              onClick={() => onPackSizeChange(clampSize(packSize - 1))}
+              disabled={packSize <= MIN_PACK_SIZE}
+              aria-label="Fewer cards"
+              className={stepClass}
+            >
+              −
+            </button>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={MIN_PACK_SIZE}
+              max={MAX_PACK_SIZE}
+              value={packSize}
+              onChange={(e) => onPackSizeChange(clampSize(Number(e.target.value)))}
+              aria-label="Cards a pack"
+              className="w-14 rounded-lg border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-center text-sm text-(--color-text)"
+            />
+            <button
+              type="button"
+              onClick={() => onPackSizeChange(clampSize(packSize + 1))}
+              disabled={packSize >= MAX_PACK_SIZE}
+              aria-label="More cards"
+              className={stepClass}
+            >
+              +
+            </button>
+          </div>
+
+          <p className="w-full text-xs text-(--color-text-dim)">
+            {mode === "random"
+              ? "Any cards from what's left in the cube."
+              : "Spread across the colors: at 15 cards, 2 of each color, 3 multicolor and 2 colorless."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

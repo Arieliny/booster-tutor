@@ -367,7 +367,6 @@ function App() {
                   pack={pack}
                   warning={packWarning}
                   onSpotlight={setSpotlightIndex}
-                  onOpenPack={handleOpenSameMatch}
                   emptyDisabled={pool.length === 0}
                 />
               )}
