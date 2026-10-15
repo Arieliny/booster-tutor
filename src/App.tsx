@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import type { Cube, CubeCard, GenerationMode } from "./types";
 import { DEFAULT_PACK_SIZE, generatePack } from "./lib/pack-generator";
 import {
@@ -35,6 +35,8 @@ import {
 } from "./lib/routes";
 import { useAuth } from "./lib/auth-context";
 import { AccountMenu } from "./components/AccountMenu";
+import { LifeCounter } from "./components/LifeCounter";
+import { PlayModeSwitch } from "./components/PlayModeSwitch";
 import { AppShell } from "./components/AppShell";
 import { PageHeader } from "./components/PageHeader";
 import { SyncChip } from "./components/SyncChip";
@@ -96,6 +98,11 @@ function App() {
   // Bumped by every nav tap, so tapping "My cube" from inside one of its lists
   // goes back to its home page.
   const [navCount, setNavCount] = useState(0);
+  // Tapping Play goes back to whichever of packs / life was last open.
+  const lastPlay = useRef<Tab>("packs");
+  useEffect(() => {
+    if (tab === "packs" || tab === "life") lastPlay.current = tab;
+  }, [tab]);
 
   /** Switch tab and reflect it in the URL so each view is linkable. */
   const setTab = (next: Tab) => {
@@ -272,7 +279,7 @@ function App() {
   const onPacksTab = tab === "packs";
 
   const navigate = (s: Section) => {
-    const target = sections.find((x) => x.id === s)?.tab;
+    const target = s === "play" && tabAllowed(lastPlay.current, me) ? lastPlay.current : sections.find((x) => x.id === s)?.tab;
     if (!target) return;
     setNavCount((n) => n + 1);
     setTab(target);
@@ -302,6 +309,8 @@ function App() {
           {!onPacksTab && (
             <PageHeader title="Collection checklist" onBack={() => setTab("cubeReview")} backLabel="Back to My cube" />
           )}
+
+          {onPacksTab && !inSpotlight && <PlayModeSwitch value="packs" onChange={setTab} />}
 
           {/* The cube in play, and how much of it is left this match. */}
           {!inSpotlight && (
@@ -408,6 +417,11 @@ function App() {
         <Suspense fallback={loading("your cube")}>
           <CubeReview key={navCount} onOpenChecklist={() => setTab("inventory")} />
         </Suspense>
+      ) : tab === "life" ? (
+        <div className="space-y-4">
+          <PlayModeSwitch value="life" onChange={setTab} />
+          <LifeCounter />
+        </div>
       ) : tab === "judge" ? (
         <Suspense fallback={loading("the judge")}>
           <Judge />

@@ -12,10 +12,11 @@
 
 import { can, type Me } from "./auth";
 
-export type Tab = "packs" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "judge" | "admin";
+export type Tab = "packs" | "life" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "judge" | "admin";
 
 export const TAB_PATHS: Record<Tab, string> = {
   packs: "/",
+  life: "/life",
   inventory: "/inventory",
   review: "/set-review",
   // Not a top-level tab — a condensed, printable view of the set review.
@@ -130,7 +131,7 @@ export type Section = "play" | "myCube" | "lookup" | "judge" | "grades";
  * account menu instead.
  */
 export const SECTIONS: { id: Section; label: string; tabs: Tab[] }[] = [
-  { id: "play", label: "Play", tabs: ["packs"] },
+  { id: "play", label: "Play", tabs: ["packs", "life"] },
   // The collection checklist (Inventory) opens from My cube's home page.
   { id: "myCube", label: "My cube", tabs: ["cubeReview", "inventory"] },
   { id: "lookup", label: "Look up", tabs: ["lookup"] },
@@ -145,6 +146,7 @@ export function sectionOf(tab: Tab): Section | null {
 /** Page title for the top bar. */
 export const TAB_TITLES: Record<Tab, string> = {
   packs: "Play",
+  life: "Play",
   inventory: "My cube",
   cubeReview: "My cube",
   lookup: "Look up",
@@ -168,7 +170,7 @@ export function tabUsesCube(tab: Tab): boolean {
  */
 export function tabAllowed(tab: Tab, me: Me): boolean {
   if (me.role === "owner") return true;
-  if (tab === "packs") return can(me, "play");
+  if (tab === "packs" || tab === "life") return can(me, "play");
   if (tab === "review" || tab === "reviewPrint") return can(me, "setReview");
   if (tab === "judge") return can(me, "judge");
   return false;
