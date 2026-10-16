@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { COLORS, COUNTERS, MARKERS, colorHex, type ColorKey, type CounterKey, type MarkerKey, type Player } from "../lib/life";
+import { dungeonOf } from "../lib/dungeons";
+import { COLORS, COUNTERS, MARKERS, colorHex, colorInk, type ColorKey, type CounterKey, type MarkerKey, type Player } from "../lib/life";
 import { Icon } from "./Icon";
 
 /** How far a seat's panel is turned so it faces its player (0 = upright for the phone's owner). */
@@ -25,10 +26,7 @@ function Turned({ turn, children }: { turn: Turn; children: (w: number, h: numbe
   return (
     <div ref={ref} className="relative h-full w-full">
       {size.w > 0 && (
-        <div
-          className="absolute top-1/2 left-1/2"
-          style={{ width: w, height: h, transform: `translate(-50%, -50%) rotate(${turn}deg)` }}
-        >
+        <div className="absolute top-1/2 left-1/2" style={{ width: w, height: h, transform: `translate(-50%, -50%) rotate(${turn}deg)` }}>
           {children(w, h)}
         </div>
       )}
@@ -36,7 +34,7 @@ function Turned({ turn, children }: { turn: Turn; children: (w: number, h: numbe
   );
 }
 
-/** Tap = ±1 on release; hold = ±5 after a moment, repeating while held. */
+/** Tap = ±1 on release; hold = ±10 after a moment, repeating while held. */
 function useHold(step: (by: number) => void, sign: 1 | -1) {
   const timer = useRef<number | undefined>(undefined);
   const held = useRef(false);
@@ -57,8 +55,8 @@ function useHold(step: (by: number) => void, sign: 1 | -1) {
       window.clearTimeout(timer.current);
       const tick = () => {
         held.current = true;
-        stepRef.current(5 * sign);
-        timer.current = window.setTimeout(tick, 600);
+        stepRef.current(10 * sign);
+        timer.current = window.setTimeout(tick, 700);
       };
       timer.current = window.setTimeout(tick, 450);
     },
@@ -85,29 +83,28 @@ interface Props {
   markers: Partial<Record<MarkerKey, number>>;
   index: number;
   highlight: "first" | "spin" | null;
+  /** Giving out the monarch or the initiative: what to say, and the tap that picks this seat. */
+  picking: string | null;
+  onPick: () => void;
   onLife: (by: number) => void;
   onSet: (life: number) => void;
   onCounter: (key: CounterKey, by: number) => void;
   onAddCounter: (key: CounterKey) => void;
   onRemoveCounter: (key: CounterKey) => void;
   onCmdr: (from: number, by: number) => void;
-  onMarker: (key: MarkerKey) => void;
+  onDungeon: () => void;
   onColor: (c: ColorKey) => void;
 }
 
 export function LifePanel(props: Props) {
   const { name, player, turn, highlight } = props;
-  const hex = colorHex(player.color);
   return (
     <div
       className={
-        "relative h-full min-h-0 overflow-hidden rounded-2xl border transition-shadow " +
-        (highlight === "first" ? "ring-4 ring-(--color-accent)" : highlight === "spin" ? "ring-2 ring-white/60" : "")
+        "relative h-full min-h-0 overflow-hidden rounded-2xl transition-shadow " +
+        (highlight === "first" ? "ring-4 ring-white" : highlight === "spin" ? "ring-2 ring-white/70" : "")
       }
-      style={{
-        borderColor: `color-mix(in srgb, ${hex} 55%, transparent)`,
-        background: `color-mix(in srgb, ${hex} 22%, var(--color-bg-elev))`,
-      }}
+      style={{ background: colorHex(player.color), color: colorInk(player.color) }}
       aria-label={name}
     >
       <Turned turn={turn}>{(w, h) => <Face {...props} w={w} h={h} key={name} />}</Turned>
@@ -117,7 +114,7 @@ export function LifePanel(props: Props) {
 }
 
 function Face(props: Props & { w: number; h: number }) {
-  const { name, player, w, h, highlight, markers, index, others } = props;
+  const { name, player, w, h, highlight, markers, index, others, picking } = props;
   const [delta, setDelta] = useState(0);
   const [mode, setMode] = useState<"play" | "edit" | "menu">("play");
   const timer = useRef<number | undefined>(undefined);
@@ -129,57 +126,54 @@ function Face(props: Props & { w: number; h: number }) {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setDelta(0), 1500);
   };
-  const plus = useHold(step, 1);
   const minus = useHold(step, -1);
+  const plus = useHold(step, 1);
 
-  const big = Math.max(36, Math.min(150, Math.min(w, h) * 0.42));
-  const compact = h < 200;
+  // As big as the seat allows: three digits still fit across.
+  const big = Math.max(44, Math.min(240, h * 0.5, w * 0.36));
   const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
   const held = MARKERS.filter((m) => markers[m.key] === index);
   const cmdr = others.filter((o) => (player.cmdr[o.index] ?? 0) > 0);
-  // In a small seat the +/- hints move to the corners, clear of the name.
-  const half =
-    "flex w-full flex-1 text-2xl text-white/35 select-none touch-manipulation active:bg-white/5 " +
-    (compact ? "justify-end pr-3" : "justify-center");
+  const half = "flex h-full flex-1 items-center text-4xl opacity-45 select-none touch-manipulation active:bg-black/10";
 
   return (
     <div className="relative h-full w-full">
-      <div className="absolute inset-0 flex flex-col">
-        <button type="button" aria-label={`${name}: gain 1 life (hold for 5)`} className={`${half} items-start ${compact ? "pt-1" : "pt-2"}`} {...plus}>
-          +
-        </button>
-        <button type="button" aria-label={`${name}: lose 1 life (hold for 5)`} className={`${half} items-end ${compact ? "pb-1" : "pb-2"}`} {...minus}>
+      <div className="absolute inset-0 flex">
+        <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={`${half} justify-start pl-4`} {...minus}>
           −
+        </button>
+        <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={`${half} justify-end pr-4`} {...plus}>
+          +
         </button>
       </div>
 
       {/* Over the tap halves; only its buttons take taps. */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-        <div className="text-[11px] font-medium tracking-wide text-white/70 uppercase">
-          {highlight === "first" ? "Goes first" : name}
-        </div>
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+        <div className="text-[11px] font-semibold tracking-wide uppercase opacity-80">{highlight === "first" ? "Goes first" : name}</div>
         <button
           type="button"
           onClick={() => setMode("edit")}
           title="Tap to type a life total"
-          className={
-            "pointer-events-auto leading-none font-semibold tabular-nums " + (player.life <= 0 ? "text-red-400" : "text-white")
-          }
+          className={"pointer-events-auto leading-[0.95] font-bold tabular-nums " + (player.life <= 0 ? "opacity-60 line-through" : "")}
           style={{ fontSize: big }}
           aria-live="polite"
         >
           {player.life}
         </button>
-        <div className={"h-5 text-base font-medium tabular-nums " + (delta > 0 ? "text-emerald-300" : "text-red-300")}>
-          {delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}
-        </div>
-        {(shown.length > 0 || held.length > 0 || cmdr.length > 0) && (
-          <div className={"flex max-w-[92%] flex-wrap justify-center gap-1 " + (compact ? "mt-0" : "mt-1")}>
+        <div className="h-6 text-lg font-semibold tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
+        {(shown.length > 0 || held.length > 0 || cmdr.length > 0 || player.dungeon) && (
+          <div className="flex max-w-[80%] flex-wrap justify-center gap-1">
             {held.map((m) => (
-              <Chip key={m.key} onClick={() => setMode("menu")}>
+              <Chip key={m.key} onClick={m.key === "initiative" ? props.onDungeon : () => setMode("menu")}>
+                <Icon name={m.key === "monarch" ? "crown" : "door"} className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
                 {m.label}
               </Chip>
             ))}
+            {player.dungeon && (
+              <Chip onClick={props.onDungeon}>
+                {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
+              </Chip>
+            )}
             {shown.map((c) => {
               const v = player.counters[c.key] ?? 0;
               return (
@@ -190,7 +184,7 @@ function Face(props: Props & { w: number; h: number }) {
             })}
             {cmdr.map((o) => (
               <Chip key={o.index} onClick={() => setMode("menu")} danger={(player.cmdr[o.index] ?? 0) >= 21}>
-                <span className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: colorHex(o.color) }} />
+                <span className="mr-1 inline-block h-2 w-2 rounded-full ring-1 ring-white/70" style={{ background: colorHex(o.color) }} />
                 Cmdr {player.cmdr[o.index]}
               </Chip>
             ))}
@@ -201,14 +195,38 @@ function Face(props: Props & { w: number; h: number }) {
       <button
         type="button"
         onClick={() => setMode("menu")}
-        aria-label={`${name}: counters, commander damage and color`}
-        className="absolute top-1.5 left-1.5 rounded-full p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+        aria-label={`${name}: counters, commander damage, dungeon and color`}
+        className="absolute top-1 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 opacity-70 hover:bg-black/10 hover:opacity-100"
       >
         <Icon name="more" className="h-5 w-5" />
       </button>
 
+      {player.completed ? (
+        <div className="absolute right-2 bottom-1.5 text-[11px] font-medium opacity-75">
+          {player.completed} dungeon{player.completed === 1 ? "" : "s"} done
+        </div>
+      ) : null}
+
+      {picking && (
+        <button
+          type="button"
+          onClick={props.onPick}
+          className="absolute inset-0 z-20 flex items-end justify-center bg-black/25 pb-3 text-sm font-semibold text-white ring-4 ring-white/80 ring-inset"
+        >
+          {picking}
+        </button>
+      )}
       {mode === "edit" && <EditLife life={player.life} onSet={props.onSet} onClose={() => setMode("play")} />}
-      {mode === "menu" && <Menu {...props} onClose={() => setMode("play")} />}
+      {mode === "menu" && (
+        <Menu
+          {...props}
+          onDungeon={() => {
+            setMode("play");
+            props.onDungeon();
+          }}
+          onClose={() => setMode("play")}
+        />
+      )}
     </div>
   );
 }
@@ -218,10 +236,7 @@ function Chip({ children, onClick, danger }: { children: React.ReactNode; onClic
     <button
       type="button"
       onClick={onClick}
-      className={
-        "pointer-events-auto rounded-full px-2 py-0.5 text-[11px] font-medium " +
-        (danger ? "bg-red-500/80 text-white" : "bg-black/35 text-white/90")
-      }
+      className={"pointer-events-auto rounded-full px-2 py-0.5 text-[11px] font-semibold " + (danger ? "bg-black text-red-300" : "bg-black/30 text-white")}
     >
       {children}
     </button>
@@ -237,13 +252,13 @@ function EditLife({ life, onSet, onClose }: { life: number; onSet: (n: number) =
   };
   return (
     <form
-      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-(--color-bg-elev)/95 p-3"
+      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/85 p-3 text-white"
       onSubmit={(e) => {
         e.preventDefault();
         save();
       }}
     >
-      <label className="text-sm text-(--color-text-dim)" htmlFor="life-exact">
+      <label className="text-sm text-white/70" htmlFor="life-exact">
         Set life to
       </label>
       <input
@@ -254,13 +269,13 @@ function EditLife({ life, onSet, onClose }: { life: number; onSet: (n: number) =
         value={v}
         onChange={(e) => setV(e.target.value)}
         onFocus={(e) => e.currentTarget.select()}
-        className="w-28 rounded-lg border border-(--color-border) bg-(--color-bg) px-2 py-2 text-center text-3xl text-(--color-text) tabular-nums"
+        className="w-28 rounded-lg border border-white/30 bg-black px-2 py-2 text-center text-3xl text-white tabular-nums"
       />
       <div className="flex gap-2">
-        <button type="button" onClick={onClose} className="rounded-lg border border-(--color-border) px-4 py-1.5 text-sm text-(--color-text)">
+        <button type="button" onClick={onClose} className="rounded-lg border border-white/30 px-4 py-1.5 text-sm">
           Cancel
         </button>
-        <button type="submit" className="rounded-lg bg-(--color-accent) px-4 py-1.5 text-sm font-semibold text-black">
+        <button type="submit" className="rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-black">
           Set
         </button>
       </div>
@@ -268,15 +283,27 @@ function EditLife({ life, onSet, onClose }: { life: number; onSet: (n: number) =
   );
 }
 
-function Stepper({ label, value, onChange, danger, children }: { label: React.ReactNode; value: number; onChange: (by: number) => void; danger?: boolean; children?: React.ReactNode }) {
-  const btn = "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-(--color-border) text-lg text-(--color-text) hover:bg-white/5";
+function Stepper({
+  label,
+  value,
+  onChange,
+  danger,
+  children,
+}: {
+  label: React.ReactNode;
+  value: number;
+  onChange: (by: number) => void;
+  danger?: boolean;
+  children?: React.ReactNode;
+}) {
+  const btn = "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/25 text-lg hover:bg-white/10";
   return (
     <div className="flex items-center gap-2">
-      <span className="min-w-0 flex-1 truncate text-sm text-(--color-text)">{label}</span>
+      <span className="min-w-0 flex-1 truncate text-sm">{label}</span>
       <button type="button" onClick={() => onChange(-1)} aria-label="Less" className={btn}>
         −
       </button>
-      <span className={"w-7 text-center text-base font-semibold tabular-nums " + (danger ? "text-red-400" : "text-(--color-text)")}>{value}</span>
+      <span className={"w-7 text-center text-base font-semibold tabular-nums " + (danger ? "text-red-400" : "")}>{value}</span>
       <button type="button" onClick={() => onChange(1)} aria-label="More" className={btn}>
         +
       </button>
@@ -286,15 +313,15 @@ function Stepper({ label, value, onChange, danger, children }: { label: React.Re
 }
 
 function Menu(props: Props & { onClose: () => void }) {
-  const { name, player, others, markers, index } = props;
+  const { name, player, others } = props;
   const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
   const hidden = COUNTERS.filter((c) => player.counters[c.key] === undefined);
-  const head = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
+  const head = "text-[11px] font-medium tracking-wide text-white/60 uppercase";
   return (
-    <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-(--color-bg-elev) p-3 text-left">
+    <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] p-3 text-left text-white">
       <div className="mb-2 flex items-center">
-        <span className="flex-1 text-sm font-medium text-(--color-text)">{name}</span>
-        <button type="button" onClick={props.onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-white/10">
+        <span className="flex-1 text-sm font-medium">{name}</span>
+        <button type="button" onClick={props.onClose} aria-label="Close" className="rounded-full p-1 text-white/70 hover:bg-white/10">
           <Icon name="close" className="h-5 w-5" />
         </button>
       </div>
@@ -306,12 +333,7 @@ function Menu(props: Props & { onClose: () => void }) {
             const v = player.counters[c.key] ?? 0;
             return (
               <Stepper key={c.key} label={c.label} value={v} danger={!!c.lethal && v >= c.lethal} onChange={(by) => props.onCounter(c.key, by * (c.step ?? 1))}>
-                <button
-                  type="button"
-                  onClick={() => props.onRemoveCounter(c.key)}
-                  aria-label={`Hide ${c.label}`}
-                  className="rounded p-1 text-(--color-text-dim) hover:bg-white/10"
-                >
+                <button type="button" onClick={() => props.onRemoveCounter(c.key)} aria-label={`Hide ${c.label}`} className="rounded p-1 text-white/60 hover:bg-white/10">
                   <Icon name="close" className="h-4 w-4" />
                 </button>
               </Stepper>
@@ -324,32 +346,20 @@ function Menu(props: Props & { onClose: () => void }) {
                   key={c.key}
                   type="button"
                   onClick={() => props.onAddCounter(c.key)}
-                  className="rounded-full border border-dashed border-(--color-border) px-2.5 py-1 text-xs text-(--color-text-dim) hover:bg-white/5 hover:text-(--color-text)"
+                  className="rounded-full border border-dashed border-white/30 px-2.5 py-1 text-xs text-white/75 hover:bg-white/10"
                 >
                   + {c.label}
                 </button>
               ))}
             </div>
           )}
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {MARKERS.map((m) => {
-              const mine = markers[m.key] === index;
-              return (
-                <button
-                  key={m.key}
-                  type="button"
-                  onClick={() => props.onMarker(m.key)}
-                  aria-pressed={mine}
-                  className={
-                    "rounded-full border px-2.5 py-1 text-xs " +
-                    (mine ? "border-(--color-accent) bg-(--color-accent)/20 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
-                  }
-                >
-                  {mine ? `${m.label} ✓` : m.label}
-                </button>
-              );
-            })}
-          </div>
+        </section>
+
+        <section className="space-y-1.5">
+          <div className={head}>Dungeon</div>
+          <button type="button" onClick={props.onDungeon} className="w-full rounded-lg border border-white/25 px-3 py-2 text-left text-sm hover:bg-white/10">
+            {player.dungeon ? `${dungeonOf(player.dungeon.key).name} · ${player.dungeon.room}` : "Venture into the dungeon"}
+          </button>
         </section>
 
         <section className="space-y-1.5">
@@ -380,7 +390,7 @@ function Menu(props: Props & { onClose: () => void }) {
                 onClick={() => props.onColor(c.key)}
                 aria-label={c.label}
                 aria-pressed={player.color === c.key}
-                className={"h-7 w-7 rounded-full border-2 " + (player.color === c.key ? "border-white" : "border-transparent")}
+                className={"h-8 w-8 rounded-full border-2 " + (player.color === c.key ? "border-white" : "border-transparent")}
                 style={{ background: c.hex }}
               />
             ))}

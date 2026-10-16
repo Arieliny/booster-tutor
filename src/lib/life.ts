@@ -1,3 +1,5 @@
+import { isLastRoom, type DungeonKey } from "./dungeons";
+
 /**
  * The life counter's game state: pure functions, no React, so it's testable.
  *
@@ -31,16 +33,18 @@ export const MARKERS: { key: MarkerKey; label: string }[] = [
 ];
 
 export type ColorKey = "white" | "blue" | "black" | "red" | "green" | "gold" | "gray";
-export const COLORS: { key: ColorKey; label: string; hex: string }[] = [
-  { key: "white", label: "White", hex: "#d8cfa8" },
-  { key: "blue", label: "Blue", hex: "#3b78d8" },
-  { key: "black", label: "Black", hex: "#7a5e9a" },
-  { key: "red", label: "Red", hex: "#d84a4a" },
-  { key: "green", label: "Green", hex: "#33a15f" },
-  { key: "gold", label: "Gold", hex: "#c9a227" },
-  { key: "gray", label: "Gray", hex: "#6b7280" },
+/** Bright, solid seat colors; `ink` is the text color that reads on each. */
+export const COLORS: { key: ColorKey; label: string; hex: string; ink: string }[] = [
+  { key: "white", label: "White", hex: "#F2E6B8", ink: "#2b2412" },
+  { key: "blue", label: "Blue", hex: "#2E7CF6", ink: "#ffffff" },
+  { key: "black", label: "Black", hex: "#8E4EC6", ink: "#ffffff" },
+  { key: "red", label: "Red", hex: "#E5484D", ink: "#ffffff" },
+  { key: "green", label: "Green", hex: "#1FA463", ink: "#ffffff" },
+  { key: "gold", label: "Gold", hex: "#F5A524", ink: "#2b1d05" },
+  { key: "gray", label: "Gray", hex: "#64748B", ink: "#ffffff" },
 ];
-export const colorHex = (c: ColorKey) => COLORS.find((x) => x.key === c)?.hex ?? "#6b7280";
+export const colorHex = (c: ColorKey) => COLORS.find((x) => x.key === c)?.hex ?? "#64748B";
+export const colorInk = (c: ColorKey) => COLORS.find((x) => x.key === c)?.ink ?? "#ffffff";
 /** Seat colors for a new game, in seat order. */
 const SEAT_COLORS: ColorKey[] = ["blue", "red", "green", "black", "white", "gold"];
 
@@ -51,9 +55,13 @@ export interface Player {
   counters: Partial<Record<CounterKey, number>>;
   /** Commander damage taken, by the seat it came from. */
   cmdr: Partial<Record<number, number>>;
+  /** The dungeon room this player is in, if any. */
+  dungeon?: { key: DungeonKey; room: string };
+  /** Dungeons completed this game. */
+  completed?: number;
 }
 
-export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color";
+export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color" | "dungeon";
 
 export interface Entry {
   t: number;
@@ -61,6 +69,8 @@ export interface Entry {
   p: number;
   kind: EntryKind;
   key?: CounterKey | MarkerKey;
+  /** Dungeon moves: the room entered, or "" for a completed dungeon. */
+  room?: string;
   /** Commander damage: the seat it came from. */
   from?: number;
   /** Net change (life, counter or commander damage); for "set", the new life. */
@@ -101,7 +111,12 @@ export function untouched(g: Game): boolean {
   return g.history.every((e) => e.kind === "color");
 }
 
-const clone = (p: Player): Player => ({ ...p, counters: { ...p.counters }, cmdr: { ...p.cmdr } });
+const clone = (p: Player): Player => ({
+  ...p,
+  counters: { ...p.counters },
+  cmdr: { ...p.cmdr },
+  ...(p.dungeon && { dungeon: { ...p.dungeon } }),
+});
 
 /** Apply a change to some players, recording (or merging into) a history entry. */
 function record(
@@ -193,6 +208,34 @@ export function changeCmdr(g: Game, p: number, from: number, by: number, now = D
   );
 }
 
+/** p takes a table-wide marker (from whoever had it). No change if p already has it. */
+export function giveMarker(g: Game, p: number, key: MarkerKey, now = Date.now()): Game {
+  if (g.markers[key] === p) return g;
+  return record(g, { p, kind: "marker", key, d: 1 }, [], (_, m) => void (m[key] = p), now, false);
+}
+
+/** Move p into a dungeon room (entering the dungeon if it's the first room). */
+export function enterRoom(g: Game, p: number, key: DungeonKey, room: string, now = Date.now()): Game {
+  return record(g, { p, kind: "dungeon", room, d: 0 }, [p], (ps) => void (ps[p].dungeon = { key, room }), now, false);
+}
+
+/** p finished the last room: the dungeon is removed and counts as completed. */
+export function completeDungeon(g: Game, p: number, now = Date.now()): Game {
+  const cur = g.players[p].dungeon;
+  if (!cur || !isLastRoom(cur.key, cur.room)) return g;
+  return record(
+    g,
+    { p, kind: "dungeon", room: "", d: 1 },
+    [p],
+    (ps) => {
+      delete ps[p].dungeon;
+      ps[p].completed = (ps[p].completed ?? 0) + 1;
+    },
+    now,
+    false,
+  );
+}
+
 /** Give a table-wide marker to p, or take it back if p already has it. */
 export function toggleMarker(g: Game, p: number, key: MarkerKey, now = Date.now()): Game {
   const holds = g.markers[key] === p;
@@ -228,6 +271,12 @@ export function undo(g: Game): Game {
     if (last.kind === "cmdr" && last.from !== undefined) {
       p.cmdr[last.from] = was.cmdr[last.from] ?? 0;
       p.life = was.life;
+    }
+    if (last.kind === "dungeon") {
+      if (was.dungeon) p.dungeon = { ...was.dungeon };
+      else delete p.dungeon;
+      if (was.completed) p.completed = was.completed;
+      else delete p.completed;
     }
   }
   return {

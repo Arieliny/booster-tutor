@@ -418,10 +418,8 @@ function App() {
           <CubeReview key={navCount} onOpenChecklist={() => setTab("inventory")} />
         </Suspense>
       ) : tab === "life" ? (
-        <div className="space-y-4">
-          <PlayModeSwitch value="life" onChange={setTab} />
-          <LifeCounter />
-        </div>
+        // Full screen over the app; Exit (in its middle bar) goes back to packs.
+        <LifeCounter onExit={() => setTab("packs")} />
       ) : tab === "judge" ? (
         <Suspense fallback={loading("the judge")}>
           <Judge />

@@ -159,3 +159,49 @@ describe("rollDice and parseGame", () => {
     expect(parseGame(JSON.parse(JSON.stringify(saved)))).toEqual(saved);
   });
 });
+
+describe("giving the monarch and the initiative", () => {
+  it("moves the marker to the new holder, and does nothing if they already have it", async () => {
+    const { giveMarker } = await import("../src/lib/life");
+    let g = giveMarker(newGame(3, 20), 1, "initiative", T);
+    expect(g.markers.initiative).toBe(1);
+    expect(giveMarker(g, 1, "initiative", T + 1)).toBe(g);
+    g = giveMarker(g, 2, "initiative", T + 2);
+    expect(g.markers.initiative).toBe(2);
+    expect(undo(g).markers.initiative).toBe(1);
+  });
+});
+
+describe("dungeons", () => {
+  it("every room is on the map and every 'leads to' room exists", async () => {
+    const { DUNGEONS } = await import("../src/lib/dungeons");
+    for (const d of DUNGEONS) {
+      const onMap = d.rows.flat();
+      expect(new Set(onMap)).toEqual(new Set(Object.keys(d.rooms)));
+      for (const r of Object.values(d.rooms)) for (const n of r.next) expect(d.rooms[n], `${d.name}: ${r.name} -> ${n}`).toBeDefined();
+      // Exactly one last room, at the bottom of the map.
+      const last = Object.values(d.rooms).filter((r) => r.next.length === 0);
+      expect(last.map((r) => r.name)).toEqual(d.rows.at(-1));
+    }
+  });
+
+  it("entering, moving, completing and undoing", async () => {
+    const { enterRoom, completeDungeon } = await import("../src/lib/life");
+    let g = enterRoom(newGame(2, 20), 0, "undercity", "Secret Entrance", T);
+    g = enterRoom(g, 0, "undercity", "Forge", T + 1);
+    expect(g.players[0].dungeon).toEqual({ key: "undercity", room: "Forge" });
+    expect(completeDungeon(g, 0, T + 2)).toBe(g); // not in the last room yet
+    g = enterRoom(g, 0, "undercity", "Trap!", T + 3);
+    g = enterRoom(g, 0, "undercity", "Archives", T + 4);
+    g = enterRoom(g, 0, "undercity", "Throne of the Dead Three", T + 5);
+    g = completeDungeon(g, 0, T + 6);
+    expect(g.players[0].dungeon).toBeUndefined();
+    expect(g.players[0].completed).toBe(1);
+    g = undo(g);
+    expect(g.players[0].dungeon?.room).toBe("Throne of the Dead Three");
+    expect(g.players[0].completed).toBeUndefined();
+    g = undo(undo(undo(undo(g))));
+    expect(g.players[0].dungeon?.room).toBe("Secret Entrance");
+    expect(undo(g).players[0].dungeon).toBeUndefined();
+  });
+});

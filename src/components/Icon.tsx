@@ -46,6 +46,23 @@ const PATHS = {
       <path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01" strokeWidth={2.6} strokeLinecap="round" />
     </>
   ),
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  crown: <path d="M3.5 8 7.5 12 12 5l4.5 7 4-4-1.8 10H5.3zM5.3 20.5h13.4" />,
+  door: (
+    <>
+      <path d="M5 21V8a7 7 0 0 1 14 0v13M3 21h18" />
+      <path d="M14.5 13.5h.01" strokeWidth={2.6} strokeLinecap="round" />
+    </>
+  ),
+  exit: <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l-4-4 4-4M5 12h11" />,
+  refresh: <path d="M20 11a8 8 0 0 0-14.9-3.5M4 4v4h4M4 13a8 8 0 0 0 14.9 3.5M20 20v-4h-4" />,
+  target: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 12h.01" strokeWidth={2.6} strokeLinecap="round" />
+    </>
+  ),
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={2.8} strokeLinecap="round" />,
   sparkle: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
   columns: (
