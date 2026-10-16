@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { DB_DOWNLOAD_LABEL, searchDb, toReviewCard, type useCardDb } from "../lib/card-db";
 import { scryfallSuggest, shortDate, type ReviewCard } from "../lib/cube-review";
+import { openSettings } from "../lib/routes";
 import { ManaCost } from "./ManaCost";
 
 type CardDbHook = ReturnType<typeof useCardDb>;
@@ -26,7 +27,7 @@ export function CardLookup({
   onScryfall: (name: string) => Promise<void>;
 }) {
   const needle = q.trim();
-  const { state, download, load } = db;
+  const { state, load } = db;
   const needsLoad = needle.length >= 2 && state.kind === "ready" && !state.db;
 
   // Parse the database the first time a search actually needs it.
@@ -83,12 +84,11 @@ export function CardLookup({
       <ScryfallSearch q={needle} onPick={onScryfall} lead="Not in these cubes?" />
       {state.kind !== "checking" && (
         <div className="mt-1.5 text-xs text-(--color-text-dim)">
-          Or{" "}
-          <button type="button" onClick={download} className="text-(--color-accent) hover:underline">
-            download every card ({DB_DOWNLOAD_LABEL})
-          </button>{" "}
-          to search all of Magic offline.
-          {state.kind === "error" && <span className="text-amber-300"> {state.message}</span>}
+          To search all of Magic offline, download the card database in{" "}
+          <button type="button" onClick={openSettings} className="text-(--color-accent) hover:underline">
+            Settings
+          </button>
+          .
         </div>
       )}
     </Box>

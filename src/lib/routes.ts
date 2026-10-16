@@ -109,6 +109,18 @@ export function initialTab(pathname: string): Tab {
 
 const NAVIGATE_EVENT = "bt-navigate";
 
+const SETTINGS_EVENT = "bt-open-settings";
+
+/** Open Settings (it lives in the account menu) from anywhere, e.g. Look up's "download the card database". */
+export function openSettings(): void {
+  window.dispatchEvent(new Event(SETTINGS_EVENT));
+}
+
+export function onOpenSettings(fn: () => void): () => void {
+  window.addEventListener(SETTINGS_EVENT, fn);
+  return () => window.removeEventListener(SETTINGS_EVENT, fn);
+}
+
 /** Open another screen from deep inside one (e.g. "Ask the judge" in a card popup). */
 export function navigateTo(tab: Tab): void {
   window.dispatchEvent(new CustomEvent<Tab>(NAVIGATE_EVENT, { detail: tab }));

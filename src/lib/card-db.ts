@@ -225,16 +225,23 @@ export type DbState =
   | { kind: "error"; message: string; info: DbInfo | null };
 
 /** Download state + the parsed database, shared by the lookup and its panel. */
+/** Fired when the database is downloaded or removed, so every screen using it catches up (e.g. Settings vs Look up). */
+const CHANGED = "bt-card-db-changed";
+
 export function useCardDb() {
   const [state, setState] = useState<DbState>({ kind: "checking" });
 
   useEffect(() => {
     let live = true;
-    void dbInfo().then((info) => {
-      if (live) setState(info ? { kind: "ready", info, db: null } : { kind: "absent" });
-    });
+    const check = () =>
+      void dbInfo().then((info) => {
+        if (live) setState(info ? { kind: "ready", info, db: null } : { kind: "absent" });
+      });
+    check();
+    window.addEventListener(CHANGED, check);
     return () => {
       live = false;
+      window.removeEventListener(CHANGED, check);
     };
   }, []);
 
@@ -243,6 +250,7 @@ export function useCardDb() {
     try {
       const db = await downloadDb();
       setState({ kind: "ready", info: db.info, db });
+      window.dispatchEvent(new Event(CHANGED));
     } catch (err) {
       setState({ kind: "error", message: err instanceof Error ? err.message : String(err), info: readInfo() });
     }
@@ -261,6 +269,7 @@ export function useCardDb() {
   const remove = useCallback(async () => {
     await removeDb();
     setState({ kind: "absent" });
+    window.dispatchEvent(new Event(CHANGED));
   }, []);
 
   return { state, download, load, remove };

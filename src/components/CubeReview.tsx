@@ -64,7 +64,7 @@ import { ManaCost } from "./ManaCost";
 import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
 import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
-import { CardDbPanel, CardLookup } from "./CardLookup";
+import { CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
 import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
 import { useBackToClose } from "../lib/use-back-to-close";
@@ -629,7 +629,6 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
 
         <HomeGroup title="Offline">
           <div className="space-y-3 p-3">
-            <CardDbPanel db={st.cardDb} />
             <OfflinePanel
               urls={offlineUrls}
               title="Save card images"
@@ -1157,7 +1156,6 @@ export function LookUp() {
             Type a name to find any card in Magic, or describe one in your own words (“a blue-white creature with an enters
             ability”) and press Enter. Open a card to see its text, official rulings, which cubes have it, and your call on it.
           </p>
-          <CardDbPanel db={st.cardDb} />
         </>
       ) : !describing ? (
         <>
