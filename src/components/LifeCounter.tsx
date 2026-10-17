@@ -6,7 +6,6 @@ import {
   MAX_PLAYERS,
   MIN_PLAYERS,
   STARTING_LIFE,
-  addCounter,
   changeCmdr,
   changeCounter,
   changeLife,
@@ -25,10 +24,9 @@ import {
   untouched,
   type Entry,
   type Game,
-  type MarkerKey,
 } from "../lib/life";
 import { Icon, type IconName } from "./Icon";
-import { LifePanel, type Turn } from "./LifePanel";
+import { LifePanel, Turned, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
 
 /**
@@ -116,7 +114,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
   const [game, setGame] = useState<Game>(load);
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [barOpen, setBarOpen] = useState(false);
-  const [giving, setGiving] = useState<MarkerKey | null>(null);
+  const [giving, setGiving] = useState<"monarch" | null>(null);
   const [spin, setSpin] = useState<number | null>(null);
   const [first, setFirst] = useState<number | null>(null);
   const timers = useRef<number[]>([]);
@@ -166,23 +164,18 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
     timers.current.push(window.setTimeout(() => setFirst(null), 70 + ticks * ticks * 4 + 5000));
   };
 
-  /** Someone was picked to take the monarch or the initiative. */
+  /** Someone was picked to become the monarch. */
   const pick = (i: number) => {
-    const key = giving;
     setGiving(null);
-    if (!key) return;
-    if (key === "monarch") {
-      setGame((g) => giveMarker(g, i, "monarch"));
-      return;
-    }
-    // Taking the initiative ventures into Undercity: a player outside any
-    // dungeon enters it; one already in a dungeon picks their next room.
-    setGame((g) => {
-      const g2 = giveMarker(g, i, "initiative");
-      return g2.players[i].dungeon ? g2 : enterRoom(g2, i, "undercity", firstRoom("undercity"));
-    });
-    setSheet({ kind: "dungeon", p: i });
+    setGame((g) => giveMarker(g, i, "monarch"));
   };
+
+  /** p takes the initiative: they venture into Undercity (entering it if they're in no dungeon). */
+  const takeInitiative = (p: number) =>
+    setGame((g) => {
+      const g2 = giveMarker(g, p, "initiative");
+      return g2.players[p].dungeon ? g2 : enterRoom(g2, p, "undercity", firstRoom("undercity"));
+    });
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-black p-1.5 select-none" style={{ paddingTop: "max(env(safe-area-inset-top), 0.375rem)", paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
@@ -201,15 +194,18 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                 markers={game.markers}
                 others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: seatName(n, j), color: o.color }]))}
                 highlight={first === i ? "first" : spin === i ? "spin" : null}
-                picking={giving ? (giving === "monarch" ? "Becomes the monarch" : "Takes the initiative") : null}
+                trayOpen={barOpen}
+                picking={giving ? "Becomes the monarch" : null}
                 onPick={() => pick(i)}
                 onLife={(by) => setGame((g) => changeLife(g, i, by))}
                 onSet={(life) => setGame((g) => setLife(g, i, life))}
                 onCounter={(key, by) => setGame((g) => changeCounter(g, i, key, by))}
-                onAddCounter={(key) => setGame((g) => addCounter(g, i, key))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
                 onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
-                onDungeon={() => setSheet({ kind: "dungeon", p: i })}
+                onDungeon={() => {
+                  setBarOpen(false);
+                  setSheet({ kind: "dungeon", p: i });
+                }}
                 onColor={(c) => setGame((g) => setColor(g, i, c))}
               />
             </div>
@@ -228,8 +224,11 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
             </button>
           ) : (
             <div
-              className="pointer-events-auto flex items-center overflow-hidden rounded-full border-4 border-black bg-[#14161c] transition-[width] duration-200 ease-out"
-              style={{ width: barOpen ? "min(calc(100vw - 1rem), 36rem)" : "3.75rem", height: "3.75rem" }}
+              className={
+                "pointer-events-auto flex items-center overflow-hidden border-black bg-[#14161c] transition-[width,border-radius] duration-200 ease-out " +
+                (barOpen ? "rounded-none border-y-4" : "rounded-full border-4")
+              }
+              style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem" }}
             >
               <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
                 <Tool icon="exit" label="Exit" onClick={onExit} />
@@ -248,7 +247,6 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
               </button>
               <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
                 <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
-                <Tool icon="door" label="Initiative" tint="#B9A4FF" onClick={() => (setBarOpen(false), setGiving("initiative"))} />
                 <Tool icon="target" label="Who's first" onClick={whoGoesFirst} />
                 <Tool icon="dice" label="Dice" onClick={() => setSheet({ kind: "dice" })} />
               </div>
@@ -260,10 +258,12 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
       {sheet?.kind === "dice" && <DiceSheet onClose={() => setSheet(null)} />}
       {sheet?.kind === "dungeon" && (
-        <DungeonSheet
+        <DungeonTracker
           game={game}
           p={sheet.p}
+          turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
           name={seatName(n, sheet.p)}
+          onTakeInitiative={() => takeInitiative(sheet.p)}
           onEnter={(key, room) => setGame((g) => enterRoom(g, sheet.p, key, room))}
           onComplete={() => setGame((g) => completeDungeon(g, sheet.p))}
           onClose={() => setSheet(null)}
@@ -410,104 +410,153 @@ function DiceSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-function DungeonSheet({
+/**
+ * The dungeons and the initiative, full screen and turned to face the player
+ * who opened it. Every player's marker shows in the room they're in; the
+ * rooms this player can venture into next are marked.
+ */
+function DungeonTracker({
   game,
   p,
+  turn,
   name,
+  onTakeInitiative,
   onEnter,
   onComplete,
   onClose,
 }: {
   game: Game;
   p: number;
+  turn: Turn;
   name: string;
+  onTakeInitiative: () => void;
   onEnter: (key: DungeonKey, room: string) => void;
   onComplete: () => void;
   onClose: () => void;
 }) {
   const player = game.players[p];
   const cur = player.dungeon;
+  const [tab, setTab] = useState<DungeonKey>(cur?.key ?? "undercity");
+  const d = dungeonOf(tab);
+  const holds = game.markers.initiative === p;
   const hex = colorHex(player.color);
-  const [choosing, setChoosing] = useState<DungeonKey | null>(null);
-  const shown = cur?.key ?? choosing;
-  const d = shown ? dungeonOf(shown) : null;
-  const next = cur ? (d?.rooms[cur.room]?.next ?? []) : d ? [d.rows[0][0]] : [];
-  const holdsInitiative = game.markers.initiative === p;
+
+  // Undercity can only be entered through the initiative; the others through any venture.
+  const canGo = (room: string) =>
+    cur ? cur.key === tab && (d.rooms[cur.room]?.next ?? []).includes(room) : room === d.rows[0][0] && (tab !== "undercity" || holds);
+  const markersIn = (key: DungeonKey, room?: string) =>
+    game.players.flatMap((pl, i) => (pl.dungeon?.key === key && (!room || pl.dungeon.room === room) ? [{ i, color: pl.color }] : []));
+  const dot = (color: string, mine: boolean) => (
+    <span
+      className={"inline-block shrink-0 rounded-full " + (mine ? "h-3.5 w-3.5 ring-2 ring-white" : "h-3 w-3 ring-1 ring-white/60")}
+      style={{ background: color }}
+    />
+  );
 
   return (
-    <Sheet title={`${name} · ${d ? d.name : "Venture into the dungeon"}`} onClose={onClose}>
-      {!d ? (
-        <div className="space-y-2">
-          {player.completed ? <p className="text-sm text-(--color-text-dim)">Dungeons completed this game: {player.completed}</p> : null}
-          <p className="text-sm text-(--color-text-dim)">Pick a dungeon to enter. You start in its first room.</p>
-          {DUNGEONS.map((x) => (
-            <button
-              key={x.key}
-              type="button"
-              onClick={() => setChoosing(x.key)}
-              className="block w-full rounded-lg border border-(--color-border) px-3 py-2.5 text-left hover:bg-white/5"
-            >
-              <span className="block text-sm font-medium text-(--color-text)">{x.name}</span>
-              <span className="block text-xs text-(--color-text-dim)">
-                {x.note ?? `${Object.keys(x.rooms).length} rooms`} · starts with {x.rooms[x.rows[0][0]].effect.replace(/\.$/, "").toLowerCase()}
-              </span>
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <p className="text-sm text-(--color-text-dim)">
-            {cur
-              ? isLastRoom(cur.key, cur.room)
-                ? "Last room. Once its ability resolves, the dungeon is complete."
-                : "Tap the room you venture into next."
-              : "Tap the first room to enter."}
-          </p>
-          {d.key === "undercity" && holdsInitiative && <p className="rounded-lg bg-white/5 p-2 text-xs text-(--color-text-dim)">{INITIATIVE_TEXT}</p>}
-          <div className="space-y-2">
-            {d.rows.map((row, r) => (
-              <div key={r} className="flex gap-2">
-                {row.map((roomName) => {
-                  const room = d.rooms[roomName];
-                  const here = cur?.room === roomName;
-                  const canGo = next.includes(roomName);
+    <div className="absolute inset-0 z-40 bg-[#0f1115] text-white">
+      <Turned turn={turn}>
+        {() => (
+          <div className="flex h-full flex-col">
+            <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+              {dot(hex, true)}
+              <span className="flex-1 text-base font-semibold">Dungeons</span>
+              <span className="sr-only">for {name}</span>
+              <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-white/70 hover:bg-white/10">
+                <Icon name="close" className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
+              <div className="rounded-xl bg-white/5 p-3 text-sm">
+                {holds ? (
+                  <p>
+                    <b className="font-semibold">You have the initiative.</b> At your upkeep, venture into Undercity: tap the room you move to.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onTakeInitiative();
+                      setTab(cur?.key ?? "undercity");
+                    }}
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#B9A4FF] py-2.5 font-semibold text-black"
+                  >
+                    <Icon name="door" className="h-5 w-5" /> Take the initiative
+                  </button>
+                )}
+                <p className="mt-2 text-xs text-white/60">{INITIATIVE_TEXT}</p>
+              </div>
+
+              <div className="flex flex-wrap gap-1.5">
+                {DUNGEONS.map((x) => {
+                  const inside = markersIn(x.key);
                   return (
                     <button
-                      key={roomName}
+                      key={x.key}
                       type="button"
-                      disabled={!canGo}
-                      onClick={() => onEnter(d.key, roomName)}
+                      onClick={() => setTab(x.key)}
+                      aria-pressed={tab === x.key}
                       className={
-                        "min-w-0 flex-1 rounded-lg border p-2 text-left transition-colors " +
-                        (here ? "border-2" : canGo ? "border-dashed border-(--color-accent) hover:bg-(--color-accent)/10" : "border-(--color-border) opacity-55")
+                        "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs " +
+                        (tab === x.key ? "border-white bg-white text-black" : "border-white/25 text-white/80 hover:bg-white/10")
                       }
-                      style={here ? { borderColor: hex, background: `color-mix(in srgb, ${hex} 18%, transparent)` } : undefined}
                     >
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-(--color-text)">
-                        {here && <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: hex }} />}
-                        {roomName}
-                      </span>
-                      <span className="mt-0.5 block text-[11px] leading-snug text-(--color-text-dim)">{room.effect}</span>
-                      {canGo && <span className="mt-1 block text-[11px] font-medium text-(--color-accent)">Venture here</span>}
+                      {x.name}
+                      {inside.map((m) => (
+                        <span key={m.i} className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: colorHex(m.color) }} />
+                      ))}
                     </button>
                   );
                 })}
               </div>
-            ))}
+
+              <div className="space-y-2">
+                {d.rows.map((row, r) => (
+                  <div key={r} className="flex gap-2">
+                    {row.map((roomName) => {
+                      const here = markersIn(tab, roomName);
+                      const go = canGo(roomName);
+                      const mineHere = cur?.key === tab && cur.room === roomName;
+                      return (
+                        <button
+                          key={roomName}
+                          type="button"
+                          disabled={!go}
+                          onClick={() => onEnter(tab, roomName)}
+                          className={
+                            "min-w-0 flex-1 rounded-xl border p-2.5 text-left " +
+                            (go ? "border-2 border-dashed border-[#B9A4FF] bg-[#B9A4FF]/10" : mineHere ? "border-2" : "border-white/15")
+                          }
+                          style={mineHere ? { borderColor: hex, background: `color-mix(in srgb, ${hex} 22%, transparent)` } : undefined}
+                        >
+                          <span className="flex items-center gap-1.5 text-sm font-semibold">
+                            <span className="min-w-0 flex-1">{roomName}</span>
+                            {here.map((m) => (
+                              <span key={m.i}>{dot(colorHex(m.color), m.i === p)}</span>
+                            ))}
+                          </span>
+                          <span className="mt-1 block text-xs leading-snug text-white/75">{d.rooms[roomName].effect}</span>
+                          {go && <span className="mt-1.5 block text-xs font-semibold text-[#B9A4FF]">Venture here</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
+              {cur && cur.key === tab && isLastRoom(cur.key, cur.room) && (
+                <button type="button" onClick={onComplete} className="w-full rounded-lg bg-white py-2.5 text-sm font-semibold text-black">
+                  Complete the dungeon
+                </button>
+              )}
+              {player.completed ? <p className="text-xs text-white/60">Dungeons you've completed this game: {player.completed}</p> : null}
+              {tab === "undercity" && !cur && !holds && <p className="text-xs text-white/60">{d.note}.</p>}
+            </div>
           </div>
-          {cur && isLastRoom(cur.key, cur.room) && (
-            <button type="button" onClick={onComplete} className="w-full rounded-lg bg-(--color-accent) py-2.5 text-sm font-semibold text-black hover:bg-(--color-accent-bright)">
-              Complete the dungeon
-            </button>
-          )}
-          {!cur && (
-            <button type="button" onClick={() => setChoosing(null)} className="text-sm text-(--color-text-dim) hover:underline">
-              ← Other dungeons
-            </button>
-          )}
-        </div>
-      )}
-    </Sheet>
+        )}
+      </Turned>
+    </div>
   );
 }
 

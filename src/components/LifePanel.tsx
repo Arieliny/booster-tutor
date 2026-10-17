@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { dungeonOf } from "../lib/dungeons";
-import { COLORS, COUNTERS, MARKERS, colorHex, colorInk, type ColorKey, type CounterKey, type MarkerKey, type Player } from "../lib/life";
+import { COLORS, COUNTERS, colorHex, colorInk, type ColorKey, type CounterKey, type MarkerKey, type Player } from "../lib/life";
 import { Icon } from "./Icon";
 
 /** How far a seat's panel is turned so it faces its player (0 = upright for the phone's owner). */
@@ -8,9 +8,9 @@ export type Turn = 0 | 90 | 180 | 270;
 
 /**
  * Lays its child out in a frame turned to face a seat: at 90/270 the frame's
- * width and height swap, so the content still fills the cell.
+ * width and height swap, so the content still fills the space.
  */
-function Turned({ turn, children }: { turn: Turn; children: (w: number, h: number) => React.ReactNode }) {
+export function Turned({ turn, children }: { turn: Turn; children: (w: number, h: number) => React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
   useLayoutEffect(() => {
@@ -75,6 +75,7 @@ function useHold(step: (by: number) => void, sign: 1 | -1) {
 }
 
 interface Props {
+  /** For screen readers and menus; not shown on the panel (it faces its player). */
   name: string;
   player: Player;
   turn: Turn;
@@ -83,13 +84,14 @@ interface Props {
   markers: Partial<Record<MarkerKey, number>>;
   index: number;
   highlight: "first" | "spin" | null;
-  /** Giving out the monarch or the initiative: what to say, and the tap that picks this seat. */
+  /** The middle tray is open: show this seat's door to the dungeon tracker. */
+  trayOpen: boolean;
+  /** Giving out the monarch: what to say, and the tap that picks this seat. */
   picking: string | null;
   onPick: () => void;
   onLife: (by: number) => void;
   onSet: (life: number) => void;
   onCounter: (key: CounterKey, by: number) => void;
-  onAddCounter: (key: CounterKey) => void;
   onRemoveCounter: (key: CounterKey) => void;
   onCmdr: (from: number, by: number) => void;
   onDungeon: () => void;
@@ -114,7 +116,7 @@ export function LifePanel(props: Props) {
 }
 
 function Face(props: Props & { w: number; h: number }) {
-  const { name, player, w, h, highlight, markers, index, others, picking } = props;
+  const { name, player, w, h, highlight, markers, index, others, picking, trayOpen } = props;
   const [delta, setDelta] = useState(0);
   const [mode, setMode] = useState<"play" | "edit" | "menu">("play");
   const timer = useRef<number | undefined>(undefined);
@@ -129,11 +131,14 @@ function Face(props: Props & { w: number; h: number }) {
   const minus = useHold(step, -1);
   const plus = useHold(step, 1);
 
-  // As big as the seat allows: three digits still fit across.
-  const big = Math.max(44, Math.min(240, h * 0.5, w * 0.36));
+  const monarch = markers.monarch === index;
+  const initiative = markers.initiative === index;
   const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
-  const held = MARKERS.filter((m) => markers[m.key] === index);
   const cmdr = others.filter((o) => (player.cmdr[o.index] ?? 0) > 0);
+  // The total is as big as the seat allows, after room for the crown and counters.
+  const crown = monarch || initiative ? Math.max(28, Math.min(64, h * 0.13)) : 0;
+  const below = shown.length * 38 + (cmdr.length || player.dungeon ? 26 : 0);
+  const big = Math.max(40, Math.min(240, (h - crown - below - 60) * 0.8, w * 0.36));
   const half = "flex h-full flex-1 items-center text-4xl opacity-45 select-none touch-manipulation active:bg-black/10";
 
   return (
@@ -149,7 +154,13 @@ function Face(props: Props & { w: number; h: number }) {
 
       {/* Over the tap halves; only its buttons take taps. */}
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-[11px] font-semibold tracking-wide uppercase opacity-80">{highlight === "first" ? "Goes first" : name}</div>
+        {highlight === "first" && <div className="mb-1 text-xs font-bold tracking-wide uppercase">Goes first</div>}
+        {crown > 0 && (
+          <div className="mb-1 flex items-end gap-5">
+            {monarch && <Marker icon="crown" label="Monarch" size={crown} />}
+            {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} />}
+          </div>
+        )}
         <button
           type="button"
           onClick={() => setMode("edit")}
@@ -161,27 +172,37 @@ function Face(props: Props & { w: number; h: number }) {
           {player.life}
         </button>
         <div className="h-6 text-lg font-semibold tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
-        {(shown.length > 0 || held.length > 0 || cmdr.length > 0 || player.dungeon) && (
-          <div className="flex max-w-[80%] flex-wrap justify-center gap-1">
-            {held.map((m) => (
-              <Chip key={m.key} onClick={m.key === "initiative" ? props.onDungeon : () => setMode("menu")}>
-                <Icon name={m.key === "monarch" ? "crown" : "door"} className="mr-1 inline h-3.5 w-3.5 align-[-2px]" />
-                {m.label}
-              </Chip>
-            ))}
+
+        {shown.length > 0 && (
+          <div className="flex flex-col items-center gap-1">
+            {shown.map((c) => {
+              const v = player.counters[c.key] ?? 0;
+              const lethal = !!c.lethal && v >= c.lethal;
+              const btn = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-xl leading-none active:bg-black/40";
+              return (
+                <div key={c.key} className="flex items-center gap-2">
+                  <button type="button" onClick={() => props.onCounter(c.key, -(c.step ?? 1))} aria-label={`${name}: ${c.label} down`} className={btn}>
+                    −
+                  </button>
+                  <span className={"min-w-[5.5rem] text-center " + (lethal ? "rounded-full bg-black px-2 text-red-300" : "")}>
+                    <span className="text-xl font-bold tabular-nums">{v}</span> <span className="text-[11px] font-semibold uppercase opacity-85">{c.label}</span>
+                  </span>
+                  <button type="button" onClick={() => props.onCounter(c.key, c.step ?? 1)} aria-label={`${name}: ${c.label} up`} className={btn}>
+                    +
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {(cmdr.length > 0 || player.dungeon) && (
+          <div className="mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
             {player.dungeon && (
               <Chip onClick={props.onDungeon}>
                 {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
               </Chip>
             )}
-            {shown.map((c) => {
-              const v = player.counters[c.key] ?? 0;
-              return (
-                <Chip key={c.key} onClick={() => setMode("menu")} danger={!!c.lethal && v >= c.lethal}>
-                  {c.label} {v}
-                </Chip>
-              );
-            })}
             {cmdr.map((o) => (
               <Chip key={o.index} onClick={() => setMode("menu")} danger={(player.cmdr[o.index] ?? 0) >= 21}>
                 <span className="mr-1 inline-block h-2 w-2 rounded-full ring-1 ring-white/70" style={{ background: colorHex(o.color) }} />
@@ -192,20 +213,34 @@ function Face(props: Props & { w: number; h: number }) {
         )}
       </div>
 
+      {/* Bottom right from this player's side of the table: counters, commander damage, color. */}
       <button
         type="button"
         onClick={() => setMode("menu")}
         aria-label={`${name}: counters, commander damage, dungeon and color`}
-        className="absolute top-1 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 opacity-70 hover:bg-black/10 hover:opacity-100"
+        className="absolute right-1.5 bottom-1.5 rounded-full px-2.5 py-1.5 opacity-75 hover:bg-black/10 hover:opacity-100"
       >
-        <Icon name="more" className="h-5 w-5" />
+        <Icon name="more" className="h-6 w-6" />
       </button>
 
       {player.completed ? (
-        <div className="absolute right-2 bottom-1.5 text-[11px] font-medium opacity-75">
+        <div className="absolute bottom-2.5 left-3 text-[11px] font-medium opacity-75">
           {player.completed} dungeon{player.completed === 1 ? "" : "s"} done
         </div>
       ) : null}
+
+      {/* With the tray open, each seat gets a door to the dungeon tracker, facing them. */}
+      {trayOpen && !picking && (
+        <button
+          type="button"
+          onClick={props.onDungeon}
+          aria-label={`${name}: dungeons and the initiative`}
+          className="absolute top-11 left-1/2 flex -translate-x-1/2 flex-col items-center rounded-2xl bg-black/35 px-4 py-2 text-white"
+        >
+          <Icon name="door" className="h-7 w-7" />
+          <span className="text-[11px] font-semibold">Dungeons</span>
+        </button>
+      )}
 
       {picking && (
         <button
@@ -228,6 +263,26 @@ function Face(props: Props & { w: number; h: number }) {
         />
       )}
     </div>
+  );
+}
+
+/** A big table marker (the monarch's crown, the initiative's door) above the total. */
+function Marker({ icon, label, size, onClick }: { icon: "crown" | "door"; label: string; size: number; onClick?: () => void }) {
+  const inner = (
+    <>
+      <span style={{ width: size, height: size }} className="block">
+        <Icon name={icon} className="h-full w-full" />
+      </span>
+      <span className="mt-0.5 text-[11px] font-bold tracking-wide uppercase">{label}</span>
+    </>
+  );
+  const cls = "flex flex-col items-center leading-none";
+  return onClick ? (
+    <button type="button" onClick={onClick} className={"pointer-events-auto " + cls}>
+      {inner}
+    </button>
+  ) : (
+    <div className={cls}>{inner}</div>
   );
 }
 
@@ -314,8 +369,6 @@ function Stepper({
 
 function Menu(props: Props & { onClose: () => void }) {
   const { name, player, others } = props;
-  const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
-  const hidden = COUNTERS.filter((c) => player.counters[c.key] === undefined);
   const head = "text-[11px] font-medium tracking-wide text-white/60 uppercase";
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] p-3 text-left text-white">
@@ -328,37 +381,29 @@ function Menu(props: Props & { onClose: () => void }) {
 
       <div className="space-y-3">
         <section className="space-y-1.5">
-          <div className={head}>Counters</div>
-          {shown.map((c) => {
+          <div className={head}>Counters · set any above 0 and it shows under your life, with − and +</div>
+          {COUNTERS.map((c) => {
+            const on = player.counters[c.key] !== undefined;
             const v = player.counters[c.key] ?? 0;
             return (
               <Stepper key={c.key} label={c.label} value={v} danger={!!c.lethal && v >= c.lethal} onChange={(by) => props.onCounter(c.key, by * (c.step ?? 1))}>
-                <button type="button" onClick={() => props.onRemoveCounter(c.key)} aria-label={`Hide ${c.label}`} className="rounded p-1 text-white/60 hover:bg-white/10">
+                <button
+                  type="button"
+                  onClick={() => props.onRemoveCounter(c.key)}
+                  aria-label={`Take ${c.label} off the screen`}
+                  className={"rounded p-1 hover:bg-white/10 " + (on ? "text-white/60" : "invisible")}
+                >
                   <Icon name="close" className="h-4 w-4" />
                 </button>
               </Stepper>
             );
           })}
-          {hidden.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {hidden.map((c) => (
-                <button
-                  key={c.key}
-                  type="button"
-                  onClick={() => props.onAddCounter(c.key)}
-                  className="rounded-full border border-dashed border-white/30 px-2.5 py-1 text-xs text-white/75 hover:bg-white/10"
-                >
-                  + {c.label}
-                </button>
-              ))}
-            </div>
-          )}
         </section>
 
         <section className="space-y-1.5">
           <div className={head}>Dungeon</div>
           <button type="button" onClick={props.onDungeon} className="w-full rounded-lg border border-white/25 px-3 py-2 text-left text-sm hover:bg-white/10">
-            {player.dungeon ? `${dungeonOf(player.dungeon.key).name} · ${player.dungeon.room}` : "Venture into the dungeon"}
+            {player.dungeon ? `${dungeonOf(player.dungeon.key).name} · ${player.dungeon.room}` : "Dungeons and the initiative"}
           </button>
         </section>
 
