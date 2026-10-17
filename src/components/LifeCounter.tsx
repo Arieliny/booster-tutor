@@ -36,6 +36,7 @@ import {
 import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
+import { useBackToClose } from "../lib/use-back-to-close";
 
 // The rules judge, opened over the counter from the tray (loaded only when first opened).
 const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
@@ -778,9 +779,23 @@ function NewGameSheet({ game, onStart, onClose }: { game: Game; onStart: (count:
   const chip = (on: boolean) =>
     "rounded-full border px-3.5 py-1.5 text-sm " +
     (on ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
+  useBackToClose(onClose);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
   return (
-    <Sheet title="New game" onClose={onClose}>
-      <div className="space-y-4">
+    // A box in the middle of the table, not a panel from the edge.
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label="New game" className="relative w-full max-w-sm space-y-4 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) p-5 shadow-2xl">
+        <div className="flex items-center">
+          <h2 className="flex-1 text-lg font-semibold text-(--color-text)">New game</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-white/10">
+            <Icon name="close" className="h-5 w-5" />
+          </button>
+        </div>
         <div className="space-y-1.5">
           <div className="text-sm text-(--color-text-dim)">Players</div>
           <div className="flex flex-wrap gap-1.5">
@@ -810,6 +825,6 @@ function NewGameSheet({ game, onStart, onClose }: { game: Game; onStart: (count:
         </button>
         <p className="text-xs text-(--color-text-dim)">Seats keep their colors. Life, counters, dungeons and history start fresh.</p>
       </div>
-    </Sheet>
+    </div>
   );
 }
