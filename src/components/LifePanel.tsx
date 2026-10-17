@@ -110,6 +110,9 @@ interface Props {
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
   /** Setting: commander damage also lowers life. */
   cmdrTakesLife: boolean;
+  onCmdrTakesLife: (on: boolean) => void;
+  /** The ... menu is opening (the tray closes so it doesn't cover the menu). */
+  onMenu: () => void;
   onCmdr: (from: number, by: number) => void;
   onAddCmdr: (from: number) => void;
   onRemoveCmdr: (from: number) => void;
@@ -245,8 +248,11 @@ function Face(props: Props & { w: number; h: number }) {
       {/* Bottom right from this player's side of the table: counters, commander damage, color. */}
       <button
         type="button"
-        onClick={() => setMode("menu")}
-        aria-label={`${name}: counters, commander damage, dungeon and color`}
+        onClick={() => {
+          props.onMenu();
+          setMode("menu");
+        }}
+        aria-label={`${name}: counters, commander damage and color`}
         className="absolute right-1.5 bottom-1.5 rounded-full px-2.5 py-1.5 opacity-75 hover:bg-black/10 hover:opacity-100"
       >
         <Icon name="more" className="h-6 w-6" />
@@ -280,16 +286,7 @@ function Face(props: Props & { w: number; h: number }) {
           {picking}
         </button>
       )}
-      {mode === "menu" && (
-        <Menu
-          {...props}
-          onDungeon={() => {
-            setMode("play");
-            props.onDungeon();
-          }}
-          onClose={() => setMode("play")}
-        />
-      )}
+      {mode === "menu" && <Menu {...props} onClose={() => setMode("play")} />}
     </div>
   );
 }
@@ -427,14 +424,7 @@ function Menu(props: Props & { onClose: () => void }) {
         </section>
 
         <section className="space-y-1.5">
-          <div className={head}>Dungeon</div>
-          <button type="button" onClick={props.onDungeon} className="w-full rounded-lg border border-white/25 px-3 py-2 text-left text-sm hover:bg-white/10">
-            {player.dungeon ? `${dungeonOf(player.dungeon.key).name} · ${player.dungeon.room}` : "Dungeons and the initiative"}
-          </button>
-        </section>
-
-        <section className="space-y-1.5">
-          <div className={head}>Commander damage on your life card{props.cmdrTakesLife ? " (also takes life)" : ""}</div>
+          <div className={head}>Commander damage on your life card</div>
           <div className="grid grid-cols-2 gap-1.5">
             {others.map((o) => {
               const on = player.cmdr[o.index] !== undefined;
@@ -457,6 +447,18 @@ function Menu(props: Props & { onClose: () => void }) {
               );
             })}
           </div>
+          <label className="flex cursor-pointer items-start gap-2.5 pt-1 text-sm">
+            <input
+              type="checkbox"
+              checked={props.cmdrTakesLife}
+              onChange={(e) => props.onCmdrTakesLife(e.target.checked)}
+              className="mt-0.5 h-4.5 w-4.5 shrink-0 accent-white"
+            />
+            <span>
+              Also takes life
+              <span className="block text-xs text-white/55">For everyone at the table; remembered on this device.</span>
+            </span>
+          </label>
         </section>
 
         <section className="space-y-1.5">

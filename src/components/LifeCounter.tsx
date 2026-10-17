@@ -160,7 +160,7 @@ function seating(count: number, wide: boolean): { i: number; turn: Turn; span: b
   return out;
 }
 
-type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "settings" } | { kind: "judge" } | { kind: "dungeon"; p: number };
+type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "judge" } | { kind: "dungeon"; p: number };
 
 const DICE = [4, 6, 8, 10, 12, 20];
 
@@ -307,6 +307,8 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
                 cmdrTakesLife={settings.cmdrTakesLife}
+                onCmdrTakesLife={(on) => setSettings((x) => ({ ...x, cmdrTakesLife: on }))}
+                onMenu={closeTray}
                 onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by, Date.now(), settings.cmdrTakesLife))}
                 onAddCmdr={(from) => setGame((g) => addCmdr(g, i, from))}
                 onRemoveCmdr={(from) => setGame((g) => removeCmdr(g, i, from))}
@@ -373,7 +375,6 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                     <Tool icon="target" label="Who's first" onClick={whoGoesFirst} />
                     <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                     {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
-                    <Tool icon="gear" label="Settings" onClick={() => setSheet({ kind: "settings" })} />
                   </>
                 )}
               </div>
@@ -384,7 +385,6 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
       </div>
 
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
-      {sheet?.kind === "settings" && <SettingsSheet settings={settings} onChange={setSettings} onClose={() => setSheet(null)} />}
       {sheet?.kind === "judge" && (
         // Full screen over the counter; closing it comes straight back to the game.
         <div className="absolute inset-0 z-50 flex flex-col bg-(--color-bg) text-(--color-text)" style={{ paddingTop: "env(safe-area-inset-top)" }}>
@@ -769,29 +769,6 @@ function DungeonTracker({
         )}
       </Turned>
     </div>
-  );
-}
-
-/** Life counter settings (kept on this device). */
-function SettingsSheet({ settings, onChange, onClose }: { settings: LifeSettings; onChange: (s: LifeSettings) => void; onClose: () => void }) {
-  return (
-    <Sheet title="Life counter settings" onClose={onClose}>
-      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-(--color-border) p-3">
-        <input
-          type="checkbox"
-          checked={settings.cmdrTakesLife}
-          onChange={(e) => onChange({ ...settings, cmdrTakesLife: e.target.checked })}
-          className="mt-0.5 h-5 w-5 shrink-0 accent-(--color-accent)"
-        />
-        <span>
-          <span className="block text-sm font-medium text-(--color-text)">Commander damage also takes life</span>
-          <span className="block text-xs text-(--color-text-dim)">
-            On: adding commander damage lowers that player's life too. Off: it's tracked on its own and you change life yourself (like
-            Carbon). Damage already dealt isn't changed when you switch.
-          </span>
-        </span>
-      </label>
-    </Sheet>
   );
 }
 
