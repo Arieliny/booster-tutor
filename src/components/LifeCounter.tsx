@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+// Latin digits only: Nunito Black for the big numbers.
+import "@fontsource/nunito/latin-900.css";
 import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, type DungeonKey } from "../lib/dungeons";
 import {
   COUNTERS,

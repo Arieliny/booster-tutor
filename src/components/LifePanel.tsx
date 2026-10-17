@@ -182,13 +182,13 @@ function Face(props: Props & { w: number; h: number }) {
           type="button"
           onClick={() => setMode("edit")}
           title="Tap to type a life total"
-          className={"pointer-events-auto leading-[0.95] font-bold tabular-nums " + (player.life <= 0 ? "opacity-60 line-through" : "")}
+          className={"pointer-events-auto font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60 line-through" : "")}
           style={{ fontSize: big }}
           aria-live="polite"
         >
           {player.life}
         </button>
-        <div className="h-6 text-lg font-semibold tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
+        <div className="h-6 font-life text-lg font-black tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
 
         {shown.length > 0 && (
           <div className={shown.length > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1"}>
@@ -207,7 +207,7 @@ function Face(props: Props & { w: number; h: number }) {
                     className={"flex min-w-[4.5rem] items-center justify-center gap-1.5 rounded-full px-2 " + (lethal ? "bg-black text-red-300" : "")}
                   >
                     <Icon name={counterIcon(props, c.key)} className="h-5 w-5" />
-                    <span className="text-xl font-bold tabular-nums">{v}</span>
+                    <span className="font-life text-xl font-black tabular-nums">{v}</span>
                   </span>
                   <button type="button" onClick={() => props.onCounter(c.key, c.step ?? 1)} aria-label={`${name}: ${c.label} up`} className={btn}>
                     +
