@@ -25,10 +25,12 @@ export default defineConfig({
       manifest: {
         name: 'Booster Tutor',
         short_name: 'Booster Tutor',
-        description: 'MTG cube pack simulator, rotisserie drafting and set review',
+        description: 'Magic cube tools, rules judge, set grades and a life counter',
         theme_color: '#0b0d12',
         background_color: '#0b0d12',
-        display: 'standalone',
+        // Installed, the app runs full screen (no status bar), so the life counter needs no
+        // browser full screen and Chrome shows no "to exit full screen" banner.
+        display: 'fullscreen',
         orientation: 'portrait',
         start_url: '/',
         icons: [

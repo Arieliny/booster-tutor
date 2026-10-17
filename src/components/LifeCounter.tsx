@@ -94,16 +94,18 @@ function useWakeLock() {
 }
 
 /**
- * True full screen (hides the phone's status and navigation bars) while the
- * counter is open, locked to portrait so it doesn't flip when the phone lies
- * flat. Browsers only allow it right after a tap: opening Life counts; after a
+ * In a browser tab: true full screen (hides the phone's status and navigation
+ * bars) while the counter is open, locked to portrait so it doesn't flip when
+ * the phone lies flat. The installed app is full screen anyway. Browsers only allow it right after a tap: opening Life counts; after a
  * reload, or if someone swiped the bars back, the next tap does it. iPhones
  * don't support it in the browser, so there the counter just fills the page.
  */
 function useFullscreen() {
   useEffect(() => {
     const el = document.documentElement;
-    if (!el.requestFullscreen) return;
+    // The installed app already runs full screen (manifest display: fullscreen). Asking again
+    // would only bring up Chrome's "to exit full screen" banner, so only do it in a browser tab.
+    if (!el.requestFullscreen || !window.matchMedia("(display-mode: browser)").matches) return;
     const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
     const enter = () => {
       if (document.fullscreenElement) return;

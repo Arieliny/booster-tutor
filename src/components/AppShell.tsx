@@ -67,7 +67,8 @@ export function AppShell({
       )}
 
       <div className={"flex min-w-0 flex-1 flex-col " + (showNav ? "pb-16 md:pb-0" : "") + " print:pb-0"}>
-        <header className="sticky top-0 z-30 border-b border-(--color-border) bg-(--color-bg)/95 backdrop-blur print:hidden">
+        {/* Clear of the camera cutout when the installed app runs full screen. */}
+        <header className="sticky top-0 z-30 border-b border-(--color-border) bg-(--color-bg)/95 pt-[env(safe-area-inset-top)] backdrop-blur print:hidden">
           <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-3 px-4 sm:px-6">
             <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-(--color-text)">{title}</h1>
             {right}
