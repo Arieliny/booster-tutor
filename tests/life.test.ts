@@ -205,3 +205,32 @@ describe("dungeons", () => {
     expect(undo(g).players[0].dungeon).toBeUndefined();
   });
 });
+
+describe("venturing into Undercity takes the initiative", () => {
+  it("in one history entry, so a single undo puts back both the room and the initiative", async () => {
+    const { enterRoom, giveMarker } = await import("../src/lib/life");
+    let g = giveMarker(newGame(2, 20), 1, "initiative", T);
+    g = enterRoom(g, 0, "undercity", "Secret Entrance", T + 1, true);
+    expect(g.markers.initiative).toBe(0);
+    expect(g.players[0].dungeon?.room).toBe("Secret Entrance");
+    expect(g.history).toHaveLength(2);
+    g = undo(g);
+    expect(g.markers.initiative).toBe(1);
+    expect(g.players[0].dungeon).toBeUndefined();
+  });
+
+  it("other dungeons don't touch the initiative", async () => {
+    const { enterRoom } = await import("../src/lib/life");
+    const g = enterRoom(newGame(2, 20), 0, "lostMine", "Cave Entrance", T, false);
+    expect(g.markers.initiative).toBeUndefined();
+  });
+});
+
+describe("counter caps", () => {
+  it("speed stops at 4", () => {
+    let g = changeCounter(newGame(2, 20), 0, "speed", 3, T);
+    g = changeCounter(g, 0, "speed", 5, T + MERGE_MS + 1);
+    expect(g.players[0].counters.speed).toBe(4);
+    expect(changeCounter(g, 0, "speed", 1, T + 2 * MERGE_MS)).toBe(g);
+  });
+});

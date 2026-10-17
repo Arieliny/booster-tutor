@@ -137,7 +137,9 @@ function Face(props: Props & { w: number; h: number }) {
   const cmdr = others.filter((o) => (player.cmdr[o.index] ?? 0) > 0);
   // The total is as big as the seat allows, after room for the crown and counters.
   const crown = monarch || initiative ? Math.max(28, Math.min(64, h * 0.13)) : 0;
-  const below = shown.length * 38 + (cmdr.length || player.dungeon ? 26 : 0);
+  // Three or more counters sit two to a row so the total stays big.
+  const counterRows = shown.length > 2 ? Math.ceil(shown.length / 2) : shown.length;
+  const below = counterRows * 38 + (cmdr.length || player.dungeon ? 26 : 0);
   const big = Math.max(40, Math.min(240, (h - crown - below - 60) * 0.8, w * 0.36));
   const half = "flex h-full flex-1 items-center text-4xl opacity-45 select-none touch-manipulation active:bg-black/10";
 
@@ -174,7 +176,7 @@ function Face(props: Props & { w: number; h: number }) {
         <div className="h-6 text-lg font-semibold tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
 
         {shown.length > 0 && (
-          <div className="flex flex-col items-center gap-1">
+          <div className={shown.length > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1"}>
             {shown.map((c) => {
               const v = player.counters[c.key] ?? 0;
               const lethal = !!c.lethal && v >= c.lethal;
@@ -184,8 +186,13 @@ function Face(props: Props & { w: number; h: number }) {
                   <button type="button" onClick={() => props.onCounter(c.key, -(c.step ?? 1))} aria-label={`${name}: ${c.label} down`} className={btn}>
                     −
                   </button>
-                  <span className={"min-w-[5.5rem] text-center " + (lethal ? "rounded-full bg-black px-2 text-red-300" : "")}>
-                    <span className="text-xl font-bold tabular-nums">{v}</span> <span className="text-[11px] font-semibold uppercase opacity-85">{c.label}</span>
+                  <span
+                    title={c.label}
+                    aria-label={`${c.label} ${v}`}
+                    className={"flex min-w-[4.5rem] items-center justify-center gap-1.5 rounded-full px-2 " + (lethal ? "bg-black text-red-300" : "")}
+                  >
+                    <Icon name={c.icon} className="h-5 w-5" />
+                    <span className="text-xl font-bold tabular-nums">{v}</span>
                   </span>
                   <button type="button" onClick={() => props.onCounter(c.key, c.step ?? 1)} aria-label={`${name}: ${c.label} up`} className={btn}>
                     +
@@ -266,7 +273,9 @@ function Face(props: Props & { w: number; h: number }) {
   );
 }
 
-/** A big table marker (the monarch's crown, the initiative's door) above the total. */
+const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF" } as const;
+
+/** A big table marker above the total: the monarch's gold crown, the initiative's lavender door. */
 function Marker({ icon, label, size, onClick }: { icon: "crown" | "door"; label: string; size: number; onClick?: () => void }) {
   const inner = (
     <>
@@ -276,13 +285,16 @@ function Marker({ icon, label, size, onClick }: { icon: "crown" | "door"; label:
       <span className="mt-0.5 text-[11px] font-bold tracking-wide uppercase">{label}</span>
     </>
   );
-  const cls = "flex flex-col items-center leading-none";
+  const cls = "flex flex-col items-center rounded-2xl bg-black/40 px-3 pt-1.5 pb-1 leading-none";
+  const style = { color: MARKER_TINT[icon] };
   return onClick ? (
-    <button type="button" onClick={onClick} className={"pointer-events-auto " + cls}>
+    <button type="button" onClick={onClick} className={"pointer-events-auto " + cls} style={style}>
       {inner}
     </button>
   ) : (
-    <div className={cls}>{inner}</div>
+    <div className={cls} style={style}>
+      {inner}
+    </div>
   );
 }
 
@@ -381,12 +393,23 @@ function Menu(props: Props & { onClose: () => void }) {
 
       <div className="space-y-3">
         <section className="space-y-1.5">
-          <div className={head}>Counters · set any above 0 and it shows under your life, with − and +</div>
+          <div className={head}>Counters · any above 0 shows under your life, with − and +</div>
           {COUNTERS.map((c) => {
             const on = player.counters[c.key] !== undefined;
             const v = player.counters[c.key] ?? 0;
             return (
-              <Stepper key={c.key} label={c.label} value={v} danger={!!c.lethal && v >= c.lethal} onChange={(by) => props.onCounter(c.key, by * (c.step ?? 1))}>
+              <Stepper
+                key={c.key}
+                label={
+                  <span className="inline-flex items-center gap-2">
+                    <Icon name={c.icon} className="h-5 w-5" />
+                    {c.label}
+                  </span>
+                }
+                value={v}
+                danger={!!c.lethal && v >= c.lethal}
+                onChange={(by) => props.onCounter(c.key, by * (c.step ?? 1))}
+              >
                 <button
                   type="button"
                   onClick={() => props.onRemoveCounter(c.key)}

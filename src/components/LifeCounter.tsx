@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, firstRoom, isLastRoom, type DungeonKey } from "../lib/dungeons";
+import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, type DungeonKey } from "../lib/dungeons";
 import {
   COUNTERS,
   MARKERS,
@@ -201,13 +201,6 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
     setGame((g) => giveMarker(g, i, "monarch"));
   };
 
-  /** p takes the initiative: they venture into Undercity (entering it if they're in no dungeon). */
-  const takeInitiative = (p: number) =>
-    setGame((g) => {
-      const g2 = giveMarker(g, p, "initiative");
-      return g2.players[p].dungeon ? g2 : enterRoom(g2, p, "undercity", firstRoom("undercity"));
-    });
-
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-black p-1.5 select-none" style={{ paddingTop: "max(env(safe-area-inset-top), 0.375rem)", paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
       <div className="relative min-h-0 flex-1">
@@ -255,11 +248,10 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
             </button>
           ) : (
             <div
-              className={
-                "pointer-events-auto flex items-center overflow-hidden border-black bg-[#14161c] transition-[width,border-radius] duration-200 ease-out " +
-                (barOpen ? "rounded-none border-y-4" : "rounded-full border-4")
-              }
-              style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem" }}
+              className="pointer-events-auto flex items-center overflow-hidden border-4 border-black bg-[#14161c] transition-[width,border-radius] duration-[250ms] ease-out"
+              // A real radius (half the height) rather than "fully round", so the corners square off
+              // in step with the width instead of snapping at the end.
+              style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem", borderRadius: barOpen ? 0 : 30 }}
             >
               <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
                 <Tool icon="exit" label="Exit" onClick={onExit} />
@@ -294,8 +286,8 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
           p={sheet.p}
           turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
           name={seatName(n, sheet.p)}
-          onTakeInitiative={() => takeInitiative(sheet.p)}
-          onEnter={(key, room) => setGame((g) => enterRoom(g, sheet.p, key, room))}
+          // Venturing into Undercity is how the initiative works, so it takes the initiative too.
+          onEnter={(key, room) => setGame((g) => enterRoom(g, sheet.p, key, room, Date.now(), key === "undercity"))}
           onComplete={() => setGame((g) => completeDungeon(g, sheet.p))}
           onClose={() => setSheet(null)}
         />
@@ -451,7 +443,6 @@ function DungeonTracker({
   p,
   turn,
   name,
-  onTakeInitiative,
   onEnter,
   onComplete,
   onClose,
@@ -460,7 +451,6 @@ function DungeonTracker({
   p: number;
   turn: Turn;
   name: string;
-  onTakeInitiative: () => void;
   onEnter: (key: DungeonKey, room: string) => void;
   onComplete: () => void;
   onClose: () => void;
@@ -472,9 +462,8 @@ function DungeonTracker({
   const holds = game.markers.initiative === p;
   const hex = colorHex(player.color);
 
-  // Undercity can only be entered through the initiative; the others through any venture.
-  const canGo = (room: string) =>
-    cur ? cur.key === tab && (d.rooms[cur.room]?.next ?? []).includes(room) : room === d.rows[0][0] && (tab !== "undercity" || holds);
+  // Out of a dungeon: any dungeon's first room (Undercity's means taking the initiative).
+  const canGo = (room: string) => (cur ? cur.key === tab && (d.rooms[cur.room]?.next ?? []).includes(room) : room === d.rows[0][0]);
   const markersIn = (key: DungeonKey, room?: string) =>
     game.players.flatMap((pl, i) => (pl.dungeon?.key === key && (!room || pl.dungeon.room === room) ? [{ i, color: pl.color }] : []));
   const dot = (color: string, mine: boolean) => (
@@ -500,22 +489,20 @@ function DungeonTracker({
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
               <div className="rounded-xl bg-white/5 p-3 text-sm">
-                {holds ? (
-                  <p>
-                    <b className="font-semibold">You have the initiative.</b> At your upkeep, venture into Undercity: tap the room you move to.
-                  </p>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onTakeInitiative();
-                      setTab(cur?.key ?? "undercity");
-                    }}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#B9A4FF] py-2.5 font-semibold text-black"
-                  >
-                    <Icon name="door" className="h-5 w-5" /> Take the initiative
-                  </button>
-                )}
+                <p className="flex items-start gap-2">
+                  <Icon name="door" className="mt-0.5 h-5 w-5 shrink-0 text-[#C9B8FF]" />
+                  <span>
+                    {holds ? (
+                      <>
+                        <b className="font-semibold">You have the initiative.</b> At your upkeep, venture into Undercity: tap the room you move to.
+                      </>
+                    ) : (
+                      <>
+                        Venturing into Undercity <b className="font-semibold">takes the initiative</b>. Just looking? Close without tapping a room.
+                      </>
+                    )}
+                  </span>
+                </p>
                 <p className="mt-2 text-xs text-white/60">{INITIATIVE_TEXT}</p>
               </div>
 
@@ -582,7 +569,6 @@ function DungeonTracker({
                 </button>
               )}
               {player.completed ? <p className="text-xs text-white/60">Dungeons you've completed this game: {player.completed}</p> : null}
-              {tab === "undercity" && !cur && !holds && <p className="text-xs text-white/60">{d.note}.</p>}
             </div>
           </div>
         )}

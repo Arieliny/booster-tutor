@@ -16,14 +16,21 @@ export const STARTING_LIFE = [20, 25, 30, 40];
 export const MERGE_MS = 4000;
 const MAX_HISTORY = 200;
 
-export type CounterKey = "poison" | "energy" | "experience" | "rad" | "tax";
-export const COUNTERS: { key: CounterKey; label: string; step?: number; lethal?: number }[] = [
-  { key: "poison", label: "Poison", lethal: 10 },
-  { key: "energy", label: "Energy" },
-  { key: "experience", label: "Experience" },
-  { key: "rad", label: "Rad" },
+export type CounterKey = "poison" | "energy" | "experience" | "rad" | "tax" | "speed" | "ticket" | "storm";
+/** Each counter's symbol: names from components/Icon.tsx. */
+export type CounterIcon = "droplet" | "bolt" | "star" | "rad" | "coins" | "gauge" | "ticket" | "storm";
+/** Player counters, each with its symbol. */
+export const COUNTERS: { key: CounterKey; label: string; icon: CounterIcon; step?: number; lethal?: number; max?: number }[] = [
+  { key: "poison", label: "Poison", icon: "droplet", lethal: 10 },
+  { key: "energy", label: "Energy", icon: "bolt" },
+  { key: "experience", label: "Experience", icon: "star" },
+  { key: "rad", label: "Rad", icon: "rad" },
   // Each cast of the commander costs 2 more.
-  { key: "tax", label: "Commander tax", step: 2 },
+  { key: "tax", label: "Commander tax", icon: "coins", step: 2 },
+  // Speed (Aetherdrift) tops out at 4.
+  { key: "speed", label: "Speed", icon: "gauge", max: 4 },
+  { key: "ticket", label: "Tickets", icon: "ticket" },
+  { key: "storm", label: "Storm count", icon: "storm" },
 ];
 
 export type MarkerKey = "monarch" | "initiative";
@@ -126,6 +133,7 @@ function record(
   change: (players: Player[], markers: Partial<Record<MarkerKey, number>>) => void,
   now: number,
   mergeable: boolean,
+  snapMarkers = false,
 ): Game {
   const players = g.players.map(clone);
   const markers = { ...g.markers };
@@ -148,7 +156,7 @@ function record(
           ...entry,
           t: now,
           before: touched.map((i) => ({ i, player: clone(g.players[i]) })),
-          ...(entry.kind === "marker" && { markersBefore: { ...g.markers } }),
+          ...((entry.kind === "marker" || snapMarkers) && { markersBefore: { ...g.markers } }),
         },
       ].slice(-MAX_HISTORY);
   return { ...g, players, markers, history };
@@ -185,7 +193,8 @@ export function removeCounter(g: Game, p: number, key: CounterKey): Game {
 
 export function changeCounter(g: Game, p: number, key: CounterKey, by: number, now = Date.now()): Game {
   const cur = g.players[p].counters[key] ?? 0;
-  const by2 = Math.max(-cur, by); // counters don't go below 0
+  const max = COUNTERS.find((c) => c.key === key)?.max ?? Infinity;
+  const by2 = Math.min(max - cur, Math.max(-cur, by)); // counters don't go below 0 (or past a cap)
   if (!by2) return g;
   return record(g, { p, kind: "counter", key, d: by2 }, [p], (ps) => void (ps[p].counters[key] = cur + by2), now, true);
 }
@@ -214,9 +223,25 @@ export function giveMarker(g: Game, p: number, key: MarkerKey, now = Date.now())
   return record(g, { p, kind: "marker", key, d: 1 }, [], (_, m) => void (m[key] = p), now, false);
 }
 
-/** Move p into a dungeon room (entering the dungeon if it's the first room). */
-export function enterRoom(g: Game, p: number, key: DungeonKey, room: string, now = Date.now()): Game {
-  return record(g, { p, kind: "dungeon", room, d: 0 }, [p], (ps) => void (ps[p].dungeon = { key, room }), now, false);
+/**
+ * Move p into a dungeon room (entering the dungeon if it's the first room).
+ * Venturing into Undercity happens through the initiative, so with
+ * `takeInitiative` p also takes it, in the same history entry (one undo).
+ */
+export function enterRoom(g: Game, p: number, key: DungeonKey, room: string, now = Date.now(), takeInitiative = false): Game {
+  const take = takeInitiative && g.markers.initiative !== p;
+  return record(
+    g,
+    { p, kind: "dungeon", room, d: 0 },
+    [p],
+    (ps, m) => {
+      ps[p].dungeon = { key, room };
+      if (take) m.initiative = p;
+    },
+    now,
+    false,
+    take,
+  );
 }
 
 /** p finished the last room: the dungeon is removed and counts as completed. */
