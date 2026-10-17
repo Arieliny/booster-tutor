@@ -1,6 +1,18 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { dungeonOf } from "../lib/dungeons";
-import { COLORS, COUNTERS, colorHex, colorInk, type ColorKey, type CounterKey, type MarkerKey, type Player } from "../lib/life";
+import {
+  COLORS,
+  COUNTERS,
+  colorHex,
+  colorInk,
+  counterIcon,
+  type ColorKey,
+  type CounterIcon,
+  type CounterKey,
+  type Game,
+  type MarkerKey,
+  type Player,
+} from "../lib/life";
 import { Icon } from "./Icon";
 
 /** How far a seat's panel is turned so it faces its player (0 = upright for the phone's owner). */
@@ -82,6 +94,8 @@ interface Props {
   /** The other seats, for commander damage. */
   others: { index: number; name: string; color: ColorKey }[];
   markers: Partial<Record<MarkerKey, number>>;
+  /** The game's chosen counter symbols. */
+  icons: Game["icons"];
   index: number;
   highlight: "first" | "spin" | null;
   /** The middle tray is open: show this seat's door to the dungeon tracker. */
@@ -93,6 +107,7 @@ interface Props {
   onSet: (life: number) => void;
   onCounter: (key: CounterKey, by: number) => void;
   onRemoveCounter: (key: CounterKey) => void;
+  onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
   onCmdr: (from: number, by: number) => void;
   onDungeon: () => void;
   onColor: (c: ColorKey) => void;
@@ -191,7 +206,7 @@ function Face(props: Props & { w: number; h: number }) {
                     aria-label={`${c.label} ${v}`}
                     className={"flex min-w-[4.5rem] items-center justify-center gap-1.5 rounded-full px-2 " + (lethal ? "bg-black text-red-300" : "")}
                   >
-                    <Icon name={c.icon} className="h-5 w-5" />
+                    <Icon name={counterIcon(props, c.key)} className="h-5 w-5" />
                     <span className="text-xl font-bold tabular-nums">{v}</span>
                   </span>
                   <button type="button" onClick={() => props.onCounter(c.key, c.step ?? 1)} aria-label={`${name}: ${c.label} up`} className={btn}>
@@ -402,8 +417,25 @@ function Menu(props: Props & { onClose: () => void }) {
                 key={c.key}
                 label={
                   <span className="inline-flex items-center gap-2">
-                    <Icon name={c.icon} className="h-5 w-5" />
+                    <Icon name={counterIcon(props, c.key)} className="h-5 w-5" />
                     {c.label}
+                    {c.icons && (
+                      // Which symbol this counter shows (poison: Phyrexian or droplet).
+                      <span className="ml-1 inline-flex overflow-hidden rounded-md border border-white/20">
+                        {c.icons.map((ic) => (
+                          <button
+                            key={ic}
+                            type="button"
+                            onClick={() => props.onCounterIcon(c.key, ic)}
+                            aria-label={`Show ${c.label} as ${ic}`}
+                            aria-pressed={counterIcon(props, c.key) === ic}
+                            className={"px-1.5 py-0.5 " + (counterIcon(props, c.key) === ic ? "bg-white/20" : "opacity-50 hover:opacity-100")}
+                          >
+                            <Icon name={ic} className="h-4 w-4" />
+                          </button>
+                        ))}
+                      </span>
+                    )}
                   </span>
                 }
                 value={v}

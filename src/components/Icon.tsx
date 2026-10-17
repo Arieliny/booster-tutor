@@ -48,6 +48,13 @@ const PATHS = {
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   // Counter symbols for the life counter.
+  // The Phyrexian symbol (as on Phyrexian mana), Magic's usual mark for poison.
+  phyrexian: (
+    <>
+      <circle cx="12" cy="12" r="5.5" />
+      <path d="M12 2.5v19" />
+    </>
+  ),
   droplet: <path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" />,
   bolt: <path d="M13 2.5 4.5 14H11l-1 7.5L19.5 10H13z" />,
   rad: (

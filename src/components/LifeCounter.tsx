@@ -19,6 +19,7 @@ import {
   removeCounter,
   rollDice,
   setColor,
+  setCounterIcon,
   setLife,
   undo,
   untouched,
@@ -216,6 +217,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                 player={game.players[i]}
                 turn={turn}
                 markers={game.markers}
+                icons={game.icons}
                 others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: seatName(n, j), color: o.color }]))}
                 highlight={first === i ? "first" : spin === i ? "spin" : null}
                 trayOpen={barOpen}
@@ -225,6 +227,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                 onSet={(life) => setGame((g) => setLife(g, i, life))}
                 onCounter={(key, by) => setGame((g) => changeCounter(g, i, key, by))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
+                onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
                 onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
                 onDungeon={() => {
                   setBarOpen(false);

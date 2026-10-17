@@ -234,3 +234,16 @@ describe("counter caps", () => {
     expect(changeCounter(g, 0, "speed", 1, T + 2 * MERGE_MS)).toBe(g);
   });
 });
+
+describe("counter symbols", () => {
+  it("poison shows the Phyrexian symbol by default, can switch, and the choice carries to the next game", async () => {
+    const { counterIcon, setCounterIcon } = await import("../src/lib/life");
+    let g = newGame(2, 20);
+    expect(counterIcon(g, "poison")).toBe("phyrexian");
+    expect(counterIcon(g, "energy")).toBe("bolt");
+    g = setCounterIcon(g, "poison", "droplet");
+    expect(counterIcon(g, "poison")).toBe("droplet");
+    expect(g.history).toHaveLength(0);
+    expect(counterIcon(newGame(2, 20, g), "poison")).toBe("droplet");
+  });
+});

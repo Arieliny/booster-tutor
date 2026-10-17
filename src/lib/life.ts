@@ -18,10 +18,10 @@ const MAX_HISTORY = 200;
 
 export type CounterKey = "poison" | "energy" | "experience" | "rad" | "tax" | "speed" | "ticket" | "storm";
 /** Each counter's symbol: names from components/Icon.tsx. */
-export type CounterIcon = "droplet" | "bolt" | "star" | "rad" | "coins" | "gauge" | "ticket" | "storm";
-/** Player counters, each with its symbol. */
-export const COUNTERS: { key: CounterKey; label: string; icon: CounterIcon; step?: number; lethal?: number; max?: number }[] = [
-  { key: "poison", label: "Poison", icon: "droplet", lethal: 10 },
+export type CounterIcon = "phyrexian" | "droplet" | "bolt" | "star" | "rad" | "coins" | "gauge" | "ticket" | "storm";
+/** Player counters, each with its symbol (`icons` lists the ones a player can switch between, default first). */
+export const COUNTERS: { key: CounterKey; label: string; icon: CounterIcon; icons?: CounterIcon[]; step?: number; lethal?: number; max?: number }[] = [
+  { key: "poison", label: "Poison", icon: "phyrexian", icons: ["phyrexian", "droplet"], lethal: 10 },
   { key: "energy", label: "Energy", icon: "bolt" },
   { key: "experience", label: "Experience", icon: "star" },
   { key: "rad", label: "Rad", icon: "rad" },
@@ -93,6 +93,8 @@ export interface Game {
   players: Player[];
   /** Who holds each table-wide marker, by seat. */
   markers: Partial<Record<MarkerKey, number>>;
+  /** Symbols picked for counters that have a choice (e.g. poison: Phyrexian or droplet). */
+  icons?: Partial<Record<CounterKey, CounterIcon>>;
   history: Entry[];
 }
 
@@ -109,6 +111,8 @@ export function newGame(count: number, start: number, previous?: Game): Game {
       cmdr: {},
     })),
     markers: {},
+    // The symbols picked carry over to the next game.
+    ...(previous?.icons && { icons: { ...previous.icons } }),
     history: [],
   };
 }
@@ -275,6 +279,16 @@ export function toggleMarker(g: Game, p: number, key: MarkerKey, now = Date.now(
     now,
     false,
   );
+}
+
+/** The symbol a counter shows in this game. */
+export function counterIcon(g: Pick<Game, "icons">, key: CounterKey): CounterIcon {
+  return g.icons?.[key] ?? COUNTERS.find((c) => c.key === key)!.icon;
+}
+
+/** Pick a counter's symbol (a preference, not a game action: no history). */
+export function setCounterIcon(g: Game, key: CounterKey, icon: CounterIcon): Game {
+  return { ...g, icons: { ...g.icons, [key]: icon } };
 }
 
 export function setColor(g: Game, p: number, color: ColorKey): Game {
