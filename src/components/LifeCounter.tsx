@@ -372,7 +372,7 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                 ) : (
                   <>
                     <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
-                    <Tool icon="target" label="Who's first" onClick={whoGoesFirst} />
+                    <Tool icon="flag" label="Who's first" onClick={whoGoesFirst} />
                     <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                     {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
                   </>
