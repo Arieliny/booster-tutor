@@ -47,6 +47,8 @@ const PATHS = {
     </>
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  // Commander damage.
+  sword: <path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2" />,
   // Counter symbols for the life counter.
   // The Phyrexian symbol (as on Phyrexian mana), Magic's usual mark for poison.
   phyrexian: (

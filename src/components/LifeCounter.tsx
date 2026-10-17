@@ -8,6 +8,7 @@ import {
   MAX_PLAYERS,
   MIN_PLAYERS,
   STARTING_LIFE,
+  addCmdr,
   addCounter,
   changeCmdr,
   changeCounter,
@@ -19,11 +20,11 @@ import {
   lifeAfter,
   newGame,
   parseGame,
+  removeCmdr,
   removeCounter,
   rollDice,
   setColor,
   setCounterIcon,
-  setLife,
   undo,
   untouched,
   type Entry,
@@ -276,12 +277,13 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                 picking={giving ? "Becomes the monarch" : null}
                 onPick={() => pick(i)}
                 onLife={(by) => setGame((g) => changeLife(g, i, by))}
-                onSet={(life) => setGame((g) => setLife(g, i, life))}
                 onCounter={(key, by) => setGame((g) => changeCounter(g, i, key, by))}
                 onAddCounter={(key) => setGame((g) => addCounter(g, i, key))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
                 onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
+                onAddCmdr={(from) => setGame((g) => addCmdr(g, i, from))}
+                onRemoveCmdr={(from) => setGame((g) => removeCmdr(g, i, from))}
                 onDungeon={() => {
                   setBarOpen(false);
                   setSheet({ kind: "dungeon", p: i });

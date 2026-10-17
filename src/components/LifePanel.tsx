@@ -104,12 +104,13 @@ interface Props {
   picking: string | null;
   onPick: () => void;
   onLife: (by: number) => void;
-  onSet: (life: number) => void;
   onCounter: (key: CounterKey, by: number) => void;
   onAddCounter: (key: CounterKey) => void;
   onRemoveCounter: (key: CounterKey) => void;
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
   onCmdr: (from: number, by: number) => void;
+  onAddCmdr: (from: number) => void;
+  onRemoveCmdr: (from: number) => void;
   onDungeon: () => void;
   onColor: (c: ColorKey) => void;
 }
@@ -134,7 +135,7 @@ export function LifePanel(props: Props) {
 function Face(props: Props & { w: number; h: number }) {
   const { name, player, w, h, highlight, markers, index, others, picking, trayOpen } = props;
   const [delta, setDelta] = useState(0);
-  const [mode, setMode] = useState<"play" | "edit" | "menu">("play");
+  const [mode, setMode] = useState<"play" | "menu">("play");
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
@@ -150,12 +151,14 @@ function Face(props: Props & { w: number; h: number }) {
   const monarch = markers.monarch === index;
   const initiative = markers.initiative === index;
   const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
-  const cmdr = others.filter((o) => (player.cmdr[o.index] ?? 0) > 0);
+  // Commander damage switched on in the menu, one row per opponent (their color on the sword).
+  const cmdr = others.filter((o) => player.cmdr[o.index] !== undefined);
   // The total is as big as the seat allows, after room for the crown and counters.
   const crown = monarch || initiative ? Math.max(28, Math.min(64, h * 0.13)) : 0;
-  // Three or more counters sit two to a row so the total stays big.
-  const counterRows = shown.length > 2 ? Math.ceil(shown.length / 2) : shown.length;
-  const below = counterRows * 38 + (cmdr.length || player.dungeon ? 26 : 0);
+  // Three or more rows (counters and commander damage) sit two to a row so the total stays big.
+  const tracked = shown.length + cmdr.length;
+  const counterRows = tracked > 2 ? Math.ceil(tracked / 2) : tracked;
+  const below = counterRows * 38 + (player.dungeon ? 26 : 0);
   const big = Math.max(40, Math.min(240, (h - crown - below - 60) * 0.8, w * 0.36));
   const half = "flex h-full flex-1 items-center text-4xl opacity-45 select-none touch-manipulation active:bg-black/10";
 
@@ -179,59 +182,60 @@ function Face(props: Props & { w: number; h: number }) {
             {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} />}
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => setMode("edit")}
-          title="Tap to type a life total"
-          className={"pointer-events-auto font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60 line-through" : "")}
+        <div
+          className={"font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60 line-through" : "")}
           style={{ fontSize: big }}
           aria-live="polite"
+          data-life
         >
           {player.life}
-        </button>
+        </div>
         <div className="h-6 font-life text-lg font-black tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
 
-        {shown.length > 0 && (
-          <div className={shown.length > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1"}>
+        {tracked > 0 && (
+          <div className={tracked > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1"}>
             {shown.map((c) => {
               const v = player.counters[c.key] ?? 0;
-              const lethal = !!c.lethal && v >= c.lethal;
-              const btn = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-xl leading-none active:bg-black/40";
               return (
-                <div key={c.key} className="flex items-center gap-2">
-                  <button type="button" onClick={() => props.onCounter(c.key, -(c.step ?? 1))} aria-label={`${name}: ${c.label} down`} className={btn}>
-                    −
-                  </button>
-                  <span
-                    title={c.label}
-                    aria-label={`${c.label} ${v}`}
-                    className={"flex min-w-[4.5rem] items-center justify-center gap-1.5 rounded-full px-2 " + (lethal ? "bg-black text-red-300" : "")}
-                  >
-                    <Icon name={counterIcon(props, c.key)} className="h-5 w-5" />
-                    <span className="font-life text-xl font-black tabular-nums">{v}</span>
-                  </span>
-                  <button type="button" onClick={() => props.onCounter(c.key, c.step ?? 1)} aria-label={`${name}: ${c.label} up`} className={btn}>
-                    +
-                  </button>
-                </div>
+                <TrackRow
+                  key={c.key}
+                  label={c.label}
+                  value={v}
+                  lethal={!!c.lethal && v >= c.lethal}
+                  icon={<Icon name={counterIcon(props, c.key)} className="h-5 w-5" />}
+                  onDown={() => props.onCounter(c.key, -(c.step ?? 1))}
+                  onUp={() => props.onCounter(c.key, c.step ?? 1)}
+                  who={name}
+                />
+              );
+            })}
+            {cmdr.map((o) => {
+              const v = player.cmdr[o.index] ?? 0;
+              return (
+                <TrackRow
+                  key={`cmdr-${o.index}`}
+                  label={`Commander damage from ${o.name}`}
+                  value={v}
+                  lethal={v >= 21}
+                  icon={
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/45" style={{ color: colorHex(o.color) }}>
+                      <Icon name="sword" className="h-4 w-4" />
+                    </span>
+                  }
+                  onDown={() => props.onCmdr(o.index, -1)}
+                  onUp={() => props.onCmdr(o.index, 1)}
+                  who={name}
+                />
               );
             })}
           </div>
         )}
 
-        {(cmdr.length > 0 || player.dungeon) && (
+        {player.dungeon && (
           <div className="mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
-            {player.dungeon && (
-              <Chip onClick={props.onDungeon}>
-                {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
-              </Chip>
-            )}
-            {cmdr.map((o) => (
-              <Chip key={o.index} onClick={() => setMode("menu")} danger={(player.cmdr[o.index] ?? 0) >= 21}>
-                <span className="mr-1 inline-block h-2 w-2 rounded-full ring-1 ring-white/70" style={{ background: colorHex(o.color) }} />
-                Cmdr {player.cmdr[o.index]}
-              </Chip>
-            ))}
+            <Chip onClick={props.onDungeon}>
+              {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
+            </Chip>
           </div>
         )}
       </div>
@@ -274,7 +278,6 @@ function Face(props: Props & { w: number; h: number }) {
           {picking}
         </button>
       )}
-      {mode === "edit" && <EditLife life={player.life} onSet={props.onSet} onClose={() => setMode("play")} />}
       {mode === "menu" && (
         <Menu
           {...props}
@@ -326,71 +329,41 @@ function Chip({ children, onClick, danger }: { children: React.ReactNode; onClic
   );
 }
 
-function EditLife({ life, onSet, onClose }: { life: number; onSet: (n: number) => void; onClose: () => void }) {
-  const [v, setV] = useState(String(life));
-  const save = () => {
-    const n = Number(v);
-    if (v.trim() !== "" && Number.isFinite(n)) onSet(n);
-    onClose();
-  };
-  return (
-    <form
-      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/85 p-3 text-white"
-      onSubmit={(e) => {
-        e.preventDefault();
-        save();
-      }}
-    >
-      <label className="text-sm text-white/70" htmlFor="life-exact">
-        Set life to
-      </label>
-      <input
-        id="life-exact"
-        autoFocus
-        type="number"
-        inputMode="numeric"
-        value={v}
-        onChange={(e) => setV(e.target.value)}
-        onFocus={(e) => e.currentTarget.select()}
-        className="w-28 rounded-lg border border-white/30 bg-black px-2 py-2 text-center text-3xl text-white tabular-nums"
-      />
-      <div className="flex gap-2">
-        <button type="button" onClick={onClose} className="rounded-lg border border-white/30 px-4 py-1.5 text-sm">
-          Cancel
-        </button>
-        <button type="submit" className="rounded-lg bg-white px-4 py-1.5 text-sm font-semibold text-black">
-          Set
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function Stepper({
+/** A counter or commander damage under the total: - [symbol value] +. */
+function TrackRow({
   label,
   value,
-  onChange,
-  danger,
-  children,
+  lethal,
+  icon,
+  onDown,
+  onUp,
+  who,
 }: {
-  label: React.ReactNode;
+  label: string;
   value: number;
-  onChange: (by: number) => void;
-  danger?: boolean;
-  children?: React.ReactNode;
+  lethal: boolean;
+  icon: React.ReactNode;
+  onDown: () => void;
+  onUp: () => void;
+  who: string;
 }) {
-  const btn = "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/25 text-lg hover:bg-white/10";
+  const btn = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-xl leading-none active:bg-black/40";
   return (
     <div className="flex items-center gap-2">
-      <span className="min-w-0 flex-1 truncate text-sm">{label}</span>
-      <button type="button" onClick={() => onChange(-1)} aria-label="Less" className={btn}>
+      <button type="button" onClick={onDown} aria-label={`${who}: ${label} down`} className={btn}>
         −
       </button>
-      <span className={"w-7 text-center text-base font-semibold tabular-nums " + (danger ? "text-red-400" : "")}>{value}</span>
-      <button type="button" onClick={() => onChange(1)} aria-label="More" className={btn}>
+      <span
+        title={label}
+        aria-label={`${label} ${value}`}
+        className={"flex min-w-[4.5rem] items-center justify-center gap-1.5 rounded-full px-2 " + (lethal ? "bg-black text-red-300" : "")}
+      >
+        {icon}
+        <span className="font-life text-xl font-black tabular-nums">{value}</span>
+      </span>
+      <button type="button" onClick={onUp} aria-label={`${who}: ${label} up`} className={btn}>
         +
       </button>
-      {children}
     </div>
   );
 }
@@ -459,21 +432,29 @@ function Menu(props: Props & { onClose: () => void }) {
         </section>
 
         <section className="space-y-1.5">
-          <div className={head}>Commander damage taken (also takes life)</div>
-          {others.map((o) => (
-            <Stepper
-              key={o.index}
-              label={
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ background: colorHex(o.color) }} />
-                  from {o.name}
-                </span>
-              }
-              value={player.cmdr[o.index] ?? 0}
-              danger={(player.cmdr[o.index] ?? 0) >= 21}
-              onChange={(by) => props.onCmdr(o.index, by)}
-            />
-          ))}
+          <div className={head}>Commander damage on your life card (it also takes life)</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {others.map((o) => {
+              const on = player.cmdr[o.index] !== undefined;
+              return (
+                <button
+                  key={o.index}
+                  type="button"
+                  onClick={() => (on ? props.onRemoveCmdr(o.index) : props.onAddCmdr(o.index))}
+                  aria-pressed={on}
+                  className={
+                    "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
+                    (on ? "border-white bg-white/15" : "border-white/20 text-white/75 hover:bg-white/10")
+                  }
+                >
+                  <Icon name="sword" className="h-5 w-5 shrink-0" />
+                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: colorHex(o.color) }} />
+                  <span className="min-w-0 flex-1 truncate">From {o.name}</span>
+                  {on && <Icon name="check" className="h-4 w-4 shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         <section className="space-y-1.5">

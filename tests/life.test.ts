@@ -247,3 +247,18 @@ describe("counter symbols", () => {
     expect(counterIcon(newGame(2, 20, g), "poison")).toBe("droplet");
   });
 });
+
+describe("commander damage on the card", () => {
+  it("shows at 0, keeps showing after damage is undone, and hides", async () => {
+    const { addCmdr, removeCmdr } = await import("../src/lib/life");
+    let g = addCmdr(newGame(3, 40), 0, 2);
+    expect(g.players[0].cmdr).toEqual({ 2: 0 });
+    expect(g.history).toHaveLength(0);
+    g = changeCmdr(g, 0, 2, 7, T);
+    expect(g.players[0].life).toBe(33);
+    g = undo(g);
+    expect(g.players[0].cmdr).toEqual({ 2: 0 });
+    expect(g.players[0].life).toBe(40);
+    expect(removeCmdr(g, 0, 2).players[0].cmdr).toEqual({});
+  });
+});

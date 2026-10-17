@@ -203,6 +203,25 @@ export function changeCounter(g: Game, p: number, key: CounterKey, by: number, n
   return record(g, { p, kind: "counter", key, d: by2 }, [p], (ps) => void (ps[p].counters[key] = cur + by2), now, true);
 }
 
+/** Show commander damage from seat `from` on p's card (at 0), like adding a counter. */
+export function addCmdr(g: Game, p: number, from: number): Game {
+  if (g.players[p].cmdr[from] !== undefined) return g;
+  return { ...g, players: g.players.map((pl, i) => (i === p ? { ...pl, cmdr: { ...pl.cmdr, [from]: 0 } } : pl)) };
+}
+
+/** Take commander damage from seat `from` off p's card. */
+export function removeCmdr(g: Game, p: number, from: number): Game {
+  return {
+    ...g,
+    players: g.players.map((pl, i) => {
+      if (i !== p) return pl;
+      const cmdr = { ...pl.cmdr };
+      delete cmdr[from];
+      return { ...pl, cmdr };
+    }),
+  };
+}
+
 /** Commander damage to p from seat `from`. It's also life lost. */
 export function changeCmdr(g: Game, p: number, from: number, by: number, now = Date.now()): Game {
   const cur = g.players[p].cmdr[from] ?? 0;
