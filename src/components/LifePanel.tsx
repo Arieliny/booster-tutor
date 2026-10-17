@@ -164,7 +164,9 @@ function Face(props: Props & { w: number; h: number }) {
   const tracked = shown.length + cmdr.length;
   const counterRows = tracked > 2 ? Math.ceil(tracked / 2) : tracked;
   const below = counterRows * 38 + (player.dungeon ? 26 : 0);
-  const big = Math.max(40, Math.min(240, (h - crown - below - 60) * 0.8, w * 0.36));
+  // Two digits get half the seat's width; three (or a minus sign) shrink so they stay clear of - and +.
+  const chars = String(player.life).length;
+  const big = Math.max(40, Math.min(300, (h - crown - below - 50) * 0.9, w * (chars >= 3 ? 0.33 : 0.5)));
   const half = "flex h-full flex-1 items-center text-4xl opacity-45 select-none touch-manipulation active:bg-black/10";
 
   return (
