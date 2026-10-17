@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 // Latin digits only: Nunito Black for the big numbers.
 import "@fontsource/nunito/latin-900.css";
 import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, type DungeonKey } from "../lib/dungeons";
@@ -36,6 +36,9 @@ import {
 import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
+
+// The rules judge, opened over the counter from the tray (loaded only when first opened).
+const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
 
 /**
  * Full-screen life counter for 2-6 players around one phone. Left half of a
@@ -157,7 +160,7 @@ function seating(count: number, wide: boolean): { i: number; turn: Turn; span: b
   return out;
 }
 
-type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "settings" } | { kind: "dungeon"; p: number };
+type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "settings" } | { kind: "judge" } | { kind: "dungeon"; p: number };
 
 const DICE = [4, 6, 8, 10, 12, 20];
 
@@ -176,7 +179,7 @@ interface Roll {
   seed: number;
 }
 
-export function LifeCounter({ onExit }: { onExit: () => void }) {
+export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; canJudge?: boolean }) {
   const [game, setGame] = useState<Game>(load);
   const [settings, setSettings] = useState<LifeSettings>(loadSettings);
   const [sheet, setSheet] = useState<SheetKind | null>(null);
@@ -369,6 +372,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                     <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
                     <Tool icon="target" label="Who's first" onClick={whoGoesFirst} />
                     <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
+                    {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
                     <Tool icon="gear" label="Settings" onClick={() => setSheet({ kind: "settings" })} />
                   </>
                 )}
@@ -381,6 +385,23 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
 
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
       {sheet?.kind === "settings" && <SettingsSheet settings={settings} onChange={setSettings} onClose={() => setSheet(null)} />}
+      {sheet?.kind === "judge" && (
+        // Full screen over the counter; closing it comes straight back to the game.
+        <div className="absolute inset-0 z-50 flex flex-col bg-(--color-bg) text-(--color-text)" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-(--color-border) px-4">
+            <Icon name="scales" className="h-5 w-5 text-(--color-text-dim)" />
+            <span className="flex-1 text-lg font-semibold">Judge</span>
+            <button type="button" onClick={() => setSheet(null)} aria-label="Close the judge" className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-white/10">
+              <Icon name="close" className="h-6 w-6" />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4">
+            <Suspense fallback={<p className="text-sm text-(--color-text-dim)">Loading the judge…</p>}>
+              <Judge embedded />
+            </Suspense>
+          </div>
+        </div>
+      )}
       {sheet?.kind === "dungeon" && (
         <DungeonTracker
           game={game}

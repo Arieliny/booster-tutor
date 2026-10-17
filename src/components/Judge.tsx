@@ -37,7 +37,7 @@ type Busy = { status: string | null; draft: string } | null;
  * removed. Every answered thread goes into History (last 50, synced across
  * your devices), where it can be reread or continued.
  */
-export function Judge() {
+export function Judge({ embedded = false }: { embedded?: boolean } = {}) {
   const [convo, setConvo] = useState<Conversation>(loadConversation);
   const { messages, cards } = convo;
   const [showHistory, setShowHistory] = useState(false);
@@ -235,7 +235,12 @@ export function Judge() {
       </div>
 
       {/* Composer: stays above the bottom nav on a phone. */}
-      <div className="sticky bottom-16 -mx-4 space-y-2 border-t border-(--color-border) bg-(--color-bg) px-4 pt-3 pb-3 sm:-mx-6 sm:px-6 md:bottom-0">
+      <div
+        className={
+          "sticky -mx-4 space-y-2 border-t border-(--color-border) bg-(--color-bg) px-4 pt-3 pb-3 " +
+          (embedded ? "bottom-0" : "bottom-16 sm:-mx-6 sm:px-6 md:bottom-0")
+        }
+      >
         <div className="flex flex-wrap items-center gap-1.5">
           {cards.map((c) => (
             <span

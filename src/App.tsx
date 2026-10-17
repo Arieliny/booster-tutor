@@ -416,7 +416,10 @@ function App() {
         </Suspense>
       ) : tab === "life" ? (
         // Full screen over the app; Exit (in its middle bar) goes back to the screen before it.
-        <LifeCounter onExit={() => setTab(tabAllowed(beforeLife.current, me) ? beforeLife.current : "packs")} />
+        <LifeCounter
+          onExit={() => setTab(tabAllowed(beforeLife.current, me) ? beforeLife.current : "packs")}
+          canJudge={tabAllowed("judge", me)}
+        />
       ) : tab === "judge" ? (
         <Suspense fallback={loading("the judge")}>
           <Judge />
