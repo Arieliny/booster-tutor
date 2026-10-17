@@ -4,6 +4,7 @@ import { Icon, type IconName } from "./Icon";
 
 const SECTION_ICON: Record<Section, IconName> = {
   play: "play",
+  life: "heart",
   myCube: "cube",
   lookup: "search",
   judge: "scales",

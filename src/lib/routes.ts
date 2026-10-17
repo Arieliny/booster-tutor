@@ -135,7 +135,7 @@ export function onNavigate(fn: (tab: Tab) => void): () => void {
 
 // ---------------------------------------------------------------- nav sections
 
-export type Section = "play" | "myCube" | "lookup" | "judge" | "grades";
+export type Section = "play" | "life" | "myCube" | "lookup" | "judge" | "grades";
 
 /**
  * The nav, in order. Each section holds one or more screens; the first one
@@ -143,7 +143,9 @@ export type Section = "play" | "myCube" | "lookup" | "judge" | "grades";
  * account menu instead.
  */
 export const SECTIONS: { id: Section; label: string; tabs: Tab[] }[] = [
-  { id: "play", label: "Play", tabs: ["packs", "life"] },
+  { id: "play", label: "Play", tabs: ["packs"] },
+  // The life counter: its own section (anyone who can open Play can use it).
+  { id: "life", label: "Life", tabs: ["life"] },
   // The collection checklist (Inventory) opens from My cube's home page.
   { id: "myCube", label: "My cube", tabs: ["cubeReview", "inventory"] },
   { id: "lookup", label: "Look up", tabs: ["lookup"] },
@@ -158,7 +160,7 @@ export function sectionOf(tab: Tab): Section | null {
 /** Page title for the top bar. */
 export const TAB_TITLES: Record<Tab, string> = {
   packs: "Play",
-  life: "Play",
+  life: "Life",
   inventory: "My cube",
   cubeReview: "My cube",
   lookup: "Look up",
