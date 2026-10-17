@@ -76,6 +76,36 @@ function useWakeLock() {
   }, []);
 }
 
+/**
+ * True full screen (hides the phone's status and navigation bars) while the
+ * counter is open, locked to portrait so it doesn't flip when the phone lies
+ * flat. Browsers only allow it right after a tap: opening Life counts; after a
+ * reload, or if someone swiped the bars back, the next tap does it. iPhones
+ * don't support it in the browser, so there the counter just fills the page.
+ */
+function useFullscreen() {
+  useEffect(() => {
+    const el = document.documentElement;
+    if (!el.requestFullscreen) return;
+    const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
+    const enter = () => {
+      if (document.fullscreenElement) return;
+      el.requestFullscreen({ navigationUI: "hide" })
+        .then(() => orientation?.lock?.("portrait").catch(() => {}))
+        .catch(() => {
+          // Not allowed without a tap yet: the next tap tries again.
+        });
+    };
+    enter();
+    document.addEventListener("pointerup", enter);
+    return () => {
+      document.removeEventListener("pointerup", enter);
+      orientation?.unlock?.();
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    };
+  }, []);
+}
+
 function useWide() {
   const [wide, setWide] = useState(() => window.matchMedia("(min-width: 768px)").matches);
   useEffect(() => {
@@ -120,6 +150,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
   const timers = useRef<number[]>([]);
   const wide = useWide();
   useWakeLock();
+  useFullscreen();
 
   useEffect(() => {
     try {
