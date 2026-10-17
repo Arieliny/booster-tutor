@@ -8,6 +8,7 @@ import {
   MAX_PLAYERS,
   MIN_PLAYERS,
   STARTING_LIFE,
+  addCounter,
   changeCmdr,
   changeCounter,
   changeLife,
@@ -141,7 +142,17 @@ function seating(count: number, wide: boolean): { i: number; turn: Turn; span: b
   return out;
 }
 
-type SheetKind = { kind: "history" } | { kind: "dice" } | { kind: "new" } | { kind: "dungeon"; p: number };
+type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "dungeon"; p: number };
+
+const DICE = [4, 6, 8, 10, 12, 20];
+
+/** A roll on the table: what was rolled, what it shows now (it tumbles first), and a key to restart the animation. */
+interface Roll {
+  what: number | "coin";
+  shown: string;
+  rolling: boolean;
+  id: number;
+}
 
 export function LifeCounter({ onExit }: { onExit: () => void }) {
   const [game, setGame] = useState<Game>(load);
@@ -150,6 +161,10 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
   const [giving, setGiving] = useState<"monarch" | null>(null);
   const [spin, setSpin] = useState<number | null>(null);
   const [first, setFirst] = useState<number | null>(null);
+  // The tray shows the dice instead of the tools; the latest roll.
+  const [diceTray, setDiceTray] = useState(false);
+  const [roll, setRoll] = useState<Roll | null>(null);
+  const rollTimer = useRef<number | undefined>(undefined);
   const timers = useRef<number[]>([]);
   const wide = useWide();
   useWakeLock();
@@ -163,7 +178,13 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
       // Blocked storage: the game still works until the page closes.
     }
   }, [game]);
-  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+  useEffect(
+    () => () => {
+      timers.current.forEach((t) => window.clearTimeout(t));
+      window.clearInterval(rollTimer.current);
+    },
+    [],
+  );
   // The page underneath mustn't scroll while the counter covers it.
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -198,6 +219,30 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
     timers.current.push(window.setTimeout(() => setFirst(null), 70 + ticks * ticks * 4 + 5000));
   };
 
+  /** Roll a die (or flip the coin): it tumbles through faces for a moment, then lands. */
+  const rollIt = (what: number | "coin") => {
+    window.clearInterval(rollTimer.current);
+    const face = () => (what === "coin" ? (Math.random() < 0.5 ? "Heads" : "Tails") : String(rollDice(1, what)[0]));
+    const final = face();
+    // About 0.65 s of tumbling for a die, 0.9 s of spinning for the coin (70 ms a face).
+    let left = what === "coin" ? 13 : 9;
+    setRoll((r) => ({ what, shown: face(), rolling: true, id: (r?.id ?? 0) + 1 }));
+    rollTimer.current = window.setInterval(() => {
+      left -= 1;
+      if (left <= 0) {
+        window.clearInterval(rollTimer.current);
+        setRoll((r) => r && { ...r, shown: final, rolling: false });
+      } else setRoll((r) => r && { ...r, shown: face() });
+    }, 70);
+  };
+
+  const closeTray = () => {
+    setBarOpen(false);
+    setDiceTray(false);
+    setRoll(null);
+    window.clearInterval(rollTimer.current);
+  };
+
   /** Someone was picked to become the monarch. */
   const pick = (i: number) => {
     setGiving(null);
@@ -228,6 +273,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                 onLife={(by) => setGame((g) => changeLife(g, i, by))}
                 onSet={(life) => setGame((g) => setLife(g, i, life))}
                 onCounter={(key, by) => setGame((g) => changeCounter(g, i, key, by))}
+                onAddCounter={(key) => setGame((g) => addCounter(g, i, key))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
                 onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
@@ -241,8 +287,9 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
           ))}
         </div>
 
-        {/* The middle button, which slides open into the tools bar. */}
-        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+        {/* The middle button, which slides open into the tools bar (or the dice). */}
+        <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center gap-2">
+          {roll && <RollResult roll={roll} flipped onClear={() => setRoll(null)} />}
           {giving ? (
             <button
               type="button"
@@ -259,32 +306,49 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
               style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem", borderRadius: barOpen ? 0 : 30 }}
             >
               <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
-                <Tool icon="exit" label="Exit" onClick={onExit} />
-                <Tool icon="undo" label="Undo" onClick={() => setGame(undo)} disabled={!game.history.length} />
-                <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
-                <Tool icon="refresh" label="New game" onClick={() => setSheet({ kind: "new" })} />
+                {diceTray ? (
+                  DICE.slice(0, 3).map((d) => <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />)
+                ) : (
+                  <>
+                    <Tool icon="exit" label="Exit" onClick={onExit} />
+                    <Tool icon="undo" label="Undo" onClick={() => setGame(undo)} disabled={!game.history.length} />
+                    <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
+                    <Tool icon="refresh" label="New game" onClick={() => setSheet({ kind: "new" })} />
+                  </>
+                )}
               </div>
               <button
                 type="button"
-                onClick={() => setBarOpen((o) => !o)}
-                aria-label={barOpen ? "Close the tools" : "Open the tools"}
+                onClick={() => (barOpen ? closeTray() : setBarOpen(true))}
+                aria-label={barOpen ? (diceTray ? "Put the dice away" : "Close the tools") : "Open the tools"}
                 aria-expanded={barOpen}
                 className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-white text-black"
               >
                 <Icon name={barOpen ? "close" : "menu"} className="h-6 w-6" />
               </button>
               <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
-                <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
-                <Tool icon="target" label="Who's first" onClick={whoGoesFirst} />
-                <Tool icon="dice" label="Dice" onClick={() => setSheet({ kind: "dice" })} />
+                {diceTray ? (
+                  <>
+                    {DICE.slice(3).map((d) => (
+                      <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />
+                    ))}
+                    <DieButton label="Coin" coin onClick={() => rollIt("coin")} />
+                  </>
+                ) : (
+                  <>
+                    <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
+                    <Tool icon="target" label="Who's first" onClick={whoGoesFirst} />
+                    <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
+                  </>
+                )}
               </div>
             </div>
           )}
+          {roll && <RollResult roll={roll} onClear={() => setRoll(null)} />}
         </div>
       </div>
 
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
-      {sheet?.kind === "dice" && <DiceSheet onClose={() => setSheet(null)} />}
       {sheet?.kind === "dungeon" && (
         <DungeonTracker
           game={game}
@@ -393,48 +457,51 @@ function HistorySheet({ game, onUndo, onClose }: { game: Game; onUndo: () => voi
   );
 }
 
-const SIDES = [4, 6, 8, 10, 12, 20];
-
-function DiceSheet({ onClose }: { onClose: () => void }) {
-  const [sides, setSides] = useState(20);
-  const [result, setResult] = useState<{ what: string; value: number | string } | null>(null);
-  const chip = (on: boolean) =>
-    "rounded-full border px-3.5 py-1.5 text-sm " +
-    (on ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
+/** A die (or the coin) in the dice tray: tap to roll it straight away. */
+function DieButton({ label, coin, onClick }: { label: string; coin?: boolean; onClick: () => void }) {
   return (
-    <Sheet title="Dice" onClose={onClose}>
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-1.5">
-          {SIDES.map((s) => (
-            <button key={s} type="button" onClick={() => setSides(s)} aria-pressed={sides === s} className={chip(sides === s)}>
-              d{s}
-            </button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setResult({ what: `d${sides}`, value: rollDice(1, sides)[0] })}
-            className="flex-1 rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-black hover:bg-(--color-accent-bright)"
-          >
-            Roll a d{sides}
-          </button>
-          <button
-            type="button"
-            onClick={() => setResult({ what: "Coin", value: Math.random() < 0.5 ? "Heads" : "Tails" })}
-            className="rounded-lg border border-(--color-border) px-4 py-3 text-base text-(--color-text) hover:bg-white/5"
-          >
-            Flip a coin
-          </button>
-        </div>
-        {result && (
-          <div className="rounded-xl border border-(--color-border) bg-(--color-bg) p-4 text-center" aria-live="polite">
-            <div className="text-xs text-(--color-text-dim)">{result.what}</div>
-            <div className="mt-1 text-5xl font-semibold text-(--color-text) tabular-nums">{result.value}</div>
-          </div>
-        )}
-      </div>
-    </Sheet>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={coin ? "Flip a coin" : `Roll a ${label}`}
+      className="flex h-11 min-w-0 flex-1 items-center justify-center text-white"
+    >
+      <span
+        className={
+          "flex h-9 min-w-9 items-center justify-center border-2 px-1 font-life text-sm font-black " +
+          (coin ? "rounded-full border-[#F5C04A] text-[#F5C04A]" : "rounded-lg border-white/70")
+        }
+      >
+        {coin ? "Coin" : label}
+      </span>
+    </button>
+  );
+}
+
+/** The roll, shown at the middle of the table; `flipped` faces the far side. Tap to clear. */
+function RollResult({ roll, flipped, onClear }: { roll: Roll; flipped?: boolean; onClear: () => void }) {
+  const coin = roll.what === "coin";
+  return (
+    <button
+      type="button"
+      onClick={onClear}
+      aria-label={`${coin ? "Coin" : `d${roll.what}`}: ${roll.shown}. Tap to clear.`}
+      className={"pointer-events-auto " + (flipped ? "rotate-180" : "")}
+    >
+      <span
+        key={roll.id}
+        className={
+          "flex min-w-24 flex-col items-center px-4 py-1.5 shadow-lg " +
+          (coin ? "rounded-full border-4 border-[#c99a1a] bg-[#F5C04A] text-[#3a2a05]" : "rounded-2xl bg-white text-black")
+        }
+        style={{ animation: `${coin ? "bt-coin 0.9s" : "bt-tumble 0.65s"} ease-out` }}
+      >
+        <span className="text-[11px] font-semibold uppercase opacity-60">{coin ? "Coin" : `d${roll.what}`}</span>
+        <span className={"font-life leading-none font-black tabular-nums " + (coin ? "text-2xl" : "text-5xl") + (roll.rolling ? " opacity-70" : "")}>
+          {roll.shown}
+        </span>
+      </span>
+    </button>
   );
 }
 

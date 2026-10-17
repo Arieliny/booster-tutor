@@ -51,3 +51,15 @@ body {
     margin: 12mm;
   }
 }
+
+/* Life counter: a die tumbling as it lands, a coin spinning. */
+@keyframes bt-tumble {
+  0% { transform: rotate(0deg) scale(0.5); }
+  60% { transform: rotate(560deg) scale(1.15); }
+  100% { transform: rotate(720deg) scale(1); }
+}
+@keyframes bt-coin {
+  0% { transform: rotateY(0deg) scale(0.6); }
+  70% { transform: rotateY(1620deg) scale(1.1); }
+  100% { transform: rotateY(1800deg) scale(1); }
+}

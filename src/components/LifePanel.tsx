@@ -106,6 +106,7 @@ interface Props {
   onLife: (by: number) => void;
   onSet: (life: number) => void;
   onCounter: (key: CounterKey, by: number) => void;
+  onAddCounter: (key: CounterKey) => void;
   onRemoveCounter: (key: CounterKey) => void;
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
   onCmdr: (from: number, by: number) => void;
@@ -408,51 +409,46 @@ function Menu(props: Props & { onClose: () => void }) {
 
       <div className="space-y-3">
         <section className="space-y-1.5">
-          <div className={head}>Counters · any above 0 shows under your life, with − and +</div>
-          {COUNTERS.map((c) => {
-            const on = player.counters[c.key] !== undefined;
-            const v = player.counters[c.key] ?? 0;
-            return (
-              <Stepper
-                key={c.key}
-                label={
-                  <span className="inline-flex items-center gap-2">
-                    <Icon name={counterIcon(props, c.key)} className="h-5 w-5" />
-                    {c.label}
-                    {c.icons && (
-                      // Which symbol this counter shows (poison: Phyrexian or droplet).
-                      <span className="ml-1 inline-flex overflow-hidden rounded-md border border-white/20">
-                        {c.icons.map((ic) => (
-                          <button
-                            key={ic}
-                            type="button"
-                            onClick={() => props.onCounterIcon(c.key, ic)}
-                            aria-label={`Show ${c.label} as ${ic}`}
-                            aria-pressed={counterIcon(props, c.key) === ic}
-                            className={"px-1.5 py-0.5 " + (counterIcon(props, c.key) === ic ? "bg-white/20" : "opacity-50 hover:opacity-100")}
-                          >
-                            <Icon name={ic} className="h-4 w-4" />
-                          </button>
-                        ))}
-                      </span>
-                    )}
-                  </span>
-                }
-                value={v}
-                danger={!!c.lethal && v >= c.lethal}
-                onChange={(by) => props.onCounter(c.key, by * (c.step ?? 1))}
-              >
-                <button
-                  type="button"
-                  onClick={() => props.onRemoveCounter(c.key)}
-                  aria-label={`Take ${c.label} off the screen`}
-                  className={"rounded p-1 hover:bg-white/10 " + (on ? "text-white/60" : "invisible")}
-                >
-                  <Icon name="close" className="h-4 w-4" />
-                </button>
-              </Stepper>
-            );
-          })}
+          <div className={head}>Counters on your life card</div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {COUNTERS.map((c) => {
+              const on = player.counters[c.key] !== undefined;
+              return (
+                <div key={c.key} className="flex items-stretch gap-1">
+                  <button
+                    type="button"
+                    onClick={() => (on ? props.onRemoveCounter(c.key) : props.onAddCounter(c.key))}
+                    aria-pressed={on}
+                    className={
+                      "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
+                      (on ? "border-white bg-white/15" : "border-white/20 text-white/75 hover:bg-white/10")
+                    }
+                  >
+                    <Icon name={counterIcon(props, c.key)} className="h-5 w-5 shrink-0" />
+                    <span className="min-w-0 flex-1 truncate">{c.label}</span>
+                    {on && <Icon name="check" className="h-4 w-4 shrink-0" />}
+                  </button>
+                  {c.icons && (
+                    // Which symbol this counter shows (poison: Phyrexian or droplet).
+                    <span className="flex flex-col overflow-hidden rounded-lg border border-white/20">
+                      {c.icons.map((ic) => (
+                        <button
+                          key={ic}
+                          type="button"
+                          onClick={() => props.onCounterIcon(c.key, ic)}
+                          aria-label={`Show ${c.label} as ${ic}`}
+                          aria-pressed={counterIcon(props, c.key) === ic}
+                          className={"flex flex-1 items-center px-1.5 " + (counterIcon(props, c.key) === ic ? "bg-white/20" : "opacity-50 hover:opacity-100")}
+                        >
+                          <Icon name={ic} className="h-3.5 w-3.5" />
+                        </button>
+                      ))}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         <section className="space-y-1.5">
