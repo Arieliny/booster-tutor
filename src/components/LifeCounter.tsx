@@ -149,10 +149,19 @@ const DICE = [4, 6, 8, 10, 12, 20];
 /** A roll on the table: what was rolled, what it shows now (it tumbles first), and a key to restart the animation. */
 interface Roll {
   what: number | "coin";
+  /** Where it landed. */
+  final: string;
+  /** What it shows right now (other dice flick through faces as they tumble). */
   shown: string;
   rolling: boolean;
   id: number;
+  /** d6: the cube's end rotation; coin: its end spin (both decided at the roll, so the last frame is the result). */
+  rx: number;
+  ry: number;
 }
+
+/** The d6 cube's rotation that brings each face to the front (see Cube's face layout). */
+const CUBE_FACE: Record<string, [number, number]> = { "1": [0, 0], "6": [0, 180], "3": [0, -90], "4": [0, 90], "2": [-90, 0], "5": [90, 0] };
 
 export function LifeCounter({ onExit }: { onExit: () => void }) {
   const [game, setGame] = useState<Game>(load);
@@ -224,16 +233,24 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
     window.clearInterval(rollTimer.current);
     const face = () => (what === "coin" ? (Math.random() < 0.5 ? "Heads" : "Tails") : String(rollDice(1, what)[0]));
     const final = face();
-    // About 0.65 s of tumbling for a die, 0.9 s of spinning for the coin (70 ms a face).
-    let left = what === "coin" ? 13 : 9;
-    setRoll((r) => ({ what, shown: face(), rolling: true, id: (r?.id ?? 0) + 1 }));
-    rollTimer.current = window.setInterval(() => {
-      left -= 1;
-      if (left <= 0) {
-        window.clearInterval(rollTimer.current);
-        setRoll((r) => r && { ...r, shown: final, rolling: false });
-      } else setRoll((r) => r && { ...r, shown: face() });
-    }, 70);
+    // The cube and the coin show the real result the whole way (they turn to it); other dice flick through faces.
+    const flicks = what !== "coin" && what !== 6;
+    const [fx, fy] = CUBE_FACE[final] ?? [0, 0];
+    const turns = (n: number) => 360 * (n + Math.floor(Math.random() * 2));
+    const rx = what === "coin" ? 0 : fx + turns(2);
+    const ry = what === "coin" ? turns(4) + (final === "Tails" ? 180 : 0) : fy + turns(2);
+    let left = flicks ? 9 : 10;
+    setRoll((r) => ({ what, final, shown: flicks ? face() : final, rolling: true, id: (r?.id ?? 0) + 1, rx, ry }));
+    rollTimer.current = window.setInterval(
+      () => {
+        left -= 1;
+        if (left <= 0) {
+          window.clearInterval(rollTimer.current);
+          setRoll((r) => r && { ...r, shown: r.final, rolling: false });
+        } else if (flicks) setRoll((r) => r && { ...r, shown: face() });
+      },
+      flicks ? 70 : 100,
+    );
   };
 
   const closeTray = () => {
@@ -480,28 +497,134 @@ function DieButton({ label, coin, onClick }: { label: string; coin?: boolean; on
 
 /** The roll, shown at the middle of the table; `flipped` faces the far side. Tap to clear. */
 function RollResult({ roll, flipped, onClear }: { roll: Roll; flipped?: boolean; onClear: () => void }) {
-  const coin = roll.what === "coin";
+  const label = roll.what === "coin" ? "Coin" : `d${roll.what}`;
   return (
     <button
       type="button"
       onClick={onClear}
-      aria-label={`${coin ? "Coin" : `d${roll.what}`}: ${roll.shown}. Tap to clear.`}
-      className={"pointer-events-auto " + (flipped ? "rotate-180" : "")}
+      aria-label={`${label}: ${roll.rolling ? "rolling" : roll.final}. Tap to clear.`}
+      className={"pointer-events-auto flex flex-col items-center " + (flipped ? "rotate-180" : "")}
     >
-      <span
-        key={roll.id}
-        className={
-          "flex min-w-24 flex-col items-center px-4 py-1.5 shadow-lg " +
-          (coin ? "rounded-full border-4 border-[#c99a1a] bg-[#F5C04A] text-[#3a2a05]" : "rounded-2xl bg-white text-black")
-        }
-        style={{ animation: `${coin ? "bt-coin 0.9s" : "bt-tumble 0.65s"} ease-out` }}
-      >
-        <span className="text-[11px] font-semibold uppercase opacity-60">{coin ? "Coin" : `d${roll.what}`}</span>
-        <span className={"font-life leading-none font-black tabular-nums " + (coin ? "text-2xl" : "text-5xl") + (roll.rolling ? " opacity-70" : "")}>
-          {roll.shown}
-        </span>
+      {/* Drops in and bounces; the die itself turns inside. */}
+      <span key={roll.id} className="block" style={{ animation: "bt-drop 0.95s ease-out" }}>
+        {roll.what === "coin" ? <Coin roll={roll} /> : roll.what === 6 ? <Cube roll={roll} /> : <PolyDie roll={roll} sides={roll.what} />}
+      </span>
+      <span className={"mt-1 rounded-full bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white " + (roll.rolling ? "opacity-0" : "")}>
+        {label} · {roll.final}
       </span>
     </button>
+  );
+}
+
+/** A coin that spins to the side it landed on: a head, or a planeswalker-style sigil for tails. */
+function Coin({ roll }: { roll: Roll }) {
+  const face = "absolute inset-0 flex items-center justify-center rounded-full border-4 border-[#b8860b] bg-[#F5C04A] text-[#5a3d00]";
+  return (
+    <span className="block h-20 w-20" style={{ perspective: 400 }}>
+      <span
+        className="relative block h-full w-full"
+        style={
+          {
+            transformStyle: "preserve-3d",
+            "--end": `${roll.ry}deg`,
+            animation: "bt-coin 1s cubic-bezier(.2,.7,.3,1) forwards",
+          } as React.CSSProperties
+        }
+      >
+        <span className={face} style={{ backfaceVisibility: "hidden" }}>
+          <svg viewBox="0 0 100 100" className="h-14 w-14" fill="currentColor" aria-hidden="true">
+            <circle cx="50" cy="36" r="17" />
+            <path d="M18 88c2-20 15-31 32-31s30 11 32 31z" />
+          </svg>
+        </span>
+        <span className={face} style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+          <svg viewBox="0 0 100 100" className="h-14 w-14" fill="currentColor" aria-hidden="true">
+            <path d="M50 8c4 24 6 50 0 86-6-36-4-62 0-86z" />
+            <path d="M30 28c6 18 11 36 15 58-14-14-20-34-15-58z" />
+            <path d="M70 28c-6 18-11 36-15 58 14-14 20-34 15-58z" />
+          </svg>
+        </span>
+      </span>
+    </span>
+  );
+}
+
+/** Pips on a 3x3 grid, for the d6. */
+const PIPS: Record<number, number[]> = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+
+/** A d6 as a real cube that tumbles and comes to rest on the rolled face. */
+function Cube({ roll }: { roll: Roll }) {
+  const size = 72;
+  const half = size / 2;
+  // Which side each face sits on (matches CUBE_FACE).
+  const faces: [number, string][] = [
+    [1, `translateZ(${half}px)`],
+    [6, `rotateY(180deg) translateZ(${half}px)`],
+    [3, `rotateY(90deg) translateZ(${half}px)`],
+    [4, `rotateY(-90deg) translateZ(${half}px)`],
+    [2, `rotateX(90deg) translateZ(${half}px)`],
+    [5, `rotateX(-90deg) translateZ(${half}px)`],
+  ];
+  return (
+    <span className="block" style={{ width: size, height: size, perspective: 500 }}>
+      <span
+        className="relative block h-full w-full"
+        style={
+          {
+            transformStyle: "preserve-3d",
+            "--rx": `${roll.rx}deg`,
+            "--ry": `${roll.ry}deg`,
+            animation: "bt-cube 1s cubic-bezier(.2,.7,.3,1) forwards",
+          } as React.CSSProperties
+        }
+      >
+        {faces.map(([n, transform]) => (
+          <span
+            key={n}
+            className="absolute inset-0 grid grid-cols-3 grid-rows-3 rounded-xl border-2 border-black/15 bg-white p-2"
+            style={{ transform, backfaceVisibility: "hidden" }}
+          >
+            {Array.from({ length: 9 }, (_, k) => (
+              <span key={k} className="flex items-center justify-center">
+                {PIPS[n].includes(k) && <span className="h-3 w-3 rounded-full bg-[#14161c]" />}
+              </span>
+            ))}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+/** Outline of each die (viewBox 100x100) and where its number sits. */
+const DIE_SHAPE: Record<number, { points: string; y: number }> = {
+  4: { points: "50,8 94,88 6,88", y: 66 },
+  8: { points: "50,4 94,50 50,96 6,50", y: 50 },
+  10: { points: "50,4 92,44 50,96 8,44", y: 48 },
+  12: { points: "50,5 95,38 78,92 22,92 5,38", y: 55 },
+  20: { points: "50,4 92,27 92,73 50,96 8,73 8,27", y: 52 },
+};
+
+/** Any other die: its shape tumbles while the faces flick past, then settles on the result. */
+function PolyDie({ roll, sides }: { roll: Roll; sides: number }) {
+  const shape = DIE_SHAPE[sides] ?? DIE_SHAPE[20];
+  return (
+    <span className="block h-20 w-20" style={{ animation: roll.rolling ? "bt-tumble 0.65s ease-out" : undefined }}>
+      <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
+        <polygon points={shape.points} fill="#ffffff" stroke="#14161c" strokeOpacity="0.2" strokeWidth="3" strokeLinejoin="round" />
+        <text
+          x="50"
+          y={shape.y}
+          textAnchor="middle"
+          dominantBaseline="central"
+          className="font-life"
+          style={{ fontWeight: 900, fontSize: sides === 4 ? 30 : 34 }}
+          fill="#14161c"
+        >
+          {roll.shown}
+        </text>
+      </svg>
+    </span>
   );
 }
 
