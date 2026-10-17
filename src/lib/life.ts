@@ -78,6 +78,8 @@ export interface Entry {
   key?: CounterKey | MarkerKey;
   /** Dungeon moves: the room entered, or "" for a completed dungeon. */
   room?: string;
+  /** Commander damage that also took life. */
+  withLife?: boolean;
   /** Commander damage: the seat it came from. */
   from?: number;
   /** Net change (life, counter or commander damage); for "set", the new life. */
@@ -222,18 +224,21 @@ export function removeCmdr(g: Game, p: number, from: number): Game {
   };
 }
 
-/** Commander damage to p from seat `from`. It's also life lost. */
-export function changeCmdr(g: Game, p: number, from: number, by: number, now = Date.now()): Game {
+/**
+ * Commander damage to p from seat `from`. With `takesLife` (a setting, off by
+ * default) it's also taken off p's life; otherwise players adjust life themselves.
+ */
+export function changeCmdr(g: Game, p: number, from: number, by: number, now = Date.now(), takesLife = false): Game {
   const cur = g.players[p].cmdr[from] ?? 0;
   const by2 = Math.max(-cur, by);
   if (!by2) return g;
   return record(
     g,
-    { p, kind: "cmdr", from, d: by2 },
+    { p, kind: "cmdr", from, d: by2, ...(takesLife && { withLife: true }) },
     [p],
     (ps) => {
       ps[p].cmdr[from] = cur + by2;
-      ps[p].life -= by2;
+      if (takesLife) ps[p].life -= by2;
     },
     now,
     true,
@@ -354,6 +359,19 @@ export function lifeAfter(g: Game, index: number): number {
 
 export function rollDice(count: number, sides: number, random = Math.random): number[] {
   return Array.from({ length: count }, () => 1 + Math.floor(random() * sides));
+}
+
+/** Life counter settings, kept on the device across games. */
+export interface LifeSettings {
+  /** Commander damage also comes off the player's life (off: track it separately, as in Carbon). */
+  cmdrTakesLife: boolean;
+}
+
+export const DEFAULT_SETTINGS: LifeSettings = { cmdrTakesLife: false };
+
+export function parseSettings(raw: unknown): LifeSettings {
+  const r = raw && typeof raw === "object" ? (raw as Partial<LifeSettings>) : {};
+  return { cmdrTakesLife: r.cmdrTakesLife === true };
 }
 
 /** A saved game, or null if it isn't one we can read (old versions are upgraded). */

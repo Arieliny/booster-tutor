@@ -115,14 +115,14 @@ describe("counters", () => {
 describe("commander damage", () => {
   it("is tracked per source seat and also takes life", () => {
     let g = newGame(4, 40);
-    g = changeCmdr(g, 2, 0, 5, T);
-    g = changeCmdr(g, 2, 3, 4, T + 1);
+    g = changeCmdr(g, 2, 0, 5, T, true);
+    g = changeCmdr(g, 2, 3, 4, T + 1, true);
     expect(g.players[2].cmdr).toEqual({ 0: 5, 3: 4 });
     expect(g.players[2].life).toBe(31);
   });
 
   it("can't go below 0, and undo restores both damage and life", () => {
-    let g = changeCmdr(newGame(2, 20), 0, 1, 6, T);
+    let g = changeCmdr(newGame(2, 20), 0, 1, 6, T, true);
     expect(changeCmdr(g, 0, 1, -10, T + MERGE_MS + 1).players[0].cmdr[1]).toBe(0);
     g = undo(g);
     expect(g.players[0].cmdr[1]).toBe(0);
@@ -254,11 +254,25 @@ describe("commander damage on the card", () => {
     let g = addCmdr(newGame(3, 40), 0, 2);
     expect(g.players[0].cmdr).toEqual({ 2: 0 });
     expect(g.history).toHaveLength(0);
-    g = changeCmdr(g, 0, 2, 7, T);
+    g = changeCmdr(g, 0, 2, 7, T, true);
     expect(g.players[0].life).toBe(33);
     g = undo(g);
     expect(g.players[0].cmdr).toEqual({ 2: 0 });
     expect(g.players[0].life).toBe(40);
     expect(removeCmdr(g, 0, 2).players[0].cmdr).toEqual({});
+  });
+});
+
+describe("commander damage and life (setting)", () => {
+  it("leaves life alone by default, takes it with the setting on", async () => {
+    const { parseSettings, DEFAULT_SETTINGS } = await import("../src/lib/life");
+    expect(DEFAULT_SETTINGS.cmdrTakesLife).toBe(false);
+    expect(parseSettings(null).cmdrTakesLife).toBe(false);
+    expect(parseSettings({ cmdrTakesLife: true }).cmdrTakesLife).toBe(true);
+    const off = changeCmdr(newGame(2, 40), 0, 1, 5, T);
+    expect(off.players[0].cmdr[1]).toBe(5);
+    expect(off.players[0].life).toBe(40);
+    const on = changeCmdr(newGame(2, 40), 0, 1, 5, T, true);
+    expect(on.players[0].life).toBe(35);
   });
 });

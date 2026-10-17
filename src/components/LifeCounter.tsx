@@ -27,8 +27,11 @@ import {
   setCounterIcon,
   undo,
   untouched,
+  DEFAULT_SETTINGS,
+  parseSettings,
   type Entry,
   type Game,
+  type LifeSettings,
 } from "../lib/life";
 import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Turn } from "./LifePanel";
@@ -45,6 +48,15 @@ import { Sheet } from "./Sheet";
  */
 
 const KEY = "booster-tutor-life-v2";
+const SETTINGS_KEY = "booster-tutor-life-settings";
+
+function loadSettings(): LifeSettings {
+  try {
+    return parseSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null"));
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
 const OLD_KEY = "booster-tutor-life-v1";
 
 function load(): Game {
@@ -143,7 +155,7 @@ function seating(count: number, wide: boolean): { i: number; turn: Turn; span: b
   return out;
 }
 
-type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "dungeon"; p: number };
+type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "settings" } | { kind: "dungeon"; p: number };
 
 const DICE = [4, 6, 8, 10, 12, 20];
 
@@ -164,6 +176,7 @@ interface Roll {
 
 export function LifeCounter({ onExit }: { onExit: () => void }) {
   const [game, setGame] = useState<Game>(load);
+  const [settings, setSettings] = useState<LifeSettings>(loadSettings);
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [barOpen, setBarOpen] = useState(false);
   const [giving, setGiving] = useState<"monarch" | null>(null);
@@ -186,6 +199,13 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
       // Blocked storage: the game still works until the page closes.
     }
   }, [game]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      // Blocked storage: the setting holds until the page closes.
+    }
+  }, [settings]);
   useEffect(
     () => () => {
       timers.current.forEach((t) => window.clearTimeout(t));
@@ -281,7 +301,8 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                 onAddCounter={(key) => setGame((g) => addCounter(g, i, key))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
-                onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
+                cmdrTakesLife={settings.cmdrTakesLife}
+                onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by, Date.now(), settings.cmdrTakesLife))}
                 onAddCmdr={(from) => setGame((g) => addCmdr(g, i, from))}
                 onRemoveCmdr={(from) => setGame((g) => removeCmdr(g, i, from))}
                 onDungeon={() => {
@@ -346,6 +367,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
                     <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
                     <Tool icon="target" label="Who's first" onClick={whoGoesFirst} />
                     <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
+                    <Tool icon="gear" label="Settings" onClick={() => setSheet({ kind: "settings" })} />
                   </>
                 )}
               </div>
@@ -356,6 +378,7 @@ export function LifeCounter({ onExit }: { onExit: () => void }) {
       </div>
 
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
+      {sheet?.kind === "settings" && <SettingsSheet settings={settings} onChange={setSettings} onClose={() => setSheet(null)} />}
       {sheet?.kind === "dungeon" && (
         <DungeonTracker
           game={game}
@@ -415,10 +438,12 @@ function describe(g: Game, e: Entry, index: number): string {
       return `${who} set to ${e.d}`;
     case "counter":
       return `${who} ${COUNTERS.find((c) => c.key === e.key)?.label ?? e.key} ${sign(e.d)}`;
-    case "cmdr":
+    case "cmdr": {
+      const life = e.withLife ? ` → ${lifeAfter(g, index)}` : "";
       return e.d > 0
-        ? `${who} took ${e.d} commander damage from ${seatName(n, e.from ?? 0)} → ${lifeAfter(g, index)}`
-        : `${who}: ${-e.d} commander damage from ${seatName(n, e.from ?? 0)} taken back → ${lifeAfter(g, index)}`;
+        ? `${who} took ${e.d} commander damage from ${seatName(n, e.from ?? 0)}${life}`
+        : `${who}: ${-e.d} commander damage from ${seatName(n, e.from ?? 0)} taken back${life}`;
+    }
     case "marker": {
       const label = MARKERS.find((m) => m.key === e.key)?.label ?? e.key;
       return e.d > 0 ? `${who} took ${label === "Monarch" ? "the monarch" : "the initiative"}` : `${who} lost ${label}`;
@@ -721,6 +746,29 @@ function DungeonTracker({
         )}
       </Turned>
     </div>
+  );
+}
+
+/** Life counter settings (kept on this device). */
+function SettingsSheet({ settings, onChange, onClose }: { settings: LifeSettings; onChange: (s: LifeSettings) => void; onClose: () => void }) {
+  return (
+    <Sheet title="Life counter settings" onClose={onClose}>
+      <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-(--color-border) p-3">
+        <input
+          type="checkbox"
+          checked={settings.cmdrTakesLife}
+          onChange={(e) => onChange({ ...settings, cmdrTakesLife: e.target.checked })}
+          className="mt-0.5 h-5 w-5 shrink-0 accent-(--color-accent)"
+        />
+        <span>
+          <span className="block text-sm font-medium text-(--color-text)">Commander damage also takes life</span>
+          <span className="block text-xs text-(--color-text-dim)">
+            On: adding commander damage lowers that player's life too. Off: it's tracked on its own and you change life yourself (like
+            Carbon). Damage already dealt isn't changed when you switch.
+          </span>
+        </span>
+      </label>
+    </Sheet>
   );
 }
 

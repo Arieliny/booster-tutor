@@ -108,6 +108,8 @@ interface Props {
   onAddCounter: (key: CounterKey) => void;
   onRemoveCounter: (key: CounterKey) => void;
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
+  /** Setting: commander damage also lowers life. */
+  cmdrTakesLife: boolean;
   onCmdr: (from: number, by: number) => void;
   onAddCmdr: (from: number) => void;
   onRemoveCmdr: (from: number) => void;
@@ -432,7 +434,7 @@ function Menu(props: Props & { onClose: () => void }) {
         </section>
 
         <section className="space-y-1.5">
-          <div className={head}>Commander damage on your life card (it also takes life)</div>
+          <div className={head}>Commander damage on your life card{props.cmdrTakesLife ? " (also takes life)" : ""}</div>
           <div className="grid grid-cols-2 gap-1.5">
             {others.map((o) => {
               const on = player.cmdr[o.index] !== undefined;
