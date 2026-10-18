@@ -565,7 +565,7 @@ function RollResult({ roll, flipped, onClear }: { roll: Roll; flipped?: boolean;
   );
 }
 
-/** A coin that spins to the side it landed on: a head, or a planeswalker-style sigil for tails. */
+/** A coin that spins to the side it landed on: a dragon's head for heads, a dragon's tail for tails. */
 function Coin({ roll }: { roll: Roll }) {
   const face = "absolute inset-0 flex items-center justify-center rounded-full border-4 border-[#b8860b] bg-[#F5C04A] text-[#5a3d00]";
   return (
@@ -581,16 +581,16 @@ function Coin({ roll }: { roll: Roll }) {
         }
       >
         <span className={face} style={{ backfaceVisibility: "hidden" }}>
-          <svg viewBox="0 0 100 100" className="h-14 w-14" fill="currentColor" aria-hidden="true">
-            <circle cx="50" cy="36" r="17" />
-            <path d="M18 88c2-20 15-31 32-31s30 11 32 31z" />
+          {/* Heads: a dragon's head in profile (swept-back horns, neck spines, open jaw); eye and nostril cut out. */}
+          <svg viewBox="0 0 100 100" className="h-14 w-14" fill="currentColor" fillRule="evenodd" aria-hidden="true">
+            <path d="M18 92C16 76 18 62 26 50L12 44 28 42 30 36 6 18 34 28 38 24 22 6 46 22C54 26 66 30 78 34C86 37 93 40 96 45C97 48 95 50 92 51L64 55 88 60C86 64 82 67 76 68L58 70C52 78 46 86 40 92ZM52 37a4 3 0 1 0 8 0a4 3 0 1 0-8 0ZM87 45a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0Z" />
           </svg>
         </span>
         <span className={face} style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
+          {/* Tails: a curling dragon's tail ending in a spade tip. */}
           <svg viewBox="0 0 100 100" className="h-14 w-14" fill="currentColor" aria-hidden="true">
-            <path d="M50 8c4 24 6 50 0 86-6-36-4-62 0-86z" />
-            <path d="M30 28c6 18 11 36 15 58-14-14-20-34-15-58z" />
-            <path d="M70 28c-6 18-11 36-15 58 14-14 20-34 15-58z" />
+            <path d="M18 86C30 88 44 80 46 66S38 46 50 38S66 34 64 30" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" />
+            <path d="M66 8C74 16 82 22 80 32C75 30 70 32 66 36C62 32 57 30 52 32C50 22 58 16 66 8Z" />
           </svg>
         </span>
       </span>
