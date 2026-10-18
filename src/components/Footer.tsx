@@ -27,6 +27,17 @@ function AboutNotice() {
         </a>
         . Scryfall is not affiliated with this tool. Card images are displayed unmodified per Scryfall's image guidelines.
       </p>
+      <p>
+        Life counter coin art (dragon head and tail) by Delapouite from{" "}
+        <a href="https://game-icons.net" target="_blank" rel="noopener noreferrer" className={link}>
+          game-icons.net
+        </a>
+        , licensed{" "}
+        <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer" className={link}>
+          CC BY 3.0
+        </a>
+        .
+      </p>
     </div>
   );
 }
