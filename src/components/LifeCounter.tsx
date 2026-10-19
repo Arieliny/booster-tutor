@@ -411,7 +411,12 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
           turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
           name={seatName(n, sheet.p)}
           // Venturing into Undercity is how the initiative works, so it takes the initiative too.
-          onEnter={(key, room) => setGame((g) => enterRoom(g, sheet.p, key, room, Date.now(), key === "undercity"))}
+          onEnter={(key, room) => {
+            const who = sheet.p;
+            setGame((g) => enterRoom(g, who, key, room, Date.now(), key === "undercity"));
+            // Picking the room is the whole move: back to the game.
+            setSheet(null);
+          }}
           onComplete={() => setGame((g) => completeDungeon(g, sheet.p))}
           onClose={() => setSheet(null)}
         />
