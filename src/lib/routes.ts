@@ -12,10 +12,11 @@
 
 import { can, type Me } from "./auth";
 
-export type Tab = "packs" | "life" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "judge" | "admin";
+export type Tab = "packs" | "decks" | "life" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "judge" | "admin";
 
 export const TAB_PATHS: Record<Tab, string> = {
   packs: "/",
+  decks: "/decks",
   life: "/life",
   inventory: "/inventory",
   review: "/set-review",
@@ -143,7 +144,8 @@ export type Section = "play" | "life" | "myCube" | "lookup" | "judge" | "grades"
  * account menu instead.
  */
 export const SECTIONS: { id: Section; label: string; tabs: Tab[] }[] = [
-  { id: "play", label: "Play", tabs: ["packs"] },
+  // Play: opening packs, or dealing random decks (the Packs | Decks switch).
+  { id: "play", label: "Play", tabs: ["packs", "decks"] },
   // The life counter: its own section (anyone who can open Play can use it).
   { id: "life", label: "Life", tabs: ["life"] },
   // The collection checklist (Inventory) opens from My cube's home page.
@@ -160,6 +162,7 @@ export function sectionOf(tab: Tab): Section | null {
 /** Page title for the top bar. */
 export const TAB_TITLES: Record<Tab, string> = {
   packs: "Play",
+  decks: "Play",
   life: "Life",
   inventory: "My cube",
   cubeReview: "My cube",
@@ -184,7 +187,7 @@ export function tabUsesCube(tab: Tab): boolean {
  */
 export function tabAllowed(tab: Tab, me: Me): boolean {
   if (me.role === "owner") return true;
-  if (tab === "packs" || tab === "life") return can(me, "play");
+  if (tab === "packs" || tab === "decks" || tab === "life") return can(me, "play");
   if (tab === "review" || tab === "reviewPrint") return can(me, "setReview");
   if (tab === "judge") return can(me, "judge");
   return false;

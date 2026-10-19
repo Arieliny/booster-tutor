@@ -36,6 +36,8 @@ import {
 import { useAuth } from "./lib/auth-context";
 import { AccountMenu } from "./components/AccountMenu";
 import { LifeCounter } from "./components/LifeCounter";
+import { DeckRandomizer } from "./components/DeckRandomizer";
+import { PlaySwitch } from "./components/PlaySwitch";
 import { AppShell } from "./components/AppShell";
 import { PageHeader } from "./components/PageHeader";
 import { SyncChip } from "./components/SyncChip";
@@ -309,6 +311,8 @@ function App() {
             <PageHeader title="Collection checklist" onBack={() => setTab("cubeReview")} backLabel="Back to My cube" />
           )}
 
+          {onPacksTab && !inSpotlight && <PlaySwitch value="packs" onChange={setTab} />}
+
           {/* The cube in play, and how much of it is left this match. */}
           {!inSpotlight && (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2">
@@ -414,6 +418,11 @@ function App() {
         <Suspense fallback={loading("your cube")}>
           <CubeReview key={navCount} onOpenChecklist={() => setTab("inventory")} />
         </Suspense>
+      ) : tab === "decks" ? (
+        <div className="space-y-4">
+          <PlaySwitch value="decks" onChange={setTab} />
+          <DeckRandomizer />
+        </div>
       ) : tab === "life" ? (
         // Full screen over the app; Exit (in its middle bar) goes back to the screen before it.
         <LifeCounter

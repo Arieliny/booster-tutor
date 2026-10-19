@@ -1,6 +1,7 @@
 /**
  * Per-account sync for Cube review data (decisions, hand-added cards, printing
- * choices) - see api/userdata.ts for the server half.
+ * choices) and the deck randomizer's deck list - see api/userdata.ts for the
+ * server half.
  *
  * The device stays the fast copy: every edit lands in localStorage instantly
  * and works offline. This engine runs alongside:
@@ -22,6 +23,7 @@ const KEYS = {
   decisions: "booster-tutor-cube-review-decisions-v1",
   extras: "booster-tutor-cube-review-extras-v1",
   art: "booster-tutor-cube-review-art-v1",
+  decks: "booster-tutor-decks-v1",
 } as const;
 
 /** Fired by lib/cube-review.ts whenever it saves something on this device. */
@@ -40,7 +42,7 @@ interface Meta {
   /** Server revision this device last caught up to (-1 = never). */
   rev: number;
   /** What the server is known to have, so only real changes get pushed. */
-  pushed: { decisions: Record<string, number>; art: Record<string, number>; extras: Record<string, 1> };
+  pushed: { decisions: Record<string, number>; art: Record<string, number>; decks: Record<string, number>; extras: Record<string, 1> };
 }
 
 export type SyncState = "starting" | "synced" | "syncing" | "offline" | "error";
@@ -95,6 +97,7 @@ function loadMeta(userId: string): Meta {
     pushed: {
       decisions: m?.pushed?.decisions ?? {},
       art: m?.pushed?.art ?? {},
+      decks: m?.pushed?.decks ?? {},
       extras: m?.pushed?.extras ?? {},
     },
   };
@@ -106,11 +109,12 @@ function pendingChanges(meta: Meta) {
     Object.fromEntries(Object.entries(map).filter(([id, v]) => v && typeof v.t === "number" && sent[id] !== v.t));
   const decisions = pick(read<StampedMap>(KEYS.decisions, {}), meta.pushed.decisions);
   const art = pick(read<StampedMap>(KEYS.art, {}), meta.pushed.art);
+  const decks = pick(read<StampedMap>(KEYS.decks, {}), meta.pushed.decks);
   const extras = Object.fromEntries(
     Object.entries(read<CardMap>(KEYS.extras, {})).filter(([id]) => !meta.pushed.extras[id]),
   );
-  const count = Object.keys(decisions).length + Object.keys(art).length + Object.keys(extras).length;
-  return { decisions, art, extras, count };
+  const count = Object.keys(decisions).length + Object.keys(art).length + Object.keys(decks).length + Object.keys(extras).length;
+  return { decisions, art, decks, extras, count };
 }
 
 /** Newer edit wins, per entry. Returns whether anything local changed. */
@@ -166,10 +170,11 @@ export function startUserSync(userId: string): () => void {
     const p = pendingChanges(meta);
     setStatus({ pending: p.count });
     if (!p.count) return;
-    const sent = { decisions: p.decisions, art: p.art, extras: p.extras };
+    const sent = { decisions: p.decisions, art: p.art, decks: p.decks, extras: p.extras };
     const res = await api<{ rev: number; applied: number }>("POST", "/api/userdata", sent);
     for (const [id, v] of Object.entries(p.decisions)) meta.pushed.decisions[id] = (v as Stamped).t;
     for (const [id, v] of Object.entries(p.art)) meta.pushed.art[id] = (v as Stamped).t;
+    for (const [id, v] of Object.entries(p.decks)) meta.pushed.decks[id] = (v as Stamped).t;
     for (const id of Object.keys(p.extras)) meta.pushed.extras[id] = 1;
     // If nobody else wrote in between, we're already at the server's revision.
     if (res.rev === meta.rev + (res.applied ? 1 : 0)) meta.rev = res.rev;
@@ -182,12 +187,14 @@ export function startUserSync(userId: string): () => void {
       unchanged?: boolean;
       decisions?: StampedMap;
       art?: StampedMap;
+      decks?: StampedMap;
       extras?: CardMap;
     }>("GET", `/api/userdata?since=${meta.rev}`);
     if (res.unchanged) return;
     let changed = false;
     changed = mergeStamped(KEYS.decisions, res.decisions ?? {}, meta.pushed.decisions) || changed;
     changed = mergeStamped(KEYS.art, res.art ?? {}, meta.pushed.art) || changed;
+    changed = mergeStamped(KEYS.decks, res.decks ?? {}, meta.pushed.decks) || changed;
     const localExtras = read<CardMap>(KEYS.extras, {});
     let extrasChanged = false;
     for (const [id, c] of Object.entries(res.extras ?? {})) {
