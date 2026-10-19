@@ -5,25 +5,25 @@ import { redis } from "./_redis.js";
 /**
  * Per-account data that follows a person across devices: Cube review
  * decisions, hand-added cards, printing choices, and the deck randomizer's
- * deck list.
+ * decks and deck lists.
  *
  *   GET  /api/userdata?since=<rev>
  *        -> { rev, unchanged: true }               nothing new since <rev>
- *        -> { rev, decisions, extras, art, decks }  the full set otherwise
- *   POST /api/userdata { decisions?, extras?, art?, decks? }   (changed entries only)
+ *        -> { rev, decisions, extras, art, decks, decklists }  the full set otherwise
+ *   POST /api/userdata { decisions?, extras?, art?, decks?, decklists? }   (changed entries only)
  *        -> { rev, applied }
  *
- * Merge rule, per entry: decisions, art and decks carry an edit time `t` and the
+ * Merge rule, per entry: decisions, art, decks and decklists carry an edit time `t` and the
  * NEWER edit wins (so the same push twice, or a stale one, changes nothing).
  * A cleared decision / reset printing is still an entry with its own `t`, so
  * clearing travels too. Hand-added cards are add-only. Every real change bumps
  * `rev`, which is what makes the cheap "anything new?" poll possible.
  *
- * Keys: ud:{userId}:decisions | :art | :decks | :extras  HASH id -> JSON;  ud:{userId}:rev  INT
+ * Keys: ud:{userId}:decisions | :art | :decks | :decklists | :extras  HASH id -> JSON;  ud:{userId}:rev  INT
  */
 
 type Stamped = { t: number } & Record<string, unknown>;
-const KINDS = ["decisions", "art", "decks"] as const;
+const KINDS = ["decisions", "art", "decks", "decklists"] as const;
 const MAX_ENTRIES = 5000;
 
 const key = (userId: string, part: string) => `ud:${userId}:${part}`;
@@ -51,13 +51,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(200).json({ rev, unchanged: true });
         return;
       }
-      const [decisions, art, extras, decks] = await Promise.all([
+      const [decisions, art, extras, decks, decklists] = await Promise.all([
         redis.hgetall<Record<string, Stamped>>(key(me.id, "decisions")),
         redis.hgetall<Record<string, Stamped>>(key(me.id, "art")),
         redis.hgetall<Record<string, unknown>>(key(me.id, "extras")),
         redis.hgetall<Record<string, Stamped>>(key(me.id, "decks")),
+        redis.hgetall<Record<string, Stamped>>(key(me.id, "decklists")),
       ]);
-      res.status(200).json({ rev, decisions: decisions ?? {}, art: art ?? {}, extras: extras ?? {}, decks: decks ?? {} });
+      res.status(200).json({ rev, decisions: decisions ?? {}, art: art ?? {}, extras: extras ?? {}, decks: decks ?? {}, decklists: decklists ?? {} });
       return;
     }
 

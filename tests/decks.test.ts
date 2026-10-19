@@ -51,3 +51,36 @@ describe("deal", () => {
     expect([...seen].sort()).toEqual(["A", "B", "C"]);
   });
 });
+
+describe("deck lists", () => {
+  it("starts with one list, 'My decks', holding decks saved before lists existed", async () => {
+    const { listLists, DEFAULT_LIST } = await import("../src/lib/decks");
+    expect(listLists({}).map((l) => [l.id, l.name])).toEqual([[DEFAULT_LIST, "My decks"]]);
+    const old: DeckMap = { a: { t: 1, name: "Old deck", active: true } };
+    expect(listDecks(old, DEFAULT_LIST).map((d) => d.name)).toEqual(["Old deck"]);
+  });
+
+  it("adds lists (no duplicate names), keeps decks per list, and the same name can be in two lists", async () => {
+    const { addList, listLists } = await import("../src/lib/decks");
+    const made = addList({}, "Commander", 1, () => "cmd");
+    expect(made.id).toBe("cmd");
+    expect(addList(made.lists, "commander", 2, () => "x").id).toBeNull();
+    expect(listLists(made.lists).map((l) => l.name)).toEqual(["Commander", "My decks"]);
+    let decks: DeckMap = addDecks({}, "Atraxa\nKrenko", 1, id, "cmd").map;
+    decks = addDecks(decks, "Krenko", 2, id).map; // same name, starting list
+    expect(listDecks(decks, "cmd").map((d) => d.name)).toEqual(["Atraxa", "Krenko"]);
+    expect(listDecks(decks).map((d) => d.name)).toEqual(["Krenko"]);
+  });
+
+  it("renames (including the starting list) and deleting a list deletes its decks", async () => {
+    const { addList, renameList, deleteList, listLists, DEFAULT_LIST } = await import("../src/lib/decks");
+    let lists = renameList({}, DEFAULT_LIST, "Pauper cube", 1);
+    expect(listLists(lists).map((l) => l.name)).toEqual(["Pauper cube"]);
+    lists = addList(lists, "Jumpstart", 2, () => "js").lists;
+    const decks = addDecks({}, "Goblins\nPirates", 3, id, "js").map;
+    const after = deleteList(lists, decks, "js", 4);
+    expect(listLists(after.lists).map((l) => l.name)).toEqual(["Pauper cube"]);
+    expect(listDecks(after.decks, "js")).toEqual([]);
+    expect(Object.values(after.decks).every((d) => d.deleted && d.t === 4)).toBe(true);
+  });
+});

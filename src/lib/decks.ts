@@ -1,15 +1,22 @@
 /**
- * The deck randomizer's deck list: for game nights with lots of decks, deal
- * each player (2-4) a different random deck.
+ * The deck randomizer: for game nights with lots of decks, deal each player
+ * (2-4) a different random deck from one of your deck lists ("Commander",
+ * "Pauper cube", ...).
  *
- * The list lives in localStorage and, for the owner, syncs across devices with
- * the rest of their account data (lib/user-sync.ts): each deck is an entry with
- * its own edit time `t`, so the newer edit of a deck wins, and a deleted deck is
- * a stamped "deleted" entry so deleting syncs too.
+ * Lists and decks live in localStorage and, for the owner, sync across devices
+ * with the rest of their account data (lib/user-sync.ts): every list and deck
+ * is an entry with its own edit time `t`, so the newer edit wins, and deleting
+ * leaves a stamped "deleted" entry so deletions sync too.
+ *
+ * Decks saved before lists existed have no `list`; they belong to the
+ * starting list (DEFAULT_LIST, "My decks").
  */
 import { LOCAL_CHANGE_EVENT, REMOTE_CHANGE_EVENT } from "./user-sync";
 
 export const DECKS_KEY = "booster-tutor-decks-v1";
+export const LISTS_KEY = "booster-tutor-deck-lists-v1";
+export const DEFAULT_LIST = "default";
+const DEFAULT_LIST_NAME = "My decks";
 export const MIN_SEATS = 2;
 export const MAX_SEATS = 4;
 
@@ -18,28 +25,42 @@ export interface Deck {
   name: string;
   /** In the pool the dealer picks from (off: lent out, being rebuilt...). */
   active: boolean;
+  /** The list it's in (missing = the starting list). */
+  list?: string;
+  deleted?: boolean;
+}
+
+export interface DeckList {
+  t: number;
+  name: string;
   deleted?: boolean;
 }
 
 export type DeckMap = Record<string, Deck>;
+export type ListMap = Record<string, DeckList>;
 
-export function loadDecks(): DeckMap {
+function read<T>(key: string): T {
   try {
-    const v = JSON.parse(localStorage.getItem(DECKS_KEY) ?? "{}") as DeckMap;
-    return v && typeof v === "object" ? v : {};
+    const v = JSON.parse(localStorage.getItem(key) ?? "{}") as T;
+    return v && typeof v === "object" ? v : ({} as T);
   } catch {
-    return {};
+    return {} as T;
   }
 }
 
-export function saveDecks(map: DeckMap): void {
+function write(key: string, value: unknown): void {
   try {
-    localStorage.setItem(DECKS_KEY, JSON.stringify(map));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch {
-    // Blocked storage: the list still works until the page closes.
+    // Blocked storage: it still works until the page closes.
   }
   window.dispatchEvent(new Event(LOCAL_CHANGE_EVENT));
 }
+
+export const loadDecks = (): DeckMap => read<DeckMap>(DECKS_KEY);
+export const saveDecks = (map: DeckMap): void => write(DECKS_KEY, map);
+export const loadLists = (): ListMap => read<ListMap>(LISTS_KEY);
+export const saveLists = (map: ListMap): void => write(LISTS_KEY, map);
 
 /** Fires when another device's changes arrive. Returns the unsubscribe. */
 export function onRemoteDecks(fn: () => void): () => void {
@@ -47,30 +68,73 @@ export function onRemoteDecks(fn: () => void): () => void {
   return () => window.removeEventListener(REMOTE_CHANGE_EVENT, fn);
 }
 
-/** The decks still on the list (not deleted), A to Z. */
-export function listDecks(map: DeckMap): (Deck & { id: string })[] {
+const norm = (name: string) => name.trim().replace(/\s+/g, " ");
+const listOf = (d: Deck) => d.list ?? DEFAULT_LIST;
+
+/**
+ * The lists, A to Z. The starting list is always there unless it was
+ * deleted on purpose (and is the only one when nothing's been made yet).
+ */
+export function listLists(lists: ListMap): (DeckList & { id: string })[] {
+  const out = Object.entries(lists)
+    .filter(([, l]) => l && !l.deleted && typeof l.name === "string")
+    .map(([id, l]) => ({ ...l, id }));
+  if (!lists[DEFAULT_LIST]) out.push({ id: DEFAULT_LIST, t: 0, name: DEFAULT_LIST_NAME });
+  if (!out.length) out.push({ id: DEFAULT_LIST, t: 0, name: DEFAULT_LIST_NAME });
+  return out.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+}
+
+/** The decks in one list (not deleted), A to Z. */
+export function listDecks(map: DeckMap, listId: string = DEFAULT_LIST): (Deck & { id: string })[] {
   return Object.entries(map)
-    .filter(([, d]) => d && !d.deleted && typeof d.name === "string")
+    .filter(([, d]) => d && !d.deleted && typeof d.name === "string" && listOf(d) === listId)
     .map(([id, d]) => ({ ...d, id }))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 }
 
-const norm = (name: string) => name.trim().replace(/\s+/g, " ");
+/** A new list (a name already used, any capitalisation, isn't added). Returns its id, or null. */
+export function addList(lists: ListMap, name: string, now: number, newId: () => string): { lists: ListMap; id: string | null } {
+  const n = norm(name).slice(0, 60);
+  if (!n || listLists(lists).some((l) => l.name.toLowerCase() === n.toLowerCase())) return { lists, id: null };
+  const id = newId();
+  return { lists: { ...lists, [id]: { t: now, name: n } }, id };
+}
+
+export function renameList(lists: ListMap, id: string, name: string, now: number): ListMap {
+  const n = norm(name).slice(0, 60);
+  const cur = listLists(lists).find((l) => l.id === id);
+  if (!cur || !n || n === cur.name) return lists;
+  return { ...lists, [id]: { t: now, name: n } };
+}
+
+/** Delete a list and the decks in it (stamped, so it syncs). */
+export function deleteList(lists: ListMap, decks: DeckMap, id: string, now: number): { lists: ListMap; decks: DeckMap } {
+  const cur = listLists(lists).find((l) => l.id === id);
+  if (!cur) return { lists, decks };
+  const nextDecks = { ...decks };
+  for (const d of listDecks(decks, id)) nextDecks[d.id] = { ...decks[d.id], deleted: true, t: now };
+  return { lists: { ...lists, [id]: { t: now, name: cur.name, deleted: true } }, decks: nextDecks };
+}
 
 /**
- * Add decks, one per line (pasting a whole list works). Blank lines and names
- * already on the list (any capitalisation) are skipped. Returns the new map
- * and how many were added.
+ * Add decks to a list, one per line (pasting a whole list works). Blank lines
+ * and names already in that list (any capitalisation) are skipped.
  */
-export function addDecks(map: DeckMap, text: string, now: number, newId: () => string): { map: DeckMap; added: number } {
-  const have = new Set(listDecks(map).map((d) => d.name.toLowerCase()));
+export function addDecks(
+  map: DeckMap,
+  text: string,
+  now: number,
+  newId: () => string,
+  listId: string = DEFAULT_LIST,
+): { map: DeckMap; added: number } {
+  const have = new Set(listDecks(map, listId).map((d) => d.name.toLowerCase()));
   const next = { ...map };
   let added = 0;
   for (const line of text.split(/\r?\n/)) {
     const name = norm(line);
     if (!name || name.length > 80 || have.has(name.toLowerCase())) continue;
     have.add(name.toLowerCase());
-    next[newId()] = { t: now, name, active: true };
+    next[newId()] = { t: now, name, active: true, ...(listId !== DEFAULT_LIST && { list: listId }) };
     added++;
   }
   return { map: next, added };
