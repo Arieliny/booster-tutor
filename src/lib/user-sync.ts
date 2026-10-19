@@ -181,6 +181,7 @@ export function startUserSync(userId: string): () => void {
   let running = false;
   let again = false;
   let full = false;
+  let refetch = false;
   let pushTimer: ReturnType<typeof setTimeout> | null = null;
 
   const saveMeta = () => write(metaKey(userId), meta);
@@ -201,7 +202,7 @@ export function startUserSync(userId: string): () => void {
     saveMeta();
   }
 
-  async function pull() {
+  async function pull(everything = false) {
     const res = await api<{
       rev: number;
       unchanged?: boolean;
@@ -210,7 +211,7 @@ export function startUserSync(userId: string): () => void {
       decks?: StampedMap;
       decklists?: StampedMap;
       extras?: CardMap;
-    }>("GET", `/api/userdata?since=${meta.rev}`);
+    }>("GET", `/api/userdata?since=${everything ? -1 : meta.rev}`);
     if (res.unchanged) return;
     let changed = false;
     changed = mergeStamped(KEYS.decisions, res.decisions ?? {}, meta.pushed.decisions) || changed;
@@ -250,8 +251,10 @@ export function startUserSync(userId: string): () => void {
           await pull(); // re-learns what the server has, so the push only sends what it lacks
           await push();
         } else {
+          const everything = refetch;
+          refetch = false;
           await push();
-          await pull();
+          await pull(everything);
           await push(); // anything that only became "ours to send" after the merge
         }
       } while (again && !stopped);
@@ -276,8 +279,12 @@ export function startUserSync(userId: string): () => void {
     if (pushTimer) clearTimeout(pushTimer);
     pushTimer = setTimeout(() => void run(), PUSH_DELAY_MS);
   };
+  // Back in the foreground (picked the phone up after editing on the laptop):
+  // fetch everything rather than trusting the "anything new?" check alone.
   const onVisible = () => {
-    if (document.visibilityState === "visible") void run();
+    if (document.visibilityState !== "visible") return;
+    refetch = true;
+    void run();
   };
   const onOnline = () => void run();
 

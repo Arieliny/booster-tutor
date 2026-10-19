@@ -32,7 +32,7 @@ export function fakeRedis() {
     return e;
   };
 
-  return {
+  const client = {
     async get<T>(k: string) {
       return dec<T>(live(k)?.v);
     },
@@ -133,5 +133,27 @@ export function fakeRedis() {
     async ping() {
       return "PONG";
     },
+    /** Like Upstash's multi(): chain commands, then exec() runs them in order and returns the results. */
+    multi() {
+      const ops: (() => Promise<unknown>)[] = [];
+      const tx: Record<string, unknown> = new Proxy(
+        {},
+        {
+          get: (_, name: string) =>
+            name === "exec"
+              ? async () => {
+                  const out: unknown[] = [];
+                  for (const op of ops) out.push(await op());
+                  return out;
+                }
+              : (...args: unknown[]) => {
+                  ops.push(() => (client as unknown as Record<string, (...a: unknown[]) => Promise<unknown>>)[name](...args));
+                  return tx;
+                },
+        },
+      );
+      return tx;
+    },
   };
+  return client;
 }

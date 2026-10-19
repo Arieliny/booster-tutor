@@ -226,3 +226,34 @@ describe("sync status store", () => {
     expect(listener).not.toHaveBeenCalled();
   });
 });
+
+describe("catching up after a missed change", () => {
+  it("coming back to the foreground fetches everything, not just 'anything new?'", async () => {
+    const calls = fakeServer({ pull: () => json({ rev: 4, unchanged: true }) });
+    seed("booster-tutor-sync-u1", { rev: 4, pushed: {} });
+    stop = us.startUserSync("u1");
+    await settled();
+    expect(calls.at(-1)?.path).toBe("/api/userdata?since=4");
+    stubs.doc.dispatchEvent(new Event("visibilitychange"));
+    await settled();
+    expect(calls.at(-1)?.path).toBe("/api/userdata?since=-1");
+  });
+
+  it("Sync now re-fetches everything first, so a change the device thinks it has arrives", async () => {
+    // The device believes it's at rev 4 but never got deck d1 (the bug this guards against).
+    seed("booster-tutor-sync-u1", { rev: 4, pushed: {} });
+    // The server answers the quick check with "nothing new" (rev matches); only a full fetch has the deck.
+    const calls: Call[] = fakeServer({
+      pull: () =>
+        calls.at(-1)?.path.endsWith("since=4")
+          ? json({ rev: 4, unchanged: true })
+          : json({ rev: 4, decks: { d1: { t: 9, name: "From the laptop", active: true } } }),
+    });
+    stop = us.startUserSync("u1");
+    await settled();
+    expect(stored("booster-tutor-decks-v1")).toEqual({});
+    expect(us.syncNow()).toBe(true);
+    await settled();
+    expect(stored("booster-tutor-decks-v1")).toEqual({ d1: { t: 9, name: "From the laptop", active: true } });
+  });
+});

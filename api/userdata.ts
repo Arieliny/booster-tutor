@@ -45,20 +45,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!me) return;
 
     if (req.method === "GET") {
-      const rev = Number((await redis.get<number>(key(me.id, "rev"))) ?? 0);
       const since = Number(req.query.since ?? -1);
-      if (since === rev) {
-        res.status(200).json({ rev, unchanged: true });
+      if (since === Number((await redis.get<number>(key(me.id, "rev"))) ?? 0)) {
+        res.status(200).json({ rev: since, unchanged: true });
         return;
       }
-      const [decisions, art, extras, decks, decklists] = await Promise.all([
-        redis.hgetall<Record<string, Stamped>>(key(me.id, "decisions")),
-        redis.hgetall<Record<string, Stamped>>(key(me.id, "art")),
-        redis.hgetall<Record<string, unknown>>(key(me.id, "extras")),
-        redis.hgetall<Record<string, Stamped>>(key(me.id, "decks")),
-        redis.hgetall<Record<string, Stamped>>(key(me.id, "decklists")),
-      ]);
-      res.status(200).json({ rev, decisions: decisions ?? {}, art: art ?? {}, extras: extras ?? {}, decks: decks ?? {}, decklists: decklists ?? {} });
+      // The revision and the data in ONE transaction. Upstash serves reads from
+      // replicas, so separate reads could pair a fresh rev with stale data; the
+      // device would then record that rev and never ask for the missing change
+      // again. Rev is read first, so the data is at least that new.
+      type Hash = Record<string, Stamped> | null;
+      const [rev, decisions, art, extras, decks, decklists] = await redis
+        .multi()
+        .get<number>(key(me.id, "rev"))
+        .hgetall<Record<string, Stamped>>(key(me.id, "decisions"))
+        .hgetall<Record<string, Stamped>>(key(me.id, "art"))
+        .hgetall<Record<string, unknown>>(key(me.id, "extras"))
+        .hgetall<Record<string, Stamped>>(key(me.id, "decks"))
+        .hgetall<Record<string, Stamped>>(key(me.id, "decklists"))
+        .exec<[number | null, Hash, Hash, Record<string, unknown> | null, Hash, Hash]>();
+      res.status(200).json({
+        rev: Number(rev ?? 0),
+        decisions: decisions ?? {},
+        art: art ?? {},
+        extras: extras ?? {},
+        decks: decks ?? {},
+        decklists: decklists ?? {},
+      });
       return;
     }
 
