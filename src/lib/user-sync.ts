@@ -141,6 +141,20 @@ function mergeStamped(key: string, remote: StampedMap, sent: Record<string, numb
 
 // ---------------------------------------------------------------- engine
 
+/** The running sync's "start over" hook (null when sync isn't running). */
+let fullSync: (() => void) | null = null;
+
+/**
+ * "Sync now" (account menu): forget what this device thinks the server has,
+ * pull everything, then push whatever the server is missing. Repairs a device
+ * that drifted. Returns false if sync isn't running (not the owner, signed out).
+ */
+export function syncNow(): boolean {
+  if (!fullSync) return false;
+  fullSync();
+  return true;
+}
+
 class AuthEnded extends Error {}
 
 async function api<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
@@ -166,6 +180,7 @@ export function startUserSync(userId: string): () => void {
   let stopped = false;
   let running = false;
   let again = false;
+  let full = false;
   let pushTimer: ReturnType<typeof setTimeout> | null = null;
 
   const saveMeta = () => write(metaKey(userId), meta);
@@ -228,14 +243,23 @@ export function startUserSync(userId: string): () => void {
     try {
       do {
         again = false;
-        await push();
-        await pull();
-        await push(); // anything that only became "ours to send" after the merge
+        if (full) {
+          full = false;
+          meta.rev = -1;
+          meta.pushed = { decisions: {}, art: {}, decks: {}, decklists: {}, extras: {} };
+          await pull(); // re-learns what the server has, so the push only sends what it lacks
+          await push();
+        } else {
+          await push();
+          await pull();
+          await push(); // anything that only became "ours to send" after the merge
+        }
       } while (again && !stopped);
       setStatus({ state: "synced", lastSynced: Date.now(), pending: pendingChanges(meta).count, message: undefined });
     } catch (err) {
       if (err instanceof AuthEnded) {
         stopped = true;
+        fullSync = null;
         setStatus({ state: "error", message: "Signed out - sign in again to sync." });
       } else if (!navigator.onLine || err instanceof TypeError) {
         setStatus({ state: "offline", pending: pendingChanges(meta).count, message: undefined });
@@ -263,10 +287,17 @@ export function startUserSync(userId: string): () => void {
   const poll = setInterval(() => {
     if (document.visibilityState === "visible") void run();
   }, POLL_MS);
+  fullSync = () => {
+    full = true;
+    if (pushTimer) clearTimeout(pushTimer);
+    setStatus({ state: "syncing" });
+    void run();
+  };
   void run();
 
   return () => {
     stopped = true;
+    fullSync = null;
     if (pushTimer) clearTimeout(pushTimer);
     clearInterval(poll);
     window.removeEventListener(LOCAL_CHANGE_EVENT, onLocal);

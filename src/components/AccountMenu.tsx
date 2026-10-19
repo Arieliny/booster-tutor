@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../lib/auth-context";
 import { onOpenSettings } from "../lib/routes";
+import { useSyncStatus } from "../lib/use-sync-status";
+import { syncNow } from "../lib/user-sync";
 import { AboutSheet } from "./Footer";
 import { SettingsSheet } from "./SettingsSheet";
 
@@ -56,6 +58,7 @@ export function AccountMenu({ onAdmin, onManageCubes }: { onAdmin: () => void; o
               Manage cubes
             </button>
           )}
+          {isOwner && <SyncNowItem />}
           {isOwner && (
             <button
               type="button"
@@ -103,5 +106,35 @@ export function AccountMenu({ onAdmin, onManageCubes }: { onAdmin: () => void; o
       {about && createPortal(<AboutSheet onClose={() => setAbout(false)} />, document.body)}
       {settings && createPortal(<SettingsSheet onClose={() => setSettings(false)} />, document.body)}
     </div>
+  );
+}
+
+/** Full resync on demand; stays in the open menu so you see how it went. */
+function SyncNowItem() {
+  const s = useSyncStatus();
+  const busy = s.state === "syncing" || s.state === "starting";
+  const detail = busy
+    ? "Syncing…"
+    : s.state === "error"
+      ? (s.message ?? "Sync problem")
+      : s.state === "offline"
+        ? `Offline${s.pending ? ` · ${s.pending} to sync` : ""}`
+        : s.lastSynced
+          ? `Synced at ${new Date(s.lastSynced).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`
+          : null;
+  return (
+    <button
+      type="button"
+      onClick={() => syncNow()}
+      disabled={busy}
+      className="block w-full rounded px-3 py-2 text-left text-(--color-text) hover:bg-white/5 disabled:cursor-wait"
+    >
+      Sync now
+      {detail && (
+        <span className={"block text-xs " + (s.state === "error" ? "text-red-300" : s.state === "offline" ? "text-amber-300" : "text-(--color-text-dim)")}>
+          {detail}
+        </span>
+      )}
+    </button>
   );
 }
