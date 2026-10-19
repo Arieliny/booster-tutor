@@ -144,10 +144,10 @@ export type Section = "play" | "life" | "myCube" | "lookup" | "judge" | "grades"
  * account menu instead.
  */
 export const SECTIONS: { id: Section; label: string; tabs: Tab[] }[] = [
-  // Play: opening packs, or dealing random decks (the Packs | Decks switch).
-  { id: "play", label: "Play", tabs: ["packs", "decks"] },
   // The life counter: its own section (anyone who can open Play can use it).
   { id: "life", label: "Life", tabs: ["life"] },
+  // Play: opening packs, or dealing random decks (the Packs | Decks switch).
+  { id: "play", label: "Play", tabs: ["packs", "decks"] },
   // The collection checklist (Inventory) opens from My cube's home page.
   { id: "myCube", label: "My cube", tabs: ["cubeReview", "inventory"] },
   { id: "lookup", label: "Look up", tabs: ["lookup"] },
