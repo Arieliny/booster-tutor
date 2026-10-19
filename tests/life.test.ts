@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  COUNTERS,
   MERGE_MS,
   addCounter,
   changeCmdr,
@@ -264,15 +265,21 @@ describe("commander damage on the card", () => {
 });
 
 describe("commander damage and life (setting)", () => {
-  it("leaves life alone by default, takes it with the setting on", async () => {
-    const { parseSettings, DEFAULT_SETTINGS } = await import("../src/lib/life");
-    expect(DEFAULT_SETTINGS.cmdrTakesLife).toBe(false);
-    expect(parseSettings(null).cmdrTakesLife).toBe(false);
-    expect(parseSettings({ cmdrTakesLife: true }).cmdrTakesLife).toBe(true);
+  it("leaves life alone by default, takes it when asked to", async () => {
     const off = changeCmdr(newGame(2, 40), 0, 1, 5, T);
     expect(off.players[0].cmdr[1]).toBe(5);
     expect(off.players[0].life).toBe(40);
     const on = changeCmdr(newGame(2, 40), 0, 1, 5, T, true);
     expect(on.players[0].life).toBe(35);
+  });
+});
+
+describe("mana counters", () => {
+  it("one per color plus colorless, each with its pip", () => {
+    const mana = COUNTERS.filter((c) => c.pip);
+    expect(mana.map((c) => c.pip)).toEqual(["W", "U", "B", "R", "G", "C"]);
+    let g = addCounter(newGame(2, 20), 0, "manaG");
+    g = changeCounter(g, 0, "manaG", 3, T);
+    expect(g.players[0].counters.manaG).toBe(3);
   });
 });

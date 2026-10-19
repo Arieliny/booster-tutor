@@ -16,11 +16,40 @@ export const STARTING_LIFE = [20, 25, 30, 40];
 export const MERGE_MS = 4000;
 const MAX_HISTORY = 200;
 
-export type CounterKey = "poison" | "energy" | "experience" | "rad" | "tax" | "speed" | "ticket" | "storm";
+export type CounterKey =
+  | "poison"
+  | "energy"
+  | "experience"
+  | "rad"
+  | "tax"
+  | "speed"
+  | "ticket"
+  | "storm"
+  | "manaW"
+  | "manaU"
+  | "manaB"
+  | "manaR"
+  | "manaG"
+  | "manaC";
 /** Each counter's symbol: names from components/Icon.tsx. */
 export type CounterIcon = "phyrexian" | "droplet" | "bolt" | "star" | "rad" | "coins" | "gauge" | "ticket" | "storm";
-/** Player counters, each with its symbol (`icons` lists the ones a player can switch between, default first). */
-export const COUNTERS: { key: CounterKey; label: string; icon: CounterIcon; icons?: CounterIcon[]; step?: number; lethal?: number; max?: number }[] = [
+/**
+ * Player counters, each with its symbol: an icon (`icons` lists the ones a
+ * player can switch between, default first), or for unspent mana a mana pip.
+ */
+export interface CounterDef {
+  key: CounterKey;
+  label: string;
+  icon?: CounterIcon;
+  icons?: CounterIcon[];
+  /** Mana counters: the mana symbol (W, U, B, R, G, C) shown instead of an icon. */
+  pip?: string;
+  step?: number;
+  lethal?: number;
+  max?: number;
+}
+
+export const COUNTERS: CounterDef[] = [
   { key: "poison", label: "Poison", icon: "phyrexian", icons: ["phyrexian", "droplet"], lethal: 10 },
   { key: "energy", label: "Energy", icon: "bolt" },
   { key: "experience", label: "Experience", icon: "star" },
@@ -31,6 +60,13 @@ export const COUNTERS: { key: CounterKey; label: string; icon: CounterIcon; icon
   { key: "speed", label: "Speed", icon: "gauge", max: 4 },
   { key: "ticket", label: "Tickets", icon: "ticket" },
   { key: "storm", label: "Storm count", icon: "storm" },
+  // Unspent (floating) mana, one counter per color plus colorless.
+  { key: "manaW", label: "White mana", pip: "W" },
+  { key: "manaU", label: "Blue mana", pip: "U" },
+  { key: "manaB", label: "Black mana", pip: "B" },
+  { key: "manaR", label: "Red mana", pip: "R" },
+  { key: "manaG", label: "Green mana", pip: "G" },
+  { key: "manaC", label: "Colorless mana", pip: "C" },
 ];
 
 export type MarkerKey = "monarch" | "initiative";
@@ -307,7 +343,7 @@ export function toggleMarker(g: Game, p: number, key: MarkerKey, now = Date.now(
 
 /** The symbol a counter shows in this game. */
 export function counterIcon(g: Pick<Game, "icons">, key: CounterKey): CounterIcon {
-  return g.icons?.[key] ?? COUNTERS.find((c) => c.key === key)!.icon;
+  return g.icons?.[key] ?? COUNTERS.find((c) => c.key === key)?.icon ?? "star";
 }
 
 /** Pick a counter's symbol (a preference, not a game action: no history). */
@@ -359,19 +395,6 @@ export function lifeAfter(g: Game, index: number): number {
 
 export function rollDice(count: number, sides: number, random = Math.random): number[] {
   return Array.from({ length: count }, () => 1 + Math.floor(random() * sides));
-}
-
-/** Life counter settings, kept on the device across games. */
-export interface LifeSettings {
-  /** Commander damage also comes off the player's life (off: track it separately, as in Carbon). */
-  cmdrTakesLife: boolean;
-}
-
-export const DEFAULT_SETTINGS: LifeSettings = { cmdrTakesLife: false };
-
-export function parseSettings(raw: unknown): LifeSettings {
-  const r = raw && typeof raw === "object" ? (raw as Partial<LifeSettings>) : {};
-  return { cmdrTakesLife: r.cmdrTakesLife === true };
 }
 
 /** A saved game, or null if it isn't one we can read (old versions are upgraded). */

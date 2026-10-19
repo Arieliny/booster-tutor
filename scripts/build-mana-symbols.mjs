@@ -41,6 +41,8 @@ if (fs.existsSync(cubeReview)) {
   }
 }
 if (used.size === 0) throw new Error("No mana symbols found in src/data/set-review-*.json");
+// The life counter's mana counters (floating mana) need all five colors and colorless.
+for (const sym of ["W", "U", "B", "R", "G", "C"]) used.add(sym);
 
 const res = await fetch("https://api.scryfall.com/symbology", {
   headers: { "User-Agent": UA, Accept: "application/json" },

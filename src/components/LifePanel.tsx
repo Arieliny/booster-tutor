@@ -7,6 +7,7 @@ import {
   colorInk,
   counterIcon,
   type ColorKey,
+  type CounterDef,
   type CounterIcon,
   type CounterKey,
   type Game,
@@ -14,6 +15,7 @@ import {
   type Player,
 } from "../lib/life";
 import { Icon } from "./Icon";
+import { Pip } from "./ManaCost";
 
 /** How far a seat's panel is turned so it faces its player (0 = upright for the phone's owner). */
 export type Turn = 0 | 90 | 180 | 270;
@@ -108,9 +110,6 @@ interface Props {
   onAddCounter: (key: CounterKey) => void;
   onRemoveCounter: (key: CounterKey) => void;
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
-  /** Setting: commander damage also lowers life. */
-  cmdrTakesLife: boolean;
-  onCmdrTakesLife: (on: boolean) => void;
   /** The ... menu is opening (the tray closes so it doesn't cover the menu). */
   onMenu: () => void;
   onCmdr: (from: number, by: number) => void;
@@ -209,7 +208,7 @@ function Face(props: Props & { w: number; h: number }) {
                   label={c.label}
                   value={v}
                   lethal={!!c.lethal && v >= c.lethal}
-                  icon={<Icon name={counterIcon(props, c.key)} className="h-5 w-5" />}
+                  icon={<CounterSymbol c={c} icons={props.icons} size={20} />}
                   onDown={() => props.onCounter(c.key, -(c.step ?? 1))}
                   onUp={() => props.onCounter(c.key, c.step ?? 1)}
                   who={name}
@@ -330,6 +329,16 @@ function Chip({ children, onClick, danger }: { children: React.ReactNode; onClic
   );
 }
 
+/** A counter's symbol: its mana pip, or its icon (poison can be Phyrexian or a droplet). */
+function CounterSymbol({ c, icons, size }: { c: CounterDef; icons: Props["icons"]; size: number }) {
+  if (c.pip) return <Pip sym={c.pip} size={size} />;
+  return (
+    <span className="block shrink-0" style={{ width: size, height: size }}>
+      <Icon name={counterIcon({ icons }, c.key)} className="h-full w-full" />
+    </span>
+  );
+}
+
 /** A counter or commander damage under the total: - [symbol value] +. */
 function TrackRow({
   label,
@@ -373,8 +382,9 @@ function Menu(props: Props & { onClose: () => void }) {
   const { name, player, others } = props;
   const head = "text-[11px] font-medium tracking-wide text-white/60 uppercase";
   return (
-    <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] p-3 text-left text-white">
-      <div className="mb-2 flex items-center">
+    <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] px-3 pb-3 text-left text-white">
+      {/* Stays at the top while the menu scrolls, so x is always in reach. */}
+      <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center bg-[#14161c] px-3 pt-3 pb-2">
         <span className="flex-1 text-sm font-medium">{name}</span>
         <button type="button" onClick={props.onClose} aria-label="Close" className="rounded-full p-1 text-white/70 hover:bg-white/10">
           <Icon name="close" className="h-5 w-5" />
@@ -385,7 +395,7 @@ function Menu(props: Props & { onClose: () => void }) {
         <section className="space-y-1.5">
           <div className={head}>Counters on your life card</div>
           <div className="grid grid-cols-2 gap-1.5">
-            {COUNTERS.map((c) => {
+            {COUNTERS.filter((c) => !c.pip).map((c) => {
               const on = player.counters[c.key] !== undefined;
               return (
                 <div key={c.key} className="flex items-stretch gap-1">
@@ -426,6 +436,31 @@ function Menu(props: Props & { onClose: () => void }) {
         </section>
 
         <section className="space-y-1.5">
+          <div className={head}>Unspent mana</div>
+          <div className="flex flex-wrap gap-1.5">
+            {COUNTERS.filter((c) => c.pip).map((c) => {
+              const on = player.counters[c.key] !== undefined;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => (on ? props.onRemoveCounter(c.key) : props.onAddCounter(c.key))}
+                  aria-pressed={on}
+                  aria-label={c.label}
+                  title={c.label}
+                  className={
+                    "flex h-11 w-11 items-center justify-center rounded-lg border " +
+                    (on ? "border-white bg-white/15" : "border-white/20 opacity-60 hover:bg-white/10 hover:opacity-100")
+                  }
+                >
+                  <Pip sym={c.pip!} size={26} />
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="space-y-1.5">
           <div className={head}>Commander damage on your life card</div>
           <div className="grid grid-cols-2 gap-1.5">
             {others.map((o) => {
@@ -449,18 +484,6 @@ function Menu(props: Props & { onClose: () => void }) {
               );
             })}
           </div>
-          <label className="flex cursor-pointer items-start gap-2.5 pt-1 text-sm">
-            <input
-              type="checkbox"
-              checked={props.cmdrTakesLife}
-              onChange={(e) => props.onCmdrTakesLife(e.target.checked)}
-              className="mt-0.5 h-4.5 w-4.5 shrink-0 accent-white"
-            />
-            <span>
-              Also takes life
-              <span className="block text-xs text-white/55">For everyone at the table; remembered on this device.</span>
-            </span>
-          </label>
         </section>
 
         <section className="space-y-1.5">

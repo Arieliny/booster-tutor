@@ -27,11 +27,8 @@ import {
   setCounterIcon,
   undo,
   untouched,
-  DEFAULT_SETTINGS,
-  parseSettings,
   type Entry,
   type Game,
-  type LifeSettings,
 } from "../lib/life";
 import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Turn } from "./LifePanel";
@@ -53,15 +50,6 @@ const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
  */
 
 const KEY = "booster-tutor-life-v2";
-const SETTINGS_KEY = "booster-tutor-life-settings";
-
-function loadSettings(): LifeSettings {
-  try {
-    return parseSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? "null"));
-  } catch {
-    return { ...DEFAULT_SETTINGS };
-  }
-}
 const OLD_KEY = "booster-tutor-life-v1";
 
 function load(): Game {
@@ -183,7 +171,6 @@ interface Roll {
 
 export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; canJudge?: boolean }) {
   const [game, setGame] = useState<Game>(load);
-  const [settings, setSettings] = useState<LifeSettings>(loadSettings);
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [barOpen, setBarOpen] = useState(false);
   const [giving, setGiving] = useState<"monarch" | null>(null);
@@ -206,13 +193,6 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
       // Blocked storage: the game still works until the page closes.
     }
   }, [game]);
-  useEffect(() => {
-    try {
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    } catch {
-      // Blocked storage: the setting holds until the page closes.
-    }
-  }, [settings]);
   useEffect(
     () => () => {
       timers.current.forEach((t) => window.clearTimeout(t));
@@ -308,10 +288,8 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                 onAddCounter={(key) => setGame((g) => addCounter(g, i, key))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
-                cmdrTakesLife={settings.cmdrTakesLife}
-                onCmdrTakesLife={(on) => setSettings((x) => ({ ...x, cmdrTakesLife: on }))}
                 onMenu={closeTray}
-                onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by, Date.now(), settings.cmdrTakesLife))}
+                onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
                 onAddCmdr={(from) => setGame((g) => addCmdr(g, i, from))}
                 onRemoveCmdr={(from) => setGame((g) => removeCmdr(g, i, from))}
                 onDungeon={() => {
