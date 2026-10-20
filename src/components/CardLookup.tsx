@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { DB_DOWNLOAD_LABEL, searchDb, toReviewCard, type useCardDb } from "../lib/card-db";
 import { scryfallSuggest, shortDate, type ReviewCard } from "../lib/cube-review";
 import { openSettings } from "../lib/routes";
+import { InLifeCounterContext } from "../lib/in-life-counter";
 import { ManaCost } from "./ManaCost";
 
 type CardDbHook = ReturnType<typeof useCardDb>;
@@ -39,6 +40,9 @@ export function CardLookup({
     () => (state.kind === "ready" && state.db && needle.length >= 2 ? searchDb(state.db, needle, SHOW, exclude) : null),
     [state, needle, exclude],
   );
+
+  // Settings would open behind the life counter, so the pointer to it is left out there.
+  const inCounter = useContext(InLifeCounterContext);
 
   if (needle.length < 2) return null;
 
@@ -82,7 +86,7 @@ export function CardLookup({
   return (
     <Box>
       <ScryfallSearch q={needle} onPick={onScryfall} lead="Not in these cubes?" />
-      {state.kind !== "checking" && (
+      {state.kind !== "checking" && !inCounter && (
         <div className="mt-1.5 text-xs text-(--color-text-dim)">
           To search all of Magic offline, download the card database in{" "}
           <button type="button" onClick={openSettings} className="text-(--color-accent) hover:underline">

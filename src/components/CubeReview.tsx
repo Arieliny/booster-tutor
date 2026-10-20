@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   CMC_FACETS,
   COLOR_FACETS,
@@ -72,6 +72,7 @@ import { useAuth } from "../lib/auth-context";
 import { can } from "../lib/auth";
 import { startQuestionAbout } from "../lib/judge";
 import { navigateTo } from "../lib/routes";
+import { AskJudgeContext } from "../lib/in-life-counter";
 import { Rulings } from "./Rulings";
 import { Icon, type IconName } from "./Icon";
 import { PageHeader } from "./PageHeader";
@@ -1855,6 +1856,7 @@ function CardBody({
   const [picking, setPicking] = useState(false);
   const back = hasBackImage(c);
   const { me } = useAuth();
+  const askJudge = useContext(AskJudgeContext);
 
   // F flips double-faced cards.
   useEffect(() => {
@@ -1982,7 +1984,8 @@ function CardBody({
                   type="button"
                   onClick={() => {
                     startQuestionAbout(c.name);
-                    navigateTo("judge");
+                    if (askJudge) askJudge();
+                    else navigateTo("judge");
                   }}
                   className="w-full rounded-lg border border-(--color-accent)/60 py-2 text-sm text-(--color-text) hover:bg-(--color-accent)/10"
                 >

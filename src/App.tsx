@@ -428,6 +428,7 @@ function App() {
         <LifeCounter
           onExit={() => setTab(tabAllowed(beforeLife.current, me) ? beforeLife.current : "packs")}
           canJudge={tabAllowed("judge", me)}
+          canLookUp={tabAllowed("lookup", me)}
         />
       ) : tab === "judge" ? (
         <Suspense fallback={loading("the judge")}>

@@ -282,6 +282,35 @@ export function changeCmdr(g: Game, p: number, from: number, by: number, now = D
 }
 
 /** p takes a table-wide marker (from whoever had it). No change if p already has it. */
+/**
+ * The seats in order going clockwise round the table as they sit on screen
+ * (= turn order, to each player's left), from rows of player indices
+ * listed left to right. The layouts never have a seat that isn't on the
+ * edge, so this walks the outside: along the top, down the right side,
+ * back along the bottom, up the left side.
+ */
+export function aroundTheTable(rows: number[][]): number[] {
+  if (rows.length === 0) return [];
+  if (rows.length === 1) return [...rows[0]];
+  const middle = rows.slice(1, -1);
+  return [
+    ...rows[0],
+    ...middle.map((r) => r[r.length - 1]),
+    ...[...rows[rows.length - 1]].reverse(),
+    ...middle
+      .filter((r) => r.length > 1)
+      .map((r) => r[0])
+      .reverse(),
+  ];
+}
+
+/** Pass the monarch to the next player round the table (who's next comes from aroundTheTable). */
+export function passMonarch(g: Game, order: number[], now = Date.now()): Game {
+  const at = order.indexOf(g.markers.monarch ?? -1);
+  if (at < 0 || order.length < 2) return g;
+  return giveMarker(g, order[(at + 1) % order.length], "monarch", now);
+}
+
 export function giveMarker(g: Game, p: number, key: MarkerKey, now = Date.now()): Game {
   if (g.markers[key] === p) return g;
   return record(g, { p, kind: "marker", key, d: 1 }, [], (_, m) => void (m[key] = p), now, false);

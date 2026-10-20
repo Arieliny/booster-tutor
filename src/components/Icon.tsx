@@ -101,6 +101,14 @@ const PATHS = {
       <path d="M14.5 13.5h.01" strokeWidth={2.6} strokeLinecap="round" />
     </>
   ),
+  // The back of a Magic card: the card, its oval, and the five mana orbs. Card search in the life counter.
+  cardBack: (
+    <>
+      <rect x="5" y="2.5" width="14" height="19" rx="2" />
+      <ellipse cx="12" cy="12" rx="4.6" ry="6.6" />
+      <path d="M12 11.1h.01M14.3 12.8h.01M13.4 15.4h.01M10.6 15.4h.01M9.7 12.8h.01" strokeWidth={2.2} />
+    </>
+  ),
   exit: <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l-4-4 4-4M5 12h11" />,
   refresh: <path d="M20 11a8 8 0 0 0-14.9-3.5M4 4v4h4M4 13a8 8 0 0 0 14.9 3.5M20 20v-4h-4" />,
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={2.8} strokeLinecap="round" />,

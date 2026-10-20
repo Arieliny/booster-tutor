@@ -116,6 +116,8 @@ interface Props {
   onAddCmdr: (from: number) => void;
   onRemoveCmdr: (from: number) => void;
   onDungeon: () => void;
+  /** Tap the crown: the monarch goes to the next player. */
+  onPassMonarch: () => void;
   onColor: (c: ColorKey) => void;
 }
 
@@ -184,8 +186,8 @@ function Face(props: Props & { w: number; h: number }) {
         {highlight === "first" && <div className="mb-1 text-xs font-bold tracking-wide uppercase">Goes first</div>}
         {crown > 0 && (
           <div className="mb-1 flex items-end gap-5">
-            {monarch && <Marker icon="crown" label="Monarch" size={crown} />}
-            {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} />}
+            {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch to the next player" />}
+            {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
           </div>
         )}
         <div
@@ -295,7 +297,7 @@ function Face(props: Props & { w: number; h: number }) {
 const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF" } as const;
 
 /** A big table marker above the total: the monarch's gold crown, the initiative's lavender door. */
-function Marker({ icon, label, size, onClick }: { icon: "crown" | "door"; label: string; size: number; onClick?: () => void }) {
+function Marker({ icon, label, size, onClick, title }: { icon: "crown" | "door"; label: string; size: number; onClick?: () => void; title?: string }) {
   const inner = (
     <>
       <span style={{ width: size, height: size }} className="block">
@@ -307,7 +309,7 @@ function Marker({ icon, label, size, onClick }: { icon: "crown" | "door"; label:
   const cls = "flex flex-col items-center rounded-2xl bg-black/40 px-3 pt-1.5 pb-1 leading-none";
   const style = { color: MARKER_TINT[icon] };
   return onClick ? (
-    <button type="button" onClick={onClick} className={"pointer-events-auto " + cls} style={style}>
+    <button type="button" onClick={onClick} aria-label={title} title={title} className={"pointer-events-auto " + cls} style={style}>
       {inner}
     </button>
   ) : (

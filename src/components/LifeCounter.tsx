@@ -16,7 +16,9 @@ import {
   colorHex,
   completeDungeon,
   enterRoom,
+  aroundTheTable,
   giveMarker,
+  passMonarch,
   lifeAfter,
   newGame,
   parseGame,
@@ -34,10 +36,13 @@ import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
 import { useBackToClose } from "../lib/use-back-to-close";
+import { AskJudgeContext, InLifeCounterContext } from "../lib/in-life-counter";
 import { COIN_HEAD, COIN_TAIL } from "../lib/coin-art";
 
 // The rules judge, opened over the counter from the tray (loaded only when first opened).
 const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
+// Card search (the Look up screen), opened the same way.
+const LookUp = lazy(() => import("./CubeReview").then((m) => ({ default: m.LookUp })));
 
 /**
  * Full-screen life counter for 2-6 players around one phone. Left half of a
@@ -129,6 +134,43 @@ function useWide() {
   return wide;
 }
 
+/** The seats as rows on screen (left to right), for working out who sits next to whom. */
+function gridRows(seats: { i: number; span: boolean }[], cols: number): number[][] {
+  const rows: number[][] = [];
+  let row: number[] = [];
+  for (const s of seats) {
+    if (s.span) {
+      rows.push([s.i]);
+      continue;
+    }
+    row.push(s.i);
+    if (row.length === cols) {
+      rows.push(row);
+      row = [];
+    }
+  }
+  if (row.length) rows.push(row);
+  return rows;
+}
+
+/** Judge or card search: full screen over the counter; closing it comes straight back to the game. */
+function ToolScreen({ icon, title, loading, onClose, children }: { icon: IconName; title: string; loading: string; onClose: () => void; children: React.ReactNode }) {
+  return (
+    <div className="absolute inset-0 z-50 flex flex-col bg-(--color-bg) text-(--color-text)" style={{ paddingTop: "env(safe-area-inset-top)" }}>
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-(--color-border) px-4">
+        <Icon name={icon} className="h-5 w-5 text-(--color-text-dim)" />
+        <span className="flex-1 text-lg font-semibold">{title}</span>
+        <button type="button" onClick={onClose} aria-label={`Close ${title.toLowerCase()}`} className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-white/10">
+          <Icon name="close" className="h-6 w-6" />
+        </button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4">
+        <Suspense fallback={<p className="text-sm text-(--color-text-dim)">Loading {loading}…</p>}>{children}</Suspense>
+      </div>
+    </div>
+  );
+}
+
 const seatName = (count: number, i: number) => (count === 2 ? (i === 0 ? "You" : "Opponent") : `P${i + 1}`);
 
 /**
@@ -150,7 +192,7 @@ function seating(count: number, wide: boolean): { i: number; turn: Turn; span: b
   return out;
 }
 
-type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "judge" } | { kind: "dungeon"; p: number };
+type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "judge" } | { kind: "cards" } | { kind: "dungeon"; p: number };
 
 const DICE = [4, 6, 8, 10, 12, 20];
 
@@ -169,7 +211,7 @@ interface Roll {
   seed: number;
 }
 
-export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; canJudge?: boolean }) {
+export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { onExit: () => void; canJudge?: boolean; canLookUp?: boolean }) {
   const [game, setGame] = useState<Game>(load);
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [barOpen, setBarOpen] = useState(false);
@@ -213,6 +255,8 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
   const seats = seating(n, wide);
   const cols = wide ? (n === 2 || n === 4 ? 2 : 3) : n === 2 ? 1 : 2;
   const rows = wide ? Math.ceil(n / cols) : n === 2 ? 2 : Math.ceil(n / 2);
+  // Turn order: clockwise round the table as the seats sit on screen.
+  const order = aroundTheTable(gridRows(seats, cols));
 
   /** Flicker around the table, then land on someone. */
   const whoGoesFirst = () => {
@@ -297,6 +341,7 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                   setSheet({ kind: "dungeon", p: i });
                 }}
                 onColor={(c) => setGame((g) => setColor(g, i, c))}
+                onPassMonarch={() => setGame((g) => passMonarch(g, order))}
               />
             </div>
           ))}
@@ -326,9 +371,9 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                 ) : (
                   <>
                     <Tool icon="exit" label="Exit" onClick={onExit} />
-                    <Tool icon="undo" label="Undo" onClick={() => setGame(undo)} disabled={!game.history.length} />
                     <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
                     <Tool icon="refresh" label="New game" onClick={() => setSheet({ kind: "new" })} />
+                    <Tool icon="flag" label="Who's first" onClick={whoGoesFirst} />
                   </>
                 )}
               </div>
@@ -352,9 +397,9 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                 ) : (
                   <>
                     <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
-                    <Tool icon="flag" label="Who's first" onClick={whoGoesFirst} />
                     <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                     {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
+                    {canLookUp && <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />}
                   </>
                 )}
               </div>
@@ -366,21 +411,19 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
 
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
       {sheet?.kind === "judge" && (
-        // Full screen over the counter; closing it comes straight back to the game.
-        <div className="absolute inset-0 z-50 flex flex-col bg-(--color-bg) text-(--color-text)" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-          <div className="flex h-14 shrink-0 items-center gap-2 border-b border-(--color-border) px-4">
-            <Icon name="scales" className="h-5 w-5 text-(--color-text-dim)" />
-            <span className="flex-1 text-lg font-semibold">Judge</span>
-            <button type="button" onClick={() => setSheet(null)} aria-label="Close the judge" className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-white/10">
-              <Icon name="close" className="h-6 w-6" />
-            </button>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4">
-            <Suspense fallback={<p className="text-sm text-(--color-text-dim)">Loading the judge…</p>}>
-              <Judge embedded />
-            </Suspense>
-          </div>
-        </div>
+        <ToolScreen icon="scales" title="Judge" loading="the judge" onClose={() => setSheet(null)}>
+          <Judge embedded />
+        </ToolScreen>
+      )}
+      {sheet?.kind === "cards" && (
+        <ToolScreen icon="cardBack" title="Cards" loading="card search" onClose={() => setSheet(null)}>
+          {/* A card's "Ask the judge" opens the judge here instead of leaving the game. */}
+          <InLifeCounterContext.Provider value={true}>
+            <AskJudgeContext.Provider value={canJudge ? () => setSheet({ kind: "judge" }) : null}>
+              <LookUp />
+            </AskJudgeContext.Provider>
+          </InLifeCounterContext.Provider>
+        </ToolScreen>
       )}
       {sheet?.kind === "dungeon" && (
         <DungeonTracker
