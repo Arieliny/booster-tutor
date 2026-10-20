@@ -368,8 +368,8 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
                   <>
                     <Tool icon="exit" label="Exit" onClick={onExit} />
                     <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
-                    <Tool icon="refresh" label="New game" onClick={() => setSheet({ kind: "new" })} />
-                    <Tool icon="flag" label="Who's first" onClick={whoGoesFirst} />
+                    <Tool icon="refresh" label="New" hint="New game" onClick={() => setSheet({ kind: "new" })} />
+                    <Tool icon="flag" label="Chooser" hint="Choose who goes first" onClick={whoGoesFirst} />
                   </>
                 )}
               </div>
@@ -455,14 +455,15 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
 }
 
 /** A button in the middle bar. */
-function Tool({ icon, label, onClick, tint, disabled }: { icon: IconName; label: string; onClick: () => void; tint?: string; disabled?: boolean }) {
+/** A tray button: icon and short label; `hint` is the fuller name for tooltips and screen readers. */
+function Tool({ icon, label, hint, onClick, tint, disabled }: { icon: IconName; label: string; hint?: string; onClick: () => void; tint?: string; disabled?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      aria-label={label}
-      title={label}
+      aria-label={hint ?? label}
+      title={hint ?? label}
       className="flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
       style={tint ? { color: tint } : undefined}
     >
