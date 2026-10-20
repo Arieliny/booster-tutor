@@ -31,7 +31,7 @@ import {
   type Game,
 } from "../lib/life";
 import { Icon, type IconName } from "./Icon";
-import { LifePanel, Turned, type Turn } from "./LifePanel";
+import { LifePanel, Turned, type Corner, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
 import { useBackToClose } from "../lib/use-back-to-close";
 import { AskJudgeContext, InLifeCounterContext } from "../lib/in-life-counter";
@@ -130,6 +130,40 @@ function useWide() {
     return () => mq.removeEventListener("change", on);
   }, []);
   return wide;
+}
+
+/**
+ * Which corner of each seat gets the dungeons door while the tray is open.
+ * The tray bar runs across the middle of the screen, so a seat touching it
+ * puts the door in a corner on its far side. Which side that is, from the
+ * player's view, depends on which way the seat is turned. The bottom right
+ * is always the ⋯ menu.
+ */
+function doorCorners(seats: { i: number; turn: Turn; span: boolean }[], cols: number, rows: number): Record<number, Corner> {
+  const out: Record<number, Corner> = {};
+  let row = 0;
+  let inRow = 0;
+  for (const s of seats) {
+    // Where the bar is from this seat on screen: below it, above it, or across its middle.
+    const bar = (row + 1) / rows <= 0.5 ? "down" : row / rows >= 0.5 ? "up" : null;
+    // The same direction from the player's side of the table.
+    const side =
+      bar === null
+        ? null
+        : s.turn === 0
+          ? bar === "up" ? "top" : "bottom"
+          : s.turn === 180
+            ? bar === "up" ? "bottom" : "top"
+            : s.turn === 90
+              ? bar === "up" ? "left" : "right"
+              : bar === "up" ? "right" : "left";
+    out[s.i] = side === "top" ? "bl" : side === "left" ? "tr" : "tl";
+    if (s.span || ++inRow === cols) {
+      row++;
+      inRow = 0;
+    }
+  }
+  return out;
 }
 
 /** Judge or card search: full screen over the counter; closing it comes straight back to the game. */
@@ -234,6 +268,7 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
   const seats = seating(n, wide);
   const cols = wide ? (n === 2 || n === 4 ? 2 : 3) : n === 2 ? 1 : 2;
   const rows = wide ? Math.ceil(n / cols) : n === 2 ? 2 : Math.ceil(n / 2);
+  const doors = doorCorners(seats, cols, rows);
 
   /** Flicker around the table, then land on someone. */
   const whoGoesFirst = () => {
@@ -308,6 +343,7 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
                 others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: seatName(n, j), color: o.color }]))}
                 highlight={first === i ? "first" : spin === i ? "spin" : null}
                 trayOpen={barOpen && !diceTray}
+                doorCorner={doors[i]}
                 picking={giving ? "Becomes the monarch" : null}
                 onPick={() => pick(i)}
                 onLife={(by) => setGame((g) => changeLife(g, i, by))}

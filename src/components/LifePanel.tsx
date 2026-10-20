@@ -19,6 +19,8 @@ import { Pip } from "./ManaCost";
 
 /** How far a seat's panel is turned so it faces its player (0 = upright for the phone's owner). */
 export type Turn = 0 | 90 | 180 | 270;
+/** A corner of the seat, from its player's side of the table. */
+export type Corner = "tl" | "tr" | "bl";
 
 /**
  * Lays its child out in a frame turned to face a seat: at 90/270 the frame's
@@ -102,6 +104,8 @@ interface Props {
   highlight: "first" | "spin" | null;
   /** The middle tray is open: show this seat's door to the dungeon tracker. */
   trayOpen: boolean;
+  /** Where the dungeons door goes while the tray is open: a corner away from the tray bar (never the ⋯ corner). */
+  doorCorner: Corner;
   /** Giving out the monarch: what to say, and the tap that picks this seat. */
   picking: string | null;
   onPick: () => void;
@@ -139,7 +143,7 @@ export function LifePanel(props: Props) {
 }
 
 function Face(props: Props & { w: number; h: number }) {
-  const { name, player, w, h, highlight, markers, index, others, picking, trayOpen } = props;
+  const { name, player, w, h, highlight, markers, index, others, picking, trayOpen, doorCorner } = props;
   const [delta, setDelta] = useState(0);
   const [mode, setMode] = useState<"play" | "menu">("play");
   const timer = useRef<number | undefined>(undefined);
@@ -261,21 +265,26 @@ function Face(props: Props & { w: number; h: number }) {
         <Icon name="more" className="h-6 w-6" />
       </button>
 
-      {player.completed ? (
+      {/* The door takes this corner while the tray is open. */}
+      {player.completed && !(trayOpen && doorCorner === "bl") ? (
         <div className="absolute bottom-2.5 left-3 text-[11px] font-medium opacity-75">
           {player.completed} dungeon{player.completed === 1 ? "" : "s"} done
         </div>
       ) : null}
 
-      {/* With the tray open, each seat gets a door to the dungeon tracker, facing them. */}
+      {/* With the tray open, each seat gets a door to the dungeon tracker, facing them: in a corner,
+          clear of the crown and the total in the middle, and of the tray bar (see doorCorner). */}
       {trayOpen && !picking && (
         <button
           type="button"
           onClick={props.onDungeon}
           aria-label={`${name}: dungeons and the initiative`}
-          className="absolute top-11 left-1/2 flex -translate-x-1/2 flex-col items-center rounded-2xl bg-black/35 px-4 py-2 text-white"
+          className={
+            "absolute flex flex-col items-center rounded-2xl bg-black/35 px-2.5 py-1.5 text-white " +
+            (doorCorner === "tr" ? "top-1.5 right-1.5" : doorCorner === "bl" ? "bottom-1.5 left-1.5" : "top-1.5 left-1.5")
+          }
         >
-          <Icon name="door" className="h-7 w-7" />
+          <Icon name="door" className="h-6 w-6" />
           <span className="text-[11px] font-semibold">Dungeons</span>
         </button>
       )}
