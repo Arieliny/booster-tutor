@@ -244,8 +244,16 @@ export function setLife(g: Game, p: number, life: number, now = Date.now()): Gam
 }
 
 /** Show a counter on a player (at 0) without changing anything else. */
+/** The most rows a life card shows under the total: counters, unspent mana and commander damage together. */
+export const MAX_TRACKED = 6;
+
+/** How many rows this player's card shows under the total. */
+export function trackedCount(pl: Player): number {
+  return Object.keys(pl.counters).length + Object.keys(pl.cmdr).length;
+}
+
 export function addCounter(g: Game, p: number, key: CounterKey): Game {
-  if (g.players[p].counters[key] !== undefined) return g;
+  if (g.players[p].counters[key] !== undefined || trackedCount(g.players[p]) >= MAX_TRACKED) return g;
   const players = g.players.map((pl, i) => (i === p ? { ...pl, counters: { ...pl.counters, [key]: 0 } } : pl));
   return { ...g, players };
 }
@@ -270,7 +278,7 @@ export function changeCounter(g: Game, p: number, key: CounterKey, by: number, n
 
 /** Show commander damage from seat `from` on p's card (at 0), like adding a counter. */
 export function addCmdr(g: Game, p: number, from: number): Game {
-  if (g.players[p].cmdr[from] !== undefined) return g;
+  if (g.players[p].cmdr[from] !== undefined || trackedCount(g.players[p]) >= MAX_TRACKED) return g;
   return { ...g, players: g.players.map((pl, i) => (i === p ? { ...pl, cmdr: { ...pl.cmdr, [from]: 0 } } : pl)) };
 }
 

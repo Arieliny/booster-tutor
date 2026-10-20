@@ -3,9 +3,11 @@ import { dungeonOf } from "../lib/dungeons";
 import {
   COLORS,
   COUNTERS,
+  MAX_TRACKED,
   colorHex,
   colorInk,
   counterIcon,
+  trackedCount,
   type ColorKey,
   type CounterDef,
   type CounterIcon,
@@ -392,6 +394,9 @@ function TrackRow({
 function Menu(props: Props & { onClose: () => void }) {
   const { name, player, others } = props;
   const head = "text-[11px] font-medium tracking-wide text-white/60 uppercase";
+  // A card shows at most MAX_TRACKED rows under the total; when it's full, only removing is offered.
+  const full = trackedCount(player) >= MAX_TRACKED;
+  const off = "border-white/20 text-white/75 hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent";
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] px-3 pb-3 text-left text-white">
       {/* Stays at the top while the menu scrolls, so x is always in reach. */}
@@ -403,6 +408,11 @@ function Menu(props: Props & { onClose: () => void }) {
       </div>
 
       <div className="space-y-3">
+        {full && (
+          <p className="rounded-lg bg-white/10 px-3 py-2 text-xs text-white/80">
+            Your card shows {MAX_TRACKED}, the most it can. Remove one to add another.
+          </p>
+        )}
         <section className="space-y-1.5">
           <div className={head}>Counters on your life card</div>
           <div className="grid grid-cols-2 gap-1.5">
@@ -414,9 +424,10 @@ function Menu(props: Props & { onClose: () => void }) {
                     type="button"
                     onClick={() => (on ? props.onRemoveCounter(c.key) : props.onAddCounter(c.key))}
                     aria-pressed={on}
+                    disabled={!on && full}
                     className={
                       "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
-                      (on ? "border-white bg-white/15" : "border-white/20 text-white/75 hover:bg-white/10")
+                      (on ? "border-white bg-white/15" : off)
                     }
                   >
                     <Icon name={counterIcon(props, c.key)} className="h-5 w-5 shrink-0" />
@@ -459,9 +470,10 @@ function Menu(props: Props & { onClose: () => void }) {
                   aria-pressed={on}
                   aria-label={c.label}
                   title={c.label}
+                  disabled={!on && full}
                   className={
                     "flex h-11 w-11 items-center justify-center rounded-lg border " +
-                    (on ? "border-white bg-white/15" : "border-white/20 opacity-60 hover:bg-white/10 hover:opacity-100")
+                    (on ? "border-white bg-white/15" : "border-white/20 opacity-60 hover:bg-white/10 hover:opacity-100 disabled:opacity-25 disabled:hover:bg-transparent")
                   }
                 >
                   <Pip sym={c.pip!} size={26} />
@@ -482,9 +494,10 @@ function Menu(props: Props & { onClose: () => void }) {
                   type="button"
                   onClick={() => (on ? props.onRemoveCmdr(o.index) : props.onAddCmdr(o.index))}
                   aria-pressed={on}
+                  disabled={!on && full}
                   className={
                     "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
-                    (on ? "border-white bg-white/15" : "border-white/20 text-white/75 hover:bg-white/10")
+                    (on ? "border-white bg-white/15" : off)
                   }
                 >
                   <Icon name="sword" className="h-5 w-5 shrink-0" />

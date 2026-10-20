@@ -310,3 +310,19 @@ describe("seat colors", () => {
     expect(setColor(g, 0, "gold").players[0].color).toBe("gold");
   });
 });
+
+describe("rows on a life card", () => {
+  it("shows at most six, counting counters, unspent mana and commander damage together", async () => {
+    const { MAX_TRACKED, addCmdr, trackedCount } = await import("../src/lib/life");
+    let g = newGame(4, 40);
+    for (const key of ["poison", "energy", "experience", "manaW", "manaU"] as const) g = addCounter(g, 0, key);
+    g = addCmdr(g, 0, 1);
+    expect(trackedCount(g.players[0])).toBe(MAX_TRACKED);
+    // Full: neither another counter nor more commander damage goes on.
+    expect(addCounter(g, 0, "manaR")).toBe(g);
+    expect(addCmdr(g, 0, 2)).toBe(g);
+    // Removing one makes room again.
+    g = removeCounter(g, 0, "energy");
+    expect(trackedCount(addCounter(g, 0, "manaR").players[0])).toBe(MAX_TRACKED);
+  });
+});
