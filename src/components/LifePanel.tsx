@@ -167,15 +167,27 @@ function Face(props: Props & { w: number; h: number }) {
   // Commander damage, switched on in the menu: one strip with every opponent (their color on the sword).
   const cmdrOn = tracksCmdr(player);
   // The total is as big as the seat allows, after room for the crown, counters and commander damage.
-  const crown = monarch || initiative ? Math.max(28, Math.min(64, h * 0.13)) : 0;
+  const marked = monarch || initiative;
   // Three or more counters sit two to a row so the total stays big.
   const tracked = shown.length;
   const counterRows = tracked > 2 ? Math.ceil(tracked / 2) : tracked;
   // The strip keeps clear of the ⋯ in the bottom corner (it can be the lowest thing on a small card).
-  const below = counterRows * 38 + (cmdrOn ? 32 + 28 : 0) + (player.dungeon ? 26 : 0);
+  const under = counterRows * 38 + (cmdrOn ? 32 + 28 : 0);
   // Two digits get half the seat's width; three (or a minus sign) shrink so they stay clear of - and +.
   const chars = String(player.life).length;
-  const big = Math.max(40, Math.min(300, (h - crown - below - 50) * 0.9, w * (chars >= 3 ? 0.33 : 0.5)));
+  const fit = (above: number, below: number, widest: number, slack = 50) =>
+    Math.max(40, Math.min(300, (h - above - below - slack) * 0.9, widest));
+  const tall = Math.max(28, Math.min(64, h * 0.13));
+  // On a crowded card the crown and door shrink to badges either side of the total (the door shows the
+  // room, so the room chip goes), rather than squeezing the total under big markers. The change in life
+  // shows in place of the − or + there instead of keeping a row free under the total.
+  const roomy = w * (chars >= 3 ? 0.33 : 0.5);
+  const compact = marked && fit(tall, under + (player.dungeon ? 26 : 0), roomy) < 90;
+  const roomChip = !!player.dungeon && !(compact && initiative);
+  const below = under + (roomChip ? 26 : 0);
+  const crown = marked && !compact ? tall : 0;
+  const big = compact ? fit(0, below, (w - 2 * BADGE - 2 * SIGN - 32) / (0.6 * chars), 0) : fit(crown, below, roomy);
+  const change = delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`);
   const half = "h-full flex-1 select-none touch-manipulation active:bg-black/10";
   const sign = Math.max(22, Math.min(36, big * 0.4));
 
@@ -204,9 +216,9 @@ function Face(props: Props & { w: number; h: number }) {
           )}
           {/* − and + right beside the total, so they stay close when counters shrink it. */}
           <div className="relative flex items-center" style={{ gap: Math.max(8, big * 0.1) }}>
-            <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
-              −
-            </span>
+            {/* Each badge keeps its slot even when alone, so the total stays centred. */}
+            {compact && <div style={{ width: BADGE }}>{monarch && <Badge icon="crown" label="Monarch" onClick={props.onPassMonarch} title="Pass the monarch" />}</div>}
+            <Sign glyph="−" size={sign} compact={compact} change={compact && delta < 0 ? change : false} />
             {/* At 0 or below it's dimmed, not crossed out: some cards (Platinum Angel...) keep a player in. */}
             <div
               className={"font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60" : "")}
@@ -216,12 +228,17 @@ function Face(props: Props & { w: number; h: number }) {
             >
               {player.life}
             </div>
-            <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
-              +
-            </span>
+            <Sign glyph="+" size={sign} compact={compact} change={compact && delta > 0 ? change : false} />
+            {compact && (
+              <div style={{ width: BADGE }}>
+                {initiative && (
+                  <Badge icon="door" label={player.dungeon?.room ?? "Initiative"} onClick={props.onDungeon} title="Open the dungeons" />
+                )}
+              </div>
+            )}
           </div>
         </div>
-        <div className="relative h-6 font-life text-lg font-black tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
+        {!compact && <div className="relative h-6 font-life text-lg font-black tabular-nums">{change}</div>}
 
         {tracked > 0 && (
           <div className={"relative " + (tracked > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1")}>
@@ -245,7 +262,7 @@ function Face(props: Props & { w: number; h: number }) {
 
         {cmdrOn && <CmdrStrip others={others} values={player.cmdr} who={name} onCmdr={props.onCmdr} />}
 
-        {player.dungeon && (
+        {player.dungeon && roomChip && (
           <div className="relative mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
             <Chip onClick={props.onDungeon}>
               {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
@@ -327,6 +344,41 @@ function Marker({ icon, label, size, onClick, title }: { icon: "crown" | "door";
     <div className={cls} style={style}>
       {inner}
     </div>
+  );
+}
+
+/** The − or + beside the total; on a crowded card the change in life takes its place for a moment. */
+function Sign({ glyph, size, compact, change }: { glyph: string; size: number; compact: boolean; change: string | false }) {
+  return (
+    <span aria-hidden="true" className="relative text-center" style={{ fontSize: size, minWidth: compact ? SIGN : undefined }}>
+      <span className={change ? "invisible" : "opacity-45"}>{glyph}</span>
+      {change && (
+        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-life text-base font-black whitespace-nowrap tabular-nums">
+          {change}
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** How wide a compact marker's slot is beside the total, and the − / + slots that hold the change there. */
+const BADGE = 60;
+const SIGN = 28;
+
+/** A marker shrunk to sit beside the total on a crowded card; the door's label is the current room. */
+function Badge({ icon, label, onClick, title }: { icon: "crown" | "door"; label: string; onClick?: () => void; title: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={title}
+      title={title}
+      className="pointer-events-auto flex w-full flex-col items-center rounded-xl bg-black/40 px-1 py-0.5 leading-none"
+      style={{ color: MARKER_TINT[icon] }}
+    >
+      <Icon name={icon} className="h-5 w-5" />
+      <span className="mt-0.5 line-clamp-2 text-center text-[9px] leading-tight font-bold tracking-wide break-words uppercase">{label}</span>
+    </button>
   );
 }
 
