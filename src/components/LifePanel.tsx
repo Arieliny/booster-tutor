@@ -179,43 +179,50 @@ function Face(props: Props & { w: number; h: number }) {
 
   return (
     <div className="relative h-full w-full">
-      <div className="absolute inset-0 flex">
-        {/* The halves take the taps; their − and + are drawn beside the total (below). */}
-        <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={half} {...minus} />
-        <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} {...plus} />
-      </div>
-
-      {/* Over the tap halves; only its buttons take taps. */}
+      {/* Only buttons take taps here. */}
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        {highlight === "first" && <div className="mb-1 text-xs font-bold tracking-wide uppercase">Goes first</div>}
-        {crown > 0 && (
-          <div className="mb-1 flex items-end gap-5">
-            {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch" />}
-            {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
-          </div>
-        )}
-        {/* − and + right beside the total, so they stay close when counters shrink it. */}
-        <div className="flex items-center" style={{ gap: Math.max(8, big * 0.1) }}>
-          <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
-            −
-          </span>
-          {/* At 0 or below it's dimmed, not crossed out: some cards (Platinum Angel...) keep a player in. */}
+        {/* The total and everything above it. */}
+        <div className="relative flex flex-col items-center">
+          {/* The tap halves (their − and + are drawn beside the total). They span the seat's width from its
+              top edge down to the bottom of the total - or all the way down when there are no counters -
+              so a near miss on a counter's −/+ never changes life. The seat clips what overhangs. */}
           <div
-            className={"font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60" : "")}
-            style={{ fontSize: big }}
-            aria-live="polite"
-            data-life
+            className="pointer-events-auto absolute flex"
+            style={{ left: "50%", width: w, transform: "translateX(-50%)", top: -h, bottom: tracked > 0 ? 0 : -h }}
           >
-            {player.life}
+            <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={half} {...minus} />
+            <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} {...plus} />
           </div>
-          <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
-            +
-          </span>
+          {highlight === "first" && <div className="relative mb-1 text-xs font-bold tracking-wide uppercase">Goes first</div>}
+          {crown > 0 && (
+            <div className="relative mb-1 flex items-end gap-5">
+              {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch" />}
+              {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
+            </div>
+          )}
+          {/* − and + right beside the total, so they stay close when counters shrink it. */}
+          <div className="relative flex items-center" style={{ gap: Math.max(8, big * 0.1) }}>
+            <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
+              −
+            </span>
+            {/* At 0 or below it's dimmed, not crossed out: some cards (Platinum Angel...) keep a player in. */}
+            <div
+              className={"font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60" : "")}
+              style={{ fontSize: big }}
+              aria-live="polite"
+              data-life
+            >
+              {player.life}
+            </div>
+            <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
+              +
+            </span>
+          </div>
         </div>
-        <div className="h-6 font-life text-lg font-black tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
+        <div className="relative h-6 font-life text-lg font-black tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
 
         {tracked > 0 && (
-          <div className={tracked > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1"}>
+          <div className={"relative " + (tracked > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1")}>
             {shown.map((c) => {
               const v = player.counters[c.key] ?? 0;
               return (
@@ -254,7 +261,7 @@ function Face(props: Props & { w: number; h: number }) {
         )}
 
         {player.dungeon && (
-          <div className="mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
+          <div className="relative mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
             <Chip onClick={props.onDungeon}>
               {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
             </Chip>
