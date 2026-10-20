@@ -250,17 +250,27 @@ describe("counter symbols", () => {
 });
 
 describe("commander damage on the card", () => {
-  it("shows at 0, keeps showing after damage is undone, and hides", async () => {
-    const { addCmdr, removeCmdr } = await import("../src/lib/life");
-    let g = addCmdr(newGame(3, 40), 0, 2);
-    expect(g.players[0].cmdr).toEqual({ 2: 0 });
+  it("one switch shows every opponent at 0, keeps showing after damage is undone, and hides", async () => {
+    const { setCmdrTracking, tracksCmdr } = await import("../src/lib/life");
+    let g = setCmdrTracking(newGame(4, 40), 0, true);
+    expect(g.players[0].cmdr).toEqual({ 1: 0, 2: 0, 3: 0 });
     expect(g.history).toHaveLength(0);
     g = changeCmdr(g, 0, 2, 7, T, true);
     expect(g.players[0].life).toBe(33);
     g = undo(g);
-    expect(g.players[0].cmdr).toEqual({ 2: 0 });
+    expect(g.players[0].cmdr).toEqual({ 1: 0, 2: 0, 3: 0 });
     expect(g.players[0].life).toBe(40);
-    expect(removeCmdr(g, 0, 2).players[0].cmdr).toEqual({});
+    const off = setCmdrTracking(g, 0, false);
+    expect(tracksCmdr(off.players[0])).toBe(false);
+    expect(off.players[0].cmdr).toEqual({});
+  });
+
+  it("a six-player game tracks all five opponents, without using up counter space", async () => {
+    const { setCmdrTracking, trackedCount, maxTracked } = await import("../src/lib/life");
+    let g = setCmdrTracking(newGame(6, 40), 0, true);
+    expect(Object.keys(g.players[0].cmdr)).toHaveLength(5);
+    g = addCounter(addCounter(g, 0, "poison"), 0, "energy");
+    expect(trackedCount(g.players[0])).toBe(maxTracked(6));
   });
 });
 
@@ -312,12 +322,11 @@ describe("seat colors", () => {
 });
 
 describe("rows on a life card", () => {
-  it("1v1: at most six, counting counters, unspent mana and commander damage together", async () => {
-    const { addCmdr, maxTracked, trackedCount } = await import("../src/lib/life");
+  it("1v1: at most six counters (commander damage has its own strip)", async () => {
+    const { maxTracked, setCmdrTracking, trackedCount } = await import("../src/lib/life");
     expect(maxTracked(2)).toBe(6);
-    let g = newGame(2, 20);
-    for (const key of ["poison", "energy", "experience", "manaW", "manaU"] as const) g = addCounter(g, 0, key);
-    g = addCmdr(g, 0, 1);
+    let g = setCmdrTracking(newGame(2, 20), 0, true);
+    for (const key of ["poison", "energy", "experience", "manaW", "manaU", "manaB"] as const) g = addCounter(g, 0, key);
     expect(trackedCount(g.players[0])).toBe(6);
     expect(addCounter(g, 0, "manaR")).toBe(g);
     // Removing one makes room again.
@@ -326,15 +335,13 @@ describe("rows on a life card", () => {
   });
 
   it("3-4 players: at most four; 5-6 players: at most two (the cards are smaller)", async () => {
-    const { addCmdr, maxTracked, trackedCount } = await import("../src/lib/life");
+    const { maxTracked, trackedCount } = await import("../src/lib/life");
     expect([3, 4, 5, 6].map(maxTracked)).toEqual([4, 4, 2, 2]);
-    const six = addCmdr(addCounter(newGame(6, 40), 0, "poison"), 0, 1);
-    expect(addCounter(six, 0, "energy")).toBe(six);
     let g = newGame(4, 40);
-    for (const key of ["poison", "energy", "manaW"] as const) g = addCounter(g, 0, key);
-    g = addCmdr(g, 0, 1);
+    for (const key of ["poison", "energy", "manaW", "manaU"] as const) g = addCounter(g, 0, key);
     expect(trackedCount(g.players[0])).toBe(4);
     expect(addCounter(g, 0, "rad")).toBe(g);
-    expect(addCmdr(g, 0, 2)).toBe(g);
+    const six = addCounter(addCounter(newGame(6, 40), 0, "poison"), 0, "rad");
+    expect(addCounter(six, 0, "energy")).toBe(six);
   });
 });

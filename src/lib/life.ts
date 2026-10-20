@@ -245,17 +245,18 @@ export function setLife(g: Game, p: number, life: number, now = Date.now()): Gam
 
 /** Show a counter on a player (at 0) without changing anything else. */
 /**
- * The most rows a life card shows under the total (counters, unspent mana and
- * commander damage together), by how big the cards are: 6 in a 1v1, 4 with
- * 3-4 players, 2 with 5-6 (more get cut off at the edges of those small cards).
+ * The most counter rows (counters and unspent mana) a life card shows under
+ * the total, by how big the cards are: 6 in a 1v1, 4 with 3-4 players, 2 with
+ * 5-6 (more get cut off at the edges of those small cards). Commander damage
+ * has its own one-line strip and doesn't count.
  */
 export function maxTracked(players: number): number {
   return players <= 2 ? 6 : players <= 4 ? 4 : 2;
 }
 
-/** How many rows this player's card shows under the total. */
+/** How many counter rows this player's card shows under the total. */
 export function trackedCount(pl: Player): number {
-  return Object.keys(pl.counters).length + Object.keys(pl.cmdr).length;
+  return Object.keys(pl.counters).length;
 }
 
 export function addCounter(g: Game, p: number, key: CounterKey): Game {
@@ -282,20 +283,24 @@ export function changeCounter(g: Game, p: number, key: CounterKey, by: number, n
   return record(g, { p, kind: "counter", key, d: by2 }, [p], (ps) => void (ps[p].counters[key] = cur + by2), now, true);
 }
 
-/** Show commander damage from seat `from` on p's card (at 0), like adding a counter. */
-export function addCmdr(g: Game, p: number, from: number): Game {
-  if (g.players[p].cmdr[from] !== undefined || trackedCount(g.players[p]) >= maxTracked(g.players.length)) return g;
-  return { ...g, players: g.players.map((pl, i) => (i === p ? { ...pl, cmdr: { ...pl.cmdr, [from]: 0 } } : pl)) };
-}
+/** Whether p's card shows its commander damage strip. */
+export const tracksCmdr = (pl: Player): boolean => Object.keys(pl.cmdr).length > 0;
 
-/** Take commander damage from seat `from` off p's card. */
-export function removeCmdr(g: Game, p: number, from: number): Game {
+/**
+ * Show or hide p's commander damage: one strip with every opponent (at 0, or
+ * what they'd already dealt). Hiding it clears the numbers.
+ */
+export function setCmdrTracking(g: Game, p: number, on: boolean): Game {
+  if (on === tracksCmdr(g.players[p])) return g;
   return {
     ...g,
     players: g.players.map((pl, i) => {
       if (i !== p) return pl;
-      const cmdr = { ...pl.cmdr };
-      delete cmdr[from];
+      if (!on) return { ...pl, cmdr: {} };
+      const cmdr: Player["cmdr"] = {};
+      g.players.forEach((_, j) => {
+        if (j !== p) cmdr[j] = pl.cmdr[j] ?? 0;
+      });
       return { ...pl, cmdr };
     }),
   };

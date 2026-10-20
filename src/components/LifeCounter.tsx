@@ -8,7 +8,6 @@ import {
   MAX_PLAYERS,
   MIN_PLAYERS,
   STARTING_LIFE,
-  addCmdr,
   addCounter,
   changeCmdr,
   changeCounter,
@@ -20,9 +19,9 @@ import {
   lifeAfter,
   newGame,
   parseGame,
-  removeCmdr,
   removeCounter,
   rollDice,
+  setCmdrTracking,
   setColor,
   setCounterIcon,
   undo,
@@ -354,8 +353,7 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
                 onMenu={closeTray}
                 onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
-                onAddCmdr={(from) => setGame((g) => addCmdr(g, i, from))}
-                onRemoveCmdr={(from) => setGame((g) => removeCmdr(g, i, from))}
+                onCmdrTracking={(on) => setGame((g) => setCmdrTracking(g, i, on))}
                 onDungeon={() => {
                   setBarOpen(false);
                   setSheet({ kind: "dungeon", p: i });

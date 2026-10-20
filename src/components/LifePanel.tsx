@@ -8,6 +8,7 @@ import {
   counterIcon,
   maxTracked,
   trackedCount,
+  tracksCmdr,
   type ColorKey,
   type CounterDef,
   type CounterIcon,
@@ -119,8 +120,8 @@ interface Props {
   /** The ... menu is opening (the tray closes so it doesn't cover the menu). */
   onMenu: () => void;
   onCmdr: (from: number, by: number) => void;
-  onAddCmdr: (from: number) => void;
-  onRemoveCmdr: (from: number) => void;
+  /** Show or hide this card's commander damage strip (every opponent). */
+  onCmdrTracking: (on: boolean) => void;
   onDungeon: () => void;
   /** Tap the crown: pass the monarch (1v1: to the other player; more: pick who). */
   onPassMonarch: () => void;
@@ -163,14 +164,15 @@ function Face(props: Props & { w: number; h: number }) {
   const monarch = markers.monarch === index;
   const initiative = markers.initiative === index;
   const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
-  // Commander damage switched on in the menu, one row per opponent (their color on the sword).
-  const cmdr = others.filter((o) => player.cmdr[o.index] !== undefined);
-  // The total is as big as the seat allows, after room for the crown and counters.
+  // Commander damage, switched on in the menu: one strip with every opponent (their color on the sword).
+  const cmdrOn = tracksCmdr(player);
+  // The total is as big as the seat allows, after room for the crown, counters and commander damage.
   const crown = monarch || initiative ? Math.max(28, Math.min(64, h * 0.13)) : 0;
-  // Three or more rows (counters and commander damage) sit two to a row so the total stays big.
-  const tracked = shown.length + cmdr.length;
+  // Three or more counters sit two to a row so the total stays big.
+  const tracked = shown.length;
   const counterRows = tracked > 2 ? Math.ceil(tracked / 2) : tracked;
-  const below = counterRows * 38 + (player.dungeon ? 26 : 0);
+  // The strip keeps clear of the ⋯ in the bottom corner (it can be the lowest thing on a small card).
+  const below = counterRows * 38 + (cmdrOn ? 32 + 28 : 0) + (player.dungeon ? 26 : 0);
   // Two digits get half the seat's width; three (or a minus sign) shrink so they stay clear of - and +.
   const chars = String(player.life).length;
   const big = Math.max(40, Math.min(300, (h - crown - below - 50) * 0.9, w * (chars >= 3 ? 0.33 : 0.5)));
@@ -184,11 +186,11 @@ function Face(props: Props & { w: number; h: number }) {
         {/* The total and everything above it. */}
         <div className="relative flex flex-col items-center">
           {/* The tap halves (their − and + are drawn beside the total). They span the seat's width from its
-              top edge down to the bottom of the total - or all the way down when there are no counters -
-              so a near miss on a counter's −/+ never changes life. The seat clips what overhangs. */}
+              top edge down to the bottom of the total - or all the way down when nothing sits below it -
+              so a near miss on a counter or commander damage never changes life. The seat clips what overhangs. */}
           <div
             className="pointer-events-auto absolute flex"
-            style={{ left: "50%", width: w, transform: "translateX(-50%)", top: -h, bottom: tracked > 0 ? 0 : -h }}
+            style={{ left: "50%", width: w, transform: "translateX(-50%)", top: -h, bottom: tracked > 0 || cmdrOn ? 0 : -h }}
           >
             <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={half} {...minus} />
             <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} {...plus} />
@@ -238,27 +240,10 @@ function Face(props: Props & { w: number; h: number }) {
                 />
               );
             })}
-            {cmdr.map((o) => {
-              const v = player.cmdr[o.index] ?? 0;
-              return (
-                <TrackRow
-                  key={`cmdr-${o.index}`}
-                  label={`Commander damage from ${o.name}`}
-                  value={v}
-                  lethal={v >= 21}
-                  icon={
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/45" style={{ color: colorHex(o.color) }}>
-                      <Icon name="sword" className="h-4 w-4" />
-                    </span>
-                  }
-                  onDown={() => props.onCmdr(o.index, -1)}
-                  onUp={() => props.onCmdr(o.index, 1)}
-                  who={name}
-                />
-              );
-            })}
           </div>
         )}
+
+        {cmdrOn && <CmdrStrip others={others} values={player.cmdr} who={name} onCmdr={props.onCmdr} />}
 
         {player.dungeon && (
           <div className="relative mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
@@ -406,6 +391,89 @@ function TrackRow({
   );
 }
 
+/** How long a sword stays open for −/+ after the last tap. */
+const CMDR_OPEN_MS = 3000;
+
+/**
+ * Commander damage from every opponent in one line: a sword in their color and
+ * the damage (red at 21). Tap a sword to change it - it opens into − n + on its
+ * own (so it fits the smallest seats) and closes a few seconds after the last
+ * tap, or when its sword is tapped again. Opening first means a stray tap never
+ * changes anyone's damage.
+ */
+function CmdrStrip({
+  others,
+  values,
+  who,
+  onCmdr,
+}: {
+  others: { index: number; name: string; color: ColorKey }[];
+  values: Partial<Record<number, number>>;
+  who: string;
+  onCmdr: (from: number, by: number) => void;
+}) {
+  const [open, setOpen] = useState<number | null>(null);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const keepOpen = (from: number | null) => {
+    window.clearTimeout(timer.current);
+    setOpen(from);
+    if (from !== null) timer.current = window.setTimeout(() => setOpen(null), CMDR_OPEN_MS);
+  };
+  const sword = (v: number) => (
+    <>
+      <Icon name="sword" className="h-3.5 w-3.5" />
+      <span className="font-life text-[15px] font-black text-white tabular-nums" style={v >= 21 ? { color: "#fca5a5" } : undefined}>
+        {v}
+      </span>
+    </>
+  );
+  const step = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-xl leading-none active:bg-black/40";
+
+  const o = open === null ? undefined : others.find((x) => x.index === open);
+  if (o) {
+    const v = values[o.index] ?? 0;
+    return (
+      <div className="relative mt-1 mb-7 flex items-center gap-2">
+        <button type="button" onClick={() => (onCmdr(o.index, -1), keepOpen(o.index))} aria-label={`${who}: commander damage from ${o.name} down`} className={step}>
+          −
+        </button>
+        <button
+          type="button"
+          onClick={() => keepOpen(null)}
+          aria-label={`Commander damage from ${o.name}: ${v}. Done`}
+          className="pointer-events-auto flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-1"
+          style={{ color: colorHex(o.color) }}
+        >
+          {sword(v)}
+        </button>
+        <button type="button" onClick={() => (onCmdr(o.index, 1), keepOpen(o.index))} aria-label={`${who}: commander damage from ${o.name} up`} className={step}>
+          +
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="relative mt-1 mb-7 flex max-w-full flex-wrap justify-center gap-1">
+      {others.map((x) => {
+        const v = values[x.index] ?? 0;
+        return (
+          <button
+            key={x.index}
+            type="button"
+            onClick={() => keepOpen(x.index)}
+            aria-label={`Commander damage from ${x.name}: ${v}. Tap to change`}
+            className={"pointer-events-auto flex items-center gap-0.5 rounded-full px-1.5 py-1 " + (v >= 21 ? "bg-black" : "bg-black/35")}
+            style={{ color: colorHex(x.color) }}
+          >
+            {sword(v)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function Menu(props: Props & { onClose: () => void }) {
   const { name, player, others } = props;
   const head = "text-[11px] font-medium tracking-wide text-white/60 uppercase";
@@ -500,30 +568,26 @@ function Menu(props: Props & { onClose: () => void }) {
         </section>
 
         <section className="space-y-1.5">
-          <div className={head}>Commander damage on your life card</div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {others.map((o) => {
-              const on = player.cmdr[o.index] !== undefined;
-              return (
-                <button
-                  key={o.index}
-                  type="button"
-                  onClick={() => (on ? props.onRemoveCmdr(o.index) : props.onAddCmdr(o.index))}
-                  aria-pressed={on}
-                  disabled={!on && full}
-                  className={
-                    "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
-                    (on ? "border-white bg-white/15" : off)
-                  }
-                >
-                  <Icon name="sword" className="h-5 w-5 shrink-0" />
-                  <span className="h-3 w-3 shrink-0 rounded-full" style={{ background: colorHex(o.color) }} />
-                  <span className="min-w-0 flex-1 truncate">From {o.name}</span>
-                  {on && <Icon name="check" className="h-4 w-4 shrink-0" />}
-                </button>
-              );
-            })}
-          </div>
+          <div className={head}>Commander damage</div>
+          {/* One strip with every opponent; it doesn't use up counter space. */}
+          <button
+            type="button"
+            onClick={() => props.onCmdrTracking(!tracksCmdr(player))}
+            aria-pressed={tracksCmdr(player)}
+            className={
+              "flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
+              (tracksCmdr(player) ? "border-white bg-white/15" : "border-white/20 text-white/75 hover:bg-white/10")
+            }
+          >
+            <Icon name="sword" className="h-5 w-5 shrink-0" />
+            <span className="flex shrink-0 -space-x-1">
+              {others.map((o) => (
+                <span key={o.index} className="h-3 w-3 rounded-full ring-1 ring-[#14161c]" style={{ background: colorHex(o.color) }} />
+              ))}
+            </span>
+            <span className="min-w-0 flex-1 truncate">From each opponent</span>
+            {tracksCmdr(player) && <Icon name="check" className="h-4 w-4 shrink-0" />}
+          </button>
         </section>
 
         <section className="space-y-1.5">
