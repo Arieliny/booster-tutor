@@ -312,17 +312,29 @@ describe("seat colors", () => {
 });
 
 describe("rows on a life card", () => {
-  it("shows at most six, counting counters, unspent mana and commander damage together", async () => {
-    const { MAX_TRACKED, addCmdr, trackedCount } = await import("../src/lib/life");
-    let g = newGame(4, 40);
+  it("1v1: at most six, counting counters, unspent mana and commander damage together", async () => {
+    const { addCmdr, maxTracked, trackedCount } = await import("../src/lib/life");
+    expect(maxTracked(2)).toBe(6);
+    let g = newGame(2, 20);
     for (const key of ["poison", "energy", "experience", "manaW", "manaU"] as const) g = addCounter(g, 0, key);
     g = addCmdr(g, 0, 1);
-    expect(trackedCount(g.players[0])).toBe(MAX_TRACKED);
-    // Full: neither another counter nor more commander damage goes on.
+    expect(trackedCount(g.players[0])).toBe(6);
     expect(addCounter(g, 0, "manaR")).toBe(g);
-    expect(addCmdr(g, 0, 2)).toBe(g);
     // Removing one makes room again.
     g = removeCounter(g, 0, "energy");
-    expect(trackedCount(addCounter(g, 0, "manaR").players[0])).toBe(MAX_TRACKED);
+    expect(trackedCount(addCounter(g, 0, "manaR").players[0])).toBe(6);
+  });
+
+  it("3-4 players: at most four; 5-6 players: at most two (the cards are smaller)", async () => {
+    const { addCmdr, maxTracked, trackedCount } = await import("../src/lib/life");
+    expect([3, 4, 5, 6].map(maxTracked)).toEqual([4, 4, 2, 2]);
+    const six = addCmdr(addCounter(newGame(6, 40), 0, "poison"), 0, 1);
+    expect(addCounter(six, 0, "energy")).toBe(six);
+    let g = newGame(4, 40);
+    for (const key of ["poison", "energy", "manaW"] as const) g = addCounter(g, 0, key);
+    g = addCmdr(g, 0, 1);
+    expect(trackedCount(g.players[0])).toBe(4);
+    expect(addCounter(g, 0, "rad")).toBe(g);
+    expect(addCmdr(g, 0, 2)).toBe(g);
   });
 });

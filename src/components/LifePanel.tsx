@@ -3,10 +3,10 @@ import { dungeonOf } from "../lib/dungeons";
 import {
   COLORS,
   COUNTERS,
-  MAX_TRACKED,
   colorHex,
   colorInk,
   counterIcon,
+  maxTracked,
   trackedCount,
   type ColorKey,
   type CounterDef,
@@ -174,17 +174,15 @@ function Face(props: Props & { w: number; h: number }) {
   // Two digits get half the seat's width; three (or a minus sign) shrink so they stay clear of - and +.
   const chars = String(player.life).length;
   const big = Math.max(40, Math.min(300, (h - crown - below - 50) * 0.9, w * (chars >= 3 ? 0.33 : 0.5)));
-  const half = "flex h-full flex-1 items-center text-4xl opacity-45 select-none touch-manipulation active:bg-black/10";
+  const half = "h-full flex-1 select-none touch-manipulation active:bg-black/10";
+  const sign = Math.max(22, Math.min(36, big * 0.4));
 
   return (
     <div className="relative h-full w-full">
       <div className="absolute inset-0 flex">
-        <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={`${half} justify-start pl-4`} {...minus}>
-          −
-        </button>
-        <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={`${half} justify-end pr-4`} {...plus}>
-          +
-        </button>
+        {/* The halves take the taps; their − and + are drawn beside the total (below). */}
+        <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={half} {...minus} />
+        <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} {...plus} />
       </div>
 
       {/* Over the tap halves; only its buttons take taps. */}
@@ -196,13 +194,23 @@ function Face(props: Props & { w: number; h: number }) {
             {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
           </div>
         )}
-        <div
-          className={"font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60 line-through" : "")}
-          style={{ fontSize: big }}
-          aria-live="polite"
-          data-life
-        >
-          {player.life}
+        {/* − and + right beside the total, so they stay close when counters shrink it. */}
+        <div className="flex items-center" style={{ gap: Math.max(8, big * 0.1) }}>
+          <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
+            −
+          </span>
+          {/* At 0 or below it's dimmed, not crossed out: some cards (Platinum Angel...) keep a player in. */}
+          <div
+            className={"font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60" : "")}
+            style={{ fontSize: big }}
+            aria-live="polite"
+            data-life
+          >
+            {player.life}
+          </div>
+          <span aria-hidden="true" className="opacity-45" style={{ fontSize: sign }}>
+            +
+          </span>
         </div>
         <div className="h-6 font-life text-lg font-black tabular-nums">{delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`)}</div>
 
@@ -394,8 +402,9 @@ function TrackRow({
 function Menu(props: Props & { onClose: () => void }) {
   const { name, player, others } = props;
   const head = "text-[11px] font-medium tracking-wide text-white/60 uppercase";
-  // A card shows at most MAX_TRACKED rows under the total; when it's full, only removing is offered.
-  const full = trackedCount(player) >= MAX_TRACKED;
+  // A card shows at most `most` rows under the total (fewer at a bigger table); when it's full, only removing is offered.
+  const most = maxTracked(others.length + 1);
+  const full = trackedCount(player) >= most;
   const off = "border-white/20 text-white/75 hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent";
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] px-3 pb-3 text-left text-white">
@@ -410,7 +419,7 @@ function Menu(props: Props & { onClose: () => void }) {
       <div className="space-y-3">
         {full && (
           <p className="rounded-lg bg-white/10 px-3 py-2 text-xs text-white/80">
-            Your card shows {MAX_TRACKED}, the most it can. Remove one to add another.
+            Your card shows {most}, the most it can with {others.length + 1} players. Remove one to add another.
           </p>
         )}
         <section className="space-y-1.5">
@@ -513,18 +522,27 @@ function Menu(props: Props & { onClose: () => void }) {
         <section className="space-y-1.5">
           <div className={head}>Color</div>
           <div className="flex flex-wrap gap-2">
-            {/* Only colors nobody else has: two players can't share one. */}
-            {COLORS.filter((c) => !others.some((o) => o.color === c.key)).map((c) => (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => props.onColor(c.key)}
-                aria-label={c.label}
-                aria-pressed={player.color === c.key}
-                className={"h-8 w-8 rounded-full border-2 " + (player.color === c.key ? "border-white" : "border-transparent")}
-                style={{ background: c.hex }}
-              />
-            ))}
+            {/* Two players can't share a color: one someone else has is dimmed, with their seat on it. */}
+            {COLORS.map((c) => {
+              const owner = others.find((o) => o.color === c.key);
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => props.onColor(c.key)}
+                  disabled={!!owner}
+                  aria-label={owner ? `${c.label} (P${owner.index + 1} has it)` : c.label}
+                  aria-pressed={player.color === c.key}
+                  className={
+                    "relative flex h-9 w-9 items-center justify-center rounded-full border-2 " +
+                    (player.color === c.key ? "border-white" : "border-transparent")
+                  }
+                >
+                  <span className={"absolute inset-0 rounded-full " + (owner ? "opacity-30" : "")} style={{ background: c.hex }} />
+                  {owner && <span className="relative text-[11px] font-bold text-white">P{owner.index + 1}</span>}
+                </button>
+              );
+            })}
           </div>
         </section>
       </div>
