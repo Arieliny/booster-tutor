@@ -48,11 +48,11 @@ const PATHS = {
   ),
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   // Who goes first.
-  // Checkered (race start) flag: the pole, the flag's outline, and every other square filled in.
+  // Checkered (race start) flag: the pole, the flag's outline, and two rows of four squares, every other one filled (Ari's pick, option C).
   flag: (
     <>
       <path d="M5 21V3.5M5 4h14v9H5" />
-      <path d="M5 4h3.5v3H5zM12 4h3.5v3H12zM8.5 7H12v3H8.5zM15.5 7H19v3h-3.5zM5 10h3.5v3H5zM12 10h3.5v3H12z" fill="currentColor" strokeWidth={0.6} />
+      <path d="M5 4h3.5v4.5H5zM12 4h3.5v4.5H12zM8.5 8.5H12V13H8.5zM15.5 8.5H19V13h-3.5z" fill="currentColor" strokeWidth={0.6} />
     </>
   ),
   heart: <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.1a4.3 4.3 0 0 1 7.5 2.7C19.5 15.4 12 20 12 20z" />,
