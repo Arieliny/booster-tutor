@@ -34,7 +34,7 @@ import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Corner, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
 import { useBackToClose } from "../lib/use-back-to-close";
-import { startNewQuestion, startQuestionAbout } from "../lib/judge";
+import { startQuestionAbout } from "../lib/judge";
 import { COIN_HEAD, COIN_TAIL } from "../lib/coin-art";
 
 // The rules judge, opened over the counter from the tray (loaded only when first opened).
@@ -430,17 +430,7 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                   <>
                     <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
                     <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
-                    {canJudge && (
-                      <Tool
-                        icon="scales"
-                        label="Judge"
-                        onClick={() => {
-                          // Each ruling at the table is its own question (earlier ones are in the history).
-                          startNewQuestion();
-                          setSheet({ kind: "judge" });
-                        }}
-                      />
-                    )}
+                    {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
                     <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
                   </>
                 )}

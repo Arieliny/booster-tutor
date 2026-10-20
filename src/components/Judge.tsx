@@ -7,11 +7,12 @@ import {
   fetchHistory,
   formatCost,
   getAllowance,
-  loadConversation,
+  openingConversation,
   openThread,
   rememberThread,
   saveConversation,
   suggestCards,
+  tookHandOff,
   type Allowance,
   type Conversation,
   type JudgeEvent,
@@ -38,7 +39,8 @@ type Busy = { status: string | null; draft: string } | null;
  * your devices), where it can be reread or continued.
  */
 export function Judge({ embedded = false }: { embedded?: boolean } = {}) {
-  const [convo, setConvo] = useState<Conversation>(loadConversation);
+  // Opens on a blank question (or the card from "Ask the judge about this card").
+  const [convo, setConvo] = useState<Conversation>(openingConversation);
   const { messages, cards } = convo;
   const [showHistory, setShowHistory] = useState(false);
   const [input, setInput] = useState("");
@@ -52,6 +54,7 @@ export function Judge({ embedded = false }: { embedded?: boolean } = {}) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => saveConversation(convo), [convo]);
+  useEffect(() => tookHandOff(), []);
 
   useEffect(() => {
     getAllowance().then(setAllowance, () => {});

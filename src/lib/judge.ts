@@ -60,14 +60,27 @@ export function saveConversation(c: Conversation): void {
   }
 }
 
-/** Start a fresh question (the life counter's judge opens on one; past answers are in the history). */
-export function startNewQuestion(): void {
-  saveConversation({ messages: [], cards: [] });
-}
+/** Set by startQuestionAbout: the next Judge to open takes that card instead of a blank question. */
+let cardHandOff = false;
 
 /** Start a fresh question with this card on the table (the Judge screen picks it up when it opens). */
 export function startQuestionAbout(cardName: string): void {
   saveConversation({ messages: [], cards: [cardName] });
+  cardHandOff = true;
+}
+
+/**
+ * What a Judge shows when it opens: always a blank question (answered ones
+ * are in the history), unless it was opened by "Ask the judge about this
+ * card", which brings that card along. Pure, so it's safe as a state
+ * initializer; the Judge calls tookHandOff() once it has opened.
+ */
+export function openingConversation(): Conversation {
+  return cardHandOff ? loadConversation() : { messages: [], cards: [] };
+}
+
+export function tookHandOff(): void {
+  cardHandOff = false;
 }
 
 export async function getAllowance(): Promise<Allowance> {
