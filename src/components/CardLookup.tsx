@@ -1,8 +1,8 @@
-import { useContext, useEffect, useMemo, useState } from "react";
-import { DB_DOWNLOAD_LABEL, searchDb, toReviewCard, type useCardDb } from "../lib/card-db";
-import { scryfallSuggest, shortDate, type ReviewCard } from "../lib/cube-review";
+import { useEffect, useMemo, useState } from "react";
+import { searchDb, toReviewCard, type useCardDb } from "../lib/card-db";
+import type { ReviewCard } from "../lib/cube-review";
+import { scryfallSuggest } from "../lib/scryfall";
 import { openSettings } from "../lib/routes";
-import { InLifeCounterContext } from "../lib/in-life-counter";
 import { ManaCost } from "./ManaCost";
 
 type CardDbHook = ReturnType<typeof useCardDb>;
@@ -40,9 +40,6 @@ export function CardLookup({
     () => (state.kind === "ready" && state.db && needle.length >= 2 ? searchDb(state.db, needle, SHOW, exclude) : null),
     [state, needle, exclude],
   );
-
-  // Settings would open behind the life counter, so the pointer to it is left out there.
-  const inCounter = useContext(InLifeCounterContext);
 
   if (needle.length < 2) return null;
 
@@ -86,7 +83,7 @@ export function CardLookup({
   return (
     <Box>
       <ScryfallSearch q={needle} onPick={onScryfall} lead="Not in these cubes?" />
-      {state.kind !== "checking" && !inCounter && (
+      {state.kind !== "checking" && (
         <div className="mt-1.5 text-xs text-(--color-text-dim)">
           To search all of Magic offline, download the card database in{" "}
           <button type="button" onClick={openSettings} className="text-(--color-accent) hover:underline">
@@ -178,46 +175,6 @@ function ScryfallSearch({
           {busy === n ? "Opening…" : n}
         </button>
       ))}
-    </div>
-  );
-}
-
-/** Download / update / remove the offline card database. */
-export function CardDbPanel({ db }: { db: CardDbHook }) {
-  const { state, download, remove } = db;
-  if (state.kind === "checking") return null;
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2 text-xs text-(--color-text-dim)">
-      <span>📚 Card database — every card's text, for offline lookup</span>
-      {state.kind === "ready" && (
-        <>
-          <span className="text-(--color-text)">
-            {state.info.count ? `${state.info.count.toLocaleString()} cards` : "Downloaded"}
-            {state.info.builtAt && ` · updated ${shortDate(state.info.builtAt.slice(0, 10))}`}
-          </span>
-          <span className="ml-auto flex gap-2">
-            <button type="button" onClick={download} className="rounded border border-(--color-border) px-2 py-1 hover:bg-white/5">
-              Update
-            </button>
-            <button type="button" onClick={remove} className="rounded border border-(--color-border) px-2 py-1 hover:bg-white/5">
-              Remove
-            </button>
-          </span>
-        </>
-      )}
-      {state.kind === "busy" && <span className="text-(--color-text)">Downloading…</span>}
-      {(state.kind === "absent" || state.kind === "error") && (
-        <>
-          {state.kind === "error" && <span className="text-amber-300">{state.message}</span>}
-          <button
-            type="button"
-            onClick={download}
-            className="ml-auto rounded bg-(--color-accent) px-3 py-1.5 font-medium text-black hover:bg-(--color-accent-bright)"
-          >
-            {state.kind === "error" ? "Try again" : `Download (${DB_DOWNLOAD_LABEL}, text only)`}
-          </button>
-        </>
-      )}
     </div>
   );
 }

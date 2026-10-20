@@ -1,5 +1,5 @@
 import { useCardDb } from "../lib/card-db";
-import { CardDbPanel } from "./CardLookup";
+import { CardDbPanel } from "./CardDbPanel";
 import { Sheet } from "./Sheet";
 
 /** Settings (owner): the offline card database for now. */

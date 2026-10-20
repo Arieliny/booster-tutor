@@ -60,6 +60,11 @@ export function saveConversation(c: Conversation): void {
   }
 }
 
+/** Start a fresh question (the life counter's judge opens on one; past answers are in the history). */
+export function startNewQuestion(): void {
+  saveConversation({ messages: [], cards: [] });
+}
+
 /** Start a fresh question with this card on the table (the Judge screen picks it up when it opens). */
 export function startQuestionAbout(cardName: string): void {
   saveConversation({ messages: [], cards: [cardName] });

@@ -34,13 +34,13 @@ import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Corner, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
 import { useBackToClose } from "../lib/use-back-to-close";
-import { AskJudgeContext, InLifeCounterContext } from "../lib/in-life-counter";
+import { startNewQuestion, startQuestionAbout } from "../lib/judge";
 import { COIN_HEAD, COIN_TAIL } from "../lib/coin-art";
 
 // The rules judge, opened over the counter from the tray (loaded only when first opened).
 const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
-// Card search (the Look up screen), opened the same way.
-const LookUp = lazy(() => import("./CubeReview").then((m) => ({ default: m.LookUp })));
+// Card search by name, for everyone, opened the same way.
+const CardSearch = lazy(() => import("./CardSearch").then((m) => ({ default: m.CardSearch })));
 
 /**
  * Full-screen life counter for 2-6 players around one phone. Left half of a
@@ -224,7 +224,7 @@ interface Roll {
   seed: number;
 }
 
-export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { onExit: () => void; canJudge?: boolean; canLookUp?: boolean }) {
+export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; canJudge?: boolean }) {
   const [game, setGame] = useState<Game>(load);
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [barOpen, setBarOpen] = useState(false);
@@ -430,8 +430,18 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
                   <>
                     <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
                     <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
-                    {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
-                    {canLookUp && <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />}
+                    {canJudge && (
+                      <Tool
+                        icon="scales"
+                        label="Judge"
+                        onClick={() => {
+                          // Each ruling at the table is its own question (earlier ones are in the history).
+                          startNewQuestion();
+                          setSheet({ kind: "judge" });
+                        }}
+                      />
+                    )}
+                    <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
                   </>
                 )}
               </div>
@@ -449,12 +459,17 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
       )}
       {sheet?.kind === "cards" && (
         <ToolScreen icon="cardBack" title="Cards" loading="card search" onClose={() => setSheet(null)}>
-          {/* A card's "Ask the judge" opens the judge here instead of leaving the game. */}
-          <InLifeCounterContext.Provider value={true}>
-            <AskJudgeContext.Provider value={canJudge ? () => setSheet({ kind: "judge" }) : null}>
-              <LookUp />
-            </AskJudgeContext.Provider>
-          </InLifeCounterContext.Provider>
+          <CardSearch
+            // A card's "Ask the judge" opens the judge here, about that card, without leaving the game.
+            onAskJudge={
+              canJudge
+                ? (name) => {
+                    startQuestionAbout(name);
+                    setSheet({ kind: "judge" });
+                  }
+                : undefined
+            }
+          />
         </ToolScreen>
       )}
       {sheet?.kind === "dungeon" && (
