@@ -75,21 +75,27 @@ export const MARKERS: { key: MarkerKey; label: string }[] = [
   { key: "initiative", label: "Initiative" },
 ];
 
-export type ColorKey = "white" | "blue" | "black" | "red" | "green" | "gold" | "gray";
-/** Bright, solid seat colors; `ink` is the text color that reads on each. */
+export type ColorKey = "orange" | "blue" | "black" | "red" | "green" | "pink" | "gray";
+/**
+ * Bright, solid seat colors; `ink` is the text color that reads on each.
+ * All of them take white text (the cream "white" and "gold" that needed dark
+ * text were swapped for orange and pink; old games are moved over in parseGame).
+ */
 export const COLORS: { key: ColorKey; label: string; hex: string; ink: string }[] = [
-  { key: "white", label: "White", hex: "#F2E6B8", ink: "#2b2412" },
+  { key: "orange", label: "Orange", hex: "#EA580C", ink: "#ffffff" },
   { key: "blue", label: "Blue", hex: "#2E7CF6", ink: "#ffffff" },
-  { key: "black", label: "Black", hex: "#8E4EC6", ink: "#ffffff" },
+  { key: "black", label: "Purple", hex: "#8E4EC6", ink: "#ffffff" },
   { key: "red", label: "Red", hex: "#E5484D", ink: "#ffffff" },
   { key: "green", label: "Green", hex: "#1FA463", ink: "#ffffff" },
-  { key: "gold", label: "Gold", hex: "#F5A524", ink: "#2b1d05" },
+  { key: "pink", label: "Pink", hex: "#DB2777", ink: "#ffffff" },
   { key: "gray", label: "Gray", hex: "#64748B", ink: "#ffffff" },
 ];
+/** Colors from before the swap. */
+const RETIRED_COLORS: Record<string, ColorKey> = { white: "pink", gold: "orange" };
 export const colorHex = (c: ColorKey) => COLORS.find((x) => x.key === c)?.hex ?? "#64748B";
 export const colorInk = (c: ColorKey) => COLORS.find((x) => x.key === c)?.ink ?? "#ffffff";
 /** Seat colors for a new game, in seat order (then any other free color). */
-const SEAT_COLORS: ColorKey[] = ["blue", "red", "green", "black", "white", "gold"];
+const SEAT_COLORS: ColorKey[] = ["blue", "red", "green", "black", "orange", "pink"];
 
 /**
  * A different color for every seat: seats keep last game's color when no
@@ -457,5 +463,8 @@ export function parseGame(raw: unknown): Game | null {
     return out;
   }
   if (g.v !== 2 || !Array.isArray(g.players) || g.players.length < MIN_PLAYERS || g.players.length > MAX_PLAYERS) return null;
-  return g as unknown as Game;
+  const game = g as unknown as Game;
+  // Seats on a retired color (cream "white", "gold") move to its replacement.
+  if (!game.players.some((p) => RETIRED_COLORS[p.color])) return game;
+  return { ...game, players: game.players.map((p) => (RETIRED_COLORS[p.color] ? { ...p, color: RETIRED_COLORS[p.color] } : p)) };
 }

@@ -115,6 +115,8 @@ const PATHS = {
       <path d="M12 9.9h.01M14.3 11.6h.01M13.4 14.2h.01M10.6 14.2h.01M9.7 11.6h.01" strokeWidth={2.2} />
     </>
   ),
+  minus: <path d="M5 12h14" />,
+  plus: <path d="M12 5v14M5 12h14" />,
   exit: <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l-4-4 4-4M5 12h11" />,
   refresh: <path d="M20 11a8 8 0 0 0-14.9-3.5M4 4v4h4M4 13a8 8 0 0 0 14.9 3.5M20 20v-4h-4" />,
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={2.8} strokeLinecap="round" />,

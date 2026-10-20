@@ -370,11 +370,11 @@ function TrackRow({
   onUp: () => void;
   who: string;
 }) {
-  const btn = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-xl leading-none active:bg-black/40";
+  const btn = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 active:bg-black/40";
   return (
     <div className="flex items-center gap-2">
       <button type="button" onClick={onDown} aria-label={`${who}: ${label} down`} className={btn}>
-        −
+        <Icon name="minus" className="h-4 w-4" />
       </button>
       <span
         title={label}
@@ -385,7 +385,7 @@ function TrackRow({
         <span className="font-life text-xl font-black tabular-nums">{value}</span>
       </span>
       <button type="button" onClick={onUp} aria-label={`${who}: ${label} up`} className={btn}>
-        +
+        <Icon name="plus" className="h-4 w-4" />
       </button>
     </div>
   );
@@ -428,7 +428,7 @@ function CmdrStrip({
       </span>
     </>
   );
-  const step = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 text-xl leading-none active:bg-black/40";
+  const step = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 active:bg-black/40";
 
   const o = open === null ? undefined : others.find((x) => x.index === open);
   if (o) {
@@ -436,7 +436,7 @@ function CmdrStrip({
     return (
       <div className="relative mt-1 mb-7 flex items-center gap-2">
         <button type="button" onClick={() => (onCmdr(o.index, -1), keepOpen(o.index))} aria-label={`${who}: commander damage from ${o.name} down`} className={step}>
-          −
+          <Icon name="minus" className="h-4 w-4" />
         </button>
         <button
           type="button"
@@ -448,7 +448,7 @@ function CmdrStrip({
           {sword(v)}
         </button>
         <button type="button" onClick={() => (onCmdr(o.index, 1), keepOpen(o.index))} aria-label={`${who}: commander damage from ${o.name} up`} className={step}>
-          +
+          <Icon name="plus" className="h-4 w-4" />
         </button>
       </div>
     );

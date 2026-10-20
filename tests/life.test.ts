@@ -28,8 +28,8 @@ describe("newGame", () => {
   });
 
   it("keeps each seat's color from the previous game", () => {
-    const g = setColor(newGame(2, 20), 1, "gold");
-    expect(newGame(3, 20, g).players.map((p) => p.color)).toEqual(["blue", "gold", "green"]);
+    const g = setColor(newGame(2, 20), 1, "orange");
+    expect(newGame(3, 20, g).players.map((p) => p.color)).toEqual(["blue", "orange", "green"]);
   });
 });
 
@@ -309,7 +309,7 @@ describe("seat colors", () => {
     expect(new Set(seatColors(6)).size).toBe(6);
     expect(seatColors(3, ["red", "red", "blue"])).toEqual(["red", "green", "blue"]);
     const prev = newGame(2, 20);
-    const next = newGame(6, 40, { ...prev, players: prev.players.map((p) => ({ ...p, color: "gold" as const })) });
+    const next = newGame(6, 40, { ...prev, players: prev.players.map((p) => ({ ...p, color: "pink" as const })) });
     expect(new Set(next.players.map((p) => p.color)).size).toBe(6);
   });
 
@@ -317,7 +317,7 @@ describe("seat colors", () => {
     const { setColor } = await import("../src/lib/life");
     const g = newGame(3, 20); // blue, red, green
     expect(setColor(g, 0, "red")).toBe(g);
-    expect(setColor(g, 0, "gold").players[0].color).toBe("gold");
+    expect(setColor(g, 0, "pink").players[0].color).toBe("pink");
   });
 });
 
@@ -343,5 +343,14 @@ describe("rows on a life card", () => {
     expect(addCounter(g, 0, "rad")).toBe(g);
     const six = addCounter(addCounter(newGame(6, 40), 0, "poison"), 0, "rad");
     expect(addCounter(six, 0, "energy")).toBe(six);
+  });
+});
+
+describe("seat colors that take white text", () => {
+  it("every color reads with white text, and an old game's cream and gold seats move to pink and orange", async () => {
+    const { COLORS, parseGame } = await import("../src/lib/life");
+    expect(COLORS.every((c) => c.ink === "#ffffff")).toBe(true);
+    const old = { ...newGame(3, 20), players: newGame(3, 20).players.map((p, i) => ({ ...p, color: ["white", "gold", "blue"][i] })) };
+    expect(parseGame(JSON.parse(JSON.stringify(old)))?.players.map((p) => p.color)).toEqual(["pink", "orange", "blue"]);
   });
 });
