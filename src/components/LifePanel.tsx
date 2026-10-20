@@ -116,7 +116,7 @@ interface Props {
   onAddCmdr: (from: number) => void;
   onRemoveCmdr: (from: number) => void;
   onDungeon: () => void;
-  /** Tap the crown: the monarch goes to the next player. */
+  /** Tap the crown: pass the monarch (1v1: to the other player; more: pick who). */
   onPassMonarch: () => void;
   onColor: (c: ColorKey) => void;
 }
@@ -186,7 +186,7 @@ function Face(props: Props & { w: number; h: number }) {
         {highlight === "first" && <div className="mb-1 text-xs font-bold tracking-wide uppercase">Goes first</div>}
         {crown > 0 && (
           <div className="mb-1 flex items-end gap-5">
-            {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch to the next player" />}
+            {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch" />}
             {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
           </div>
         )}

@@ -16,9 +16,7 @@ import {
   colorHex,
   completeDungeon,
   enterRoom,
-  aroundTheTable,
   giveMarker,
-  passMonarch,
   lifeAfter,
   newGame,
   parseGame,
@@ -134,25 +132,6 @@ function useWide() {
   return wide;
 }
 
-/** The seats as rows on screen (left to right), for working out who sits next to whom. */
-function gridRows(seats: { i: number; span: boolean }[], cols: number): number[][] {
-  const rows: number[][] = [];
-  let row: number[] = [];
-  for (const s of seats) {
-    if (s.span) {
-      rows.push([s.i]);
-      continue;
-    }
-    row.push(s.i);
-    if (row.length === cols) {
-      rows.push(row);
-      row = [];
-    }
-  }
-  if (row.length) rows.push(row);
-  return rows;
-}
-
 /** Judge or card search: full screen over the counter; closing it comes straight back to the game. */
 function ToolScreen({ icon, title, loading, onClose, children }: { icon: IconName; title: string; loading: string; onClose: () => void; children: React.ReactNode }) {
   return (
@@ -255,8 +234,6 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
   const seats = seating(n, wide);
   const cols = wide ? (n === 2 || n === 4 ? 2 : 3) : n === 2 ? 1 : 2;
   const rows = wide ? Math.ceil(n / cols) : n === 2 ? 2 : Math.ceil(n / 2);
-  // Turn order: clockwise round the table as the seats sit on screen.
-  const order = aroundTheTable(gridRows(seats, cols));
 
   /** Flicker around the table, then land on someone. */
   const whoGoesFirst = () => {
@@ -347,7 +324,14 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
                   setSheet({ kind: "dungeon", p: i });
                 }}
                 onColor={(c) => setGame((g) => setColor(g, i, c))}
-                onPassMonarch={() => setGame((g) => passMonarch(g, order))}
+                // 1v1: the crown just switches sides. More players: pick who gets it.
+                onPassMonarch={() => {
+                  if (n === 2) setGame((g) => giveMarker(g, i === 0 ? 1 : 0, "monarch"));
+                  else {
+                    closeTray();
+                    setGiving("monarch");
+                  }
+                }}
               />
             </div>
           ))}

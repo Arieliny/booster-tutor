@@ -283,30 +283,3 @@ describe("mana counters", () => {
     expect(g.players[0].counters.manaG).toBe(3);
   });
 });
-
-describe("passing the monarch round the table", () => {
-  it("walks the seats clockwise as they sit on screen", async () => {
-    const { aroundTheTable } = await import("../src/lib/life");
-    expect(aroundTheTable([[1], [0]])).toEqual([1, 0]); // phone, 2 players
-    expect(aroundTheTable([[0], [1, 2]])).toEqual([0, 2, 1]); // phone, 3: far end, right, left
-    expect(aroundTheTable([[0, 1], [2, 3]])).toEqual([0, 1, 3, 2]); // phone, 4
-    expect(aroundTheTable([[0], [1, 2], [3, 4]])).toEqual([0, 2, 4, 3, 1]); // phone, 5
-    expect(aroundTheTable([[0, 1], [2, 3], [4, 5]])).toEqual([0, 1, 3, 5, 4, 2]); // phone, 6
-    expect(aroundTheTable([[0, 1, 2], [3, 4]])).toEqual([0, 1, 2, 4, 3]); // laptop, 5
-    expect(aroundTheTable([[0, 1, 2]])).toEqual([0, 1, 2]); // laptop, 3
-  });
-
-  it("tapping the crown hands it to the next seat, wrapping round, and undo brings it back", async () => {
-    const { giveMarker, passMonarch, undo } = await import("../src/lib/life");
-    const order = [0, 1, 3, 2];
-    let g = giveMarker(newGame(4, 40), 3, "monarch", 1);
-    g = passMonarch(g, order, 2);
-    expect(g.markers.monarch).toBe(2);
-    g = passMonarch(g, order, 3);
-    expect(g.markers.monarch).toBe(0);
-    expect(undo(g).markers.monarch).toBe(2);
-    // Nobody is the monarch: nothing to pass.
-    const none = newGame(4, 40);
-    expect(passMonarch(none, order, 4)).toBe(none);
-  });
-});
