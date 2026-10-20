@@ -166,19 +166,20 @@ function doorCorners(seats: { i: number; turn: Turn; span: boolean }[], cols: nu
   return out;
 }
 
-/** Judge or card search: full screen over the counter; closing it comes straight back to the game. */
-function ToolScreen({ icon, title, loading, onClose, children }: { icon: IconName; title: string; loading: string; onClose: () => void; children: React.ReactNode }) {
+/** Judge or card search: full screen over the counter; closing it (✕ or the phone's Back) comes straight back to the game. */
+function ToolScreen({ icon, title, what, onClose, children }: { icon: IconName; title: string; what: string; onClose: () => void; children: React.ReactNode }) {
+  useBackToClose(onClose);
   return (
     <div className="absolute inset-0 z-50 flex flex-col bg-(--color-bg) text-(--color-text)" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-(--color-border) px-4">
         <Icon name={icon} className="h-5 w-5 text-(--color-text-dim)" />
         <span className="flex-1 text-lg font-semibold">{title}</span>
-        <button type="button" onClick={onClose} aria-label={`Close ${title.toLowerCase()}`} className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-white/10">
+        <button type="button" onClick={onClose} aria-label={`Close ${what}`} className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-white/10">
           <Icon name="close" className="h-6 w-6" />
         </button>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4">
-        <Suspense fallback={<p className="text-sm text-(--color-text-dim)">Loading {loading}…</p>}>{children}</Suspense>
+        <Suspense fallback={<p className="text-sm text-(--color-text-dim)">Loading {what}…</p>}>{children}</Suspense>
       </div>
     </div>
   );
@@ -443,12 +444,12 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
 
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
       {sheet?.kind === "judge" && (
-        <ToolScreen icon="scales" title="Judge" loading="the judge" onClose={() => setSheet(null)}>
+        <ToolScreen icon="scales" title="Judge" what="the judge" onClose={() => setSheet(null)}>
           <Judge embedded />
         </ToolScreen>
       )}
       {sheet?.kind === "cards" && (
-        <ToolScreen icon="cardBack" title="Cards" loading="card search" onClose={() => setSheet(null)}>
+        <ToolScreen icon="cardBack" title="Look up a card" what="card search" onClose={() => setSheet(null)}>
           <CardSearch
             // A card's "Ask the judge" opens the judge here, about that card, without leaving the game.
             onAskJudge={

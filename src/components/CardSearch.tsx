@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { searchDb, toReviewCard, useCardDb, type DbCard } from "../lib/card-db";
 import type { ReviewCard } from "../lib/cube-review";
 import { scryfallCard, scryfallSuggest } from "../lib/scryfall";
+import { useBackToClose } from "../lib/use-back-to-close";
 import { CardDbPanel } from "./CardDbPanel";
 import { Icon } from "./Icon";
 import { ManaCost } from "./ManaCost";
@@ -167,6 +168,8 @@ function DbRow({ d, onOpen }: { d: DbCard; onOpen: () => void }) {
 
 /** One card: its image (when it loads), its text, and the official rulings. */
 function CardView({ card: c, onBack, onAskJudge }: { card: ReviewCard; onBack: () => void; onAskJudge?: (name: string) => void }) {
+  // The phone's Back goes back to the results first, then closes the search.
+  useBackToClose(onBack);
   const [face, setFace] = useState<"front" | "back">("front");
   const [noImage, setNoImage] = useState(false);
   const img = c.img ? c.img.replace("/small/", "/normal/").replace("/front/", `/${face}/`) : null;

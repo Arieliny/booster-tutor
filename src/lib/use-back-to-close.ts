@@ -9,7 +9,7 @@ let releasing: string | null = null;
  * only mounted while open.
  *
  * Opening adds a history entry on the same URL; Back pops it and closes the
- * popup. Closing any other way (✕, tapping outside) removes that entry again,
+ * popup (only the top one, when popups are stacked). Closing any other way (✕, tapping outside) removes that entry again,
  * so entries never pile up.
  */
 export function useBackToClose(onClose: () => void): void {
@@ -30,6 +30,9 @@ export function useBackToClose(onClose: () => void): void {
 
     let poppedByBack = false;
     const onPop = () => {
+      // With a popup open on top of this one, Back only pops the top one: its
+      // entry goes and this one's is current again, so this popup stays.
+      if ((window.history.state as { overlay?: string } | null)?.overlay === marker) return;
       poppedByBack = true;
       close();
     };
