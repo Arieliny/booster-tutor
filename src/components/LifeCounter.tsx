@@ -293,6 +293,12 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
     }, 100);
   };
 
+  const backToTools = () => {
+    setDiceTray(false);
+    setRoll(null);
+    window.clearInterval(rollTimer.current);
+  };
+
   const closeTray = () => {
     setBarOpen(false);
     setDiceTray(false);
@@ -367,7 +373,13 @@ export function LifeCounter({ onExit, canJudge = false, canLookUp = false }: { o
             >
               <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
                 {diceTray ? (
-                  DICE.slice(0, 3).map((d) => <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />)
+                  <>
+                    {/* Back to the tools (the X closes the whole tray). */}
+                    <Tool icon="back" label="Back" onClick={backToTools} />
+                    {DICE.slice(0, 3).map((d) => (
+                      <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />
+                    ))}
+                  </>
                 ) : (
                   <>
                     <Tool icon="exit" label="Exit" onClick={onExit} />
