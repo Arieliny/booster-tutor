@@ -500,7 +500,8 @@ function Menu(props: Props & { onClose: () => void }) {
         <section className="space-y-1.5">
           <div className={head}>Color</div>
           <div className="flex flex-wrap gap-2">
-            {COLORS.map((c) => (
+            {/* Only colors nobody else has: two players can't share one. */}
+            {COLORS.filter((c) => !others.some((o) => o.color === c.key)).map((c) => (
               <button
                 key={c.key}
                 type="button"

@@ -88,8 +88,34 @@ export const COLORS: { key: ColorKey; label: string; hex: string; ink: string }[
 ];
 export const colorHex = (c: ColorKey) => COLORS.find((x) => x.key === c)?.hex ?? "#64748B";
 export const colorInk = (c: ColorKey) => COLORS.find((x) => x.key === c)?.ink ?? "#ffffff";
-/** Seat colors for a new game, in seat order. */
+/** Seat colors for a new game, in seat order (then any other free color). */
 const SEAT_COLORS: ColorKey[] = ["blue", "red", "green", "black", "white", "gold"];
+
+/**
+ * A different color for every seat: seats keep last game's color when no
+ * earlier seat has it, and the rest (new seats, or a clash) get their usual
+ * seat color, or the first color nobody has yet when that's taken. There are more colors than seats, so one is always free.
+ */
+export function seatColors(count: number, previous: (ColorKey | undefined)[] = []): ColorKey[] {
+  const out: (ColorKey | undefined)[] = [];
+  const used = new Set<ColorKey>();
+  for (let i = 0; i < count; i++) {
+    const c = previous[i];
+    if (c && COLORS.some((x) => x.key === c) && !used.has(c)) {
+      out[i] = c;
+      used.add(c);
+    }
+  }
+  const free = [...SEAT_COLORS, ...COLORS.map((x) => x.key)].filter((c, k, all) => all.indexOf(c) === k);
+  for (let i = 0; i < count; i++) {
+    if (out[i]) continue;
+    // The seat's usual color if it's free, otherwise the first one nobody has.
+    const c = (!used.has(SEAT_COLORS[i]) && SEAT_COLORS[i]) || free.find((x) => !used.has(x)) || "gray";
+    out[i] = c;
+    used.add(c);
+  }
+  return out as ColorKey[];
+}
 
 export interface Player {
   life: number;
@@ -138,13 +164,14 @@ export interface Game {
 
 export function newGame(count: number, start: number, previous?: Game): Game {
   const n = Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, Math.round(count)));
+  const colors = seatColors(n, previous?.players.map((p) => p.color));
   return {
     v: 2,
     start,
-    // Seats keep the colors they had last game.
+    // Seats keep the colors they had last game; added seats get colors nobody has.
     players: Array.from({ length: n }, (_, i) => ({
       life: start,
-      color: previous?.players[i]?.color ?? SEAT_COLORS[i],
+      color: colors[i],
       counters: {},
       cmdr: {},
     })),
@@ -352,6 +379,8 @@ export function setCounterIcon(g: Game, key: CounterKey, icon: CounterIcon): Gam
 }
 
 export function setColor(g: Game, p: number, color: ColorKey): Game {
+  // Two players can't share a color.
+  if (g.players.some((pl, i) => i !== p && pl.color === color)) return g;
   // Not a game action: no history entry, and undo never changes colors back.
   return { ...g, players: g.players.map((pl, i) => (i === p ? { ...pl, color } : pl)) };
 }

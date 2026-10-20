@@ -283,3 +283,30 @@ describe("mana counters", () => {
     expect(g.players[0].counters.manaG).toBe(3);
   });
 });
+
+describe("seat colors", () => {
+  it("adding players gives the new seats colors nobody has", async () => {
+    const { seatColors } = await import("../src/lib/life");
+    // Last game: two players who'd picked green and blue.
+    const colors = seatColors(4, ["green", "blue"]);
+    expect(colors.slice(0, 2)).toEqual(["green", "blue"]);
+    expect(new Set(colors).size).toBe(4);
+    expect(colors.slice(2)).toEqual(["red", "black"]);
+  });
+
+  it("every seat is different even at six players, and an old duplicate gets a free color", async () => {
+    const { seatColors, newGame } = await import("../src/lib/life");
+    expect(new Set(seatColors(6)).size).toBe(6);
+    expect(seatColors(3, ["red", "red", "blue"])).toEqual(["red", "green", "blue"]);
+    const prev = newGame(2, 20);
+    const next = newGame(6, 40, { ...prev, players: prev.players.map((p) => ({ ...p, color: "gold" as const })) });
+    expect(new Set(next.players.map((p) => p.color)).size).toBe(6);
+  });
+
+  it("a player can't take a color someone else has", async () => {
+    const { setColor } = await import("../src/lib/life");
+    const g = newGame(3, 20); // blue, red, green
+    expect(setColor(g, 0, "red")).toBe(g);
+    expect(setColor(g, 0, "gold").players[0].color).toBe("gold");
+  });
+});
