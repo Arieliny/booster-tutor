@@ -177,13 +177,29 @@ describe("dungeons", () => {
   it("every room is on the map and every 'leads to' room exists", async () => {
     const { DUNGEONS } = await import("../src/lib/dungeons");
     for (const d of DUNGEONS) {
-      const onMap = d.rows.flat();
+      const onMap = d.rows.flat().filter(Boolean);
       expect(new Set(onMap)).toEqual(new Set(Object.keys(d.rooms)));
       for (const r of Object.values(d.rooms)) for (const n of r.next) expect(d.rooms[n], `${d.name}: ${r.name} -> ${n}`).toBeDefined();
       // Exactly one last room, at the bottom of the map.
       const last = Object.values(d.rooms).filter((r) => r.next.length === 0);
       expect(last.map((r) => r.name)).toEqual(d.rows.at(-1));
     }
+  });
+
+  it("draws a line for every move, through the gap when a move skips a row", async () => {
+    const { DUNGEONS, mapLinks, roomsAhead } = await import("../src/lib/dungeons");
+    for (const d of DUNGEONS) {
+      const links = mapLinks(d);
+      for (const r of Object.values(d.rooms))
+        for (const n of r.next) expect(links.some((l) => l.a === r.name && l.b === n), `${d.name}: ${r.name} -> ${n}`).toBe(true);
+    }
+    const tomb = DUNGEONS.find((d) => d.key === "tomb")!;
+    expect(mapLinks(tomb).filter((l) => l.a === "Oubliette").map((l) => [l.row, l.from, l.to])).toEqual([
+      [1, 1, 1],
+      [2, 1, 0],
+    ]);
+    const under = DUNGEONS.find((d) => d.key === "undercity")!;
+    expect([...roomsAhead(under, "Forge")].sort()).toEqual(["Archives", "Arena", "Catacombs", "Throne of the Dead Three", "Trap!"]);
   });
 
   it("entering, moving, completing and undoing", async () => {

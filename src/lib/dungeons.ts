@@ -1,7 +1,8 @@
 /**
  * The dungeons, room by room, with each room's effect as printed (Oracle text
  * from Scryfall, October 2026). `next` is where a room leads; `rows` lays the
- * map out top to bottom.
+ * map out top to bottom. A room leads into the row below it, or through the
+ * row's empty slot ("") when it skips a row (Tomb of Annihilation's Oubliette).
  *
  * Undercity can only be entered through the initiative ("venture into
  * Undercity"); the other three through any "venture into the dungeon".
@@ -83,7 +84,7 @@ export const DUNGEONS: Dungeon[] = [
   dungeon(
     "tomb",
     "Tomb of Annihilation",
-    [["Trapped Entry"], ["Veils of Fear", "Oubliette"], ["Sandfall Cell"], ["Cradle of the Death God"]],
+    [["Trapped Entry"], ["Veils of Fear", "Oubliette"], ["Sandfall Cell", ""], ["Cradle of the Death God"]],
     [
       { name: "Trapped Entry", effect: "Each player loses 1 life.", next: ["Veils of Fear", "Oubliette"] },
       { name: "Veils of Fear", effect: "Each player loses 2 life unless they discard a card.", next: ["Sandfall Cell"] },
@@ -97,6 +98,58 @@ export const DUNGEONS: Dungeon[] = [
 export const dungeonOf = (key: DungeonKey): Dungeon => DUNGEONS.find((d) => d.key === key)!;
 export const firstRoom = (key: DungeonKey): string => dungeonOf(key).rows[0][0];
 export const isLastRoom = (key: DungeonKey, room: string): boolean => dungeonOf(key).rooms[room]?.next.length === 0;
+
+/** Every room still reachable from `room` (not counting the room itself). */
+export function roomsAhead(d: Dungeon, room: string): Set<string> {
+  const seen = new Set<string>();
+  const walk = (r: string) =>
+    d.rooms[r]?.next.forEach((n) => {
+      if (!seen.has(n)) {
+        seen.add(n);
+        walk(n);
+      }
+    });
+  walk(room);
+  return seen;
+}
+
+/**
+ * A line on the map between row `row` and the row below: from slot `from` (of
+ * `fromOf` in that row) to slot `to` (of `toOf` below), for the move `a` → `b`.
+ * A move that skips a row is two lines, through the empty slot in between.
+ */
+export interface MapLink {
+  row: number;
+  from: number;
+  fromOf: number;
+  to: number;
+  toOf: number;
+  a: string;
+  b: string;
+}
+
+export function mapLinks(d: Dungeon): MapLink[] {
+  const links: MapLink[] = [];
+  d.rows.forEach((row, r) => {
+    const below = d.rows[r + 1];
+    if (!below) return;
+    row.forEach((a, from) => {
+      for (const b of d.rooms[a]?.next ?? []) {
+        const to = below.indexOf(b);
+        if (to >= 0) {
+          links.push({ row: r, from, fromOf: row.length, to, toOf: below.length, a, b });
+          continue;
+        }
+        const gap = below.indexOf("");
+        const end = d.rows[r + 2]?.indexOf(b) ?? -1;
+        if (gap < 0 || end < 0) continue;
+        links.push({ row: r, from, fromOf: row.length, to: gap, toOf: below.length, a, b });
+        links.push({ row: r + 1, from: gap, fromOf: below.length, to: end, toOf: d.rows[r + 2].length, a, b });
+      }
+    });
+  });
+  return links;
+}
 
 /** What the initiative does, for the tracker. */
 export const INITIATIVE_TEXT =

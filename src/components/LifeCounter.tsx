@@ -1,7 +1,7 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Fragment, Suspense, lazy, useEffect, useRef, useState } from "react";
 // Latin digits only: Nunito Black for the big numbers.
 import "@fontsource/nunito/latin-900.css";
-import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, type DungeonKey } from "../lib/dungeons";
+import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, mapLinks, roomsAhead, type DungeonKey, type MapLink } from "../lib/dungeons";
 import {
   COUNTERS,
   MARKERS,
@@ -723,6 +723,12 @@ function DungeonTracker({
 
   // Out of a dungeon: any dungeon's first room (Undercity's means taking the initiative).
   const canGo = (room: string) => (cur ? cur.key === tab && (d.rooms[cur.room]?.next ?? []).includes(room) : room === d.rows[0][0]);
+  // In this dungeon, the paths still open are lit and the rooms left behind fade.
+  const inside = cur?.key === tab;
+  const ahead = inside ? roomsAhead(d, cur.room) : new Set<string>();
+  const links = mapLinks(d);
+  const lineState = (l: MapLink): LineState =>
+    !inside ? "plain" : (l.a === cur.room || ahead.has(l.a)) && ahead.has(l.b) ? "open" : "closed";
   const markersIn = (key: DungeonKey, room?: string) =>
     game.players.flatMap((pl, i) => (pl.dungeon?.key === key && (!room || pl.dungeon.room === room) ? [{ i, color: pl.color }] : []));
   const dot = (color: string, mine: boolean) => (
@@ -788,37 +794,56 @@ function DungeonTracker({
                 })}
               </div>
 
-              <div className="space-y-2">
+              <div>
                 {d.rows.map((row, r) => (
-                  <div key={r} className="flex gap-2">
-                    {row.map((roomName) => {
-                      const here = markersIn(tab, roomName);
-                      const go = canGo(roomName);
-                      const mineHere = cur?.key === tab && cur.room === roomName;
-                      return (
-                        <button
-                          key={roomName}
-                          type="button"
-                          disabled={!go}
-                          onClick={() => onEnter(tab, roomName)}
-                          className={
-                            "min-w-0 flex-1 rounded-xl border p-2.5 text-left " +
-                            (go ? "border-2 border-dashed border-[#B9A4FF] bg-[#B9A4FF]/10" : mineHere ? "border-2" : "border-white/15")
-                          }
-                          style={mineHere ? { borderColor: hex, background: `color-mix(in srgb, ${hex} 22%, transparent)` } : undefined}
-                        >
-                          <span className="flex items-center gap-1.5 text-sm font-semibold">
-                            <span className="min-w-0 flex-1">{roomName}</span>
-                            {here.map((m) => (
-                              <span key={m.i}>{dot(colorHex(m.color), m.i === p)}</span>
-                            ))}
-                          </span>
-                          <span className="mt-1 block text-xs leading-snug text-white/75">{d.rooms[roomName].effect}</span>
-                          {go && <span className="mt-1.5 block text-xs font-semibold text-[#B9A4FF]">Venture here</span>}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <Fragment key={r}>
+                    {r > 0 && <MapLines links={links.filter((l) => l.row === r - 1)} state={lineState} />}
+                    <div className="flex gap-2">
+                      {row.map((roomName, slot) => {
+                        if (!roomName) {
+                          // The empty slot a longer path runs through.
+                          const through = links.find((l) => l.row === r && l.from === slot);
+                          return (
+                            <div key={slot} className="flex min-w-0 flex-1 justify-center">
+                              <div className={"w-0.5 " + LINE_CLASS[through ? lineState(through) : "plain"]} />
+                            </div>
+                          );
+                        }
+                        const here = markersIn(tab, roomName);
+                        const go = canGo(roomName);
+                        const mineHere = inside && cur.room === roomName;
+                        const next = d.rooms[roomName].next;
+                        return (
+                          <button
+                            key={roomName}
+                            type="button"
+                            disabled={!go}
+                            onClick={() => onEnter(tab, roomName)}
+                            className={
+                              "min-w-0 flex-1 rounded-xl border p-2.5 text-left " +
+                              (go ? "border-2 border-dashed border-[#B9A4FF] bg-[#B9A4FF]/10" : mineHere ? "border-2" : "border-white/15") +
+                              (inside && !mineHere && !ahead.has(roomName) ? " opacity-35" : "")
+                            }
+                            style={mineHere ? { borderColor: hex, background: `color-mix(in srgb, ${hex} 22%, transparent)` } : undefined}
+                          >
+                            <span className="flex items-center gap-1.5 text-sm font-semibold">
+                              <span className="min-w-0 flex-1">{roomName}</span>
+                              {here.map((m) => (
+                                <span key={m.i}>{dot(colorHex(m.color), m.i === p)}</span>
+                              ))}
+                            </span>
+                            <span className="mt-1 block text-xs leading-snug text-white/75">{d.rooms[roomName].effect}</span>
+                            {go && (
+                              <span className="mt-1.5 block text-xs leading-snug text-[#B9A4FF]">
+                                <b className="font-semibold">Venture here</b>
+                                {next.length ? <> · then {next.join(" or ")}</> : <> · the last room</>}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Fragment>
                 ))}
               </div>
 
@@ -833,6 +858,34 @@ function DungeonTracker({
         )}
       </Turned>
     </div>
+  );
+}
+
+type LineState = "plain" | "open" | "closed";
+const LINE_CLASS: Record<LineState, string> = { plain: "bg-white/40", open: "bg-[#B9A4FF]", closed: "bg-white/10" };
+const LINE_STROKE: Record<LineState, string> = { plain: "rgb(255 255 255 / 0.4)", open: "#B9A4FF", closed: "rgb(255 255 255 / 0.1)" };
+
+/** The paths between one row of a dungeon map and the next, from the middle of each room. */
+function MapLines({ links, state }: { links: MapLink[]; state: (l: MapLink) => LineState }) {
+  const x = (slot: number, of: number) => ((slot + 0.5) / of) * 100;
+  // Open paths are drawn last, so they sit on top where lines cross.
+  const order: LineState[] = ["closed", "plain", "open"];
+  const sorted = [...links].sort((a, b) => order.indexOf(state(a)) - order.indexOf(state(b)));
+  return (
+    <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="block h-5 w-full" aria-hidden="true">
+      {sorted.map((l, i) => (
+        <line
+          key={i}
+          x1={x(l.from, l.fromOf)}
+          y1={0}
+          x2={x(l.to, l.toOf)}
+          y2={20}
+          stroke={LINE_STROKE[state(l)]}
+          strokeWidth={state(l) === "open" ? 2.5 : 2}
+          vectorEffect="non-scaling-stroke"
+        />
+      ))}
+    </svg>
   );
 }
 
