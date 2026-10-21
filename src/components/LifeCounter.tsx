@@ -863,29 +863,31 @@ function DungeonTracker({
 
 type LineState = "plain" | "open" | "closed";
 const LINE_CLASS: Record<LineState, string> = { plain: "bg-white/40", open: "bg-[#B9A4FF]", closed: "bg-white/10" };
-const LINE_STROKE: Record<LineState, string> = { plain: "rgb(255 255 255 / 0.4)", open: "#B9A4FF", closed: "rgb(255 255 255 / 0.1)" };
+const ARROW_CLASS: Record<LineState, string> = { plain: "text-white/40", open: "text-[#B9A4FF]", closed: "text-white/10" };
 
-/** The paths between one row of a dungeon map and the next, from the middle of each room. */
+/** The moves from one row of a dungeon map to the next: an arrow straight down for each. */
 function MapLines({ links, state }: { links: MapLink[]; state: (l: MapLink) => LineState }) {
-  const x = (slot: number, of: number) => ((slot + 0.5) / of) * 100;
-  // Open paths are drawn last, so they sit on top where lines cross.
-  const order: LineState[] = ["closed", "plain", "open"];
-  const sorted = [...links].sort((a, b) => order.indexOf(state(a)) - order.indexOf(state(b)));
   return (
-    <svg viewBox="0 0 100 20" preserveAspectRatio="none" className="block h-5 w-full" aria-hidden="true">
-      {sorted.map((l, i) => (
-        <line
+    <div className="relative h-5" aria-hidden="true">
+      {links.map((l, i) => (
+        <svg
           key={i}
-          x1={x(l.from, l.fromOf)}
-          y1={0}
-          x2={x(l.to, l.toOf)}
-          y2={20}
-          stroke={LINE_STROKE[state(l)]}
-          strokeWidth={state(l) === "open" ? 2.5 : 2}
-          vectorEffect="non-scaling-stroke"
-        />
+          viewBox="0 0 10 20"
+          className={"absolute top-0 h-5 w-2.5 -translate-x-1/2 " + ARROW_CLASS[state(l)]}
+          style={{ left: `${l.x}%` }}
+        >
+          {l.into ? (
+            <>
+              <line x1="5" y1="0" x2="5" y2="13" stroke="currentColor" strokeWidth="2" />
+              <path d="M1 12 L5 19 L9 12 Z" fill="currentColor" />
+            </>
+          ) : (
+            // Halfway along a move that skips a row: it carries on through the empty slot below.
+            <line x1="5" y1="0" x2="5" y2="20" stroke="currentColor" strokeWidth="2" />
+          )}
+        </svg>
       ))}
-    </svg>
+    </div>
   );
 }
 

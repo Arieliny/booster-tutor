@@ -114,18 +114,28 @@ export function roomsAhead(d: Dungeon, room: string): Set<string> {
 }
 
 /**
- * A line on the map between row `row` and the row below: from slot `from` (of
- * `fromOf` in that row) to slot `to` (of `toOf` below), for the move `a` → `b`.
- * A move that skips a row is two lines, through the empty slot in between.
+ * An arrow on the map from slot `from` in row `row` straight down to slot `to`
+ * in the row below, for the move `a` → `b`. It sits at `x` (% across the
+ * map), in the middle of where the two rooms overlap, so it never runs
+ * sideways. A move that skips a row goes through the empty slot in between:
+ * the first half (`into` false) ends there without an arrowhead.
  */
 export interface MapLink {
   row: number;
   from: number;
-  fromOf: number;
   to: number;
-  toOf: number;
+  x: number;
+  into: boolean;
   a: string;
   b: string;
+}
+
+/** Where an arrow goes between slot `from` of `fromOf` and slot `to` of `toOf`. */
+function arrowX(from: number, fromOf: number, to: number, toOf: number): number {
+  const left = Math.max(from / fromOf, to / toOf);
+  const right = Math.min((from + 1) / fromOf, (to + 1) / toOf);
+  // Rooms that don't overlap (none on the printed dungeons) get the point between their middles.
+  return (right > left ? (left + right) / 2 : ((from + 0.5) / fromOf + (to + 0.5) / toOf) / 2) * 100;
 }
 
 export function mapLinks(d: Dungeon): MapLink[] {
@@ -137,14 +147,14 @@ export function mapLinks(d: Dungeon): MapLink[] {
       for (const b of d.rooms[a]?.next ?? []) {
         const to = below.indexOf(b);
         if (to >= 0) {
-          links.push({ row: r, from, fromOf: row.length, to, toOf: below.length, a, b });
+          links.push({ row: r, from, to, x: arrowX(from, row.length, to, below.length), into: true, a, b });
           continue;
         }
         const gap = below.indexOf("");
         const end = d.rows[r + 2]?.indexOf(b) ?? -1;
         if (gap < 0 || end < 0) continue;
-        links.push({ row: r, from, fromOf: row.length, to: gap, toOf: below.length, a, b });
-        links.push({ row: r + 1, from: gap, fromOf: below.length, to: end, toOf: d.rows[r + 2].length, a, b });
+        links.push({ row: r, from, to: gap, x: arrowX(from, row.length, gap, below.length), into: false, a, b });
+        links.push({ row: r + 1, from: gap, to: end, x: arrowX(gap, below.length, end, d.rows[r + 2].length), into: true, a, b });
       }
     });
   });

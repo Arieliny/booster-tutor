@@ -192,6 +192,12 @@ describe("dungeons", () => {
       const links = mapLinks(d);
       for (const r of Object.values(d.rooms))
         for (const n of r.next) expect(links.some((l) => l.a === r.name && l.b === n), `${d.name}: ${r.name} -> ${n}`).toBe(true);
+      // Every arrow points straight down: it's under the room it leaves and over the one it enters.
+      for (const l of links) {
+        const [up, down] = [d.rows[l.row], d.rows[l.row + 1]];
+        const inside = (slot: number, of: number) => l.x > (slot / of) * 100 && l.x < ((slot + 1) / of) * 100;
+        expect(inside(l.from, up.length) && inside(l.to, down.length), `${d.name}: ${l.a} -> ${l.b}`).toBe(true);
+      }
     }
     const tomb = DUNGEONS.find((d) => d.key === "tomb")!;
     expect(mapLinks(tomb).filter((l) => l.a === "Oubliette").map((l) => [l.row, l.from, l.to])).toEqual([
