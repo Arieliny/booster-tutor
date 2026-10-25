@@ -134,9 +134,15 @@ export interface Player {
   dungeon?: { key: DungeonKey; room: string };
   /** Dungeons completed this game. */
   completed?: number;
+  /** How many times the Ring has tempted this player (its abilities: the first four). */
+  ring?: number;
+  /** The city's blessing (Ascend): once a player has it, it stays. */
+  blessing?: boolean;
+  /** Emblems this player has, by name (see emblems.ts); the same one can be there twice. */
+  emblems?: string[];
 }
 
-export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color" | "dungeon";
+export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color" | "dungeon" | "ring" | "blessing" | "emblem";
 
 export interface Entry {
   t: number;
@@ -146,6 +152,8 @@ export interface Entry {
   key?: CounterKey | MarkerKey;
   /** Dungeon moves: the room entered, or "" for a completed dungeon. */
   room?: string;
+  /** Emblems: which one was added or removed. */
+  name?: string;
   /** Commander damage that also took life. */
   withLife?: boolean;
   /** Commander damage: the seat it came from. */
@@ -165,8 +173,12 @@ export interface Game {
   markers: Partial<Record<MarkerKey, number>>;
   /** Symbols picked for counters that have a choice (e.g. poison: Phyrexian or droplet). */
   icons?: Partial<Record<CounterKey, CounterIcon>>;
+  /** Day or night, once a card has started it (it's never neither again that game). */
+  dayNight?: DayNight;
   history: Entry[];
 }
+
+export type DayNight = "day" | "night";
 
 export function newGame(count: number, start: number, previous?: Game): Game {
   const n = Math.min(MAX_PLAYERS, Math.max(MIN_PLAYERS, Math.round(count)));
@@ -198,6 +210,7 @@ const clone = (p: Player): Player => ({
   counters: { ...p.counters },
   cmdr: { ...p.cmdr },
   ...(p.dungeon && { dungeon: { ...p.dungeon } }),
+  ...(p.emblems && { emblems: [...p.emblems] }),
 });
 
 /** Apply a change to some players, recording (or merging into) a history entry. */
@@ -377,6 +390,58 @@ export function completeDungeon(g: Game, p: number, now = Date.now()): Game {
   );
 }
 
+/** The Ring tempts p: its emblem gains its next ability (counting on past four, for cards that ask how many times). */
+export function temptRing(g: Game, p: number, now = Date.now()): Game {
+  return record(g, { p, kind: "ring", d: 1 }, [p], (ps) => void (ps[p].ring = (ps[p].ring ?? 0) + 1), now, false);
+}
+
+/** Give p the city's blessing, or take it back (a mistap). */
+export function setBlessing(g: Game, p: number, on: boolean, now = Date.now()): Game {
+  if (on === !!g.players[p].blessing) return g;
+  return record(
+    g,
+    { p, kind: "blessing", d: on ? 1 : -1 },
+    [p],
+    (ps) => {
+      if (on) ps[p].blessing = true;
+      else delete ps[p].blessing;
+    },
+    now,
+    false,
+  );
+}
+
+/** p gets an emblem (another copy if they already have it: they stack). */
+export function addEmblem(g: Game, p: number, name: string, now = Date.now()): Game {
+  return record(g, { p, kind: "emblem", name, d: 1 }, [p], (ps) => void (ps[p].emblems = [...(ps[p].emblems ?? []), name]), now, false);
+}
+
+/** Take one copy of an emblem off p. */
+export function removeEmblem(g: Game, p: number, name: string, now = Date.now()): Game {
+  const at = g.players[p].emblems?.indexOf(name) ?? -1;
+  if (at < 0) return g;
+  return record(
+    g,
+    { p, kind: "emblem", name, d: -1 },
+    [p],
+    (ps) => {
+      const left = ps[p].emblems!.filter((_, k) => k !== at);
+      if (left.length) ps[p].emblems = left;
+      else delete ps[p].emblems;
+    },
+    now,
+    false,
+  );
+}
+
+/** Day, night, or back to neither (a mistap). Table-wide, flipped by hand; not in the history. */
+export function setDayNight(g: Game, to: DayNight | undefined): Game {
+  if (g.dayNight === to) return g;
+  const out = { ...g, dayNight: to };
+  if (!to) delete out.dayNight;
+  return out;
+}
+
 /** Give a table-wide marker to p, or take it back if p already has it. */
 export function toggleMarker(g: Game, p: number, key: MarkerKey, now = Date.now()): Game {
   const holds = g.markers[key] === p;
@@ -430,6 +495,18 @@ export function undo(g: Game): Game {
       else delete p.dungeon;
       if (was.completed) p.completed = was.completed;
       else delete p.completed;
+    }
+    if (last.kind === "ring") {
+      if (was.ring) p.ring = was.ring;
+      else delete p.ring;
+    }
+    if (last.kind === "blessing") {
+      if (was.blessing) p.blessing = true;
+      else delete p.blessing;
+    }
+    if (last.kind === "emblem") {
+      if (was.emblems) p.emblems = [...was.emblems];
+      else delete p.emblems;
     }
   }
   return {

@@ -376,3 +376,46 @@ describe("seat colors that take white text", () => {
     expect(parseGame(JSON.parse(JSON.stringify(old)))?.players.map((p) => p.color)).toEqual(["pink", "orange", "blue"]);
   });
 });
+
+describe("the Ring, the city's blessing, emblems and day/night", () => {
+  it("each Ring temptation, blessing and emblem change is one undo", async () => {
+    const { temptRing, setBlessing, addEmblem, removeEmblem } = await import("../src/lib/life");
+    let g = temptRing(temptRing(newGame(3, 20), 1, T), 1, T + 1);
+    expect(g.players[1].ring).toBe(2);
+    expect(undo(g).players[1].ring).toBe(1);
+    expect(undo(undo(g)).players[1].ring).toBeUndefined();
+
+    g = setBlessing(g, 0, true, T);
+    expect(g.players[0].blessing).toBe(true);
+    expect(setBlessing(g, 0, true, T)).toBe(g);
+    expect(undo(g).players[0].blessing).toBeUndefined();
+
+    // The same emblem twice stacks; removing takes one copy off.
+    g = addEmblem(addEmblem(g, 2, "Ajani Resolute", T), 2, "Ajani Resolute", T + 1);
+    expect(g.players[2].emblems).toEqual(["Ajani Resolute", "Ajani Resolute"]);
+    g = removeEmblem(g, 2, "Ajani Resolute", T + 2);
+    expect(g.players[2].emblems).toEqual(["Ajani Resolute"]);
+    expect(undo(g).players[2].emblems).toHaveLength(2);
+    expect(removeEmblem(removeEmblem(g, 2, "Ajani Resolute"), 2, "Ajani Resolute").players[2].emblems).toBeUndefined();
+  });
+
+  it("day/night is table-wide, out of the history, and a new game starts without it", async () => {
+    const { setDayNight } = await import("../src/lib/life");
+    const g = setDayNight(newGame(2, 20), "night");
+    expect(g.dayNight).toBe("night");
+    expect(g.history).toHaveLength(0);
+    expect("dayNight" in setDayNight(g, undefined)).toBe(false);
+    expect(newGame(2, 20, g).dayNight).toBeUndefined();
+  });
+
+  it("emblems are searchable by planeswalker or by what they do", async () => {
+    const { EMBLEMS, searchEmblems, emblemText } = await import("../src/lib/emblems");
+    expect(EMBLEMS.length).toBeGreaterThan(80);
+    expect(EMBLEMS.some((e) => e.name === "The Ring")).toBe(false);
+    expect(searchEmblems("ajani resolute").map((e) => e.name)).toEqual(["Ajani Resolute"]);
+    expect(searchEmblems("+2/+2 creatures").some((e) => e.name === "Ajani Resolute")).toBe(true);
+    // Name matches come before rules-text matches.
+    expect(searchEmblems("elspeth")[0].name).toMatch(/^Elspeth/);
+    expect(emblemText("Ajani Resolute")).toBe("Creatures you control get +2/+2.");
+  });
+});

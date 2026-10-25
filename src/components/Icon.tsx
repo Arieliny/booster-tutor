@@ -115,6 +115,23 @@ const PATHS = {
       <path d="M12 9.9h.01M14.3 11.6h.01M13.4 14.2h.01M10.6 14.2h.01M9.7 11.6h.01" strokeWidth={2.2} />
     </>
   ),
+  // Day and night.
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
+    </>
+  ),
+  moon: <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" />,
+  // The One Ring: a plain band seen at a slight tilt.
+  ring: (
+    <>
+      <ellipse cx="12" cy="12.5" rx="8" ry="6" />
+      <ellipse cx="12" cy="11.5" rx="5" ry="3.4" />
+    </>
+  ),
+  // The city's blessing.
+  castle: <path d="M4 21V9h3v2h2V9h2v2h2V9h2v2h2V9h3v12zM10 21v-4a2 2 0 0 1 4 0v4M3 21h18" />,
   minus: <path d="M5 12h14" />,
   plus: <path d="M12 5v14M5 12h14" />,
   exit: <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l-4-4 4-4M5 12h11" />,

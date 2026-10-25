@@ -9,6 +9,7 @@ import {
   MIN_PLAYERS,
   STARTING_LIFE,
   addCounter,
+  addEmblem,
   changeCmdr,
   changeCounter,
   changeLife,
@@ -20,15 +21,22 @@ import {
   newGame,
   parseGame,
   removeCounter,
+  removeEmblem,
   rollDice,
+  setBlessing,
   setCmdrTracking,
   setColor,
   setCounterIcon,
+  setDayNight,
+  temptRing,
   undo,
   untouched,
+  type DayNight,
   type Entry,
   type Game,
+  type Player,
 } from "../lib/life";
+import { RING_ABILITIES, emblemText, searchEmblems } from "../lib/emblems";
 import { Icon, type IconName } from "./Icon";
 import { LifePanel, Turned, type Corner, type Turn } from "./LifePanel";
 import { Sheet } from "./Sheet";
@@ -205,7 +213,15 @@ function seating(count: number, wide: boolean): { i: number; turn: Turn; span: b
   return out;
 }
 
-type SheetKind = { kind: "history" } | { kind: "new" } | { kind: "judge" } | { kind: "cards" } | { kind: "dungeon"; p: number };
+type SheetKind =
+  | { kind: "history" }
+  | { kind: "new" }
+  | { kind: "judge" }
+  | { kind: "cards" }
+  | { kind: "daynight" }
+  | { kind: "dungeon"; p: number }
+  | { kind: "ring"; p: number }
+  | { kind: "emblems"; p: number };
 
 const DICE = [4, 6, 8, 10, 12, 20];
 
@@ -359,6 +375,9 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                   setSheet({ kind: "dungeon", p: i });
                 }}
                 onColor={(c) => setGame((g) => setColor(g, i, c))}
+                onRing={() => (closeTray(), setSheet({ kind: "ring", p: i }))}
+                onEmblems={() => (closeTray(), setSheet({ kind: "emblems", p: i }))}
+                onBlessing={(on) => setGame((g) => setBlessing(g, i, on))}
                 // 1v1: the crown just switches sides. More players: pick who gets it.
                 onPassMonarch={() => {
                   if (n === 2) setGame((g) => giveMarker(g, i === 0 ? 1 : 0, "monarch"));
@@ -384,56 +403,75 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
               Cancel
             </button>
           ) : (
-            <div
-              className="pointer-events-auto flex items-center overflow-hidden border-4 border-black bg-[#14161c] transition-[width,border-radius] duration-[250ms] ease-out"
-              // A real radius (half the height) rather than "fully round", so the corners square off
-              // in step with the width instead of snapping at the end.
-              style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem", borderRadius: barOpen ? 0 : 30 }}
-            >
-              <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
-                {diceTray ? (
-                  <>
-                    {/* Back to the tools (the X closes the whole tray). */}
-                    <Tool icon="back" label="Back" onClick={backToTools} />
-                    {DICE.slice(0, 3).map((d) => (
-                      <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    <Tool icon="exit" label="Exit" onClick={onExit} />
-                    <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
-                    <Tool icon="refresh" label="New" hint="New game" onClick={() => setSheet({ kind: "new" })} />
-                    <Tool icon="flag" label="Chooser" hint="Choose who goes first" onClick={whoGoesFirst} />
-                  </>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => (barOpen ? closeTray() : setBarOpen(true))}
-                aria-label={barOpen ? (diceTray ? "Put the dice away" : "Close the tools") : "Open the tools"}
-                aria-expanded={barOpen}
-                className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-white text-black"
+            <div className="relative flex w-full justify-center">
+              <div
+                className="pointer-events-auto flex items-center overflow-hidden border-4 border-black bg-[#14161c] transition-[width,border-radius] duration-[250ms] ease-out"
+                // A real radius (half the height) rather than "fully round", so the corners square off
+                // in step with the width instead of snapping at the end.
+                style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem", borderRadius: barOpen ? 0 : 30 }}
               >
-                <Icon name={barOpen ? "close" : "menu"} className="h-6 w-6" />
-              </button>
-              <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
-                {diceTray ? (
-                  <>
-                    {DICE.slice(3).map((d) => (
-                      <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />
-                    ))}
-                    <DieButton label="Coin" coin onClick={() => rollIt("coin")} />
-                  </>
-                ) : (
-                  <>
-                    <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
-                    <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
-                    {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
-                    <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
-                  </>
-                )}
+                <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
+                  {diceTray ? (
+                    <>
+                      {/* Back to the tools (the X closes the whole tray). */}
+                      <Tool icon="back" label="Back" onClick={backToTools} />
+                      {DICE.slice(0, 3).map((d) => (
+                        <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />
+                      ))}
+                    </>
+                  ) : (
+                    <>
+                      <Tool icon="exit" label="Exit" onClick={onExit} />
+                      <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
+                      <Tool icon="refresh" label="New" hint="New game" onClick={() => setSheet({ kind: "new" })} />
+                      <Tool icon="flag" label="Chooser" hint="Choose who goes first" onClick={whoGoesFirst} />
+                    </>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => (barOpen ? closeTray() : setBarOpen(true))}
+                  aria-label={barOpen ? (diceTray ? "Put the dice away" : "Close the tools") : "Open the tools"}
+                  aria-expanded={barOpen}
+                  className="flex h-[3.25rem] w-[3.25rem] shrink-0 items-center justify-center rounded-full bg-white text-black"
+                >
+                  <Icon name={barOpen ? "close" : "menu"} className="h-6 w-6" />
+                </button>
+                <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
+                  {diceTray ? (
+                    <>
+                      {DICE.slice(3).map((d) => (
+                        <DieButton key={d} label={`d${d}`} onClick={() => rollIt(d)} />
+                      ))}
+                      <DieButton label="Coin" coin onClick={() => rollIt("coin")} />
+                    </>
+                  ) : (
+                    <>
+                      <Tool
+                        icon={game.dayNight === "night" ? "moon" : "sun"}
+                        label={game.dayNight === "night" ? "Night" : game.dayNight === "day" ? "Day" : "Day/night"}
+                        hint="Day and night"
+                        tint={game.dayNight ? DAY_NIGHT_TINT[game.dayNight] : undefined}
+                        onClick={() => setSheet({ kind: "daynight" })}
+                      />
+                      <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
+                      <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
+                      {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
+                      <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
+                    </>
+                  )}
+                </div>
               </div>
+              {/* Day or night shows on the middle button too, so the whole table sees it with the tray shut. */}
+              {game.dayNight && !barOpen && (
+                <span
+                  className="absolute top-0 flex h-6 w-6 -translate-y-1 items-center justify-center rounded-full border-2 border-black bg-[#14161c]"
+                  style={{ left: "calc(50% + 1.1rem)", color: DAY_NIGHT_TINT[game.dayNight] }}
+                  aria-label={game.dayNight === "day" ? "It's day" : "It's night"}
+                >
+                  <Icon name={game.dayNight === "day" ? "sun" : "moon"} className="h-3.5 w-3.5" />
+                </span>
+              )}
             </div>
           )}
           {roll && <RollResult roll={roll} onClear={() => setRoll(null)} />}
@@ -475,6 +513,28 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
             setSheet(null);
           }}
           onComplete={() => setGame((g) => completeDungeon(g, sheet.p))}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.kind === "daynight" && (
+        <DayNightSheet state={game.dayNight} onSet={(to) => setGame((g) => setDayNight(g, to))} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.kind === "ring" && (
+        <RingScreen
+          player={game.players[sheet.p]}
+          turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
+          name={seatName(n, sheet.p)}
+          onTempt={() => setGame((g) => temptRing(g, sheet.p))}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet?.kind === "emblems" && (
+        <EmblemScreen
+          player={game.players[sheet.p]}
+          turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
+          name={seatName(n, sheet.p)}
+          onAdd={(name) => setGame((g) => addEmblem(g, sheet.p, name))}
+          onRemove={(name) => setGame((g) => removeEmblem(g, sheet.p, name))}
           onClose={() => setSheet(null)}
         />
       )}
@@ -538,6 +598,12 @@ function describe(g: Game, e: Entry, index: number): string {
     }
     case "dungeon":
       return e.room ? `${who} ventured into ${e.room}` : `${who} completed a dungeon`;
+    case "ring":
+      return `The Ring tempted ${who} (${(e.before[0]?.player.ring ?? 0) + 1})`;
+    case "blessing":
+      return e.d > 0 ? `${who} got the city's blessing` : `${who}: city's blessing taken back`;
+    case "emblem":
+      return e.d > 0 ? `${who} got the ${e.name} emblem` : `${who}: ${e.name} emblem removed`;
     default:
       return who;
   }
@@ -739,20 +805,7 @@ function DungeonTracker({
   );
 
   return (
-    <div className="absolute inset-0 z-40 bg-[#0f1115] text-white">
-      <Turned turn={turn}>
-        {() => (
-          <div className="flex h-full flex-col">
-            <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-              {dot(hex, true)}
-              <span className="flex-1 text-base font-semibold">Dungeons</span>
-              <span className="sr-only">for {name}</span>
-              <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-white/70 hover:bg-white/10">
-                <Icon name="close" className="h-6 w-6" />
-              </button>
-            </div>
-
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3">
+    <PlayerScreen turn={turn} color={hex} title="Dungeons" name={name} onClose={onClose}>
               <div className="rounded-xl bg-white/5 p-3 text-sm">
                 <p className="flex items-start gap-2">
                   <Icon name="door" className="mt-0.5 h-5 w-5 shrink-0 text-[#C9B8FF]" />
@@ -853,10 +906,205 @@ function DungeonTracker({
                 </button>
               )}
               {player.completed ? <p className="text-xs text-white/60">Dungeons you've completed this game: {player.completed}</p> : null}
+    </PlayerScreen>
+  );
+}
+
+/**
+ * A full-screen page for one player (dungeons, the Ring, emblems), turned to
+ * face them, in their color. ✕ or the phone's Back closes it.
+ */
+function PlayerScreen({
+  turn,
+  color,
+  title,
+  name,
+  onClose,
+  children,
+}: {
+  turn: Turn;
+  color: string;
+  title: string;
+  name: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  useBackToClose(onClose);
+  return (
+    <div className="absolute inset-0 z-40 bg-[#0f1115] text-white">
+      <Turned turn={turn}>
+        {() => (
+          <div className="flex h-full flex-col">
+            <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+              <span className="inline-block h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-white" style={{ background: color }} />
+              <span className="flex-1 text-base font-semibold">{title}</span>
+              <span className="sr-only">for {name}</span>
+              <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-white/70 hover:bg-white/10">
+                <Icon name="close" className="h-6 w-6" />
+              </button>
             </div>
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-3">{children}</div>
           </div>
         )}
       </Turned>
+    </div>
+  );
+}
+
+/** The Ring: its four abilities, lit as it tempts this player, and the tap for "the Ring tempts you". */
+function RingScreen({ player, turn, name, onTempt, onClose }: { player: Player; turn: Turn; name: string; onTempt: () => void; onClose: () => void }) {
+  const times = player.ring ?? 0;
+  return (
+    <PlayerScreen turn={turn} color={colorHex(player.color)} title="The Ring" name={name} onClose={onClose}>
+      <p className="text-sm text-white/75">
+        {times ? `The Ring has tempted you ${times === 1 ? "once" : `${times} times`}.` : "The Ring hasn't tempted you yet."} Each time, choose a creature you
+        control as your Ring-bearer.
+      </p>
+      <ol className="space-y-2">
+        {RING_ABILITIES.map((text, k) => (
+          <li
+            key={k}
+            className={"flex gap-2.5 rounded-xl border p-2.5 text-sm leading-snug " + (k < times ? "border-[#F5C26B] bg-[#F5C26B]/10" : "border-white/15 text-white/45")}
+          >
+            <span className={"font-semibold " + (k < times ? "text-[#F5C26B]" : "")}>{k + 1}</span>
+            <span>{text}</span>
+          </li>
+        ))}
+      </ol>
+      <button type="button" onClick={onTempt} className="w-full rounded-lg bg-white py-2.5 text-sm font-semibold text-black">
+        The Ring tempts you
+      </button>
+      <p className="text-xs text-white/55">
+        Abilities come in order and stay for the rest of the game. A mistap? Undo it from History.
+      </p>
+    </PlayerScreen>
+  );
+}
+
+/** This player's emblems, and every emblem in the game to search and add (built in, so it works offline). */
+function EmblemScreen({
+  player,
+  turn,
+  name,
+  onAdd,
+  onRemove,
+  onClose,
+}: {
+  player: Player;
+  turn: Turn;
+  name: string;
+  onAdd: (name: string) => void;
+  onRemove: (name: string) => void;
+  onClose: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const mine = [...new Set(player.emblems ?? [])].map((e) => ({ name: e, count: player.emblems!.filter((x) => x === e).length }));
+  const found = searchEmblems(q);
+  return (
+    <PlayerScreen turn={turn} color={colorHex(player.color)} title="Emblems" name={name} onClose={onClose}>
+      {mine.length > 0 && (
+        <ul className="space-y-1.5">
+          {mine.map((e) => (
+            <li key={e.name} className="rounded-xl border border-white/20 bg-white/5 p-2.5 text-sm">
+              <div className="flex items-start gap-2">
+                <span className="min-w-0 flex-1 font-semibold">
+                  {e.name}
+                  {e.count > 1 && <span className="ml-1.5 text-white/60">×{e.count}</span>}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemove(e.name)}
+                  aria-label={`Remove ${e.count > 1 ? "one" : "the"} ${e.name} emblem`}
+                  className="-m-1 rounded-full p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                >
+                  <Icon name="close" className="h-4 w-4" />
+                </button>
+              </div>
+              <p className="mt-1 text-xs leading-snug text-white/75">{emblemText(e.name)}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="relative">
+        <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-4.5 w-4.5 -translate-y-1/2 text-white/50" />
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="A planeswalker, or what it does"
+          aria-label="Search emblems"
+          className="w-full rounded-lg border border-white/20 bg-white/5 py-2 pr-3 pl-9 text-base text-white placeholder:text-white/40"
+        />
+      </div>
+      {found.length === 0 ? (
+        <p className="text-sm text-white/60">No emblem matches “{q.trim()}”.</p>
+      ) : (
+        <ul className="divide-y divide-white/10">
+          {found.map((e) => (
+            <li key={e.name} className="flex items-start gap-2 py-2">
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold">{e.name}</div>
+                <p className="text-xs leading-snug text-white/70">{e.text}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onAdd(e.name)}
+                aria-label={`Add the ${e.name} emblem`}
+                className="shrink-0 rounded-full border border-[#B9A4FF] px-2.5 py-1 text-xs font-semibold text-[#B9A4FF] hover:bg-[#B9A4FF]/10"
+              >
+                Add
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </PlayerScreen>
+  );
+}
+
+const DAY_NIGHT_TINT: Record<DayNight, string> = { day: "#FFD43B", night: "#A9B8FF" };
+
+const DAY_NIGHT_RULE = {
+  day: "At the start of each turn: if the player whose turn just ended cast no spells during it, it becomes night.",
+  night: "At the start of each turn: if the player whose turn just ended cast two or more spells during it, it becomes day.",
+  off: "It starts the first time a daybound or nightbound card comes in (or a card says it becomes day). After that it's always day or night for the rest of the game.",
+};
+
+/** Day/night for the whole table: which it is, and what turns it over next. */
+function DayNightSheet({ state, onSet, onClose }: { state: DayNight | undefined; onSet: (to: DayNight | undefined) => void; onClose: () => void }) {
+  useBackToClose(onClose);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const chip = (on: boolean) =>
+    "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-sm " +
+    (on ? "border-white bg-white text-black" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label="Day and night" className="relative w-full max-w-sm space-y-4 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) p-5 shadow-2xl">
+        <div className="flex items-center gap-2">
+          <Icon name={state === "night" ? "moon" : "sun"} className="h-5 w-5" />
+          <h2 className="flex-1 text-lg font-semibold text-(--color-text)">{state === "day" ? "It's day" : state === "night" ? "It's night" : "Day and night"}</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-white/10">
+            <Icon name="close" className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="flex gap-1.5">
+          <button type="button" onClick={() => onSet("day")} aria-pressed={state === "day"} className={chip(state === "day")}>
+            <Icon name="sun" className="h-4 w-4" /> Day
+          </button>
+          <button type="button" onClick={() => onSet("night")} aria-pressed={state === "night"} className={chip(state === "night")}>
+            <Icon name="moon" className="h-4 w-4" /> Night
+          </button>
+          <button type="button" onClick={() => onSet(undefined)} aria-pressed={!state} className={chip(!state)}>
+            Neither
+          </button>
+        </div>
+        <p className="text-sm text-(--color-text-dim)">{DAY_NIGHT_RULE[state ?? "off"]}</p>
+      </div>
     </div>
   );
 }
@@ -941,7 +1189,7 @@ function NewGameSheet({ game, onStart, onClose }: { game: Game; onStart: (count:
         >
           {untouched(game) ? "Start" : "End this game and start"}
         </button>
-        <p className="text-xs text-(--color-text-dim)">Seats keep their colors. Life, counters, dungeons and history start fresh.</p>
+        <p className="text-xs text-(--color-text-dim)">Seats keep their colors. Life, counters, dungeons, the Ring, emblems, day/night and history start fresh.</p>
       </div>
     </div>
   );

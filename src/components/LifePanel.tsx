@@ -125,6 +125,11 @@ interface Props {
   onDungeon: () => void;
   /** Tap the crown: pass the monarch (1v1: to the other player; more: pick who). */
   onPassMonarch: () => void;
+  /** Open this player's Ring (where the Ring tempts them). */
+  onRing: () => void;
+  /** Open this player's emblems. */
+  onEmblems: () => void;
+  onBlessing: (on: boolean) => void;
   onColor: (c: ColorKey) => void;
 }
 
@@ -166,8 +171,10 @@ function Face(props: Props & { w: number; h: number }) {
   const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
   // Commander damage, switched on in the menu: one strip with every opponent (their color on the sword).
   const cmdrOn = tracksCmdr(player);
+  const ring = player.ring ?? 0;
+  const emblems = player.emblems?.length ?? 0;
   // The total is as big as the seat allows, after room for the crown, counters and commander damage.
-  const marked = monarch || initiative;
+  const marked = monarch || initiative || ring > 0;
   // Three or more counters sit two to a row so the total stays big.
   const tracked = shown.length;
   const counterRows = tracked > 2 ? Math.ceil(tracked / 2) : tracked;
@@ -182,9 +189,27 @@ function Face(props: Props & { w: number; h: number }) {
   // room, so the room chip goes), rather than squeezing the total under big markers. The change in life
   // shows in place of the − or + there instead of keeping a row free under the total.
   const roomy = w * (chars >= 3 ? 0.33 : 0.5);
-  const compact = marked && fit(tall, under + (player.dungeon ? 26 : 0), roomy) < 90;
+  // The city's blessing and emblems are chips under everything, in one row with the dungeon room.
+  const otherChips = !!player.blessing || emblems > 0;
+  const compact = marked && fit(tall, under + (player.dungeon || otherChips ? 26 : 0), roomy) < 90;
   const roomChip = !!player.dungeon && !(compact && initiative);
-  const below = under + (roomChip ? 26 : 0);
+  const below = under + (roomChip || otherChips ? 26 : 0);
+  // Compact: the crown takes the left slot, the door the right, and the Ring whichever has room.
+  const slots: MarkerIcon[][] = [monarch ? ["crown"] : [], initiative ? ["door"] : []];
+  if (ring) slots[slots[0].length <= slots[1].length ? 0 : 1].push("ring");
+  const badge = (icon: MarkerIcon, shared: boolean) =>
+    icon === "crown" ? (
+      <Badge key={icon} icon="crown" label={shared ? "" : "Monarch"} onClick={props.onPassMonarch} title="Pass the monarch" />
+    ) : icon === "door" ? (
+      <Badge key={icon} icon="door" label={shared ? "" : (player.dungeon?.room ?? "Initiative")} onClick={props.onDungeon} title="Open the dungeons" />
+    ) : (
+      <Badge key={icon} icon="ring" label={shared ? String(ring) : `Ring ${ring}`} onClick={props.onRing} title="The Ring" />
+    );
+  const slot = (icons: MarkerIcon[]) => (
+    <div className="flex gap-1" style={{ width: BADGE }}>
+      {icons.map((icon) => badge(icon, icons.length > 1))}
+    </div>
+  );
   const crown = marked && !compact ? tall : 0;
   const big = compact ? fit(0, below, (w - 2 * BADGE - 2 * SIGN - 32) / (0.6 * chars), 0) : fit(crown, below, roomy);
   const change = delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`);
@@ -211,13 +236,14 @@ function Face(props: Props & { w: number; h: number }) {
           {crown > 0 && (
             <div className="relative mb-1 flex items-end gap-5">
               {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch" />}
+              {ring > 0 && <Marker icon="ring" label={`Ring · ${ring}`} size={crown} onClick={props.onRing} title="The Ring" />}
               {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
             </div>
           )}
           {/* − and + right beside the total, so they stay close when counters shrink it. */}
           <div className="relative flex items-center" style={{ gap: Math.max(8, big * 0.1) }}>
             {/* Each badge keeps its slot even when alone, so the total stays centred. */}
-            {compact && <div style={{ width: BADGE }}>{monarch && <Badge icon="crown" label="Monarch" onClick={props.onPassMonarch} title="Pass the monarch" />}</div>}
+            {compact && slot(slots[0])}
             <Sign glyph="−" size={sign} compact={compact} change={compact && delta < 0 ? change : false} />
             {/* At 0 or below it's dimmed, not crossed out: some cards (Platinum Angel...) keep a player in. */}
             <div
@@ -229,13 +255,7 @@ function Face(props: Props & { w: number; h: number }) {
               {player.life}
             </div>
             <Sign glyph="+" size={sign} compact={compact} change={compact && delta > 0 ? change : false} />
-            {compact && (
-              <div style={{ width: BADGE }}>
-                {initiative && (
-                  <Badge icon="door" label={player.dungeon?.room ?? "Initiative"} onClick={props.onDungeon} title="Open the dungeons" />
-                )}
-              </div>
-            )}
+            {compact && slot(slots[1])}
           </div>
         </div>
         {!compact && <div className="relative h-6 font-life text-lg font-black tabular-nums">{change}</div>}
@@ -262,11 +282,24 @@ function Face(props: Props & { w: number; h: number }) {
 
         {cmdrOn && <CmdrStrip others={others} values={player.cmdr} who={name} onCmdr={props.onCmdr} />}
 
-        {player.dungeon && roomChip && (
+        {((player.dungeon && roomChip) || otherChips) && (
           <div className="relative mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
-            <Chip onClick={props.onDungeon}>
-              {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
-            </Chip>
+            {player.dungeon && roomChip && (
+              <Chip onClick={props.onDungeon}>
+                {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
+              </Chip>
+            )}
+            {player.blessing && (
+              // Set in the menu, so that's where a tap goes.
+              <Chip onClick={() => (props.onMenu(), setMode("menu"))}>
+                <Icon name="castle" className="h-3.5 w-3.5" /> City's blessing
+              </Chip>
+            )}
+            {emblems > 0 && (
+              <Chip onClick={props.onEmblems}>
+                <Icon name="sparkle" className="h-3.5 w-3.5" /> {emblems} emblem{emblems === 1 ? "" : "s"}
+              </Chip>
+            )}
           </div>
         )}
       </div>
@@ -322,10 +355,11 @@ function Face(props: Props & { w: number; h: number }) {
   );
 }
 
-const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF" } as const;
+const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF", ring: "#F5C26B" } as const;
+type MarkerIcon = keyof typeof MARKER_TINT;
 
-/** A big table marker above the total: the monarch's gold crown, the initiative's lavender door. */
-function Marker({ icon, label, size, onClick, title }: { icon: "crown" | "door"; label: string; size: number; onClick?: () => void; title?: string }) {
+/** A big marker above the total: the monarch's gold crown, the initiative's lavender door, the Ring. */
+function Marker({ icon, label, size, onClick, title }: { icon: MarkerIcon; label: string; size: number; onClick?: () => void; title?: string }) {
   const inner = (
     <>
       <span style={{ width: size, height: size }} className="block">
@@ -365,19 +399,22 @@ function Sign({ glyph, size, compact, change }: { glyph: string; size: number; c
 const BADGE = 60;
 const SIGN = 28;
 
-/** A marker shrunk to sit beside the total on a crowded card; the door's label is the current room. */
-function Badge({ icon, label, onClick, title }: { icon: "crown" | "door"; label: string; onClick?: () => void; title: string }) {
+/**
+ * A marker shrunk to sit beside the total on a crowded card; the door's label is the current room.
+ * Two sharing a slot sit side by side with just their icons (the Ring keeps its count).
+ */
+function Badge({ icon, label, onClick, title }: { icon: MarkerIcon; label: string; onClick?: () => void; title: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={title}
       title={title}
-      className="pointer-events-auto flex w-full flex-col items-center rounded-xl bg-black/40 px-1 py-0.5 leading-none"
+      className="pointer-events-auto flex min-w-0 flex-1 flex-col items-center rounded-xl bg-black/40 px-1 py-0.5 leading-none"
       style={{ color: MARKER_TINT[icon] }}
     >
       <Icon name={icon} className="h-5 w-5" />
-      <span className="mt-0.5 line-clamp-2 text-center text-[9px] leading-tight font-bold tracking-wide break-words uppercase">{label}</span>
+      {label && <span className="mt-0.5 line-clamp-2 text-center text-[9px] leading-tight font-bold tracking-wide break-words uppercase">{label}</span>}
     </button>
   );
 }
@@ -387,7 +424,10 @@ function Chip({ children, onClick, danger }: { children: React.ReactNode; onClic
     <button
       type="button"
       onClick={onClick}
-      className={"pointer-events-auto rounded-full px-2 py-0.5 text-[11px] font-semibold " + (danger ? "bg-black text-red-300" : "bg-black/30 text-white")}
+      className={
+        "pointer-events-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold " +
+        (danger ? "bg-black text-red-300" : "bg-black/30 text-white")
+      }
     >
       {children}
     </button>
@@ -640,6 +680,40 @@ function Menu(props: Props & { onClose: () => void }) {
             <span className="min-w-0 flex-1 truncate">From each opponent</span>
             {tracksCmdr(player) && <Icon name="check" className="h-4 w-4 shrink-0" />}
           </button>
+        </section>
+
+        <section className="space-y-1.5">
+          <div className={head}>Ring, blessing and emblems</div>
+          <div className="grid grid-cols-1 gap-1.5">
+            <button
+              type="button"
+              onClick={() => (props.onClose(), props.onRing())}
+              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.ring ? "border-white bg-white/15" : off)}
+            >
+              <Icon name="ring" className="h-5 w-5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">The Ring</span>
+              <span className="text-xs text-white/70">{player.ring ? `Tempted ${player.ring}×` : "Not yet"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => props.onBlessing(!player.blessing)}
+              aria-pressed={!!player.blessing}
+              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.blessing ? "border-white bg-white/15" : off)}
+            >
+              <Icon name="castle" className="h-5 w-5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">City's blessing</span>
+              {player.blessing && <Icon name="check" className="h-4 w-4 shrink-0" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => (props.onClose(), props.onEmblems())}
+              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.emblems?.length ? "border-white bg-white/15" : off)}
+            >
+              <Icon name="sparkle" className="h-5 w-5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">Emblems</span>
+              <span className="text-xs text-white/70">{player.emblems?.length || "None"}</span>
+            </button>
+          </div>
         </section>
 
         <section className="space-y-1.5">
