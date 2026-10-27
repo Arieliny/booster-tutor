@@ -1768,6 +1768,8 @@ function CardDetail({
     >
       <div
         className="flex w-full max-w-3xl flex-col overflow-hidden bg-(--color-bg-elev) sm:max-h-[92vh] sm:rounded-xl sm:border sm:border-(--color-border)"
+        // Keeps the header below the phone's camera cutout (the page draws behind it: viewport-fit=cover).
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-2 border-b border-(--color-border) px-3 py-2 text-xs text-(--color-text-dim)">

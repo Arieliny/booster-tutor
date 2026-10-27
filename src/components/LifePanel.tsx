@@ -98,6 +98,8 @@ interface Props {
   name: string;
   player: Player;
   turn: Turn;
+  /** The seat touches the top of the screen (it reaches up behind the camera cutout). */
+  topEdge?: boolean;
   /** The other seats, for commander damage. */
   others: { index: number; name: string; color: ColorKey }[];
   markers: Partial<Record<MarkerKey, number>>;
@@ -134,7 +136,7 @@ interface Props {
 }
 
 export function LifePanel(props: Props) {
-  const { name, player, turn, highlight } = props;
+  const { name, player, turn, highlight, topEdge } = props;
   return (
     <div
       className={
@@ -144,7 +146,10 @@ export function LifePanel(props: Props) {
       style={{ background: colorHex(player.color), color: colorInk(player.color) }}
       aria-label={name}
     >
-      <Turned turn={turn}>{(w, h) => <Face {...props} w={w} h={h} key={name} />}</Turned>
+      {/* A seat along the top of the screen: its colour runs up behind the phone's camera, its contents stay below it. */}
+      <div className="h-full" style={topEdge ? { paddingTop: "env(safe-area-inset-top)" } : undefined}>
+        <Turned turn={turn}>{(w, h) => <Face {...props} w={w} h={h} key={name} />}</Turned>
+      </div>
       {highlight === "first" && <span className="sr-only">{name} goes first</span>}
     </div>
   );

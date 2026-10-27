@@ -341,19 +341,21 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-black p-1.5 select-none" style={{ paddingTop: "max(env(safe-area-inset-top), 0.375rem)", paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
+    // Edge to edge: no gap for the camera cutout at the top (the top seats pad their own contents instead).
+    <div className="fixed inset-0 z-[60] flex flex-col bg-black p-1.5 select-none" style={{ paddingTop: 0, paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
       <div className="relative min-h-0 flex-1">
         <div
           className="grid h-full gap-1.5"
           style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}
         >
-          {seats.map(({ i, turn, span }) => (
+          {seats.map(({ i, turn, span }, k) => (
             <div key={i} className="min-h-0" style={span ? { gridColumn: "1 / -1" } : undefined}>
               <LifePanel
                 index={i}
                 name={seatName(n, i)}
                 player={game.players[i]}
                 turn={turn}
+                topEdge={seats[0].span ? k === 0 : k < cols}
                 markers={game.markers}
                 icons={game.icons}
                 others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: seatName(n, j), color: o.color }]))}
