@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { dungeonOf } from "../lib/dungeons";
+import { emblemChips } from "../lib/emblems";
 import {
   COLORS,
   COUNTERS,
@@ -140,7 +141,9 @@ export function LifePanel(props: Props) {
   return (
     <div
       className={
-        "relative h-full min-h-0 overflow-hidden rounded-2xl transition-shadow " +
+        // clip, not hidden: hidden still lets the browser scroll the card when an overhanging tap half gets focus,
+        // which shoved the total and the ⋯ off-centre.
+        "relative h-full min-h-0 overflow-clip rounded-2xl transition-shadow " +
         (highlight === "first" ? "ring-4 ring-white" : highlight === "spin" ? "ring-2 ring-white/70" : "")
       }
       style={{ background: colorHex(player.color), color: colorInk(player.color) }}
@@ -196,9 +199,10 @@ function Face(props: Props & { w: number; h: number }) {
   const roomy = w * (chars >= 3 ? 0.33 : 0.5);
   // The city's blessing and emblems are chips under everything, in one row with the dungeon room.
   const otherChips = !!player.blessing || emblems > 0;
-  const compact = marked && fit(tall, under + (player.dungeon || otherChips ? 26 : 0), roomy) < 90;
+  const compact = marked && fit(tall, under + (emblems ? 34 : player.dungeon || otherChips ? 26 : 0), roomy) < 90;
   const roomChip = !!player.dungeon && !(compact && initiative);
-  const below = under + (roomChip || otherChips ? 26 : 0);
+  // The emblem chips are a little taller than the others.
+  const below = under + (emblems ? 34 : roomChip || otherChips ? 26 : 0);
   // Compact: the crown takes the left slot, the door the right, and the Ring whichever has room.
   const slots: MarkerIcon[][] = [monarch ? ["crown"] : [], initiative ? ["door"] : []];
   if (ring) slots[slots[0].length <= slots[1].length ? 0 : 1].push("ring");
@@ -218,6 +222,9 @@ function Face(props: Props & { w: number; h: number }) {
   const crown = marked && !compact ? tall : 0;
   const big = compact ? fit(0, below, (w - 2 * BADGE - 2 * SIGN - 32) / (0.6 * chars), 0) : fit(crown, below, roomy);
   const change = delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`);
+  // The change in life hangs just under the total, so the total itself sits in the middle of the card;
+  // whatever comes below (counters, commander damage, chips) keeps a gap for it.
+  const somethingBelow = tracked > 0 || cmdrOn || roomChip || otherChips;
   const half = "h-full flex-1 select-none touch-manipulation active:bg-black/10";
   const sign = Math.max(22, Math.min(36, big * 0.4));
 
@@ -251,9 +258,10 @@ function Face(props: Props & { w: number; h: number }) {
             {compact && slot(slots[0])}
             <Sign glyph="−" size={sign} compact={compact} change={compact && delta < 0 ? change : false} />
             {/* At 0 or below it's dimmed, not crossed out: some cards (Platinum Angel...) keep a player in. */}
+            {/* Nudged down a touch: this font's digits sit high in their line box. */}
             <div
               className={"font-life leading-[0.95] font-black tabular-nums " + (player.life <= 0 ? "opacity-60" : "")}
-              style={{ fontSize: big }}
+              style={{ fontSize: big, transform: "translateY(0.025em)" }}
               aria-live="polite"
               data-life
             >
@@ -262,8 +270,11 @@ function Face(props: Props & { w: number; h: number }) {
             <Sign glyph="+" size={sign} compact={compact} change={compact && delta > 0 ? change : false} />
             {compact && slot(slots[1])}
           </div>
+          {!compact && (
+            <div className="absolute top-full left-1/2 h-6 -translate-x-1/2 font-life text-lg font-black whitespace-nowrap tabular-nums">{change}</div>
+          )}
         </div>
-        {!compact && <div className="relative h-6 font-life text-lg font-black tabular-nums">{change}</div>}
+        {!compact && somethingBelow && <div className="h-6 shrink-0" />}
 
         {tracked > 0 && (
           <div className={"relative " + (tracked > 2 ? "grid grid-cols-2 gap-x-3 gap-y-1" : "flex flex-col items-center gap-1")}>
@@ -300,11 +311,11 @@ function Face(props: Props & { w: number; h: number }) {
                 <Icon name="castle" className="h-3.5 w-3.5" /> City's blessing
               </Chip>
             )}
-            {emblems > 0 && (
-              <Chip onClick={props.onEmblems}>
-                <Icon name="sparkle" className="h-3.5 w-3.5" /> {emblems} emblem{emblems === 1 ? "" : "s"}
+            {emblemChips(player.emblems ?? []).map((label) => (
+              <Chip key={label} onClick={props.onEmblems} strong>
+                <Icon name="emblem" className="h-[18px] w-[18px] text-[#F5C26B]" /> {label}
               </Chip>
-            )}
+            ))}
           </div>
         )}
       </div>
@@ -424,14 +435,15 @@ function Badge({ icon, label, onClick, title }: { icon: MarkerIcon; label: strin
   );
 }
 
-function Chip({ children, onClick, danger }: { children: React.ReactNode; onClick: () => void; danger?: boolean }) {
+function Chip({ children, onClick, danger, strong }: { children: React.ReactNode; onClick: () => void; danger?: boolean; strong?: boolean }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={
-        "pointer-events-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold " +
-        (danger ? "bg-black text-red-300" : "bg-black/30 text-white")
+        "pointer-events-auto inline-flex items-center gap-1 rounded-full font-semibold " +
+        (strong ? "bg-black/55 px-3 py-1 text-sm text-white ring-1 ring-white/25 " : "px-2 py-0.5 text-[11px] ") +
+        (danger ? "bg-black text-red-300" : strong ? "" : "bg-black/30 text-white")
       }
     >
       {children}
@@ -714,7 +726,7 @@ function Menu(props: Props & { onClose: () => void }) {
               onClick={() => (props.onClose(), props.onEmblems())}
               className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.emblems?.length ? "border-white bg-white/15" : off)}
             >
-              <Icon name="sparkle" className="h-5 w-5 shrink-0" />
+              <Icon name="emblem" className="h-5 w-5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">Emblems</span>
               <span className="text-xs text-white/70">{player.emblems?.length || "None"}</span>
             </button>

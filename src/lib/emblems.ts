@@ -12,6 +12,19 @@ export const RING_ABILITIES = [
 
 export const emblemText = (name: string): string => EMBLEMS.find((e) => e.name === name)?.text ?? "";
 
+/**
+ * What the emblem chips on a life card say: each emblem by its planeswalker ("Elspeth emblem", with "×2"
+ * for a second copy), up to two chips; with three or more different ones the rest fold into "+N more".
+ */
+export function emblemChips(names: string[]): string[] {
+  const counts = new Map<string, number>();
+  for (const n of names) counts.set(n, (counts.get(n) ?? 0) + 1);
+  const labels = [...counts].map(([n, k]) => `${n.split(",")[0]} emblem${k > 1 ? ` ×${k}` : ""}`);
+  if (labels.length <= 2) return labels;
+  const [, firstCount] = [...counts][0];
+  return [labels[0], `+${names.length - firstCount} more`];
+}
+
 /** Emblems whose name or text has every word typed (any order, any case). */
 export function searchEmblems(q: string): { name: string; text: string }[] {
   const words = q.toLowerCase().split(/\s+/).filter(Boolean);

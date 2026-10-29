@@ -419,3 +419,13 @@ describe("the Ring, the city's blessing, emblems and day/night", () => {
     expect(emblemText("Ajani Resolute")).toBe("Creatures you control get +2/+2.");
   });
 });
+
+describe("emblem chips on the life card", () => {
+  it("names each emblem by its planeswalker, counts copies, and folds the rest past two", async () => {
+    const { emblemChips } = await import("../src/lib/emblems");
+    expect(emblemChips([])).toEqual([]);
+    expect(emblemChips(["Elspeth, Knight-Errant"])).toEqual(["Elspeth emblem"]);
+    expect(emblemChips(["Ajani Resolute", "Ajani Resolute", "Elspeth, Knight-Errant"])).toEqual(["Ajani Resolute emblem ×2", "Elspeth emblem"]);
+    expect(emblemChips(["Ajani Resolute", "Ajani Resolute", "Elspeth, Knight-Errant", "Venser, the Sojourner"])).toEqual(["Ajani Resolute emblem ×2", "+2 more"]);
+  });
+});
