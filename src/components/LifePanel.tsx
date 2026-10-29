@@ -54,8 +54,8 @@ export function Turned({ turn, children }: { turn: Turn; children: (w: number, h
   );
 }
 
-/** Tap = ±1 on release; hold = ±10 after a moment, repeating while held. */
-function useHold(step: (by: number) => void, sign: 1 | -1) {
+/** Tap = ±1 on release; hold = ±10 (or `big`) after a moment, repeating while held. */
+function useHold(step: (by: number) => void, sign: 1 | -1, big = 10) {
   const timer = useRef<number | undefined>(undefined);
   const held = useRef(false);
   const stepRef = useRef(step);
@@ -75,7 +75,7 @@ function useHold(step: (by: number) => void, sign: 1 | -1) {
       window.clearTimeout(timer.current);
       const tick = () => {
         held.current = true;
-        stepRef.current(10 * sign);
+        stepRef.current(big * sign);
         timer.current = window.setTimeout(tick, 700);
       };
       timer.current = window.setTimeout(tick, 450);
@@ -300,8 +300,7 @@ function Face(props: Props & { w: number; h: number }) {
                   value={v}
                   lethal={!!c.lethal && v >= c.lethal}
                   icon={<CounterSymbol c={c} icons={props.icons} size={20} />}
-                  onDown={() => props.onCounter(c.key, -(c.step ?? 1))}
-                  onUp={() => props.onCounter(c.key, c.step ?? 1)}
+                  onStep={(steps) => props.onCounter(c.key, steps * (c.step ?? 1))}
                   who={name}
                 />
               );
@@ -474,22 +473,25 @@ function TrackRow({
   value,
   lethal,
   icon,
-  onDown,
-  onUp,
+  onStep,
   who,
 }: {
   label: string;
   value: number;
   lethal: boolean;
   icon: React.ReactNode;
-  onDown: () => void;
-  onUp: () => void;
+  /** Moves the counter this many steps (a step is 2 for commander tax). */
+  onStep: (steps: number) => void;
   who: string;
 }) {
-  const btn = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 active:bg-black/40";
+  // Tap = one step; hold = 5 steps, repeating while held (life's hold is 10).
+  const down = useHold(onStep, -1, 5);
+  const up = useHold(onStep, 1, 5);
+  const btn =
+    "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 select-none touch-manipulation active:bg-black/40";
   return (
     <div className="flex items-center gap-2">
-      <button type="button" onClick={onDown} aria-label={`${who}: ${label} down`} className={btn}>
+      <button type="button" {...down} aria-label={`${who}: ${label} down (hold for 5)`} className={btn}>
         <Icon name="minus" className="h-4 w-4" />
       </button>
       <span
@@ -500,7 +502,7 @@ function TrackRow({
         {icon}
         <span className="font-life text-xl font-black tabular-nums">{value}</span>
       </span>
-      <button type="button" onClick={onUp} aria-label={`${who}: ${label} up`} className={btn}>
+      <button type="button" {...up} aria-label={`${who}: ${label} up (hold for 5)`} className={btn}>
         <Icon name="plus" className="h-4 w-4" />
       </button>
     </div>
