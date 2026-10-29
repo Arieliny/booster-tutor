@@ -538,6 +538,14 @@ function CmdrStrip({
     setOpen(from);
     if (from !== null) timer.current = window.setTimeout(() => setOpen(null), CMDR_OPEN_MS);
   };
+  // Tap = 1; hold = 5, repeating while held (like the counters). Each step keeps the sword open.
+  const stepOpen = (by: number) => {
+    if (open === null) return;
+    onCmdr(open, by);
+    keepOpen(open);
+  };
+  const down = useHold(stepOpen, -1, 5);
+  const up = useHold(stepOpen, 1, 5);
   const sword = (v: number) => (
     <>
       <Icon name="sword" className="h-3.5 w-3.5" />
@@ -546,14 +554,14 @@ function CmdrStrip({
       </span>
     </>
   );
-  const step = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 active:bg-black/40";
+  const step = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 select-none touch-manipulation active:bg-black/40";
 
   const o = open === null ? undefined : others.find((x) => x.index === open);
   if (o) {
     const v = values[o.index] ?? 0;
     return (
       <div className="relative mt-1 mb-7 flex items-center gap-2">
-        <button type="button" onClick={() => (onCmdr(o.index, -1), keepOpen(o.index))} aria-label={`${who}: commander damage from ${o.name} down`} className={step}>
+        <button type="button" {...down} aria-label={`${who}: commander damage from ${o.name} down (hold for 5)`} className={step}>
           <Icon name="minus" className="h-4 w-4" />
         </button>
         <button
@@ -565,7 +573,7 @@ function CmdrStrip({
         >
           {sword(v)}
         </button>
-        <button type="button" onClick={() => (onCmdr(o.index, 1), keepOpen(o.index))} aria-label={`${who}: commander damage from ${o.name} up`} className={step}>
+        <button type="button" {...up} aria-label={`${who}: commander damage from ${o.name} up (hold for 5)`} className={step}>
           <Icon name="plus" className="h-4 w-4" />
         </button>
       </div>
