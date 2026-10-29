@@ -181,8 +181,10 @@ function Face(props: Props & { w: number; h: number }) {
   const cmdrOn = tracksCmdr(player);
   const ring = player.ring ?? 0;
   const emblems = player.emblems?.length ?? 0;
+  // The city's blessing sits with the crown and the door, above the total, so the other side of the table sees it.
+  const blessing = !!player.blessing;
   // The total is as big as the seat allows, after room for the crown, counters and commander damage.
-  const marked = monarch || initiative || ring > 0;
+  const marked = monarch || initiative || ring > 0 || blessing;
   // Three or more counters sit two to a row so the total stays big.
   const tracked = shown.length;
   const counterRows = tracked > 2 ? Math.ceil(tracked / 2) : tracked;
@@ -197,20 +199,30 @@ function Face(props: Props & { w: number; h: number }) {
   // room, so the room chip goes), rather than squeezing the total under big markers. The change in life
   // shows in place of the − or + there instead of keeping a row free under the total.
   const roomy = w * (chars >= 3 ? 0.33 : 0.5);
-  // The city's blessing and emblems are chips under everything, in one row with the dungeon room.
-  const otherChips = !!player.blessing || emblems > 0;
-  const compact = marked && fit(tall, under + (emblems ? 34 : player.dungeon || otherChips ? 26 : 0), roomy) < 90;
+  // Emblems are chips under everything, in one row with the dungeon room.
+  const otherChips = emblems > 0;
+  // The big markers sit in one row above the total; if they'd be wider than the card, they go compact too.
+  const markerLabels = [monarch && "Monarch", ring > 0 && `Ring · ${ring}`, initiative && "Initiative", blessing && "City's blessing"].filter(
+    (l): l is string => !!l,
+  );
+  const markersWide = markerLabels.reduce((a, l) => a + Math.max(tall, l.length * 7.5) + 24, 0) + 20 * (markerLabels.length - 1);
+  const compact = marked && (fit(tall, under + (emblems ? 34 : player.dungeon || otherChips ? 26 : 0), roomy) < 90 || markersWide > w - 16);
   const roomChip = !!player.dungeon && !(compact && initiative);
   // The emblem chips are a little taller than the others.
   const below = under + (emblems ? 34 : roomChip || otherChips ? 26 : 0);
-  // Compact: the crown takes the left slot, the door the right, and the Ring whichever has room.
+  // Compact: the crown takes the left slot, the door the right, and the Ring and the blessing whichever has room.
   const slots: MarkerIcon[][] = [monarch ? ["crown"] : [], initiative ? ["door"] : []];
   if (ring) slots[slots[0].length <= slots[1].length ? 0 : 1].push("ring");
+  if (blessing) slots[slots[0].length <= slots[1].length ? 0 : 1].push("castle");
+  // The blessing is switched on and off in the menu, so that's where a tap on it goes.
+  const openMenu = () => (props.onMenu(), setMode("menu"));
   const badge = (icon: MarkerIcon, shared: boolean) =>
     icon === "crown" ? (
       <Badge key={icon} icon="crown" label={shared ? "" : "Monarch"} onClick={props.onPassMonarch} title="Pass the monarch" />
     ) : icon === "door" ? (
       <Badge key={icon} icon="door" label={shared ? "" : (player.dungeon?.room ?? "Initiative")} onClick={props.onDungeon} title="Open the dungeons" />
+    ) : icon === "castle" ? (
+      <Badge key={icon} icon="castle" label={shared ? "" : "Blessing"} onClick={openMenu} title="The city's blessing" />
     ) : (
       <Badge key={icon} icon="ring" label={shared ? String(ring) : `Ring ${ring}`} onClick={props.onRing} title="The Ring" />
     );
@@ -250,6 +262,7 @@ function Face(props: Props & { w: number; h: number }) {
               {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch" />}
               {ring > 0 && <Marker icon="ring" label={`Ring · ${ring}`} size={crown} onClick={props.onRing} title="The Ring" />}
               {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
+              {blessing && <Marker icon="castle" label="City's blessing" size={crown} onClick={openMenu} title="The city's blessing" />}
             </div>
           )}
           {/* − and + right beside the total, so they stay close when counters shrink it. */}
@@ -303,12 +316,6 @@ function Face(props: Props & { w: number; h: number }) {
             {player.dungeon && roomChip && (
               <Chip onClick={props.onDungeon}>
                 {dungeonOf(player.dungeon.key).name.split(" ")[0]} · {player.dungeon.room}
-              </Chip>
-            )}
-            {player.blessing && (
-              // Set in the menu, so that's where a tap goes.
-              <Chip onClick={() => (props.onMenu(), setMode("menu"))}>
-                <Icon name="castle" className="h-3.5 w-3.5" /> City's blessing
               </Chip>
             )}
             {emblemChips(player.emblems ?? []).map((label) => (
@@ -371,10 +378,10 @@ function Face(props: Props & { w: number; h: number }) {
   );
 }
 
-const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF", ring: "#F5C26B" } as const;
+const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF", ring: "#F5C26B", castle: "#8FE8C8" } as const;
 type MarkerIcon = keyof typeof MARKER_TINT;
 
-/** A big marker above the total: the monarch's gold crown, the initiative's lavender door, the Ring. */
+/** A big marker above the total: the monarch's gold crown, the initiative's lavender door, the Ring, the city's mint castle. */
 function Marker({ icon, label, size, onClick, title }: { icon: MarkerIcon; label: string; size: number; onClick?: () => void; title?: string }) {
   const inner = (
     <>
