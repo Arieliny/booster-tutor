@@ -187,6 +187,8 @@ export async function rollDie(canvas: HTMLCanvasElement, roll: DieRoll): Promise
 
   // A number on every face, slightly above it, reading toward that face's "up".
   const disposables: { dispose(): void }[] = [body, bodyMat, edges.geometry, edges.material as THREE.Material];
+  const rolled = Math.max(0, Math.min(faces.length, roll.result) - 1);
+  const labels: { mesh: THREE.Mesh; mat: THREE.MeshBasicMaterial }[] = [];
   faces.forEach((f, i) => {
     const tex = numberTexture(i + 1);
     const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
@@ -197,15 +199,23 @@ export async function rollDie(canvas: HTMLCanvasElement, roll: DieRoll): Promise
     const right = new THREE.Vector3().crossVectors(f.up, f.normal);
     label.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(right, f.up, f.normal));
     die.add(label);
+    labels.push({ mesh: label, mat });
     disposables.push(tex, mat, geo);
   });
+  // As it lands, every number but the rolled one fades and the rolled one grows a little, so the face
+  // tipped toward you (or the far copy's, upside down) can't be read as the result.
+  const settleLabels = (k: number) =>
+    labels.forEach(({ mesh, mat }, i) => {
+      if (i === rolled) mesh.scale.setScalar(1 + 0.15 * k);
+      else mat.opacity = 1 - 0.82 * k;
+    });
 
   // Tumble around a seeded axis, slowing down, then ease onto the rolled face.
   const rand = mulberry32(roll.seed);
   const axis = new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize();
   die.quaternion.setFromAxisAngle(new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize(), rand() * Math.PI * 2);
   const startQ = die.quaternion.clone();
-  const endQ = restingRotation(faces[Math.max(0, Math.min(faces.length, roll.result) - 1)]);
+  const endQ = restingRotation(faces[rolled]);
   const SPIN = 0.7;
   const SETTLE = 0.5;
   const speed = 16 + rand() * 6; // radians per second at the start
@@ -225,6 +235,7 @@ export async function rollDie(canvas: HTMLCanvasElement, roll: DieRoll): Promise
       const k = Math.min(1, (t - SPIN) / SETTLE);
       const ease = 1 - Math.pow(1 - k, 3);
       die.quaternion.slerpQuaternions(settleFrom, endQ, ease);
+      settleLabels(ease);
     }
     renderer.render(scene, camera);
     if (t < SPIN + SETTLE) raf = requestAnimationFrame(frame);
