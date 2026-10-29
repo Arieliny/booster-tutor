@@ -1,5 +1,5 @@
 /**
- * Cube review: compare my cube with LSV's and MTGO's, go through their recent
+ * Cube review: compare my cube with LSV's, MTGO's and Arena's, go through their recent
  * changelogs and a new set, and record Keep / Cut / Add / Maybe decisions.
  *
  * All card data is baked into src/data/cube-review.json by
@@ -19,8 +19,8 @@ export { shortDate } from "./short-date";
 /** Tell the sync engine (lib/user-sync.ts) that something changed on this device. */
 const announceLocalChange = () => window.dispatchEvent(new Event(LOCAL_CHANGE_EVENT));
 
-export type CubeKey = "mine" | "lsv" | "mtgo";
-export type LogKey = "lsv" | "mtgo";
+export type CubeKey = "mine" | "lsv" | "mtgo" | "arena";
+export type LogKey = "lsv" | "mtgo" | "arena";
 
 export interface ReviewFace {
   name: string;
@@ -86,26 +86,26 @@ interface CubeReviewData {
 
 export const data = raw as unknown as CubeReviewData;
 
-export const CUBE_KEYS: CubeKey[] = ["mine", "lsv", "mtgo"];
-export const CUBE_SHORT: Record<CubeKey, string> = { mine: "M", lsv: "L", mtgo: "O" };
+export const CUBE_KEYS: CubeKey[] = ["mine", "lsv", "mtgo", "arena"];
+export const CUBE_SHORT: Record<CubeKey, string> = { mine: "M", lsv: "L", mtgo: "O", arena: "A" };
 
 export const members: Record<CubeKey, Set<string>> = {
   mine: new Set(data.cubes.mine.cards),
   lsv: new Set(data.cubes.lsv.cards),
   mtgo: new Set(data.cubes.mtgo.cards),
+  arena: new Set(data.cubes.arena.cards),
 };
 
 export const logById: Record<LogKey, Map<string, ChangelogEntry>> = {
   lsv: new Map(data.changelogs.lsv.map((e) => [e.id, e])),
   mtgo: new Map(data.changelogs.mtgo.map((e) => [e.id, e])),
+  arena: new Map(data.changelogs.arena.map((e) => [e.id, e])),
 };
 
 export const setIds = new Set(data.set.cards);
 
-/** Every card in at least one of the three cubes. */
-export const cubeUnion: string[] = [
-  ...new Set([...data.cubes.mine.cards, ...data.cubes.lsv.cards, ...data.cubes.mtgo.cards]),
-];
+/** Every card in at least one of the cubes. */
+export const cubeUnion: string[] = [...new Set(CUBE_KEYS.flatMap((k) => data.cubes[k].cards))];
 
 // ---------------------------------------------------------------- extra cards
 //

@@ -100,7 +100,7 @@ interface Ui {
 }
 
 const DEFAULT_UI: Ui = {
-  member: { mine: "out", lsv: "in", mtgo: "any" },
+  member: { mine: "out", lsv: "in", mtgo: "any", arena: "any" },
   log: "lsv",
   logTag: "all",
   hideMine: false,
@@ -115,11 +115,15 @@ const DEFAULT_UI: Ui = {
 };
 
 const UI_KEY = "booster-tutor-cube-review-ui-v1";
+const ANY_MEMBER: Record<CubeKey, Member> = { mine: "any", lsv: "any", mtgo: "any", arena: "any" };
 
 function loadUi(): Ui {
   try {
     const s = localStorage.getItem(UI_KEY);
-    return s ? { ...DEFAULT_UI, ...(JSON.parse(s) as Partial<Ui>) } : DEFAULT_UI;
+    if (!s) return DEFAULT_UI;
+    const saved = JSON.parse(s) as Partial<Ui>;
+    // Saved before a cube was added (Arena, 2026-10-29): the new one starts at "Either".
+    return { ...DEFAULT_UI, ...saved, member: { ...ANY_MEMBER, ...saved.member } };
   } catch {
     return DEFAULT_UI;
   }
@@ -136,12 +140,13 @@ const VIEW_TITLE: Record<View, string> = {
 };
 
 const PRESETS: { label: string; m: Record<CubeKey, Member> }[] = [
-  { label: "LSV has, I don't", m: { mine: "out", lsv: "in", mtgo: "any" } },
-  { label: "I have, LSV doesn't", m: { mine: "in", lsv: "out", mtgo: "any" } },
-  { label: "MTGO has, I don't", m: { mine: "out", lsv: "any", mtgo: "in" } },
-  { label: "Only mine", m: { mine: "in", lsv: "out", mtgo: "out" } },
-  { label: "In all three", m: { mine: "in", lsv: "in", mtgo: "in" } },
-  { label: "All cube cards", m: { mine: "any", lsv: "any", mtgo: "any" } },
+  { label: "LSV has, I don't", m: { mine: "out", lsv: "in", mtgo: "any", arena: "any" } },
+  { label: "I have, LSV doesn't", m: { mine: "in", lsv: "out", mtgo: "any", arena: "any" } },
+  { label: "MTGO has, I don't", m: { mine: "out", lsv: "any", mtgo: "in", arena: "any" } },
+  { label: "Arena has, I don't", m: { mine: "out", lsv: "any", mtgo: "any", arena: "in" } },
+  { label: "Only mine", m: { mine: "in", lsv: "out", mtgo: "out", arena: "out" } },
+  { label: "In all four", m: { mine: "in", lsv: "in", mtgo: "in", arena: "in" } },
+  { label: "All cube cards", m: ANY_MEMBER },
 ];
 
 const STATUS_TONE: Record<Status, string> = {
@@ -449,7 +454,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
     const undecided = (id: string) => !normalizeStatus(id, decisions[id]?.status);
     const fresh = (log: LogKey) =>
       data.changelogs[log].filter((e) => e.current && !members.mine.has(e.id) && undecided(e.id)).length;
-    return { lsv: fresh("lsv"), mtgo: fresh("mtgo"), set: data.set.cards.filter((id) => hasCard(id) && undecided(id)).length };
+    return { lsv: fresh("lsv"), mtgo: fresh("mtgo"), arena: fresh("arena"), set: data.set.cards.filter((id) => hasCard(id) && undecided(id)).length };
   }, [decisions]);
 
   // Render a page at a time; any change to what's listed starts again at one page.
@@ -596,6 +601,15 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
               }
             />
             <HomeRow
+              icon="history"
+              label={`New in ${data.cubes.arena.label}`}
+              sub={`Added since ${since}, not in your cube`}
+              count={todo.arena}
+              onClick={() =>
+                goView("changelog", { log: "arena", logTag: "current", hideMine: true, statuses: ["none"] }, `New in ${data.cubes.arena.label}`)
+              }
+            />
+            <HomeRow
               icon="sparkle"
               label={data.set.name}
               sub="Cards you haven't decided on"
@@ -608,7 +622,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
             <HomeRow
               icon="columns"
               label="Compare cubes"
-              sub={`Yours, ${data.cubes.lsv.label} and ${data.cubes.mtgo.label}`}
+              sub={`Yours, ${data.cubes.lsv.label}, ${data.cubes.mtgo.label} and ${data.cubes.arena.label}`}
               onClick={() => goView("compare")}
             />
             <HomeRow
@@ -645,7 +659,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
 
         <p className="text-xs text-(--color-text-dim)" title="Refresh: node --use-system-ca scripts/build-cube-review.mjs, then deploy">
           Data from {shortDate(data.builtAt.slice(0, 10))} · {data.cubes.lsv.label} updated {shortDate(data.cubes.lsv.updated)} ·{" "}
-          {data.cubes.mtgo.label} {shortDate(data.cubes.mtgo.updated)}
+          {data.cubes.mtgo.label} {shortDate(data.cubes.mtgo.updated)} · {data.cubes.arena.label} {shortDate(data.cubes.arena.updated)}
         </p>
       </div>
     );
@@ -733,6 +747,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                 options={[
                   ["lsv", `LSV · ${data.changelogs.lsv.length}`],
                   ["mtgo", `MTGO · ${data.changelogs.mtgo.length}`],
+                  ["arena", `Arena · ${data.changelogs.arena.length}`],
                 ]}
                 onChange={(v) => patch({ log: v })}
               />

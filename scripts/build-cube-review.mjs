@@ -35,6 +35,9 @@ const CONFIG = {
     { key: "mine", id: "PiemanPoweredCube", label: "My cube" },
     { key: "lsv", id: "PowerLSV", label: "LSV", changelog: true },
     { key: "mtgo", id: "modovintage", label: "MTGO Vintage", changelog: true },
+    // MTG Arena's Powered Cube, kept in step with Arena's updates by a Cube Cobra user
+    // (checked 2026-10-29: matches Arena's Oct 19 update; its history lines up with Arena's update dates).
+    { key: "arena", id: "mtgapc", label: "Arena Powered", changelog: true },
   ],
   changelogSince: "2026-01-01",
   set: "fra",
@@ -233,13 +236,13 @@ console.log(`  Scryfall      ${found.size} printings resolved, ${missing.length}
 console.log(`  ${fra.set.name.padEnd(13)} ${fra.cards.length} main-set cards (from ${fra.prints} printings)\n`);
 
 // Card table keyed by Oracle ID. Display-printing preference: my cube, then LSV,
-// then MTGO, then anything else - so I see the printing I actually own.
+// then MTGO, then Arena, then anything else - so I see the printing I actually own.
 const cards = {};
 const put = (c) => {
   const n = normalize(c);
   if (n.id && !cards[n.id]) cards[n.id] = n;
 };
-for (const key of ["mine", "lsv", "mtgo"])
+for (const key of ["mine", "lsv", "mtgo", "arena"])
   for (const s of cubes[key].sids) if (found.has(s)) put(found.get(s));
 for (const c of found.values()) put(c);
 for (const c of fra.cards) put(c);
@@ -321,6 +324,7 @@ writeFileSync(OUT, JSON.stringify(out));
 const M = members.mine;
 const L = members.lsv;
 const O = members.mtgo;
+const A = members.arena;
 const n = (f) => Object.keys(cards).filter(f).length;
 const row = (label, value) => console.log(`  ${String(label).padEnd(34)}${value}`);
 
@@ -328,6 +332,7 @@ console.log("CUBE COMPARISON (unique Oracle cards)");
 row("My cube", M.size);
 row("LSV", L.size);
 row("MTGO Vintage", O.size);
+row("Arena Powered", A.size);
 row("Only in mine", n((i) => M.has(i) && !L.has(i) && !O.has(i)));
 row("Only in LSV", n((i) => L.has(i) && !M.has(i) && !O.has(i)));
 row("Only in MTGO", n((i) => O.has(i) && !M.has(i) && !L.has(i)));
@@ -337,8 +342,10 @@ row("LSV + MTGO (not mine)", n((i) => L.has(i) && O.has(i) && !M.has(i)));
 row("All three", n((i) => M.has(i) && L.has(i) && O.has(i)));
 row("In LSV, not mine", n((i) => L.has(i) && !M.has(i)));
 row("In mine, not LSV", n((i) => M.has(i) && !L.has(i)));
+row("In Arena, not mine", n((i) => A.has(i) && !M.has(i)));
+row("In mine, not Arena", n((i) => M.has(i) && !A.has(i)));
 
-for (const key of ["lsv", "mtgo"]) {
+for (const key of ["lsv", "mtgo", "arena"]) {
   const log = out.changelogs[key];
   const cur = log.filter((e) => e.current);
   const posts = cubes[key].posts;
@@ -360,6 +367,7 @@ row("Main-set cards", setIds.length);
 row("Already in my cube", setIds.filter((i) => M.has(i)).length);
 row("In LSV", setIds.filter((i) => L.has(i)).length);
 row("In MTGO", setIds.filter((i) => O.has(i)).length);
+row("In Arena", setIds.filter((i) => A.has(i)).length);
 
 const total = Object.keys(cards).length;
 const images = Object.values(cards).reduce((s, c) => s + (c.back ? 2 : 1), 0);
