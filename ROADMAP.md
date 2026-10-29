@@ -241,7 +241,7 @@ and `boostersPerPlayer: 9` (clamped down for cubes smaller than 198 cards).
 
 ## Future / under consideration
 
-### A. Rotisserie draft mode  *(new — biggest idea)*
+### A. Rotisserie draft mode  *(REMOVED 2026-10-12 at Ari's request; kept below as history)*
 
 A multiplayer, full-information draft from the whole cube: no packs, one card per
 turn, snake order, every pick public. See **`docs/ROTISSERIE_DESIGN.md`** for the
@@ -297,6 +297,63 @@ Power-Weighted generation mode is removed from the UI (`GenerationMode` is only
 `"random" | "color-balanced"`). Likely future direction: make tier data a
 per-cube property set during upload (optional column or a tagging step), and only
 expose Power-Weighted for cubes that carry tier data.
+
+### C. Life counter as its own store app  *(potential — researched 2026-10-29, not started)*
+
+The idea: the life counter as a standalone app on Google Play and the App Store, with
+a home screen ("New game": players, starting life, format) instead of opening inside
+Booster Tutor. The Judge becomes a paid add-on (Ari's first guess: ~$5/month for ~100
+rulings). Research notes, not a plan yet:
+
+**Spinning it off is mostly packaging, not a rewrite.** The counter only depends on
+`LifeCounter`, `LifePanel`, `lib/life.ts`, `dungeons`, `emblems`, `dice3d` (three.js),
+`coin-art`, `Icon`, `Sheet`, `ManaCost`, `use-back-to-close`. Game state is already local.
+Judge and card search are lazy-loaded and need the server (`api/judge`, `api/card-search`).
+Likely shape: a second Vite entry in this repo, wrapped with Capacitor (same React code in
+a native shell), plus native touches (keep-awake, haptics, orientation, status bar).
+
+**Store work, roughly in order of effort:**
+- *Accounts + payments* (only needed for the paid Judge): the invite-link/PIN sign-in
+  isn't fit for the public. Needs real sign-in (Sign in with Apple if Google sign-in is
+  offered), in-app account deletion (Apple 5.1.1(v)), in-app purchase for the
+  subscription on both stores (Apple 3.1.1; RevenueCat is the usual shortcut), and the
+  server checking the entitlement before each ruling.
+- *iOS builds need a Mac* (or a cloud Mac: Codemagic / GitHub Actions macOS runners).
+  Apple Developer $99/yr. Google Play $25 once.
+- *Google Play, new personal account:* 12 testers opted in for 14 days of closed
+  testing before production unlocks (organisation accounts are exempt but need a D-U-N-S).
+- *Listing paperwork:* privacy policy URL, Apple privacy labels / Google data-safety
+  form, age rating, screenshots. AI-specific: disclose that questions go to a
+  third-party AI (Apple 5.1.2(i)), plus a way to report bad answers (Apple 1.2 / 4.7).
+- Apple's "not just a website" rule (4.2) shouldn't bite: a life counter is app-like,
+  and dozens are already listed (Lotus, Life Counter Magic, Dragon Counter...).
+
+**Money:** the Judge costs ~7–12¢ per ruling on Opus 5.5, so 100 rulings ≈ $7–12 of API
+spend against $5 minus the store's 15% (small-business rate) ≈ $4.25. As guessed, heavy
+users lose money. Options: fewer rulings per tier (~30–40), a cheaper model for the paid
+tier (test quality first), or credit packs. Comparables: MagicJudge (iOS) Pro plans
+$7.99 / $14.99 / $29.99; StackCaster credit packs from $5; Ask Judge has a "Pro" tier.
+
+**Legal (not legal advice — get a short IP-lawyer read before charging):**
+- *Wizards Fan Content Policy:* fan content "must be free"; "You can't require payments
+  ... subscriptions ... to access your Fan Content"; sponsorships, ads and donations are
+  allowed; Wizards can revoke at any time. The Wizards Terms say the policy "only
+  permits noncommercial activities". A paid Judge built on the Comprehensive Rules and
+  Oracle text is the part that conflicts. Plenty of store apps charge anyway (unlocks,
+  ad removal, AI judge plans), but that's tolerance, not permission.
+- *Scryfall:* the data is free "under the Wizards Fan Content Policy" and may not be
+  paywalled. Card search must stay free, image credits stay visible, and the app must
+  add value beyond repackaging.
+- *Trademarks:* no "MTG" / "Magic: The Gathering" or Wizards logos in the app name or
+  icon (Apple 5.2.1 rejects these, and the Fan Content Policy bars logos/trademarks).
+  Use our own name plus the unofficial-fan-content disclaimer.
+- The life counter itself is low-risk: life totals and dice aren't Wizards IP. The
+  Wizards material in it (mana symbols, emblem/dungeon text, "Monarch") is ordinary fan
+  use as long as it's free.
+- *Lowest-risk model:* everything free, including a monthly Judge allowance, with an
+  optional supporter subscription/tip that raises the allowance (the Lotus / MTJudge
+  pattern). Still ambiguous under "can't require payment to access", hence the lawyer read
+  (or written permission from Wizards).
 
 ---
 
