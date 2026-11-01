@@ -157,6 +157,10 @@ const STATUS_TONE: Record<Status, string> = {
   maybe: "bg-amber-500/25 text-amber-200",
 };
 
+/** The card popup's ‹ / › buttons. */
+const ARROW =
+  "flex items-center justify-center rounded-lg border border-(--color-border) text-(--color-text-dim) touch-manipulation hover:bg-white/5 active:bg-white/10 disabled:opacity-30";
+
 const STATUS_BUTTON: Record<Status, string> = {
   keep: "border-sky-500/60 bg-sky-500/25 text-sky-100",
   cut: "border-red-500/60 bg-red-500/25 text-red-100",
@@ -1814,16 +1818,18 @@ function CardDetail({
           artVersion={artVersion}
           onChooseArt={onChooseArt}
         />
-        {/* Review bar — big tap targets, pinned to the bottom on a phone. */}
-        <div className="grid grid-cols-[auto_repeat(3,minmax(0,1fr))_auto] gap-1.5 border-t border-(--color-border) p-2">
+        {/* Review bar — big tap targets, pinned to the bottom on a phone. The arrows are 48px wide and the bar
+            keeps them off the very edges (and above the gesture bar): taps there that drift a few pixels
+            were being taken by Android's back-swipe and needed a second try. */}
+        <div className="grid grid-cols-[3rem_repeat(3,minmax(0,1fr))_3rem] gap-1.5 border-t border-(--color-border) px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => go(-1)}
             disabled={index === 0}
-            className="rounded border border-(--color-border) px-3 text-lg text-(--color-text-dim) hover:bg-white/5 disabled:opacity-30"
+            className={ARROW}
             aria-label="Previous card"
           >
-            ‹
+            <Icon name="back" className="h-6 w-6" />
           </button>
           {choicesFor(c.id).map((s) => (
             <button
@@ -1843,10 +1849,10 @@ function CardDetail({
             type="button"
             onClick={() => go(1)}
             disabled={index === ids.length - 1}
-            className="rounded border border-(--color-border) px-3 text-lg text-(--color-text-dim) hover:bg-white/5 disabled:opacity-30"
+            className={ARROW}
             aria-label="Next card"
           >
-            ›
+            <Icon name="chevron" className="h-6 w-6" />
           </button>
         </div>
       </div>
