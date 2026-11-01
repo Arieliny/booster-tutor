@@ -355,6 +355,20 @@ $7.99 / $14.99 / $29.99; StackCaster credit packs from $5; Ask Judge has a "Pro"
   pattern). Still ambiguous under "can't require payment to access", hence the lawyer read
   (or written permission from Wizards).
 
+### D. Life counter home screen + settings  *(later — Ari, 2026-11-01; cube work comes first)*
+
+Independent of the store app (item C), and a step towards it. Today the Life tab drops straight
+into a game with everything switched on. Instead:
+
+- **An opening screen**: *New game* (players, starting life) and *Settings*.
+- **Settings choose which trackers a player wants**: dungeons / the initiative, day/night, the Ring,
+  the city's blessing, emblems, monarch, commander damage, the counter list. Most people don't care
+  about dungeons or day/night; their tray and ⋯ menu should only show what they picked. The defaults
+  stay as they are now for Ari.
+- Per device (localStorage), since guests aren't signed in; signed-in players could sync it later.
+- Ties into **access**: people who get only the life counter need a thought-through experience, not
+  the owner's. What to give them beyond the counter (Judge? card search?) is still to decide.
+
 ---
 
 ## Out of scope (still)
