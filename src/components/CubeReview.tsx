@@ -2166,6 +2166,11 @@ function CardBody({
                   </div>
                 )}
                 {isExtra(c.id) && <div className="text-(--color-accent)">Added by hand</div>}
+                {c.aka && (
+                  <div>
+                    <span className="text-(--color-text)">Your copy says:</span> {c.aka} (Through the Omenpaths)
+                  </div>
+                )}
                 <TagRow tags={tags} overridden={tagsOverridden} editing={editingTags} onEdit={() => setEditingTags((v) => !v)} onTags={(t) => onTags(c.id, t)} />
                 {/* Owned: from the proxy orders, from the cube itself, or flagged by hand. */}
                 <div className="flex flex-wrap items-center gap-1">

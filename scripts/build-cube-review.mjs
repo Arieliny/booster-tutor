@@ -279,6 +279,15 @@ if (existsSync(OWNED)) {
     }
   }
   console.log(`  Owned         ${ownedCount} cards from proxy orders${lookedUp.length ? `; added from Scryfall: ${lookedUp.join(", ")}` : ""}${unknownNames.length ? `; not real cards: ${unknownNames.join(", ")}` : ""}`);
+  // Omenpaths proxies carry the in-universe printed name; keep it as an alias so Ari finds the card by it.
+  const ALIASES = join(dirname(fileURLToPath(import.meta.url)), "card-aliases.json");
+  if (existsSync(ALIASES)) {
+    const aliases = JSON.parse(readFileSync(ALIASES, "utf8"));
+    for (const [name, aka] of Object.entries(aliases)) {
+      const c = names.get(name);
+      if (c) c.aka = aka;
+    }
+  }
 }
 
 // Archetype tags (scripts/archetype-tags.json, by card name: "lands:P" = archetype key + role).

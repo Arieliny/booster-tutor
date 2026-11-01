@@ -60,6 +60,8 @@ export interface ReviewCard {
   tags?: string[];
   /** The proxy orders this card was printed in ("MPC #1"), from scripts/owned-proxies.json: Ari has a copy. */
   owned?: string[];
+  /** The name on Ari's copy when it differs (Through the Omenpaths prints the Spider-Man set under its own names). */
+  aka?: string;
 }
 
 export interface ChangelogEntry {
@@ -416,7 +418,7 @@ export function frontName(c: ReviewCard): string {
 
 export function searchText(c: ReviewCard): string {
   const faces = (c.faces ?? []).map((f) => `${f.name} ${f.type ?? ""} ${f.text ?? ""}`).join(" ");
-  return `${c.name} ${c.type} ${c.text} ${faces}`.toLowerCase();
+  return `${c.name} ${c.aka ?? ""} ${c.type} ${c.text} ${faces}`.toLowerCase();
 }
 
 /** Adds and removes merged into one chronological history line. */
