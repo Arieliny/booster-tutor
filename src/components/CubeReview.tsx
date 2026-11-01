@@ -38,6 +38,9 @@ import {
   imageUrl,
   inMyCube,
   cardTags,
+  benchIds,
+  owns,
+  relevantCardIds,
   lastChange,
   loadDecisions,
   mergeDecisions,
@@ -80,7 +83,7 @@ import { Icon, type IconName } from "./Icon";
 import { PageHeader } from "./PageHeader";
 import { Sheet } from "./Sheet";
 
-type View = "home" | "compare" | "changelog" | "set" | "all" | "decisions" | "summary" | "shape";
+type View = "home" | "compare" | "changelog" | "all" | "decisions" | "summary" | "shape" | "bench";
 type Member = "in" | "out" | "any";
 type LogTag = "all" | "current" | "past" | "tried";
 type Layout = "grid" | "list";
@@ -101,6 +104,8 @@ interface Ui {
   statuses: StatusFilter[];
   /** Base cube filter: only base cards, only the rest ("flex"), or all. */
   base: "any" | "base" | "flex";
+  /** Only cards tagged for this archetype ("" = any). */
+  archetype: string;
   autoAdvance: boolean;
 }
 
@@ -117,6 +122,7 @@ const DEFAULT_UI: Ui = {
   rarities: [],
   statuses: [],
   base: "any",
+  archetype: "",
   autoAdvance: true,
 };
 
@@ -139,11 +145,11 @@ const VIEW_TITLE: Record<View, string> = {
   home: "My cube",
   compare: "Compare cubes",
   changelog: "Changelogs",
-  set: data.set.name,
   all: "All cards",
   decisions: "Your decisions",
   summary: "Summary and export",
   shape: "Cube shape",
+  bench: "Bench",
 };
 
 const PRESETS: { label: string; m: Record<CubeKey, Member> }[] = [
@@ -210,6 +216,7 @@ function facetFilter(ui: Ui, q: string, decisions: Decisions) {
       if (!ui.statuses.includes(s)) return false;
     }
     if (ui.base !== "any" && (ui.base === "base") !== !!decisions[c.id]?.base) return false;
+    if (ui.archetype && !cardTags(c.id, decisions).some((t) => t.startsWith(ui.archetype + ":"))) return false;
     if (needle && !searchText(c).includes(needle)) return false;
     return true;
   };
@@ -278,6 +285,12 @@ function useReviewState() {
     setDecisions((d) => ({ ...d, [id]: { ...d[id], tags, t: Date.now() } }));
   }, []);
 
+  /** Ari has a copy the proxy orders don't know about. */
+  const setOwned = useCallback((id: string, on: boolean) => {
+    if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
+    setDecisions((d) => ({ ...d, [id]: { ...d[id], owned: on || undefined, t: Date.now() } }));
+  }, []);
+
   const setNote = useCallback((id: string, note: string) => {
     if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
     setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
@@ -322,6 +335,7 @@ function useReviewState() {
     setNote,
     setBase,
     setTags,
+    setOwned,
     openLookedUp,
     openFromScryfall,
     live,
@@ -329,7 +343,7 @@ function useReviewState() {
   };
 }
 
-const LIST_VIEWS: View[] = ["compare", "changelog", "set", "all", "decisions", "summary", "shape"];
+const LIST_VIEWS: View[] = ["compare", "changelog", "all", "decisions", "summary", "shape", "bench"];
 
 /** /my-cube/changelog -> "changelog"; /my-cube -> home. */
 function viewFromPath(pathname: string): View {
@@ -342,7 +356,7 @@ function historyTitle(): string | undefined {
 }
 
 /** Facets cleared whenever a list is opened from the home page. */
-const CLEAN: Partial<Ui> = { colors: [], types: [], cmcs: [], rarities: [], statuses: [] };
+const CLEAN: Partial<Ui> = { colors: [], types: [], cmcs: [], rarities: [], statuses: [], base: "any", archetype: "" };
 
 export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }) {
   const st = useReviewState();
@@ -443,16 +457,16 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
           )
           .filter((e) => !(ui.hideMine && members.mine.has(e.id)))
           .map((e) => e.id);
-      case "set":
-        return data.set.cards;
       case "decisions":
         return decided.map(([id]) => id);
+      case "bench":
+        return benchIds(decisions);
       default:
-        return allCardIds();
+        return relevantCardIds(decisions);
     }
     // extrasVersion: hand-added cards join "All cards".
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, ui.member, ui.log, ui.logTag, ui.hideMine, decided, extrasVersion]);
+  }, [view, ui.member, ui.log, ui.logTag, ui.hideMine, decided, decisions, extrasVersion]);
 
   const ids = useMemo(() => {
     const keep = facetFilter(ui, q, decisions);
@@ -478,7 +492,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
     const undecided = (id: string) => !normalizeStatus(id, decisions[id]?.status);
     const fresh = (log: LogKey) =>
       data.changelogs[log].filter((e) => e.current && !members.mine.has(e.id) && undecided(e.id)).length;
-    return { lsv: fresh("lsv"), mtgo: fresh("mtgo"), arena: fresh("arena"), set: data.set.cards.filter((id) => hasCard(id) && undecided(id)).length };
+    return { lsv: fresh("lsv"), mtgo: fresh("mtgo"), arena: fresh("arena") };
   }, [decisions]);
 
   // Render a page at a time; any change to what's listed starts again at one page.
@@ -557,7 +571,8 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
   const toggle = <T,>(list: T[], v: T): T[] =>
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 
-  const activeFilters = ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length + (ui.base === "any" ? 0 : 1);
+  const activeFilters =
+    ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length + (ui.base === "any" ? 0 : 1) + (ui.archetype ? 1 : 0);
   const clearFilters = () => patch({ colors: [], types: [], cmcs: [], rarities: [], statuses: [] });
 
   const offlineUrls = useMemo(
@@ -585,6 +600,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
       onNote={st.setNote}
       onBase={st.setBase}
       onTags={st.setTags}
+      onOwned={st.setOwned}
       onClose={() => setDetail(null)}
     />
   );
@@ -638,13 +654,6 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                 goView("changelog", { log: "arena", logTag: "current", hideMine: true, statuses: ["none"] }, `New in ${data.cubes.arena.label}`)
               }
             />
-            <HomeRow
-              icon="sparkle"
-              label={data.set.name}
-              sub="Cards you haven't decided on"
-              count={todo.set}
-              onClick={() => goView("set", { statuses: ["none"] }, `${data.set.name}: undecided`)}
-            />
           </HomeGroup>
 
           <HomeGroup title="Browse">
@@ -660,10 +669,16 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
               sub={`Every change since ${since}`}
               onClick={() => goView("changelog", { logTag: "all", hideMine: false })}
             />
-            <HomeRow icon="sparkle" label={`${data.set.name}, whole set`} onClick={() => goView("set")} />
             <HomeRow icon="cards" label="All cards" onClick={() => goView("all")} />
             <HomeRow icon="list" label="Your decisions" count={decided.length} onClick={() => goView("decisions")} />
             <HomeRow icon="gauge" label="Cube shape" sub="Colours, types, curve and guilds after your decisions" onClick={() => goView("shape")} />
+            <HomeRow
+              icon="cardBack"
+              label="Bench"
+              sub="Cards you have that aren't in the cube: your cuts and old proxies"
+              count={benchIds(decisions).length}
+              onClick={() => goView("bench")}
+            />
             <HomeRow icon="summary" label="Summary and export" onClick={() => goView("summary")} />
             {onOpenChecklist && (
               <HomeRow icon="check" label="Collection checklist" sub="Cards you've received" onClick={onOpenChecklist} />
@@ -804,10 +819,6 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
             </div>
           )}
 
-          {view === "set" && (
-            <OfflineHint text={`Main set, basics excluded. Commons and uncommons show their Limited Resources grade.`} />
-          )}
-
           {view === "decisions" && (
             <div className="flex flex-wrap gap-1.5 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-3">
               {STATUSES.map((s) => {
@@ -922,6 +933,13 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                     </Chip>
                   ))}
                 </FacetRow>
+                <FacetRow label="Archetype">
+                  {ARCHETYPES.map((a) => (
+                    <Chip key={a.key} on={ui.archetype === a.key} onClick={() => patch({ archetype: ui.archetype === a.key ? "" : a.key })}>
+                      {a.label}
+                    </Chip>
+                  ))}
+                </FacetRow>
                 <FacetRow label="Base cube">
                   <Chip on={ui.base === "base"} onClick={() => patch({ base: ui.base === "base" ? "any" : "base" })}>
                     Base
@@ -970,7 +988,6 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                 <option value="name">Name</option>
                 <option value="cmc">Mana value</option>
                 {view === "changelog" && <option value="recent">Newest change</option>}
-                {view === "set" && <option value="grade">LR grade</option>}
               </select>
               <Segmented
                 value={layout}
@@ -1337,6 +1354,7 @@ export function LookUp() {
           onNote={st.setNote}
           onBase={st.setBase}
           onTags={st.setTags}
+          onOwned={st.setOwned}
           onClose={() => setDetail(null)}
         />
       )}
@@ -1414,10 +1432,6 @@ function sectionsFor(view: View, ids: string[], limit: number) {
     { key: "mine", title: "In your cube — keep or cut?", ids: shown.filter(inMyCube), total: mineTotal },
     { key: "new", title: "Not in your cube — add or not?", ids: shown.filter((id) => !inMyCube(id)), total: ids.length - mineTotal },
   ].filter((sec) => sec.total > 0);
-}
-
-function OfflineHint({ text }: { text: string }) {
-  return <p className="text-xs text-(--color-text-dim)">{text}</p>;
 }
 
 function Segmented<T extends string>({
@@ -1772,6 +1786,7 @@ function CardDetail({
   onNote,
   onBase,
   onTags,
+  onOwned,
   onClose,
 }: {
   ids: string[];
@@ -1787,6 +1802,7 @@ function CardDetail({
   onNote: (id: string, note: string) => void;
   onBase: (id: string, on: boolean) => void;
   onTags: (id: string, tags: string[] | undefined) => void;
+  onOwned: (id: string, on: boolean) => void;
   onClose: () => void;
 }) {
   const c = card(ids[index]);
@@ -1875,6 +1891,9 @@ function CardDetail({
           tags={cardTags(c.id, decisions)}
           tagsOverridden={!!decisions[c.id]?.tags}
           onTags={onTags}
+          owned={owns(c.id, decisions)}
+          ownedByHand={!!decisions[c.id]?.owned}
+          onOwned={onOwned}
           artVersion={artVersion}
           onChooseArt={onChooseArt}
         />
@@ -2008,6 +2027,9 @@ function CardBody({
   tags,
   tagsOverridden,
   onTags,
+  owned,
+  ownedByHand,
+  onOwned,
   artVersion,
   onChooseArt,
 }: {
@@ -2017,6 +2039,9 @@ function CardBody({
   tags: string[];
   tagsOverridden: boolean;
   onTags: (id: string, tags: string[] | undefined) => void;
+  owned: boolean;
+  ownedByHand: boolean;
+  onOwned: (id: string, on: boolean) => void;
   artVersion: number;
   onChooseArt: (id: string, p: Printing | null) => void;
 }) {
@@ -2142,6 +2167,17 @@ function CardBody({
                 )}
                 {isExtra(c.id) && <div className="text-(--color-accent)">Added by hand</div>}
                 <TagRow tags={tags} overridden={tagsOverridden} editing={editingTags} onEdit={() => setEditingTags((v) => !v)} onTags={(t) => onTags(c.id, t)} />
+                {/* Owned: from the proxy orders, from the cube itself, or flagged by hand. */}
+                <div className="flex flex-wrap items-center gap-1">
+                  <span className="text-(--color-text)">Owned:</span>
+                  {c.owned?.length ? <span>{c.owned.join(", ")}</span> : inMyCube(c.id) ? <span>in the cube</span> : <span>{ownedByHand ? "yes (marked by hand)" : "no"}</span>}
+                  {!c.owned?.length && !inMyCube(c.id) && (
+                    <button type="button" onClick={() => onOwned(c.id, !ownedByHand)} className="ml-1 rounded border border-(--color-border) px-2 py-0.5 text-[11px] hover:bg-white/5">
+                      {ownedByHand ? "I don't have it" : "I have a copy"}
+                    </button>
+                  )}
+                  {owned && !inMyCube(c.id) && <span className="text-[11px] text-(--color-text-dim)">· on the bench unless you add it</span>}
+                </div>
                 {isLookedUp(c.id) && (
                   <div className="text-(--color-accent)">Looked up — tag it or add a note to keep it on your list</div>
                 )}

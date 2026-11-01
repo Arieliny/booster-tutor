@@ -247,6 +247,40 @@ for (const key of ["mine", "lsv", "mtgo", "arena"])
 for (const c of found.values()) put(c);
 for (const c of fra.cards) put(c);
 
+// Owned proxies (scripts/owned-proxies.json, by card name -> orders). A card Ari printed that no cube has is
+// looked up on Scryfall and added, so the Bench can show it.
+const OWNED = join(dirname(fileURLToPath(import.meta.url)), "owned-proxies.json");
+if (existsSync(OWNED)) {
+  const owned = JSON.parse(readFileSync(OWNED, "utf8"));
+  const byName = () => new Map(Object.values(cards).map((c) => [c.name, c]));
+  let names = byName();
+  const lookedUp = [];
+  const unknownNames = [];
+  for (const name of Object.keys(owned)) {
+    if (names.has(name)) continue;
+    await sleep(150);
+    const r = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`, { headers: SCRY });
+    if (!r.ok) {
+      unknownNames.push(name);
+      continue;
+    }
+    const c = await r.json();
+    if (c.layout === "token" || c.set_type === "token") continue;
+    put(c);
+    lookedUp.push(c.name);
+  }
+  names = byName();
+  let ownedCount = 0;
+  for (const [name, orders] of Object.entries(owned)) {
+    const c = names.get(name);
+    if (c) {
+      c.owned = orders;
+      ownedCount++;
+    }
+  }
+  console.log(`  Owned         ${ownedCount} cards from proxy orders${lookedUp.length ? `; added from Scryfall: ${lookedUp.join(", ")}` : ""}${unknownNames.length ? `; not real cards: ${unknownNames.join(", ")}` : ""}`);
+}
+
 // Archetype tags (scripts/archetype-tags.json, by card name: "lands:P" = archetype key + role).
 // Baked onto the cards so the app can count support per archetype offline; a decision can override.
 const TAGS = join(dirname(fileURLToPath(import.meta.url)), "archetype-tags.json");

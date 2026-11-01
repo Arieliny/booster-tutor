@@ -35,6 +35,9 @@
  "Aether Spellbomb": [
   "artifacts:E"
  ],
+ "Aetherflux Reservoir": [
+  "storm:P"
+ ],
  "Agatha's Soul Cauldron": [
   "gw:F"
  ],
@@ -428,6 +431,9 @@
   "storm:E",
   "artifacts:E"
  ],
+ "City of Brass": [
+  "goodstuff:E"
+ ],
  "City of Traitors": [
   "artifacts:E"
  ],
@@ -651,6 +657,10 @@
  "Dragon's Rage Channeler": [
   "graveyard:P",
   "spells:P"
+ ],
+ "Dreadhorde Arcanist": [
+  "spells:P",
+  "graveyard:E"
  ],
  "Dreams of Steel and Oil": [],
  "Dress Down": [],
@@ -1599,6 +1609,9 @@
   "storm:E"
  ],
  "Mind Twist": [],
+ "Mindslaver": [
+  "artifacts:P"
+ ],
  "Mine Collapse": [],
  "Minsc & Boo, Timeless Heroes": [
   "ramp:P"

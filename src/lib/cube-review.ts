@@ -58,6 +58,8 @@ export interface ReviewCard {
   cubeImg?: string;
   /** Archetype tags, "key:role" (see lib/archetypes.ts). From the baked AI pass; a decision can override. */
   tags?: string[];
+  /** The proxy orders this card was printed in ("MPC #1"), from scripts/owned-proxies.json: Ari has a copy. */
+  owned?: string[];
 }
 
 export interface ChangelogEntry {
@@ -187,6 +189,33 @@ export function addExtraCards(cards: ReviewCard[]): number {
 export function allCardIds(): string[] {
   return [...Object.keys(data.cards), ...Object.keys(extraCards())];
 }
+
+/** Whether Ari has a copy: printed in a proxy order, flagged by hand, or in the cube today. */
+export function owns(id: string, d?: Decisions): boolean {
+  return !!d?.[id]?.owned || inMyCube(id) || (hasCard(id) && !!card(id).owned?.length);
+}
+
+/**
+ * The bench: cards Ari has that won't be in the cube after his decisions - what
+ * he cut, plus proxies from earlier orders that aren't in the list any more.
+ * Candidates for coming back when an archetype needs help.
+ */
+export function benchIds(d: Decisions): string[] {
+  const out: string[] = [];
+  for (const id of allCardIds()) {
+    if (!owns(id, d)) continue;
+    const s = normalizeStatus(id, d[id]?.status);
+    if (inMyCube(id) ? s === "cut" : s !== "add") out.push(id);
+  }
+  return out;
+}
+
+/** The cards worth listing under "All cards": in a cube, in a changelog, owned, or decided on. */
+export function relevantCardIds(d: Decisions): string[] {
+  const inLog = new Set(Object.values(data.changelogs).flatMap((log) => log.map((e) => e.id)));
+  return allCardIds().filter((id) => cubeUnionSet.has(id) || inLog.has(id) || owns(id, d) || !!d[id]?.status || !!d[id]?.note || !!extras[id]);
+}
+const cubeUnionSet = new Set(cubeUnion);
 
 /** A card's archetype tags: the hand-set list if there is one, else the baked ones. */
 export function cardTags(id: string, d?: Decisions): string[] {
@@ -460,6 +489,8 @@ export interface Decision {
   base?: true;
   /** Archetype tags set by hand; replaces the card's baked tags entirely (an empty list clears them). */
   tags?: string[];
+  /** Ari has a copy of this card that the proxy orders don't know about (set by hand). */
+  owned?: true;
   /** Last edit time (ms) — import merges keep the newer edit per card. */
   t: number;
 }
@@ -514,7 +545,7 @@ export function mergeDecisions(current: Decisions, incoming: Decisions): Decisio
 /** Drop entries with neither a status nor a note. */
 export function prune(d: Decisions): Decisions {
   const out: Decisions = {};
-  for (const [id, v] of Object.entries(d)) if (v.status || v.note || v.base || v.tags) out[id] = v;
+  for (const [id, v] of Object.entries(d)) if (v.status || v.note || v.base || v.tags || v.owned) out[id] = v;
   return out;
 }
 
