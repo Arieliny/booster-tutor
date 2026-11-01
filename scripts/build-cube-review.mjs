@@ -290,6 +290,23 @@ if (existsSync(OWNED)) {
   }
 }
 
+// Staples (scripts/staples.json): cards that go in any deck, whatever the archetype. Shown apart from the
+// archetype tags; Ari can mark or unmark one in the app.
+const STAPLES = join(dirname(fileURLToPath(import.meta.url)), "staples.json");
+if (existsSync(STAPLES)) {
+  const names = new Map(Object.values(cards).map((c) => [c.name, c]));
+  let n = 0;
+  const unknown = [];
+  for (const name of JSON.parse(readFileSync(STAPLES, "utf8"))) {
+    const c = names.get(name);
+    if (c) {
+      c.staple = true;
+      n++;
+    } else unknown.push(name);
+  }
+  console.log(`  Staples       ${n}${unknown.length ? `; not in the data: ${unknown.join(", ")}` : ""}`);
+}
+
 // Archetype tags (scripts/archetype-tags.json, by card name: "lands:P" = archetype key + role).
 // Baked onto the cards so the app can count support per archetype offline; a decision can override.
 const TAGS = join(dirname(fileURLToPath(import.meta.url)), "archetype-tags.json");

@@ -40,6 +40,7 @@ import {
   cardTags,
   benchIds,
   owns,
+  isStaple,
   relevantCardIds,
   lastChange,
   loadDecisions,
@@ -107,6 +108,8 @@ interface Ui {
   base: "any" | "base" | "flex";
   /** Only cards tagged for this archetype ("" = any). */
   archetype: string;
+  /** Staples only, non-staples only, or all. */
+  staple: "any" | "staple" | "not";
   autoAdvance: boolean;
 }
 
@@ -124,6 +127,7 @@ const DEFAULT_UI: Ui = {
   statuses: [],
   base: "any",
   archetype: "",
+  staple: "any",
   autoAdvance: true,
 };
 
@@ -218,6 +222,7 @@ function facetFilter(ui: Ui, q: string, decisions: Decisions) {
     }
     if (ui.base !== "any" && (ui.base === "base") !== !!decisions[c.id]?.base) return false;
     if (ui.archetype && !cardTags(c.id, decisions).some((t) => t.startsWith(ui.archetype + ":"))) return false;
+    if (ui.staple !== "any" && (ui.staple === "staple") !== isStaple(c.id, decisions)) return false;
     if (needle && !searchText(c).includes(needle)) return false;
     return true;
   };
@@ -292,6 +297,11 @@ function useReviewState() {
     setDecisions((d) => ({ ...d, [id]: { ...d[id], owned: on || undefined, t: Date.now() } }));
   }, []);
 
+  /** Mark (true) or unmark (false) a staple; undefined goes back to the baked list. */
+  const setStaple = useCallback((id: string, on: boolean | undefined) => {
+    setDecisions((d) => ({ ...d, [id]: { ...d[id], staple: on, t: Date.now() } }));
+  }, []);
+
   const setNote = useCallback((id: string, note: string) => {
     if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
     setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
@@ -337,6 +347,7 @@ function useReviewState() {
     setBase,
     setTags,
     setOwned,
+    setStaple,
     openLookedUp,
     openFromScryfall,
     live,
@@ -357,7 +368,7 @@ function historyTitle(): string | undefined {
 }
 
 /** Facets cleared whenever a list is opened from the home page. */
-const CLEAN: Partial<Ui> = { colors: [], types: [], cmcs: [], rarities: [], statuses: [], base: "any", archetype: "" };
+const CLEAN: Partial<Ui> = { colors: [], types: [], cmcs: [], rarities: [], statuses: [], base: "any", archetype: "", staple: "any" };
 
 export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }) {
   const st = useReviewState();
@@ -573,7 +584,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 
   const activeFilters =
-    ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length + (ui.base === "any" ? 0 : 1) + (ui.archetype ? 1 : 0);
+    ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length + (ui.base === "any" ? 0 : 1) + (ui.archetype ? 1 : 0) + (ui.staple === "any" ? 0 : 1);
   const clearFilters = () => patch({ colors: [], types: [], cmcs: [], rarities: [], statuses: [] });
 
   const offlineUrls = useMemo(
@@ -602,6 +613,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
       onBase={st.setBase}
       onTags={st.setTags}
       onOwned={st.setOwned}
+      onStaple={st.setStaple}
       onClose={() => setDetail(null)}
     />
   );
@@ -942,6 +954,14 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                       {a.label}
                     </Chip>
                   ))}
+                </FacetRow>
+                <FacetRow label="Staple">
+                  <Chip on={ui.staple === "staple"} onClick={() => patch({ staple: ui.staple === "staple" ? "any" : "staple" })}>
+                    Staple
+                  </Chip>
+                  <Chip on={ui.staple === "not"} onClick={() => patch({ staple: ui.staple === "not" ? "any" : "not" })}>
+                    Not a staple
+                  </Chip>
                 </FacetRow>
                 <FacetRow label="Base cube">
                   <Chip on={ui.base === "base"} onClick={() => patch({ base: ui.base === "base" ? "any" : "base" })}>
@@ -1358,6 +1378,7 @@ export function LookUp() {
           onBase={st.setBase}
           onTags={st.setTags}
           onOwned={st.setOwned}
+          onStaple={st.setStaple}
           onClose={() => setDetail(null)}
         />
       )}
@@ -1790,6 +1811,7 @@ function CardDetail({
   onBase,
   onTags,
   onOwned,
+  onStaple,
   onClose,
 }: {
   ids: string[];
@@ -1806,6 +1828,7 @@ function CardDetail({
   onBase: (id: string, on: boolean) => void;
   onTags: (id: string, tags: string[] | undefined) => void;
   onOwned: (id: string, on: boolean) => void;
+  onStaple: (id: string, on: boolean | undefined) => void;
   onClose: () => void;
 }) {
   const c = card(ids[index]);
@@ -1900,6 +1923,9 @@ function CardDetail({
           onOwned={onOwned}
           combos={combos}
           decisions={decisions}
+          staple={isStaple(c.id, decisions)}
+          stapleEdited={decisions[c.id]?.staple !== undefined}
+          onStaple={onStaple}
           artVersion={artVersion}
           onChooseArt={onChooseArt}
         />
@@ -2038,6 +2064,9 @@ function CardBody({
   onOwned,
   combos,
   decisions,
+  staple,
+  stapleEdited,
+  onStaple,
   artVersion,
   onChooseArt,
 }: {
@@ -2052,6 +2081,9 @@ function CardBody({
   onOwned: (id: string, on: boolean) => void;
   combos: { combo: Combo; state: ComboState; missing: Combo["slots"] }[];
   decisions: Decisions;
+  staple: boolean;
+  stapleEdited: boolean;
+  onStaple: (id: string, on: boolean | undefined) => void;
   artVersion: number;
   onChooseArt: (id: string, p: Printing | null) => void;
 }) {
@@ -2181,6 +2213,19 @@ function CardBody({
                     <span className="text-(--color-text)">Your copy says:</span> {c.aka} (Through the Omenpaths)
                   </div>
                 )}
+                {/* Staple: goes in any deck, whatever the archetype tags say. */}
+                <div className="flex flex-wrap items-center gap-1">
+                  <span className="text-(--color-text)">Staple:</span>
+                  {staple ? <span className="rounded-full bg-amber-500/25 px-2 py-0.5 text-[11px] text-amber-100">Goes in any deck</span> : <span>no</span>}
+                  <button type="button" onClick={() => onStaple(c.id, !staple)} className="ml-1 rounded border border-(--color-border) px-2 py-0.5 text-[11px] hover:bg-white/5">
+                    {staple ? "Not a staple" : "Mark as staple"}
+                  </button>
+                  {stapleEdited && (
+                    <button type="button" onClick={() => onStaple(c.id, undefined)} className="text-[11px] text-(--color-accent)">
+                      edited · back to suggested
+                    </button>
+                  )}
+                </div>
                 <TagRow tags={tags} overridden={tagsOverridden} editing={editingTags} onEdit={() => setEditingTags((v) => !v)} onTags={(t) => onTags(c.id, t)} />
                 {/* Owned: from the proxy orders, from the cube itself, or flagged by hand. */}
                 <div className="flex flex-wrap items-center gap-1">

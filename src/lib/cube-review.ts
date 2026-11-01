@@ -62,6 +62,8 @@ export interface ReviewCard {
   owned?: string[];
   /** The name on Ari's copy when it differs (Through the Omenpaths prints the Spider-Man set under its own names). */
   aka?: string;
+  /** Goes in any deck, whatever the archetype (scripts/staples.json); a decision can mark or unmark. */
+  staple?: true;
 }
 
 export interface ChangelogEntry {
@@ -190,6 +192,13 @@ export function addExtraCards(cards: ReviewCard[]): number {
 /** Every card id: the baked data plus anything added by hand. */
 export function allCardIds(): string[] {
   return [...Object.keys(data.cards), ...Object.keys(extraCards())];
+}
+
+/** A staple goes in any deck: the hand setting wins, else the baked list. */
+export function isStaple(id: string, d?: Decisions): boolean {
+  const own = d?.[id]?.staple;
+  if (own !== undefined) return own;
+  return hasCard(id) && !!card(id).staple;
 }
 
 /** Whether Ari has a copy: printed in a proxy order, flagged by hand, or in the cube today. */
@@ -493,6 +502,8 @@ export interface Decision {
   tags?: string[];
   /** Ari has a copy of this card that the proxy orders don't know about (set by hand). */
   owned?: true;
+  /** Staple set by hand: true marks it, false unmarks a baked one. */
+  staple?: boolean;
   /** Last edit time (ms) — import merges keep the newer edit per card. */
   t: number;
 }
@@ -547,7 +558,7 @@ export function mergeDecisions(current: Decisions, incoming: Decisions): Decisio
 /** Drop entries with neither a status nor a note. */
 export function prune(d: Decisions): Decisions {
   const out: Decisions = {};
-  for (const [id, v] of Object.entries(d)) if (v.status || v.note || v.base || v.tags || v.owned) out[id] = v;
+  for (const [id, v] of Object.entries(d)) if (v.status || v.note || v.base || v.tags || v.owned || v.staple !== undefined) out[id] = v;
   return out;
 }
 

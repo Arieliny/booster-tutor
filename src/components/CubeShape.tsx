@@ -10,6 +10,7 @@ import {
   data,
   hasCard,
   hasType,
+  isStaple,
   members,
   normalizeStatus,
   summarize,
@@ -138,7 +139,8 @@ function shapeOf(decisions: Decisions) {
         if (p) (into.get(p.key) ?? into.set(p.key, []).get(p.key)!).push(id);
       }
   const anyTags = byArch.size > 0;
-  return { byType, byCurve, byGuild, byBase, byArch, archCuts, archAdds, anyTags, cuts: cuts.size, adds: adds.size, base: base.size, after: after.length };
+  const staples = after.filter((id) => isStaple(id, decisions));
+  return { byType, byCurve, byGuild, byBase, byArch, archCuts, archAdds, anyTags, staples, cuts: cuts.size, adds: adds.size, base: base.size, after: after.length };
 }
 
 export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; onOpenCards: (ids: string[]) => void }) {
@@ -205,11 +207,17 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
             {s.current} now · <span className="text-red-300">{shape.cuts} cut</span> · <span className="text-emerald-300">{shape.adds} added</span>
           </span>
         </div>
-        {shape.base > 0 && (
-          <p className="mt-1 text-sm text-(--color-text-dim)">
-            <span className="text-violet-200">{shape.base} base</span> · {shape.after - shape.base} could still be cut
-          </p>
-        )}
+        <p className="mt-1 text-sm text-(--color-text-dim)">
+          {shape.base > 0 && (
+            <>
+              <span className="text-violet-200">{shape.base} base</span> · {shape.after - shape.base} could still be cut ·{" "}
+            </>
+          )}
+          <button type="button" onClick={() => onOpenCards(shape.staples)} className="text-amber-200 hover:underline">
+            {shape.staples.length} staples
+          </button>{" "}
+          (go in any deck; they keep their archetype tags)
+        </p>`
         <p className="mt-1 text-xs text-(--color-text-dim)">
           Every number is the count after your cuts and adds, with the change from today beside it. Tap a number to open those cards.
         </p>
