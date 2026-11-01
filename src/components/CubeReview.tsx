@@ -64,6 +64,7 @@ import { ManaCost } from "./ManaCost";
 import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
 import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
+import { CubeShape } from "./CubeShape";
 import { CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
 import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
@@ -77,7 +78,7 @@ import { Icon, type IconName } from "./Icon";
 import { PageHeader } from "./PageHeader";
 import { Sheet } from "./Sheet";
 
-type View = "home" | "compare" | "changelog" | "set" | "all" | "decisions" | "summary";
+type View = "home" | "compare" | "changelog" | "set" | "all" | "decisions" | "summary" | "shape";
 type Member = "in" | "out" | "any";
 type LogTag = "all" | "current" | "past" | "tried";
 type Layout = "grid" | "list";
@@ -137,6 +138,7 @@ const VIEW_TITLE: Record<View, string> = {
   all: "All cards",
   decisions: "Your decisions",
   summary: "Summary and export",
+  shape: "Cube shape",
 };
 
 const PRESETS: { label: string; m: Record<CubeKey, Member> }[] = [
@@ -309,7 +311,7 @@ function useReviewState() {
   };
 }
 
-const LIST_VIEWS: View[] = ["compare", "changelog", "set", "all", "decisions", "summary"];
+const LIST_VIEWS: View[] = ["compare", "changelog", "set", "all", "decisions", "summary", "shape"];
 
 /** /my-cube/changelog -> "changelog"; /my-cube -> home. */
 function viewFromPath(pathname: string): View {
@@ -494,7 +496,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
 
   // Laptop keyboard: arrows move the cursor, Enter opens, K/C/A/M tag.
   useEffect(() => {
-    if (detail || filtersOpen || view === "summary" || view === "home") return;
+    if (detail || filtersOpen || view === "summary" || view === "shape" || view === "home") return;
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
@@ -638,6 +640,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
             <HomeRow icon="sparkle" label={`${data.set.name}, whole set`} onClick={() => goView("set")} />
             <HomeRow icon="cards" label="All cards" onClick={() => goView("all")} />
             <HomeRow icon="list" label="Your decisions" count={decided.length} onClick={() => goView("decisions")} />
+            <HomeRow icon="gauge" label="Cube shape" sub="Colours, types, curve and guilds after your decisions" onClick={() => goView("shape")} />
             <HomeRow icon="summary" label="Summary and export" onClick={() => goView("summary")} />
             {onOpenChecklist && (
               <HomeRow icon="check" label="Collection checklist" sub="Cards you've received" onClick={onOpenChecklist} />
@@ -700,6 +703,8 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
           </div>
           <CubeReviewSummary decisions={decisions} onOpenCard={(id) => setDetail({ ids: [id], index: 0 })} />
         </>
+      ) : view === "shape" ? (
+        <CubeShape decisions={decisions} onOpenCards={(ids) => setDetail({ ids, index: 0 })} />
       ) : (
         <>
           {/* View-specific controls */}
