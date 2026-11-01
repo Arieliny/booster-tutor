@@ -618,7 +618,9 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
         {saveWarning}
         <HeroCount live={live} />
 
-        <div className="grid gap-5 md:grid-cols-2">
+        {/* minmax(0, 1fr): a plain 1fr column can't shrink below its content, so one long single-line
+            row description (they're nowrap + truncate) would widen the whole page past the phone screen. */}
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 md:grid-cols-[repeat(2,minmax(0,1fr))]">
           <HomeGroup title="To decide">
             <HomeRow
               icon="help"
@@ -675,7 +677,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
             <HomeRow
               icon="cardBack"
               label="Bench"
-              sub="Cards you have that aren't in the cube: your cuts and old proxies"
+              sub="Your cuts and old proxies, not in the cube"
               count={benchIds(decisions).length}
               onClick={() => goView("bench")}
             />
@@ -1381,7 +1383,7 @@ function HeroCount({ live }: { live: Summary }) {
 
 function HomeGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section>
+    <section className="min-w-0">
       <h3 className="mb-1.5 px-1 text-xs font-medium text-(--color-text-dim)">{title}</h3>
       <div className="divide-y divide-(--color-border) overflow-hidden rounded-xl border border-(--color-border) bg-(--color-bg-elev)">
         {children}
