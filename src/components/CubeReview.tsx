@@ -37,6 +37,7 @@ import {
   historyEvents,
   imageUrl,
   inMyCube,
+  cardTags,
   lastChange,
   loadDecisions,
   mergeDecisions,
@@ -65,6 +66,7 @@ import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
 import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
 import { CubeShape } from "./CubeShape";
+import { ARCHETYPES, ROLES, ROLE_LABEL, parseTag, type Role } from "../lib/archetypes";
 import { CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
 import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
@@ -271,6 +273,11 @@ function useReviewState() {
     setDecisions((d) => ({ ...d, [id]: { ...d[id], base: on || undefined, t: Date.now() } }));
   }, []);
 
+  /** Hand-set archetype tags; undefined goes back to the baked ones. */
+  const setTags = useCallback((id: string, tags: string[] | undefined) => {
+    setDecisions((d) => ({ ...d, [id]: { ...d[id], tags, t: Date.now() } }));
+  }, []);
+
   const setNote = useCallback((id: string, note: string) => {
     if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
     setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
@@ -314,6 +321,7 @@ function useReviewState() {
     setStatus,
     setNote,
     setBase,
+    setTags,
     openLookedUp,
     openFromScryfall,
     live,
@@ -576,6 +584,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
       onStatus={setStatus}
       onNote={st.setNote}
       onBase={st.setBase}
+      onTags={st.setTags}
       onClose={() => setDetail(null)}
     />
   );
@@ -1327,6 +1336,7 @@ export function LookUp() {
           onStatus={st.setStatus}
           onNote={st.setNote}
           onBase={st.setBase}
+          onTags={st.setTags}
           onClose={() => setDetail(null)}
         />
       )}
@@ -1761,6 +1771,7 @@ function CardDetail({
   onStatus,
   onNote,
   onBase,
+  onTags,
   onClose,
 }: {
   ids: string[];
@@ -1775,6 +1786,7 @@ function CardDetail({
   onStatus: (id: string, s: Status) => void;
   onNote: (id: string, note: string) => void;
   onBase: (id: string, on: boolean) => void;
+  onTags: (id: string, tags: string[] | undefined) => void;
   onClose: () => void;
 }) {
   const c = card(ids[index]);
@@ -1860,6 +1872,9 @@ function CardDetail({
           c={c}
           savedNote={decisions[c.id]?.note ?? ""}
           onNote={onNote}
+          tags={cardTags(c.id, decisions)}
+          tagsOverridden={!!decisions[c.id]?.tags}
+          onTags={onTags}
           artVersion={artVersion}
           onChooseArt={onChooseArt}
         />
@@ -1921,21 +1936,93 @@ function CardDetail({
   );
 }
 
+/**
+ * A card's archetype tags as chips ("Lands · P"), with an editor: one row per
+ * archetype, pick a role or none. Edited tags replace the suggested ones for
+ * that card; "Back to suggested" drops the edit.
+ */
+function TagRow({
+  tags,
+  overridden,
+  editing,
+  onEdit,
+  onTags,
+}: {
+  tags: string[];
+  overridden: boolean;
+  editing: boolean;
+  onEdit: () => void;
+  onTags: (tags: string[] | undefined) => void;
+}) {
+  const parsed = tags.map(parseTag).filter((t): t is { key: string; role: Role } => !!t);
+  const roleOf = (key: string): Role | "" => parsed.find((t) => t.key === key)?.role ?? "";
+  const set = (key: string, role: Role | "") => {
+    const rest = parsed.filter((t) => t.key !== key).map((t) => `${t.key}:${t.role}`);
+    onTags(role ? [...rest, `${key}:${role}`] : rest);
+  };
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-1">
+        <span className="text-(--color-text)">Archetypes:</span>
+        {parsed.length === 0 && <span>none</span>}
+        {parsed.map((t) => (
+          <span key={t.key} className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[11px] text-violet-100" title={ROLE_LABEL[t.role]}>
+            {ARCHETYPES.find((a) => a.key === t.key)?.label} · {t.role}
+          </span>
+        ))}
+        <button type="button" onClick={onEdit} className="ml-1 rounded border border-(--color-border) px-2 py-0.5 text-[11px] hover:bg-white/5">
+          {editing ? "Done" : "Edit"}
+        </button>
+        {overridden && !editing && <span className="text-[11px] text-(--color-accent)">edited</span>}
+      </div>
+      {editing && (
+        <div className="mt-2 space-y-1 rounded border border-(--color-border) p-2">
+          {ARCHETYPES.map((a) => (
+            <div key={a.key} className="flex items-center justify-between gap-2">
+              <span className="min-w-0 truncate text-(--color-text)">{a.label}</span>
+              <Segmented<Role | "">
+                value={roleOf(a.key)}
+                options={[["", "–"], ...ROLES.map((r): [Role, string] => [r, r])]}
+                onChange={(v) => set(a.key, v)}
+              />
+            </div>
+          ))}
+          <div className="flex items-center justify-between pt-1 text-[11px]">
+            <span>P payoff · E enabler · F fits</span>
+            {overridden && (
+              <button type="button" onClick={() => onTags(undefined)} className="rounded border border-(--color-border) px-2 py-0.5 hover:bg-white/5">
+                Back to suggested
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CardBody({
   c,
   savedNote,
   onNote,
+  tags,
+  tagsOverridden,
+  onTags,
   artVersion,
   onChooseArt,
 }: {
   c: ReviewCard;
   savedNote: string;
   onNote: (id: string, note: string) => void;
+  tags: string[];
+  tagsOverridden: boolean;
+  onTags: (id: string, tags: string[] | undefined) => void;
   artVersion: number;
   onChooseArt: (id: string, p: Printing | null) => void;
 }) {
   const [face, setFace] = useState<"front" | "back">("front");
   const [noteDraft, setNoteDraft] = useState(savedNote);
+  const [editingTags, setEditingTags] = useState(false);
   const [picking, setPicking] = useState(false);
   const back = hasBackImage(c);
   const { me } = useAuth();
@@ -2054,6 +2141,7 @@ function CardBody({
                   </div>
                 )}
                 {isExtra(c.id) && <div className="text-(--color-accent)">Added by hand</div>}
+                <TagRow tags={tags} overridden={tagsOverridden} editing={editingTags} onEdit={() => setEditingTags((v) => !v)} onTags={(t) => onTags(c.id, t)} />
                 {isLookedUp(c.id) && (
                   <div className="text-(--color-accent)">Looked up — tag it or add a note to keep it on your list</div>
                 )}

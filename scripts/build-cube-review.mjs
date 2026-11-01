@@ -25,7 +25,7 @@
  * Cards are keyed by ORACLE ID, never by printing - the same card in a
  * different printing in each cube must count as one card.
  */
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { oldestPrintings, smallImageUrl } from "./lib/oldest-printings.mjs";
@@ -246,6 +246,25 @@ for (const key of ["mine", "lsv", "mtgo", "arena"])
   for (const s of cubes[key].sids) if (found.has(s)) put(found.get(s));
 for (const c of found.values()) put(c);
 for (const c of fra.cards) put(c);
+
+// Archetype tags (scripts/archetype-tags.json, by card name: "lands:P" = archetype key + role).
+// Baked onto the cards so the app can count support per archetype offline; a decision can override.
+const TAGS = join(dirname(fileURLToPath(import.meta.url)), "archetype-tags.json");
+let tagged = 0;
+if (existsSync(TAGS)) {
+  const tags = JSON.parse(readFileSync(TAGS, "utf8"));
+  const byName = new Map(Object.values(cards).map((c) => [c.name, c]));
+  const unknown = [];
+  for (const [name, list] of Object.entries(tags)) {
+    const c = byName.get(name);
+    if (!c) unknown.push(name);
+    else if (list.length) {
+      c.tags = list;
+      tagged++;
+    }
+  }
+  console.log(`  Tags          ${tagged} cards tagged from ${Object.keys(tags).length} entries${unknown.length ? `; ${unknown.length} names not in the data: ${unknown.slice(0, 5).join(", ")}${unknown.length > 5 ? "..." : ""}` : ""}\n`);
+}
 
 const oid = (sid) => (found.has(sid) ? oracleOf(found.get(sid)) : null);
 

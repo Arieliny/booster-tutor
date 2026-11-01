@@ -1,8 +1,10 @@
 import { useMemo } from "react";
+import { ARCHETYPES, parseTag } from "../lib/archetypes";
 import {
   BALANCE_ROWS,
   balanceRow,
   card,
+  cardTags,
   cmcFacet,
   data,
   hasCard,
@@ -90,6 +92,10 @@ function shapeOf(decisions: Decisions) {
   const byCurve = new Map<string, Cell>();
   const byGuild = new Map<string, Cell>();
   const byBase = new Map<string, Cell>();
+  // Per archetype: "key|all", "key|P" / "E" / "F"; plus the cuts and adds that carry the tag.
+  const byArch = new Map<string, Cell>();
+  const archCuts = new Map<string, string[]>();
+  const archAdds = new Map<string, string[]>();
   const key = (m: Map<string, Cell>, k: string) => {
     let v = m.get(k);
     if (!v) m.set(k, (v = cell()));
@@ -111,11 +117,27 @@ function shapeOf(decisions: Decisions) {
       }
       const g = guildOf(c);
       if (g) key(byGuild, g)[which].push(id);
+      for (const t of cardTags(id, decisions)) {
+        const p = parseTag(t);
+        if (!p) continue;
+        key(byArch, `${p.key}|all`)[which].push(id);
+        key(byArch, `${p.key}|${p.role}`)[which].push(id);
+      }
     }
   };
   tally(now, "now");
   tally(after, "after");
-  return { byType, byCurve, byGuild, byBase, cuts: cuts.size, adds: adds.size, base: base.size, after: after.length };
+  for (const [list, into] of [
+    [cuts, archCuts],
+    [adds, archAdds],
+  ] as const)
+    for (const id of list)
+      for (const t of cardTags(id, decisions)) {
+        const p = parseTag(t);
+        if (p) (into.get(p.key) ?? into.set(p.key, []).get(p.key)!).push(id);
+      }
+  const anyTags = byArch.size > 0;
+  return { byType, byCurve, byGuild, byBase, byArch, archCuts, archAdds, anyTags, cuts: cuts.size, adds: adds.size, base: base.size, after: after.length };
 }
 
 export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; onOpenCards: (ids: string[]) => void }) {
@@ -141,6 +163,14 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
       </button>
     );
   };
+  /** A plain list of ids as a tappable count (the cuts or adds carrying an archetype's tag). */
+  const list = (ids: string[], tone: string, sign: string) =>
+    ids.length ? (
+      <button type="button" onClick={() => onOpenCards(ids)} className={"w-full rounded px-1 py-1.5 text-right tabular-nums hover:bg-white/5 " + tone}>
+        {sign}
+        {ids.length}
+      </button>
+    ) : null;
   /** The cards in a row that aren't marked base: what's actually on the table to cut. */
   const flex = (c: Cell | undefined, b: Cell | undefined) => {
     const baseIds = new Set(b?.after ?? []);
@@ -178,6 +208,49 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
           Every number is the count after your cuts and adds, with the change from today beside it. Tap a number to open those cards.
         </p>
       </div>
+
+      {shape.anyTags && (
+        <Section
+          title="Archetypes"
+          hint="Cards tagged for each archetype (see docs/ARCHETYPES.md). P = payoffs, E = enablers, F = fits, counted after your decisions. Cut and Add show which archetypes lose or gain support."
+        >
+          <table className="w-full text-sm">
+            <thead>
+              <tr>
+                <th className={th + " text-left"}>Archetype</th>
+                <th className={th}>Now</th>
+                <th className={th}>Cut</th>
+                <th className={th}>Add</th>
+                <th className={th}>After</th>
+                <th className={th}>P</th>
+                <th className={th}>E</th>
+                <th className={th}>F</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ARCHETYPES.map((a) => {
+                const all = shape.byArch.get(`${a.key}|all`);
+                const cut = shape.archCuts.get(a.key) ?? [];
+                const add = shape.archAdds.get(a.key) ?? [];
+                return (
+                  <tr key={a.key} className="border-t border-(--color-border)">
+                    <td className={rowHead}>
+                      {a.label} <span className="text-(--color-text-dim)">{a.colors}</span>
+                    </td>
+                    <td className="py-1 text-right tabular-nums text-(--color-text-dim)">{all?.now.length ?? 0}</td>
+                    <td className="py-0">{list(cut, "text-red-300", "−")}</td>
+                    <td className="py-0">{list(add, "text-emerald-300", "+")}</td>
+                    <td className="py-0">{num(all, true)}</td>
+                    <td className="py-0">{num(shape.byArch.get(`${a.key}|P`))}</td>
+                    <td className="py-0">{num(shape.byArch.get(`${a.key}|E`))}</td>
+                    <td className="py-0">{num(shape.byArch.get(`${a.key}|F`))}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Section>
+      )}
 
       <Section title="Colours" hint="By colour identity. Lands are counted on their own line. Flex = after, minus the cards marked base.">
         <table className="w-full text-sm">

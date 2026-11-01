@@ -56,6 +56,8 @@ export interface ReviewCard {
    * Used as a fallback so an offline device shows the image it already saved.
    */
   cubeImg?: string;
+  /** Archetype tags, "key:role" (see lib/archetypes.ts). From the baked AI pass; a decision can override. */
+  tags?: string[];
 }
 
 export interface ChangelogEntry {
@@ -184,6 +186,13 @@ export function addExtraCards(cards: ReviewCard[]): number {
 /** Every card id: the baked data plus anything added by hand. */
 export function allCardIds(): string[] {
   return [...Object.keys(data.cards), ...Object.keys(extraCards())];
+}
+
+/** A card's archetype tags: the hand-set list if there is one, else the baked ones. */
+export function cardTags(id: string, d?: Decisions): string[] {
+  const own = d?.[id]?.tags;
+  if (own) return own;
+  return hasCard(id) ? (card(id).tags ?? []) : [];
 }
 
 export function hasCard(id: string): boolean {
@@ -449,6 +458,8 @@ export interface Decision {
   note?: string;
   /** Part of the base cube: a card that would very unlikely be cut. */
   base?: true;
+  /** Archetype tags set by hand; replaces the card's baked tags entirely (an empty list clears them). */
+  tags?: string[];
   /** Last edit time (ms) — import merges keep the newer edit per card. */
   t: number;
 }
@@ -503,7 +514,7 @@ export function mergeDecisions(current: Decisions, incoming: Decisions): Decisio
 /** Drop entries with neither a status nor a note. */
 export function prune(d: Decisions): Decisions {
   const out: Decisions = {};
-  for (const [id, v] of Object.entries(d)) if (v.status || v.note || v.base) out[id] = v;
+  for (const [id, v] of Object.entries(d)) if (v.status || v.note || v.base || v.tags) out[id] = v;
   return out;
 }
 
