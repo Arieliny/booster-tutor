@@ -97,6 +97,8 @@ interface Ui {
   cmcs: CmcFacet[];
   rarities: string[];
   statuses: StatusFilter[];
+  /** Base cube filter: only base cards, only the rest ("flex"), or all. */
+  base: "any" | "base" | "flex";
   autoAdvance: boolean;
 }
 
@@ -112,6 +114,7 @@ const DEFAULT_UI: Ui = {
   cmcs: [],
   rarities: [],
   statuses: [],
+  base: "any",
   autoAdvance: true,
 };
 
@@ -204,6 +207,7 @@ function facetFilter(ui: Ui, q: string, decisions: Decisions) {
       const s: StatusFilter = normalizeStatus(c.id, decisions[c.id]?.status) ?? "none";
       if (!ui.statuses.includes(s)) return false;
     }
+    if (ui.base !== "any" && (ui.base === "base") !== !!decisions[c.id]?.base) return false;
     if (needle && !searchText(c).includes(needle)) return false;
     return true;
   };
@@ -262,6 +266,11 @@ function useReviewState() {
     });
   }, []);
 
+  /** Mark a card as part of the base cube (or not). A base card stays on your list even with no decision. */
+  const setBase = useCallback((id: string, on: boolean) => {
+    setDecisions((d) => ({ ...d, [id]: { ...d[id], base: on || undefined, t: Date.now() } }));
+  }, []);
+
   const setNote = useCallback((id: string, note: string) => {
     if (persistIfLookedUp(id)) setExtrasVersion((v) => v + 1);
     setDecisions((d) => ({ ...d, [id]: { ...d[id], note: note || undefined, t: Date.now() } }));
@@ -304,6 +313,7 @@ function useReviewState() {
     chooseArt,
     setStatus,
     setNote,
+    setBase,
     openLookedUp,
     openFromScryfall,
     live,
@@ -518,6 +528,9 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
       } else if (KEY_POLARITY[e.key.toLowerCase()] && selId) {
         setStatus(selId, statusFor(selId, KEY_POLARITY[e.key.toLowerCase()]));
         return;
+      } else if (e.key.toLowerCase() === "b" && selId && inMyCube(selId)) {
+        st.setBase(selId, !decisions[selId]?.base);
+        return;
       } else return;
       e.preventDefault();
       next = Math.max(0, Math.min(ids.length - 1, next));
@@ -526,7 +539,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [detail, filtersOpen, view, ids, selId, layout, limit, open, setStatus, showAtLeast]);
+  }, [detail, filtersOpen, view, ids, selId, layout, limit, open, setStatus, showAtLeast, st, decisions]);
 
   useEffect(() => {
     if (!selId) return;
@@ -536,7 +549,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
   const toggle = <T,>(list: T[], v: T): T[] =>
     list.includes(v) ? list.filter((x) => x !== v) : [...list, v];
 
-  const activeFilters = ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length;
+  const activeFilters = ui.colors.length + ui.types.length + ui.cmcs.length + ui.rarities.length + ui.statuses.length + (ui.base === "any" ? 0 : 1);
   const clearFilters = () => patch({ colors: [], types: [], cmcs: [], rarities: [], statuses: [] });
 
   const offlineUrls = useMemo(
@@ -562,6 +575,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
       }}
       onStatus={setStatus}
       onNote={st.setNote}
+      onBase={st.setBase}
       onClose={() => setDetail(null)}
     />
   );
@@ -899,6 +913,14 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                     </Chip>
                   ))}
                 </FacetRow>
+                <FacetRow label="Base cube">
+                  <Chip on={ui.base === "base"} onClick={() => patch({ base: ui.base === "base" ? "any" : "base" })}>
+                    Base
+                  </Chip>
+                  <Chip on={ui.base === "flex"} onClick={() => patch({ base: ui.base === "flex" ? "any" : "flex" })}>
+                    Not base
+                  </Chip>
+                </FacetRow>
                 <FacetRow label="Your decision">
                   {([...STATUSES, "none"] as StatusFilter[]).map((s) => (
                     <Chip
@@ -976,6 +998,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                         c={card(id)}
                         src={imageUrl(card(id), "small")}
                         status={normalizeStatus(id, decisions[id]?.status)}
+                        base={!!decisions[id]?.base}
                         hasNote={!!decisions[id]?.note}
                         selected={selId === id}
                         onOpen={open}
@@ -990,6 +1013,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                         c={card(id)}
                         log={view === "changelog" ? ui.log : null}
                         status={normalizeStatus(id, decisions[id]?.status)}
+                        base={!!decisions[id]?.base}
                         selected={selId === id}
                         onOpen={open}
                       />
@@ -1195,6 +1219,7 @@ export function LookUp() {
                     c={card(id)}
                     log={null}
                     status={normalizeStatus(id, decisions[id]?.status)}
+                    base={!!decisions[id]?.base}
                     selected={false}
                     onOpen={(cid) => setDetail({ ids: local, index: local.indexOf(cid) })}
                   />
@@ -1301,6 +1326,7 @@ export function LookUp() {
           onIndex={(index) => setDetail((d) => (d ? { ...d, index } : d))}
           onStatus={st.setStatus}
           onNote={st.setNote}
+          onBase={st.setBase}
           onClose={() => setDetail(null)}
         />
       )}
@@ -1497,6 +1523,10 @@ function MemberDots({ id }: { id: string }) {
   );
 }
 
+function BasePill() {
+  return <span className="rounded bg-violet-500/35 px-1.5 py-0.5 text-[10px] font-semibold text-violet-100">Base</span>;
+}
+
 function StatusPill({ status }: { status?: Status }) {
   if (!status) return null;
   return (
@@ -1510,6 +1540,7 @@ const Tile = memo(function Tile({
   c,
   src,
   status,
+  base,
   hasNote,
   selected,
   onOpen,
@@ -1517,6 +1548,7 @@ const Tile = memo(function Tile({
   c: ReviewCard;
   src: string | null;
   status?: Status;
+  base?: boolean;
   hasNote: boolean;
   selected: boolean;
   onOpen: (id: string) => void;
@@ -1548,8 +1580,9 @@ const Tile = memo(function Tile({
             {c.name}
           </span>
         )}
-        {status && (
-          <span className="absolute top-1 right-1">
+        {(status || base) && (
+          <span className="absolute top-1 right-1 flex gap-0.5">
+            {base && <BasePill />}
             <StatusPill status={status} />
           </span>
         )}
@@ -1574,12 +1607,14 @@ const Row = memo(function Row({
   c,
   log,
   status,
+  base,
   selected,
   onOpen,
 }: {
   c: ReviewCard;
   log: LogKey | null;
   status?: Status;
+  base?: boolean;
   selected: boolean;
   onOpen: (id: string) => void;
 }) {
@@ -1611,6 +1646,7 @@ const Row = memo(function Row({
             {entry.current ? "Current" : "Past"}
           </span>
         )}
+        {base && <BasePill />}
         <StatusPill status={status} />
       </span>
       <span className="col-span-2 truncate text-xs text-(--color-text-dim) sm:col-span-1">
@@ -1724,6 +1760,7 @@ function CardDetail({
   onIndex,
   onStatus,
   onNote,
+  onBase,
   onClose,
 }: {
   ids: string[];
@@ -1737,10 +1774,12 @@ function CardDetail({
   onIndex: (i: number) => void;
   onStatus: (id: string, s: Status) => void;
   onNote: (id: string, note: string) => void;
+  onBase: (id: string, on: boolean) => void;
   onClose: () => void;
 }) {
   const c = card(ids[index]);
   const status = normalizeStatus(c.id, decisions[c.id]?.status);
+  const base = !!decisions[c.id]?.base;
   const stepping = ids.length > 1;
   useBackToClose(onClose);
 
@@ -1774,6 +1813,7 @@ function CardDetail({
       if (e.key === "ArrowRight") go(1);
       else if (e.key === "ArrowLeft") go(-1);
       else if (KEY_POLARITY[e.key.toLowerCase()]) tag(statusFor(c.id, KEY_POLARITY[e.key.toLowerCase()]));
+      else if (e.key.toLowerCase() === "b" && inMyCube(c.id)) onBase(c.id, !base);
       else if (e.key.toLowerCase() === "e") {
         e.preventDefault();
         document.getElementById("cube-review-note")?.focus();
@@ -1782,7 +1822,7 @@ function CardDetail({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [go, tag, onClose, c.id]);
+  }, [go, tag, onClose, onBase, base, c.id]);
 
   return (
     // h-dvh, not inset-0: see Sheet.tsx (keeps the review bar over the bottom nav).
@@ -1823,6 +1863,22 @@ function CardDetail({
           artVersion={artVersion}
           onChooseArt={onChooseArt}
         />
+        {/* Base cube: a card that would very unlikely be cut. Only for cards in my cube. */}
+        {inMyCube(c.id) && (
+          <button
+            type="button"
+            onClick={() => onBase(c.id, !base)}
+            aria-pressed={base}
+            className={
+              "mx-4 mt-2 flex items-center justify-center gap-2 rounded-lg border py-1.5 text-xs font-medium " +
+              (base ? "border-violet-400/60 bg-violet-500/25 text-violet-100" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+            }
+          >
+            <Icon name="shield" className="h-4 w-4" />
+            {base ? "Base cube · won't be cut" : "Mark as base cube"}
+            <span className="ml-1 hidden text-(--color-text-dim) lg:inline">B</span>
+          </button>
+        )}
         {/* Review bar — big tap targets, pinned to the bottom on a phone. The arrows are 48px wide and the bar
             keeps them off the very edges (and above the gesture bar): taps there that drift a few pixels
             were being taken by Android's back-swipe and needed a second try. */}

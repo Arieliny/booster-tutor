@@ -138,6 +138,7 @@ const PATHS = {
   refresh: <path d="M20 11a8 8 0 0 0-14.9-3.5M4 4v4h4M4 13a8 8 0 0 0 14.9 3.5M20 20v-4h-4" />,
   more: <path d="M5 12h.01M12 12h.01M19 12h.01" strokeWidth={2.8} strokeLinecap="round" />,
   sparkle: <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />,
+  shield: <path d="M12 2.5 19.5 5.5v5.5c0 4.6-3.1 8.4-7.5 10.5-4.4-2.1-7.5-5.9-7.5-10.5V5.5z" />,
   // A planeswalker's emblem: a shield with a star.
   emblem: (
     <>

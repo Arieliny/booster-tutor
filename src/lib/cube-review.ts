@@ -447,6 +447,8 @@ export function choicesFor(id: string): Status[] {
 export interface Decision {
   status?: Status;
   note?: string;
+  /** Part of the base cube: a card that would very unlikely be cut. */
+  base?: true;
   /** Last edit time (ms) — import merges keep the newer edit per card. */
   t: number;
 }
@@ -501,7 +503,7 @@ export function mergeDecisions(current: Decisions, incoming: Decisions): Decisio
 /** Drop entries with neither a status nor a note. */
 export function prune(d: Decisions): Decisions {
   const out: Decisions = {};
-  for (const [id, v] of Object.entries(d)) if (v.status || v.note) out[id] = v;
+  for (const [id, v] of Object.entries(d)) if (v.status || v.note || v.base) out[id] = v;
   return out;
 }
 

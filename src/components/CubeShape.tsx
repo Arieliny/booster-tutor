@@ -75,11 +75,13 @@ const cell = (): Cell => ({ now: [], after: [] });
 function shapeOf(decisions: Decisions) {
   const cuts = new Set<string>();
   const adds = new Set<string>();
+  const base = new Set<string>();
   for (const [id, v] of Object.entries(decisions)) {
     const s = normalizeStatus(id, v.status);
     if (!hasCard(id)) continue;
     if (s === "cut") cuts.add(id);
     if (s === "add") adds.add(id);
+    if (v.base) base.add(id);
   }
   const now = [...members.mine].filter((id) => data.cards[id]);
   const after = [...now.filter((id) => !cuts.has(id)), ...[...adds].filter((id) => !members.mine.has(id))];
@@ -87,6 +89,7 @@ function shapeOf(decisions: Decisions) {
   const byType = new Map<string, Cell>();
   const byCurve = new Map<string, Cell>();
   const byGuild = new Map<string, Cell>();
+  const byBase = new Map<string, Cell>();
   const key = (m: Map<string, Cell>, k: string) => {
     let v = m.get(k);
     if (!v) m.set(k, (v = cell()));
@@ -96,6 +99,7 @@ function shapeOf(decisions: Decisions) {
     for (const id of ids) {
       const c = card(id);
       const row = balanceRow(c);
+      if (which === "after" && base.has(id)) key(byBase, row).after.push(id);
       if (row === "L") {
         key(byType, "L")[which].push(id);
       } else {
@@ -111,7 +115,7 @@ function shapeOf(decisions: Decisions) {
   };
   tally(now, "now");
   tally(after, "after");
-  return { byType, byCurve, byGuild, cuts: cuts.size, adds: adds.size };
+  return { byType, byCurve, byGuild, byBase, cuts: cuts.size, adds: adds.size, base: base.size, after: after.length };
 }
 
 export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; onOpenCards: (ids: string[]) => void }) {
@@ -137,6 +141,21 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
       </button>
     );
   };
+  /** The cards in a row that aren't marked base: what's actually on the table to cut. */
+  const flex = (c: Cell | undefined, b: Cell | undefined) => {
+    const baseIds = new Set(b?.after ?? []);
+    const ids = (c?.after ?? []).filter((id) => !baseIds.has(id));
+    return (
+      <button
+        type="button"
+        disabled={!ids.length}
+        onClick={() => onOpenCards(ids)}
+        className="w-full rounded px-1 py-1.5 text-right tabular-nums text-(--color-text-dim) hover:bg-white/5 disabled:opacity-40"
+      >
+        {ids.length}
+      </button>
+    );
+  };
   const th = "py-1 text-right text-xs font-normal text-(--color-text-dim)";
   const rowHead = "py-1 pr-2 text-left text-xs text-(--color-text)";
 
@@ -150,12 +169,17 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
             {s.current} now · <span className="text-red-300">{shape.cuts} cut</span> · <span className="text-emerald-300">{shape.adds} added</span>
           </span>
         </div>
+        {shape.base > 0 && (
+          <p className="mt-1 text-sm text-(--color-text-dim)">
+            <span className="text-violet-200">{shape.base} base</span> · {shape.after - shape.base} could still be cut
+          </p>
+        )}
         <p className="mt-1 text-xs text-(--color-text-dim)">
           Every number is the count after your cuts and adds, with the change from today beside it. Tap a number to open those cards.
         </p>
       </div>
 
-      <Section title="Colours" hint="By colour identity. Lands are counted on their own line.">
+      <Section title="Colours" hint="By colour identity. Lands are counted on their own line. Flex = after, minus the cards marked base.">
         <table className="w-full text-sm">
           <thead>
             <tr>
@@ -164,6 +188,7 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
               <th className={th}>Cut</th>
               <th className={th}>Add</th>
               <th className={th}>After</th>
+              <th className={th}>Flex</th>
             </tr>
           </thead>
           <tbody>
@@ -176,6 +201,7 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
                   <td className="py-1 text-right tabular-nums text-red-300">{b.minus ? `−${b.minus}` : ""}</td>
                   <td className="py-1 text-right tabular-nums text-emerald-300">{b.plus ? `+${b.plus}` : ""}</td>
                   <td className="py-0">{num(c, true)}</td>
+                  <td className="py-0">{flex(c, shape.byBase.get(b.id))}</td>
                 </tr>
               );
             })}
