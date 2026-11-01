@@ -9,7 +9,14 @@ Each card gets one or more tags, each with a role:
 - **E** enabler: makes the payoff work (Entomb, Dark Ritual, Goblin Welder).
 - **F** fits: a good card for the deck that doesn't define it (Lightning Bolt in aggro, Counterspell in control).
 
-Counts below are from the 547-card list on 2026-11-01 and are rough: they're what the tagging pass will make exact.
+Counts below are from the 547-card list on 2026-11-01 and are rough; the tagged counts are in the app (My cube →
+Cube shape → Archetypes).
+
+**Coverage of `scripts/archetype-tags.json` (2026-11-01):** every card in the four cubes (mine, LSV, MTGO Vintage,
+Arena Powered) plus every card one of them cut this year: 1,056 cards. New-set cards that aren't in a cube are not
+tagged (the set view is for looking through a set; Ari's call). To tag more cards, the tagger brief is
+`docs/ARCHETYPE-TAGGING-BRIEF.md`; it reads a batch of `### Name / line / text` cards and
+writes name → tags JSON, which `scripts/build-cube-review.mjs` bakes onto the cards.
 
 ## Ari's archetypes
 

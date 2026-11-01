@@ -2,6 +2,10 @@
  "\"Name Sticker\" Goblin": [
   "storm:E"
  ],
+ "Aang, at the Crossroads // Aang, Destined Savior": [
+  "blink:P",
+  "goodstuff:P"
+ ],
  "Aang, Swift Savior // Aang and La, Ocean's Fury": [
   "blink:P",
   "tempo:F"
@@ -17,7 +21,6 @@
  "Abrade": [],
  "Abrupt Decay": [],
  "Absorbing Man": [],
- "Academic Ascent": [],
  "Ad Nauseam": [
   "storm:P"
  ],
@@ -32,51 +35,70 @@
  "Aether Spellbomb": [
   "artifacts:E"
  ],
- "Afterthought Sentry": [],
  "Agatha's Soul Cauldron": [
   "gw:F"
  ],
  "Agent Bishop, Man in Black": [
   "gw:P"
  ],
- "Ajani Resolute": [],
- "Ajani Unrelenting": [
-  "tokens:F"
- ],
  "Ajani, Nacatl Pariah // Ajani, Nacatl Avenger": [
   "aggro:P",
   "tokens:F"
  ],
- "Ajani's Anguish": [],
+ "Ajani, Outland Chaperone": [
+  "tokens:E"
+ ],
  "Alpha Deathclaw": [
   "blink:E",
   "ramp:F"
+ ],
+ "Ambitious Augmenter": [],
+ "Amped Raptor": [
+  "aggro:F"
  ],
  "Ancestral Recall": [
   "storm:E",
   "spells:E"
  ],
+ "Ancient Cornucopia": [
+  "goodstuff:E",
+  "artifacts:E"
+ ],
  "Ancient Tomb": [
   "artifacts:E"
  ],
+ "Andúril, Flame of the West": [
+  "aggro:E",
+  "tokens:E"
+ ],
+ "Anger": [],
  "Animate Dead": [
   "reanimator:E"
+ ],
+ "Anje's Ravager": [
+  "aggro:F"
  ],
  "Anointed Peacekeeper": [
   "aggro:F"
  ],
- "Apex Witchstalker": [
-  "reanimator:E"
+ "Appa, Steadfast Guardian": [
+  "blink:P"
  ],
  "Applied Geometry": [],
+ "April O'Neil, Hacktivist": [
+  "spells:F"
+ ],
+ "Arachne, Psionic Weaver": [
+  "aggro:E"
+ ],
  "Aragorn, King of Gondor": [
   "initiative:P",
   "goodstuff:P"
  ],
- "Arcane Amphisbaena": [],
- "Archive Arbiter": [
-  "artifacts:F"
+ "Arcbound Ravager": [
+  "artifacts:P"
  ],
+ "Archfiend of the Dross": [],
  "Archnemesis": [],
  "Archon of Cruelty": [
   "reanimator:P",
@@ -92,11 +114,9 @@
   "goodstuff:E",
   "lands:E"
  ],
- "Arni, Humble Scribe": [
-  "reanimator:E"
+ "Armageddon": [
+  "aggro:F"
  ],
- "Arni, Renowned Champion": [],
- "Artifist Acumen": [],
  "Arwen, Mortal Queen": [
   "gw:P"
  ],
@@ -121,10 +141,21 @@
  "Avacyn's Pilgrim": [
   "ramp:E"
  ],
+ "Avatar Kyoshi, Earthbender": [
+  "ramp:P"
+ ],
  "Avatar of Burgeoning Echoes": [
   "lands:F"
  ],
- "Awaken the Inferno": [],
+ "Axebane Ferox": [
+  "ramp:F"
+ ],
+ "Azure Beastbinder": [
+  "tempo:F"
+ ],
+ "Ba Sing Se": [
+  "lands:F"
+ ],
  "Backup Plan": [],
  "Badgermole Cub": [
   "ramp:E",
@@ -153,6 +184,10 @@
   "artifacts:E",
   "storm:E"
  ],
+ "Basim Ibn Ishaq": [
+  "artifacts:F"
+ ],
+ "Basking Rootwalla": [],
  "Batroc the Leaper": [],
  "Batterskull": [
   "aggro:P",
@@ -161,13 +196,23 @@
  "Bayou": [
   "goodstuff:E"
  ],
+ "Bazaar of Baghdad": [
+  "reanimator:E",
+  "graveyard:E"
+ ],
+ "Bebop & Rocksteady": [],
  "Bejeweled Warg": [
   "ramp:F"
  ],
  "Beorn the Fierce": [
   "ramp:F"
  ],
- "Bestial Incursion": [],
+ "Beza, the Bounding Spring": [
+  "control:F"
+ ],
+ "Bilbo, Luckwearer // Burglar's Plot": [
+  "tempo:F"
+ ],
  "Bilbo, Thief in the Night": [
   "graveyard:P"
  ],
@@ -175,7 +220,14 @@
   "ramp:E",
   "goodstuff:E"
  ],
+ "Birgi, God of Storytelling // Harnfel, Horn of Bounty": [
+  "storm:E"
+ ],
  "Bitter Triumph": [],
+ "Bitterbloom Bearer": [
+  "tokens:E",
+  "tempo:F"
+ ],
  "Black Lotus": [
   "storm:E",
   "artifacts:E"
@@ -191,25 +243,30 @@
  "Blazemire Verge": [
   "goodstuff:E"
  ],
- "Blazing Crescendo": [],
+ "Blazing Rootwalla": [
+  "aggro:F"
+ ],
  "Bleachbone Verge": [
   "goodstuff:E"
  ],
- "Blessed Ghoul": [],
  "Blightsteel Colossus": [
   "reanimator:P",
   "artifacts:P"
  ],
+ "Blood Artist": [
+  "tokens:P"
+ ],
  "Blood Crypt": [
   "goodstuff:E"
  ],
+ "Blood Fountain": [],
  "Bloodbraid Challenger": [
   "graveyard:P"
  ],
- "Bloodchief's Thirst": [],
- "Bloodline Recollector // Ancestral Craving": [
-  "tokens:F"
+ "Bloodbraid Elf": [
+  "ramp:F"
  ],
+ "Bloodchief's Thirst": [],
  "Bloodstained Mire": [
   "goodstuff:E",
   "lands:E"
@@ -218,13 +275,14 @@
   "tokens:F",
   "aggro:F"
  ],
- "Bloombrute": [],
  "Blooming Marsh": [
   "goodstuff:E"
  ],
- "Blossom-Blessed Angel // Seed Suture": [],
  "Bolas's Citadel": [
   "storm:P"
+ ],
+ "Bomat Courier": [
+  "aggro:F"
  ],
  "Bone Shards": [
   "tokens:E"
@@ -257,8 +315,13 @@
  "Brazen Borrower // Petty Theft": [
   "tempo:P"
  ],
- "Break Under Pressure": [],
  "Breeding Pool": [
+  "goodstuff:E"
+ ],
+ "Breya's Apprentice": [
+  "artifacts:F"
+ ],
+ "Brightclimb Pathway // Grimclimb Pathway": [
   "goodstuff:E"
  ],
  "Brightglass Gearhulk": [
@@ -272,7 +335,9 @@
   "tokens:P",
   "aggro:F"
  ],
- "Budding Insurgent": [],
+ "Bumi, Unleashed": [
+  "ramp:F"
+ ],
  "Burst Lightning": [
   "aggro:F",
   "spells:F"
@@ -281,7 +346,6 @@
   "storm:E",
   "graveyard:F"
  ],
- "Campus Crier": [],
  "Candelabra of Tawnos": [
   "artifacts:E",
   "storm:E",
@@ -290,16 +354,24 @@
  "Cankerbloom": [
   "gw:F"
  ],
+ "Captain Marvel, Earth's Protector": [
+  "control:F"
+ ],
  "Carnage Interpreter": [
   "reanimator:E",
   "graveyard:E",
   "aggro:F"
  ],
+ "Carnage, Crimson Chaos": [
+  "graveyard:F"
+ ],
  "Carnivorous Cultivator // Enroot": [
   "lands:E",
   "graveyard:F"
  ],
- "Cast Away Doubt": [],
+ "Castle Doom": [
+  "artifacts:E"
+ ],
  "Cathar Commando": [
   "aggro:F"
  ],
@@ -331,9 +403,6 @@
  "Chandra, Torch of Defiance": [
   "aggro:F"
  ],
- "Chandra's Emberling": [
-  "spells:F"
- ],
  "Channel": [
   "storm:E",
   "artifacts:E"
@@ -341,12 +410,19 @@
  "Chaos Defiler": [
   "artifacts:F"
  ],
- "Charge the Sanctum": [
-  "aggro:F"
+ "Chatterfang, Squirrel General": [
+  "tokens:P"
  ],
  "Chromatic Star": [
   "artifacts:E",
   "graveyard:E"
+ ],
+ "Chrome Dome": [
+  "artifacts:P"
+ ],
+ "Chrome Host Seedshark": [
+  "spells:P",
+  "artifacts:F"
  ],
  "Chrome Mox": [
   "storm:E",
@@ -358,24 +434,24 @@
  "Clarion Conqueror": [
   "aggro:F"
  ],
- "Clash of Elements": [],
  "Cloak and Dagger, Entwined": [],
+ "Clockwork Percussionist": [
+  "aggro:F"
+ ],
+ "Cloud, Midgar Mercenary": [
+  "aggro:E"
+ ],
  "Coalition Relic": [
   "goodstuff:E",
   "artifacts:E",
   "storm:E"
  ],
- "Codie, Ravenous Codex": [
-  "goodstuff:P"
- ],
  "Cogwork Librarian": [],
  "Collective Brutality": [],
  "Comet, Stellar Pup": [],
- "Command the Stage": [],
  "Commercial District": [
   "goodstuff:E"
  ],
- "Compel Brutality": [],
  "Concealed Courtyard": [
   "goodstuff:E"
  ],
@@ -406,11 +482,19 @@
  "Council's Judgment": [
   "control:F"
  ],
- "Countersculpt": [
-  "control:F"
- ],
  "Counterspell": [
   "control:F"
+ ],
+ "Courser of Kruphix": [
+  "lands:F"
+ ],
+ "Court of Bounty": [
+  "initiative:P",
+  "reanimator:E"
+ ],
+ "Court of Garenbrig": [
+  "initiative:P",
+  "gw:F"
  ],
  "Coveted Jewel": [
   "wheels:E",
@@ -420,11 +504,12 @@
  "Crabomination": [
   "artifacts:F"
  ],
- "Craftwork Crusher": [
+ "Cranial Ram": [
   "artifacts:F"
  ],
- "Craterclaw Colossus": [
-  "artifacts:F"
+ "Craterhoof Behemoth": [
+  "ramp:P",
+  "tokens:P"
  ],
  "Creeping Tar Pit": [
   "tempo:F",
@@ -437,13 +522,13 @@
  "Crucible of Worlds": [
   "lands:P"
  ],
- "Cruel Calculations": [],
  "Cryogen Relic": [
   "artifacts:F",
   "blink:F"
  ],
- "Cryotheory Adept": [
-  "spells:F"
+ "Cryptbreaker": [
+  "tokens:E",
+  "reanimator:E"
  ],
  "Cryptic Command": [
   "control:F"
@@ -452,7 +537,6 @@
   "graveyard:E",
   "reanimator:E"
  ],
- "Curse-Marred Demon": [],
  "Cut Down": [
   "tempo:F"
  ],
@@ -466,29 +550,35 @@
  "Damnation": [
   "control:E"
  ],
- "Danitha, Spear of Agony": [],
- "Danitha, Sword of Hope": [
-  "aggro:F"
- ],
  "Dark Confidant": [],
  "Dark Depths": [
   "lands:P"
  ],
+ "Dark Fortress": [
+  "goodstuff:E"
+ ],
  "Dark Matter Manipulator": [
   "graveyard:E"
+ ],
+ "Dark Petition": [
+  "storm:E"
  ],
  "Dark Ritual": [
   "storm:E",
   "reanimator:E"
- ],
- "Darklight Phoenix": [
-  "tokens:F"
  ],
  "Darkslick Shores": [
   "goodstuff:E"
  ],
  "Dauthi Voidwalker": [
   "tempo:P"
+ ],
+ "Dawnhand Dissident": [],
+ "Day of Judgment": [
+  "control:E"
+ ],
+ "Day's Undoing": [
+  "wheels:E"
  ],
  "Daze": [
   "tempo:E"
@@ -503,8 +593,9 @@
  "Deceit": [
   "blink:E"
  ],
- "Dedicated Commons": [
-  "goodstuff:E"
+ "Deceptive Landscape": [
+  "goodstuff:E",
+  "lands:E"
  ],
  "Deep-Cavern Bat": [
   "tempo:F"
@@ -521,14 +612,9 @@
  "Demonic Tutor": [
   "storm:E"
  ],
- "Denzilore Fatehold": [],
  "Descendant of Storms": [
   "aggro:F"
  ],
- "Deserted Beach": [
-  "goodstuff:E"
- ],
- "Desperate Futurescribe": [],
  "Detective's Phoenix": [
   "graveyard:F",
   "aggro:F"
@@ -540,13 +626,18 @@
   "graveyard:P",
   "control:F"
  ],
+ "Dion, Bahamut's Dominant // Bahamut, Warden of Light": [
+  "tokens:F",
+  "aggro:F"
+ ],
  "Dismember": [],
  "Displacer Kitten": [
   "spells:P",
   "blink:P"
  ],
- "Diviner of Victory // Unwind History": [],
  "Divining Duelist": [],
+ "Doctor Doom": [],
+ "Doctor Doom, Unrivaled": [],
  "Does Machines": [
   "artifacts:E",
   "reanimator:E"
@@ -554,28 +645,33 @@
  "Doomsday": [
   "storm:P"
  ],
- "Draconic Visitor": [
-  "tokens:F",
-  "artifacts:F"
+ "Draconautics Engineer": [
+  "aggro:F"
  ],
  "Dragon's Rage Channeler": [
   "graveyard:P",
   "spells:P"
  ],
+ "Dreams of Steel and Oil": [],
+ "Dress Down": [],
+ "Duelist of the Mind": [
+  "tempo:F",
+  "spells:F"
+ ],
  "Duress": [],
  "Eagles of the North": [],
- "Eardrum Rattler": [],
+ "Earthbender Ascension": [
+  "lands:F"
+ ],
  "Echo of Eons": [
   "storm:E",
   "wheels:E"
  ],
- "Edgar, Ancient Bloodlord": [
-  "tokens:P"
- ],
- "Edgar, Moonlit Sovereign": [
-  "gw:F"
- ],
  "Eiganjo, Seat of the Empire": [],
+ "Eladamri, Korvecdal": [
+  "reanimator:E",
+  "ramp:F"
+ ],
  "Elder Gargaroth": [
   "ramp:P"
  ],
@@ -583,6 +679,7 @@
   "goodstuff:E"
  ],
  "Elegy Acolyte": [],
+ "Elite Interceptor // Rejoinder": [],
  "Elite Spellbinder": [
   "aggro:F",
   "blink:E"
@@ -606,9 +703,6 @@
  "Emberwilde Captain": [
   "initiative:P"
  ],
- "Emergency Phytomedic // Seed Suture": [
-  "gw:F"
- ],
  "Emeritus of Abundance // Regrowth": [
   "graveyard:F"
  ],
@@ -618,14 +712,25 @@
  "Emeritus of Ideation // Ancestral Recall": [
   "control:F"
  ],
+ "Emeritus of Truce // Swords to Plowshares": [
+  "control:F",
+  "aggro:F"
+ ],
+ "Emeritus of Woe // Demonic Tutor": [
+  "storm:F"
+ ],
  "Emperor of Bones": [
   "graveyard:P"
+ ],
+ "Empty the Warrens": [
+  "storm:P"
  ],
  "Emrakul, the Aeons Torn": [
   "reanimator:P"
  ],
- "Emrakul, the Exigent Doom": [
-  "reanimator:P"
+ "Emrakul, the Promised End": [
+  "reanimator:P",
+  "graveyard:P"
  ],
  "Emry, Lurker of the Loch": [
   "artifacts:E"
@@ -644,7 +749,6 @@
   "control:F",
   "goodstuff:F"
  ],
- "Enlightened Confidant": [],
  "Enlightened Tutor": [
   "storm:E",
   "artifacts:E"
@@ -652,9 +756,11 @@
  "Entomb": [
   "reanimator:E"
  ],
- "Entrust the Spark": [],
  "Environmental Scientist": [
   "lands:E"
+ ],
+ "Ephemerate": [
+  "blink:P"
  ],
  "Erode": [],
  "Ertai Resurrected": [
@@ -666,11 +772,13 @@
   "gw:P",
   "tokens:P"
  ],
+ "Esper Origins // Summon: Esper Maduin": [
+  "graveyard:F"
+ ],
  "Esper Sentinel": [
   "aggro:F",
   "artifacts:F"
  ],
- "Essence Burn": [],
  "Etali, Primal Conqueror // Etali, Primal Sickness": [
   "reanimator:P",
   "ramp:P"
@@ -679,9 +787,16 @@
   "graveyard:P",
   "blink:E"
  ],
+ "Etherium Pteramander": [
+  "artifacts:F"
+ ],
  "Everflowing Chalice": [
   "artifacts:E",
   "storm:E"
+ ],
+ "Evolved Sleeper": [],
+ "Evolved Spinoderm": [
+  "ramp:F"
  ],
  "Exhume": [
   "reanimator:E"
@@ -691,14 +806,18 @@
   "lands:E",
   "artifacts:E"
  ],
+ "Experimental Synthesizer": [
+  "artifacts:F"
+ ],
+ "Exploration": [
+  "lands:E"
+ ],
+ "Explore": [
+  "lands:F"
+ ],
  "Expressive Iteration": [
   "spells:E",
   "storm:E"
- ],
- "Extended Absence": [],
- "Extrapolate the Impossible": [],
- "Eye of Jace": [
-  "graveyard:E"
  ],
  "Fable of the Mirror-Breaker // Reflection of Kiki-Jiki": [
   "reanimator:E",
@@ -709,7 +828,6 @@
   "goodstuff:E",
   "lands:E"
  ],
- "Face Yourself": [],
  "Faerie Mastermind": [
   "tempo:P",
   "wheels:P"
@@ -717,6 +835,9 @@
  "Faithless Looting": [
   "reanimator:E",
   "graveyard:E"
+ ],
+ "Fall from Favor": [
+  "initiative:P"
  ],
  "Fallen Shinobi": [
   "tempo:P"
@@ -730,22 +851,14 @@
  "Fatal Push": [
   "tempo:F"
  ],
- "Fatehold Annex": [
-  "goodstuff:E"
- ],
- "Fatehold Charm": [],
- "Fatehold Chronologist // Peer Review": [],
- "Fateshaper Aspirant": [],
- "Fblthp, Impossibly Lost": [],
- "Fblthp, Knows the Way": [
-  "goodstuff:P"
- ],
  "Fear of Missing Out": [
   "graveyard:P"
  ],
- "Ferocity of the Hunt": [],
  "Feywild Caretaker": [
   "initiative:P"
+ ],
+ "Field of the Dead": [
+  "lands:P"
  ],
  "Fiery Confluence": [
   "control:F",
@@ -764,6 +877,13 @@
  ],
  "Fire Covenant": [
   "control:F"
+ ],
+ "Fire Nation Occupation": [
+  "tokens:E"
+ ],
+ "Firebending Student": [
+  "spells:F",
+  "aggro:F"
  ],
  "Fireblast": [
   "aggro:F"
@@ -797,7 +917,9 @@
  "Floodfarm Verge": [
   "goodstuff:E"
  ],
- "Flourishing Grapple": [],
+ "Floodpits Drowner": [
+  "tempo:F"
+ ],
  "Flow State": [
   "spells:F"
  ],
@@ -808,15 +930,19 @@
  "Force of Will": [
   "control:F"
  ],
+ "Foreboding Landscape": [
+  "goodstuff:E",
+  "lands:E"
+ ],
  "Forensic Gadgeteer": [
   "artifacts:P"
- ],
- "Formidable Commons": [
-  "goodstuff:E"
  ],
  "Formidable Speaker": [
   "reanimator:E",
   "ramp:F"
+ ],
+ "Forsaken Miner": [
+  "tokens:F"
  ],
  "Forth Eorlingas!": [
   "tokens:P",
@@ -836,8 +962,6 @@
   "initiative:P",
   "reanimator:E"
  ],
- "Frostbite Pyromental": [],
- "Fulminous Forte": [],
  "Fury": [
   "blink:E"
  ],
@@ -845,12 +969,6 @@
   "tokens:P",
   "gw:P",
   "lands:P"
- ],
- "Gallia, the Merrymaker": [
-  "aggro:F"
- ],
- "Gallia, Tragic Host": [
-  "graveyard:F"
  ],
  "Galvanic Blast": [
   "artifacts:F",
@@ -860,13 +978,12 @@
  "Gandalf, Goblins' Bane // Flameshape": [
   "spells:P"
  ],
- "Gardenize": [
-  "tokens:F"
- ],
  "Garruk, Curse Breaker": [
   "ramp:P"
  ],
- "Garruk, Veiled Butcher": [],
+ "Gathering Place": [
+  "goodstuff:E"
+ ],
  "Gau, Feral Youth": [
   "aggro:F",
   "graveyard:F"
@@ -882,25 +999,35 @@
   "goodstuff:E",
   "lands:E"
  ],
+ "Gene Pollinator": [
+  "ramp:E",
+  "artifacts:F"
+ ],
+ "General Ferrous Rokiric": [
+  "goodstuff:F",
+  "tokens:F"
+ ],
  "Generous Ent": [
   "reanimator:E"
  ],
  "Generous Plunderer": [
   "aggro:F"
  ],
- "Generous Revival": [],
- "Germinate Recruits": [],
+ "Germination Practicum": [
+  "gw:F",
+  "tokens:F"
+ ],
  "Get Lost": [
   "control:F"
  ],
- "Ghalta the Immovable": [],
- "Ghalta the Unstoppable": [
-  "ramp:P"
- ],
  "Ghost Vacuum": [],
+ "Ghostfire Slice": [
+  "aggro:F"
+ ],
  "Gideon the Oathless": [],
- "Gideon's Memorial": [
-  "tokens:F"
+ "Gideon, Ally of Zendikar": [
+  "tokens:E",
+  "aggro:F"
  ],
  "Ginger, Queen of Sweets": [
   "initiative:P",
@@ -913,8 +1040,14 @@
  "Giver of Runes": [
   "aggro:F"
  ],
+ "Gix, Yawgmoth Praetor": [
+  "tokens:F"
+ ],
  "Glamermite": [
   "tempo:F"
+ ],
+ "Gleaming Bastion": [
+  "goodstuff:E"
  ],
  "Gleemox": [
   "artifacts:E",
@@ -929,6 +1062,7 @@
   "aggro:E",
   "tokens:F"
  ],
+ "Glissa Sunslayer": [],
  "Gloomlake Verge": [
   "goodstuff:E"
  ],
@@ -967,14 +1101,18 @@
  "Goryo's Vengeance": [
   "reanimator:E"
  ],
- "Graft Surgeon": [
-  "gw:F"
+ "Grave Researcher // Reanimate": [
+  "reanimator:E"
  ],
  "Grave Titan": [],
- "Green Sun's Zenith": [
-  "ramp:E"
+ "Graveyard Trespasser // Graveyard Glutton": [],
+ "Greasewrench Goblin": [
+  "aggro:F"
  ],
- "Greenhouse Propagator": [
+ "Great Divide Guide": [
+  "goodstuff:F"
+ ],
+ "Green Sun's Zenith": [
   "ramp:E"
  ],
  "Grief": [
@@ -987,9 +1125,6 @@
   "artifacts:E",
   "storm:E"
  ],
- "Grim Repriser": [
-  "spells:F"
- ],
  "Grindstone": [
   "artifacts:F"
  ],
@@ -1001,13 +1136,11 @@
   "graveyard:F"
  ],
  "Guardian Scalelord": [],
+ "Guerrilla Gorilla": [],
  "Guide of Souls": [
   "gw:P",
   "tokens:P",
   "aggro:F"
- ],
- "Guiding Hydra": [
-  "gw:F"
  ],
  "Gush": [
   "storm:E",
@@ -1017,32 +1150,34 @@
   "tokens:P",
   "aggro:F"
  ],
- "Hall of Echoes": [],
+ "Gwen Stacy // Ghost-Spider": [
+  "goodstuff:P"
+ ],
  "Hallowed Fountain": [
   "goodstuff:E"
  ],
- "Hallway Heckler // Vicious Verse": [
-  "reanimator:E",
-  "graveyard:E"
+ "Harmonized Trio // Brainstorm": [
+  "storm:E",
+  "spells:E"
  ],
- "Hapatra, the Desert Fang": [
-  "graveyard:F"
- ],
- "Hapatra, the Desert Frost": [],
  "Harvester of Misery": [],
- "Haunted Ridge": [
-  "goodstuff:E"
+ "Hawkeye, Master Marksman": [
+  "aggro:F"
  ],
  "Haywire Mite": [],
+ "Hazoret the Fervent": [
+  "aggro:F"
+ ],
  "Headliner Scarlett": [
   "aggro:F"
  ],
- "Heartstring Puller": [],
- "Heartwood Crafter // Soul Tether": [
-  "ramp:E"
- ],
+ "Heartless Act": [],
  "Hedge Maze": [
   "goodstuff:E"
+ ],
+ "Hellrider": [
+  "aggro:F",
+  "tokens:F"
  ],
  "Heritage Reclamation": [],
  "Hero of Bladehold": [
@@ -1053,13 +1188,23 @@
   "gw:P",
   "ramp:F"
  ],
- "Hexhaven Battalion": [],
- "Hexhaven Dueling Arena": [],
- "Hexhaven Invigorator": [
-  "ramp:F"
- ],
  "Hexing Squelcher": [
   "aggro:F"
+ ],
+ "Hidden Lair": [
+  "goodstuff:E"
+ ],
+ "Hildibrand Manderville // Gentleman's Rise": [
+  "tokens:P"
+ ],
+ "Hired Claw": [
+  "aggro:F"
+ ],
+ "Hobgoblin, Mantled Marauder": [
+  "aggro:F"
+ ],
+ "Hogaak, Arisen Necropolis": [
+  "graveyard:P"
  ],
  "Horizon Canopy": [
   "goodstuff:E",
@@ -1071,9 +1216,6 @@
  "Hungering Puppetbeast": [
   "artifacts:F"
  ],
- "Hunter's Axe": [
-  "aggro:F"
- ],
  "Hushwood Verge": [
   "goodstuff:E"
  ],
@@ -1081,12 +1223,6 @@
  "Hymn to Tourach": [],
  "Icetill Explorer": [
   "lands:P"
- ],
- "Icy Reception": [
-  "tempo:F"
- ],
- "Identity Echo": [
-  "reanimator:E"
  ],
  "Ignoble Hierarch": [
   "ramp:E",
@@ -1096,39 +1232,37 @@
   "storm:E"
  ],
  "Impractical Joke": [],
+ "Improvised Arsenal": [
+  "artifacts:F"
+ ],
  "Indatha Triome": [
   "goodstuff:E"
  ],
  "Infernal Grasp": [],
- "Infinite Coursework": [],
- "Ingris Stingerquill": [
-  "aggro:F",
-  "tokens:F"
- ],
- "Innovative Commons": [
-  "goodstuff:E"
- ],
  "Inquisition of Kozilek": [
   "tempo:F"
  ],
- "Inspired Tethermage": [],
  "Inspiring Vantage": [
   "goodstuff:E"
  ],
  "Inti, Seneschal of the Sun": [
   "aggro:F"
  ],
+ "Intrepid Adversary": [
+  "aggro:E",
+  "tokens:F"
+ ],
  "Invert Polarity": [],
  "Iron Man Armor": [
   "artifacts:F",
   "aggro:F"
  ],
+ "Iron Man, Titan of Innovation": [
+  "artifacts:P"
+ ],
  "Iron-Shield Elf": [],
  "Ivora, Insatiable Heir": [
   "aggro:F"
- ],
- "Jace, Reality Sculptor": [
-  "control:F"
  ],
  "Jace, the Mind Sculptor": [
   "control:P"
@@ -1141,11 +1275,17 @@
  "Jace, Wielder of Mysteries": [
   "storm:P"
  ],
- "Jace's Machinations": [],
  "Jacked Rabbit": [
   "tokens:P",
   "gw:F",
   "aggro:F"
+ ],
+ "Jadar, Ghoulcaller of Nephalia": [
+  "tokens:E"
+ ],
+ "Jadzi, Steward of Fate // Oracle's Gift": [
+  "reanimator:E",
+  "graveyard:E"
  ],
  "Jennifer Walters // The Sensational She-Hulk": [],
  "Jet Collector": [
@@ -1154,10 +1294,7 @@
  "Jetmir's Garden": [
   "goodstuff:E"
  ],
- "Jiang Yanggu, Alone": [],
- "Jiang Yanggu, Never Alone": [
-  "ramp:F"
- ],
+ "Joshua, Phoenix's Dominant // Phoenix, Warden of Fire": [],
  "Kaito, Bane of Nightmares": [
   "tempo:P"
  ],
@@ -1169,21 +1306,28 @@
   "artifacts:P"
  ],
  "Karakas": [],
- "Karn, Argent Defender": [],
- "Karn, Gilded Guardian": [
-  "artifacts:F",
-  "goodstuff:F"
+ "Kari Zev, Skyship Raider": [
+  "aggro:F"
+ ],
+ "Karn, Legacy Reforged": [
+  "artifacts:P"
  ],
  "Karn, Scion of Urza": [
   "artifacts:P"
  ],
+ "Katara, Waterbending Master": [
+  "tempo:F"
+ ],
  "Keen-Eyed Curator": [
   "graveyard:P"
  ],
- "Keeper of the Quiet Hour": [
-  "artifacts:F"
+ "Kefka, Court Mage // Kefka, Ruler of Ruin": [
+  "goodstuff:P"
  ],
  "Kellan, Planar Trailblazer": [
+  "aggro:F"
+ ],
+ "Kellan, the Fae-Blooded // Birthright Boon": [
   "aggro:F"
  ],
  "Ketria Triome": [
@@ -1192,9 +1336,20 @@
  "Kiki-Jiki, Mirror Breaker": [
   "blink:P"
  ],
- "Kindred Judgment": [],
- "Kiora of Fire and Ashes": [],
- "Kiora of Salt and Sand": [],
+ "King T'Challa // Black Panther, Hope Enduring": [
+  "wheels:P",
+  "control:F"
+ ],
+ "Kinscaer Sentry": [
+  "aggro:E"
+ ],
+ "Kirol, Attentive First-Year": [],
+ "Kitesail Freebooter": [
+  "tempo:F"
+ ],
+ "Kitesail Larcenist": [
+  "tempo:F"
+ ],
  "Knight of Autumn": [
   "gw:F",
   "blink:E"
@@ -1205,19 +1360,8 @@
  "Kolaghan's Command": [
   "graveyard:F"
  ],
- "Konstrari Annex": [
-  "goodstuff:E"
- ],
- "Konstrari Charm": [],
- "Konstrari Improviser // Soul Tether": [
-  "ramp:E"
- ],
- "Koth of the Homestead": [
-  "lands:F",
-  "gw:F"
- ],
- "Koth, the Geomancer": [
-  "lands:F"
+ "Krang, Master Mind": [
+  "artifacts:P"
  ],
  "Krang, Utrom Warlord": [
   "artifacts:P",
@@ -1226,16 +1370,27 @@
  "Kroxa, Titan of Death's Hunger": [
   "graveyard:P"
  ],
- "Kwia Vigorbloom": [],
+ "Kumano Faces Kakkazan // Etching of Kumano": [
+  "aggro:F"
+ ],
+ "Kytheon, Hero of Akros // Gideon, Battle-Forged": [
+  "aggro:E"
+ ],
  "Laelia, the Blade Reforged": [
   "aggro:F"
  ],
- "Last Gasp": [],
  "Lava Dart": [
   "spells:F"
  ],
  "Lavaspur Boots": [
   "aggro:E"
+ ],
+ "Leader, Super-Genius": [
+  "reanimator:E"
+ ],
+ "Leatherhead, Iron Gator": [
+  "ramp:P",
+  "gw:F"
  ],
  "Leatherhead, Swamp Stalker": [
   "ramp:F"
@@ -1245,6 +1400,12 @@
  ],
  "Legion Extruder": [
   "artifacts:F"
+ ],
+ "Leonardo, Leader in Blue": [
+  "aggro:E"
+ ],
+ "Leonardo, Sewer Samurai": [
+  "aggro:F"
  ],
  "Leovold, Emissary of Trest": [
   "wheels:P",
@@ -1275,11 +1436,11 @@
  "Lightning Helix": [
   "aggro:F"
  ],
+ "Lightstall Inquisitor": [
+  "aggro:E"
+ ],
  "Liliana of the Veil": [],
  "Liliana the Faultless": [],
- "Liliana the Repentant": [
-  "graveyard:E"
- ],
  "Lim-Dûl's Vault": [
   "storm:E"
  ],
@@ -1294,22 +1455,20 @@
  "Lion's Eye Diamond": [
   "storm:E"
  ],
- "Living Library": [],
  "Llanowar Elves": [
   "ramp:E"
  ],
  "Loch Mare": [],
- "Loot, the Anomaly": [
-  "graveyard:F"
- ],
- "Loot, the Nexus": [
-  "ramp:E"
- ],
+ "Loki, God of Mischief": [],
  "Loot, the Pathfinder": [
   "goodstuff:P"
  ],
  "Loran of the Third Path": [
   "blink:E"
+ ],
+ "Lorehold Charm": [],
+ "Lorehold, the Historian": [
+  "spells:F"
  ],
  "Lórien Revealed": [
   "control:F"
@@ -1325,7 +1484,9 @@
   "storm:E",
   "artifacts:E"
  ],
- "Loyal Tutor": [],
+ "Lumbering Worldwagon": [
+  "lands:F"
+ ],
  "Luminarch Aspirant": [
   "gw:P",
   "aggro:F"
@@ -1339,16 +1500,14 @@
  "Lutri, the Spellchaser": [
   "spells:F"
  ],
- "Lyra, Archangel of Dawn": [],
- "Lyra, Tolarian Archangel": [],
- "Mabel, Bitter Recluse": [],
- "Mabel, Valley Hero": [
-  "aggro:F",
-  "gw:F"
- ],
  "Magda, Brazen Outlaw": [
   "aggro:F"
  ],
+ "Magmablood Archaic": [
+  "goodstuff:P"
+ ],
+ "Magmatic Hellkite": [],
+ "Mai, Scornful Striker": [],
  "Malcolm, Alluring Scoundrel": [
   "tempo:P"
  ],
@@ -1380,6 +1539,7 @@
  "Manifold Key": [
   "artifacts:E"
  ],
+ "Marauding Mako": [],
  "March of Otherworldly Light": [
   "control:F"
  ],
@@ -1387,20 +1547,18 @@
   "goodstuff:E",
   "lands:E"
  ],
- "Marwyn, the Clearcutter": [],
  "Marwyn, the Preserver": [
   "lands:E"
  ],
- "Massacre Girl, Most Wanted": [
-  "tokens:P"
- ],
- "Master of Barbs": [
-  "aggro:F"
+ "Master of Death": [
+  "graveyard:F"
  ],
  "Mawloc": [
   "ramp:F"
  ],
- "Medic's Kitesail": [],
+ "Melded Moxite": [
+  "artifacts:F"
+ ],
  "Memnarch, the Warden": [
   "reanimator:P",
   "artifacts:F"
@@ -1413,27 +1571,34 @@
  "Memory Lapse": [
   "tempo:E"
  ],
- "Memory Trap": [],
  "Metamorphosis Fanatic": [
   "reanimator:E"
  ],
  "Meticulous Archive": [
   "goodstuff:E"
  ],
- "Meticulous Commons": [
-  "goodstuff:E"
+ "Michelangelo, Improviser": [
+  "ramp:F"
+ ],
+ "Michelangelo, the Heart": [
+  "gw:F"
+ ],
+ "Michelangelo, Weirdness to 11": [
+  "gw:P"
+ ],
+ "Midnight Reaper": [
+  "tokens:F"
  ],
  "Mightform Harmonizer": [
   "lands:P",
   "ramp:F"
  ],
- "Mind Meanderer": [],
+ "Mind Roots": [],
  "Mind Stone": [
   "artifacts:E",
   "storm:E"
  ],
  "Mind Twist": [],
- "Mindseeker Oculus": [],
  "Mine Collapse": [],
  "Minsc & Boo, Timeless Heroes": [
   "ramp:P"
@@ -1448,12 +1613,19 @@
  "Mishra's Workshop": [
   "artifacts:P"
  ],
+ "Mister Fantastic": [
+  "goodstuff:P"
+ ],
  "Misty Rainforest": [
   "goodstuff:E",
   "lands:E"
  ],
+ "Mockingbird": [],
  "Mole Man, Moloid Master": [
   "lands:P"
+ ],
+ "Molten-Core Maestro": [
+  "spells:F"
  ],
  "Monastery Mentor": [
   "spells:P",
@@ -1463,11 +1635,27 @@
   "spells:P",
   "aggro:F"
  ],
+ "Monica Rambeau // Photon, Living Light": [
+  "spells:F"
+ ],
+ "Monoskelion": [
+  "artifacts:F"
+ ],
+ "Monstrous Rage": [
+  "aggro:F"
+ ],
+ "Monument to Endurance": [],
  "Moonshadow": [
   "graveyard:P"
  ],
+ "Morlun, Devourer of Spiders": [],
+ "Mosswood Dreadknight // Dread Whispers": [],
  "Mother of Runes": [
   "aggro:F"
+ ],
+ "Mox Amber": [
+  "artifacts:E",
+  "storm:E"
  ],
  "Mox Diamond": [
   "artifacts:E",
@@ -1501,14 +1689,15 @@
   "storm:E",
   "artifacts:E"
  ],
- "Multiply by Zero": [],
  "Multiversal Passage": [
   "goodstuff:E"
  ],
- "Murmuring Volume": [
-  "artifacts:E",
-  "storm:E",
-  "goodstuff:E"
+ "Murderous Cut": [
+  "graveyard:F"
+ ],
+ "Mutable Explorer": [],
+ "Mutagen Man, Living Ooze": [
+  "gw:F"
  ],
  "Mutagenic Growth": [
   "spells:F"
@@ -1559,12 +1748,16 @@
  "Nissa, Ascended Animist": [
   "ramp:P"
  ],
+ "Nissa, Resurgent Animist": [
+  "lands:P",
+  "ramp:E"
+ ],
  "Nissa, Who Shakes the World": [
   "lands:P",
   "ramp:P"
  ],
- "No Admittance": [
-  "aggro:F"
+ "Niv-Mizzet Reborn": [
+  "goodstuff:P"
  ],
  "No More Lies": [
   "control:F",
@@ -1573,15 +1766,26 @@
  "Noble Hierarch": [
   "ramp:E"
  ],
- "Null Summoner": [
-  "graveyard:F"
+ "Norman Osborn // Green Goblin": [
+  "goodstuff:P",
+  "tempo:F"
+ ],
+ "Nova Hellkite": [
+  "ramp:F"
  ],
  "Nurturing Peatland": [
   "goodstuff:E",
   "lands:E"
  ],
+ "Nurturing Pixie": [
+  "blink:P"
+ ],
+ "Nutrient Block": [],
  "Oath of Druids": [
   "reanimator:E"
+ ],
+ "Ob Nixilis, the Adversary": [
+  "tokens:F"
  ],
  "Occult Epiphany": [
   "reanimator:E",
@@ -1603,7 +1807,6 @@
   "goodstuff:P",
   "lands:P"
  ],
- "Omnipresence": [],
  "Once Upon a Time": [
   "ramp:F"
  ],
@@ -1627,9 +1830,6 @@
   "control:F"
  ],
  "Outland Liberator // Frenzied Trapbreaker": [],
- "Overgrown Farmland": [
-  "goodstuff:E"
- ],
  "Overgrown Tomb": [
   "goodstuff:E"
  ],
@@ -1645,9 +1845,6 @@
   "blink:E"
  ],
  "Overwhelming Surge": [],
- "Overwrite the Multiverse": [
-  "control:E"
- ],
  "Painter's Servant": [
   "artifacts:F"
  ],
@@ -1658,9 +1855,6 @@
  "Palantír of Orthanc": [
   "wheels:E"
  ],
- "Paradox Shaper // Omit Variables": [
-  "graveyard:E"
- ],
  "Paradoxical Outcome": [
   "storm:P"
  ],
@@ -1668,6 +1862,7 @@
   "blink:P",
   "control:F"
  ],
+ "Party Thrasher": [],
  "Passageway Seer": [
   "initiative:P"
  ],
@@ -1679,10 +1874,10 @@
   "storm:E",
   "artifacts:E"
  ],
- "Perfected Theory": [],
  "Persist": [
   "reanimator:E"
  ],
+ "Pest Control": [],
  "Pest Infestation": [
   "tokens:P"
  ],
@@ -1697,6 +1892,9 @@
   "graveyard:P",
   "aggro:F"
  ],
+ "Phoenix Fleet Airship": [
+  "tokens:F"
+ ],
  "Phyrexian Dragon Engine": [
   "artifacts:F"
  ],
@@ -1707,18 +1905,12 @@
   "aggro:F",
   "artifacts:F"
  ],
- "Pia, Aether Ascetic": [
-  "reanimator:E"
- ],
- "Pia, Determined Rebuilder": [
-  "artifacts:F"
- ],
+ "Pick Your Poison": [],
  "Pillage the Bog": [],
  "Pinnacle Emissary": [
   "artifacts:P",
   "tokens:P"
  ],
- "Plan for All Outcomes": [],
  "Plateau": [
   "goodstuff:E"
  ],
@@ -1741,19 +1933,22 @@
   "artifacts:F"
  ],
  "Power Play": [],
- "Preacher of the Schism": [],
- "Precise Redaction": [],
- "Predictive Preparations": [
-  "gw:F"
+ "Practiced Scrollsmith": [
+  "aggro:F"
  ],
+ "Preacher of the Schism": [],
  "Preordain": [
   "storm:E",
   "spells:E"
  ],
- "Primal Witchstalker": [
-  "graveyard:E",
+ "Priest of Fell Rites": [
+  "reanimator:E"
+ ],
+ "Primeval Titan": [
+  "ramp:P",
   "lands:E"
  ],
+ "Prismari Charm": [],
  "Prismatic Ending": [
   "goodstuff:P",
   "control:F"
@@ -1762,25 +1957,15 @@
   "goodstuff:E",
   "lands:E"
  ],
- "Proctor of Potential": [],
  "Professor Dellian Fel": [],
- "Proft, Consulting Detective": [],
- "Proft, Sinister Mastermind": [
-  "graveyard:F"
- ],
  "Proft's Eidetic Memory": [],
  "Prophesied End": [],
- "Protege's Awakening": [],
- "Prudent Fateseer // Peer Review": [],
  "Psychic Frog": [
   "tempo:P",
   "graveyard:F"
  ],
- "Puppet Crafting": [
-  "artifacts:F"
- ],
- "Pyre Rhymer // Molten Tide": [
-  "spells:F"
+ "Pyretic Ritual": [
+  "storm:E"
  ],
  "Pyrite Spellbomb": [
   "artifacts:F"
@@ -1792,7 +1977,10 @@
  "Pyrokinesis": [
   "aggro:F"
  ],
+ "Qarsi Revenant": [],
  "Qasali Pridemage": [],
+ "Quandrix Charm": [],
+ "Quandrix, the Proof": [],
  "Quantum Riddler": [
   "blink:E",
   "control:F"
@@ -1800,9 +1988,13 @@
  "Questing Beast": [
   "ramp:P"
  ],
+ "Questing Druid // Seek the Beast": [],
  "Quirion Ranger": [
   "ramp:E",
   "lands:E"
+ ],
+ "Rabbit Battery": [
+  "aggro:F"
  ],
  "Raffine, Scheming Seer": [
   "tempo:P",
@@ -1818,13 +2010,20 @@
   "storm:E",
   "lands:E"
  ],
- "Rampart Hunter": [],
+ "Rampaging Raptor": [
+  "aggro:F"
+ ],
  "Ramunap Excavator": [
   "lands:P"
  ],
- "Rank Rat": [],
+ "Ranger-Captain of Eos": [
+  "aggro:E"
+ ],
  "Raph & Mikey, Troublemakers": [
   "ramp:P"
+ ],
+ "Raphael, the Nightwatcher": [
+  "aggro:F"
  ],
  "Raucous Theater": [
   "goodstuff:E"
@@ -1834,6 +2033,9 @@
  ],
  "Ravenous Robots": [
   "tokens:P",
+  "artifacts:F"
+ ],
+ "Razorlash Transmogrant": [
   "artifacts:F"
  ],
  "Razorverge Thicket": [
@@ -1849,11 +2051,11 @@
   "artifacts:E",
   "control:F"
  ],
+ "Reclamation Sage": [],
  "Recurring Nightmare": [
   "reanimator:E"
  ],
- "Recursive Recruitment": [],
- "Refute Destiny": [],
+ "Redirect Lightning": [],
  "Regrowth": [
   "storm:E",
   "graveyard:F"
@@ -1871,10 +2073,23 @@
  "Repurposed Enforcer": [
   "aggro:F"
  ],
- "Rescue Girl, First Responder": [
-  "blink:F"
+ "Resentful Revelation": [
+  "graveyard:E"
  ],
  "Restless Cottage": [
+  "goodstuff:E"
+ ],
+ "Restless Fortress": [
+  "goodstuff:E"
+ ],
+ "Restless Prairie": [
+  "goodstuff:E",
+  "gw:F"
+ ],
+ "Restless Ridgeline": [
+  "goodstuff:E"
+ ],
+ "Restless Vents": [
   "goodstuff:E"
  ],
  "Restless Vinestalk": [
@@ -1883,46 +2098,36 @@
  "Restoration Angel": [
   "blink:P"
  ],
- "Restore with Empathy": [],
  "Retrofitter Foundry": [
   "tokens:P",
   "artifacts:E"
  ],
- "Return to the Light Realms": [],
- "Rewrite Regrets": [],
- "Rise of the Deathbringer": [],
+ "Rhys, the Evermore": [],
+ "Riddles in the Dark": [
+  "graveyard:E",
+  "control:F"
+ ],
+ "Riverglide Pathway // Lavaglide Pathway": [
+  "goodstuff:E"
+ ],
  "Riverpyre Verge": [
   "goodstuff:E"
  ],
  "Robber of the Rich": [
   "aggro:F"
  ],
- "Rockfall Vale": [
-  "goodstuff:E"
- ],
  "Rofellos, Llanowar Emissary": [
   "ramp:E"
  ],
  "Roiling Canopy": [],
- "Room of Refuge": [],
- "Ruric Thar, Biomagus": [
-  "spells:F"
- ],
- "Ruric Thar, Magecrusher": [
-  "ramp:P"
+ "Rust Harvester": [
+  "artifacts:F"
  ],
  "Sacred Foundry": [
   "goodstuff:E"
  ],
  "Sage of the Skies": [
   "spells:P"
- ],
- "Saheeli, Consul of Oversight": [
-  "tokens:F"
- ],
- "Saheeli, Jewel of Avishkar": [
-  "spells:P",
-  "tokens:P"
  ],
  "Saheeli, Sublime Artificer": [
   "spells:P",
@@ -1932,29 +2137,54 @@
  "Samut, Hazoret's Champion": [
   "aggro:F"
  ],
- "Samut, Tyrant of Naktamun": [],
+ "Samwise the Stouthearted": [
+  "aggro:F"
+ ],
  "Sanctum Lurker": [],
+ "Sandman, Shifting Scoundrel": [
+  "lands:P"
+ ],
+ "Sandstorm Salvager": [
+  "tokens:F"
+ ],
  "Sanguine Evangelist": [
   "tokens:P",
   "aggro:F"
  ],
+ "Satya, Aetherflux Genius": [
+  "goodstuff:P"
+ ],
+ "Satyr Wayfinder": [
+  "graveyard:E",
+  "reanimator:E"
+ ],
+ "Sauron, Dino Devotee": [],
  "Savai Triome": [
   "goodstuff:E"
  ],
  "Savannah": [
   "goodstuff:E"
  ],
+ "Sazh's Chocobo": [
+  "lands:F"
+ ],
  "Scalding Tarn": [
   "goodstuff:E",
   "lands:E"
  ],
+ "Scavenging Ooze": [
+  "gw:F"
+ ],
  "Scion of Draco": [
   "goodstuff:P"
+ ],
+ "Scrapshooter": [],
+ "Scrapwork Mutt": [
+  "artifacts:F"
  ],
  "Screaming Nemesis": [
   "aggro:F"
  ],
- "Screeching Soulbreaker": [],
  "Scrubland": [
   "goodstuff:E"
  ],
@@ -1969,6 +2199,10 @@
   "goodstuff:E"
  ],
  "Sear": [],
+ "Searslicer Goblin": [
+  "aggro:F",
+  "tokens:F"
+ ],
  "Seasoned Cryomancer": [
   "reanimator:E"
  ],
@@ -1979,33 +2213,53 @@
   "reanimator:E",
   "graveyard:E"
  ],
+ "Securitron Squadron": [
+  "tokens:F"
+ ],
  "Sedgemoor Witch": [
   "spells:P",
   "storm:E",
   "tokens:F"
  ],
+ "Seething Song": [
+  "storm:E"
+ ],
+ "Seismic Sense": [
+  "lands:F"
+ ],
  "Selfless Spirit": [
   "aggro:F"
  ],
- "Semester Foreseer // Peer Review": [],
  "Sensei's Divining Top": [
   "artifacts:E"
  ],
  "Sentinel of the Nameless City": [
   "ramp:F"
  ],
+ "Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel": [
+  "tokens:P"
+ ],
  "Serra Paragon": [
   "graveyard:P",
   "lands:F"
  ],
+ "Settle the Wreckage": [
+  "control:F"
+ ],
+ "Sevinne's Reclamation": [
+  "graveyard:F"
+ ],
  "Sewer-veillance Cam": [],
+ "Shadowspear": [
+  "aggro:F"
+ ],
  "Shadowy Backstreet": [
   "goodstuff:E"
  ],
  "Shallow Grave": [
   "reanimator:E"
  ],
- "Shatterwing Pegasus": [],
+ "Shatterskull Smashing // Shatterskull, the Hammer Pass": [],
  "Shelldock Isle": [],
  "Sheltering Landscape": [
   "goodstuff:E",
@@ -2018,9 +2272,6 @@
  "Shifting Woodland": [
   "lands:P",
   "graveyard:F"
- ],
- "Shipwreck Marsh": [
-  "goodstuff:E"
  ],
  "Shorikai, Genesis Engine": [
   "control:F",
@@ -2035,7 +2286,10 @@
  "Sicarian Infiltrator": [
   "artifacts:F"
  ],
- "Silence the Echo": [],
+ "Silverquill Charm": [],
+ "Silverquill, the Disputant": [
+  "spells:F"
+ ],
  "Simian Spirit Guide": [
   "storm:E"
  ],
@@ -2058,7 +2312,7 @@
  "Skateboard": [
   "aggro:E"
  ],
- "Skilled Battlecarver": [
+ "Skrelv, Defector Mite": [
   "aggro:F"
  ],
  "Skullclamp": [
@@ -2069,10 +2323,19 @@
   "blink:E",
   "aggro:F"
  ],
+ "Skycoach Conductor // All Aboard": [
+  "blink:P",
+  "tempo:F"
+ ],
+ "Sleight of Hand": [
+  "storm:E",
+  "spells:E"
+ ],
  "Slickshot Show-Off": [
   "spells:P",
   "aggro:F"
  ],
+ "Slumbering Trudge": [],
  "Smaug the Magnificent": [
   "ramp:F",
   "aggro:F"
@@ -2105,14 +2368,14 @@
   "control:F",
   "blink:E"
  ],
- "Solve for Disappointment": [],
- "Something Worth Saving": [
-  "graveyard:E"
- ],
+ "Sorin of House Markov // Sorin, Ravenous Neonate": [],
  "Soul-Guide Lantern": [],
  "Soul-Scar Mage": [
   "spells:F",
   "aggro:F"
+ ],
+ "Souls of the Lost": [
+  "graveyard:P"
  ],
  "Sovereign's Realm": [],
  "Sowing Mycospawn": [
@@ -2133,21 +2396,35 @@
   "blink:E"
  ],
  "Sphinx of False Conclusions": [],
- "Sphinx's Approach": [],
  "Spider-Woman, Stunning Savior": [
   "tempo:F"
+ ],
+ "Spire of Industry": [
+  "artifacts:E"
  ],
  "Spirebluff Canal": [
   "goodstuff:E"
  ],
  "Splinter Twin": [],
+ "Splitskin Doll": [
+  "artifacts:F",
+  "aggro:F"
+ ],
  "Springheart Nantuko": [
   "lands:P",
   "tokens:F"
  ],
+ "Spyglass Siren": [
+  "tempo:F",
+  "artifacts:F"
+ ],
  "Squandered Resources": [
   "lands:E",
   "storm:E"
+ ],
+ "Squee, Goblin Nabob": [],
+ "Stadium Headliner": [
+  "aggro:F"
  ],
  "Staff of the Storyteller": [
   "tokens:P"
@@ -2158,6 +2435,13 @@
  "Steam Vents": [
   "goodstuff:E"
  ],
+ "Steel Overseer": [
+  "artifacts:P"
+ ],
+ "Steel Seraph": [
+  "artifacts:F",
+  "aggro:F"
+ ],
  "Stern Scolding": [
   "tempo:E"
  ],
@@ -2165,20 +2449,13 @@
   "spells:F",
   "graveyard:F"
  ],
- "Stingerquill Annex": [
-  "goodstuff:E"
- ],
- "Stingerquill Charm": [
-  "aggro:F"
- ],
- "Stingerquill Voxmancer // Vicious Verse": [
-  "spells:E"
- ],
- "Stinging Vitriol": [],
  "Stitcher's Supplier": [
   "graveyard:E"
  ],
  "Stock Up": [],
+ "Stoke the Flames": [
+  "aggro:F"
+ ],
  "Stomping Ground": [
   "goodstuff:E"
  ],
@@ -2197,9 +2474,15 @@
   "blink:E",
   "tempo:F"
  ],
+ "Summon: Bahamut": [
+  "reanimator:P"
+ ],
  "Summon: Good King Mog XII": [
   "tokens:P",
   "spells:F"
+ ],
+ "Sun-Blessed Healer": [
+  "aggro:F"
  ],
  "Sunbaked Canyon": [
   "goodstuff:E",
@@ -2207,6 +2490,12 @@
  ],
  "Sunbillow Verge": [
   "goodstuff:E"
+ ],
+ "Sundering Eruption // Volcanic Fissure": [],
+ "Sundering Titan": [
+  "artifacts:P",
+  "reanimator:P",
+  "blink:E"
  ],
  "Sunfall": [
   "control:P"
@@ -2223,16 +2512,19 @@
   "graveyard:F"
  ],
  "Suplex": [],
- "Sureshot Sower": [],
- "Surgical Precision": [],
  "Surrak, Elusive Hunter": [
   "ramp:P"
  ],
- "Surveillance Phantasm": [],
+ "Survival of the Fittest": [
+  "reanimator:E"
+ ],
  "Suspicious Stowaway // Seafaring Werewolf": [
   "tempo:P"
  ],
  "Swift Reconfiguration": [],
+ "Sword of Fire and Ice": [
+  "aggro:E"
+ ],
  "Sword of the Meek": [
   "artifacts:P",
   "tokens:P"
@@ -2248,6 +2540,9 @@
  "Sylvan Library": [],
  "Sylvan Safekeeper": [
   "lands:P"
+ ],
+ "Syr Ginger, the Meal Ender": [
+  "artifacts:P"
  ],
  "Taiga": [
   "goodstuff:E"
@@ -2276,6 +2571,14 @@
   "artifacts:E",
   "storm:E"
  ],
+ "Talisman of Hierarchy": [
+  "goodstuff:E",
+  "artifacts:E",
+  "storm:E"
+ ],
+ "Talisman of Impulse": [
+  "goodstuff:E"
+ ],
  "Talisman of Indulgence": [
   "goodstuff:E",
   "artifacts:E",
@@ -2286,18 +2589,25 @@
   "artifacts:E",
   "storm:E"
  ],
+ "Talisman of Resilience": [
+  "goodstuff:E",
+  "artifacts:E",
+  "storm:E"
+ ],
+ "Talisman of Unity": [
+  "goodstuff:E"
+ ],
  "Talon Gates of Madara": [
   "goodstuff:E"
  ],
- "Tam, the Possibility": [
-  "goodstuff:P"
- ],
- "Tam's Resistance": [],
  "Tamiyo, Collector of Tales": [],
  "Tamiyo, Inquisitive Student // Tamiyo, Seasoned Scholar": [
   "spells:F"
  ],
  "Tamiyo's Safekeeping": [],
+ "Tangle Wire": [
+  "artifacts:E"
+ ],
  "Tarfire": [
   "aggro:F",
   "graveyard:E"
@@ -2315,14 +2625,10 @@
  "Temple Garden": [
   "goodstuff:E"
  ],
+ "Tenacious Underdog": [],
  "Tendrils of Agony": [
   "storm:P"
  ],
- "Tenured Tethermage": [
-  "lands:E",
-  "artifacts:F"
- ],
- "Terminal Criticism": [],
  "Territorial Kavu": [
   "goodstuff:P"
  ],
@@ -2331,25 +2637,11 @@
   "graveyard:F",
   "aggro:F"
  ],
- "Tether Technician": [],
- "Tethermage's Advantage": [],
- "Tetsuko Umezawa, Fugitive": [],
- "Tetsuko Umezawa, Pursuer": [
-  "spells:F",
-  "aggro:F"
- ],
- "Teyo, Diamondblade Mage": [],
- "Teyo, Lightshield Expert": [
-  "gw:F"
- ],
  "Tezzeret, Cruel Captain": [
   "artifacts:P"
  ],
  "Thalia, Guardian of Thraben": [
   "aggro:P"
- ],
- "Thalia, the Survivor": [
-  "aggro:F"
  ],
  "Thassa's Oracle": [
   "storm:P"
@@ -2370,6 +2662,10 @@
   "control:F"
  ],
  "The Legend of Roku // Avatar Roku": [],
+ "The Legend of Yangchen // Avatar Yangchen": [
+  "control:F",
+  "wheels:E"
+ ],
  "The Mightstone and Weakstone": [
   "artifacts:E"
  ],
@@ -2381,9 +2677,17 @@
   "control:F",
   "artifacts:F"
  ],
+ "The Ooze": [
+  "gw:P"
+ ],
+ "The Queen of Dale": [
+  "aggro:E"
+ ],
  "The Reaper, King No More": [
   "goodstuff:P"
  ],
+ "The Ruinous Wrecking Crew": [],
+ "The Super Hero Civil War": [],
  "The Theorist, Jace Beleren": [
   "control:F"
  ],
@@ -2393,18 +2697,7 @@
  "The Wondrous Wasp": [
   "tempo:F"
  ],
- "Theoretical Necromancer": [],
  "Theorist's Proxy": [],
- "Theorist's Sanctum": [],
- "Theorix Annex": [
-  "goodstuff:E"
- ],
- "Theorix Charm": [
-  "tempo:F"
- ],
- "Theorix Metamage // Omit Variables": [
-  "graveyard:F"
- ],
  "Thespian's Stage": [
   "lands:E"
  ],
@@ -2415,18 +2708,36 @@
   "spells:P",
   "tokens:P"
  ],
+ "Thirst for Discovery": [
+  "reanimator:E",
+  "control:F"
+ ],
+ "Thirst for Identity": [
+  "reanimator:E",
+  "control:F"
+ ],
  "Thopter Foundry": [
   "artifacts:P",
   "tokens:P"
  ],
+ "Thor, God of Thunder": [
+  "spells:F"
+ ],
  "Thornspire Verge": [
   "goodstuff:E"
+ ],
+ "Thought Monitor": [
+  "artifacts:P"
  ],
  "Thought Scour": [
   "graveyard:E"
  ],
  "Thoughtseize": [
   "tempo:F"
+ ],
+ "Thousand Moons Smithy // Barracks of the Thousand": [
+  "artifacts:F",
+  "tokens:F"
  ],
  "Thraben Inspector": [
   "blink:E",
@@ -2448,6 +2759,9 @@
   "aggro:F",
   "blink:E"
  ],
+ "Tifa Lockhart": [
+  "lands:P"
+ ],
  "Time Spiral": [
   "storm:E",
   "wheels:E"
@@ -2459,6 +2773,9 @@
   "storm:E"
  ],
  "Time Warp": [],
+ "Timeless Dragon": [
+  "control:F"
+ ],
  "Timetwister": [
   "storm:E",
   "wheels:E"
@@ -2467,14 +2784,17 @@
   "artifacts:P",
   "reanimator:E"
  ],
- "Tinybones, Pocket Nuisance": [],
+ "Tinybones, the Pickpocket": [],
+ "Tireless Provisioner": [
+  "lands:P",
+  "ramp:E"
+ ],
  "Tireless Tracker": [
   "lands:P"
  ],
  "Tishana's Tidebinder": [
   "tempo:F"
  ],
- "Titanbones, Towering Heart": [],
  "Titania, Protector of Argoth": [
   "lands:P"
  ],
@@ -2486,11 +2806,8 @@
   "artifacts:P",
   "storm:E"
  ],
- "Tomik, Izzet Sparkmage": [
-  "spells:F"
- ],
- "Tomik, Orzhov Lawmage": [
-  "gw:F"
+ "Tony Stark // The Invincible Iron Man": [
+  "artifacts:E"
  ],
  "Torsten, Founder of Benalia": [
   "reanimator:P",
@@ -2499,27 +2816,42 @@
  "Touch the Spirit Realm": [
   "blink:P"
  ],
+ "Tough Cookie": [
+  "artifacts:F"
+ ],
+ "Town Greeter": [
+  "graveyard:E"
+ ],
  "Toxic Deluge": [
   "control:E"
  ],
- "Transformative Commons": [
+ "Tragic Trajectory": [],
+ "Training Compound": [
   "goodstuff:E"
+ ],
+ "Tranquil Landscape": [
+  "goodstuff:E",
+  "lands:E"
  ],
  "Transmute Artifact": [
   "artifacts:E"
  ],
+ "Trash for Treasure": [
+  "artifacts:E",
+  "reanimator:E"
+ ],
  "Traumatic Critique": [
   "spells:E"
  ],
- "Traxos, Academy Guardian": [
-  "spells:F"
- ],
- "Traxos, Scourge Eternal": [
-  "artifacts:F"
+ "Traxos, Scourge of Kroog": [
+  "artifacts:P"
  ],
  "Treasure Cruise": [
   "graveyard:P",
   "spells:F"
+ ],
+ "Tribal Flames": [
+  "goodstuff:P"
  ],
  "Trinket Mage": [
   "artifacts:E",
@@ -2538,13 +2870,15 @@
  "True-Name Nemesis": [
   "tempo:P"
  ],
+ "Trumpeting Carnosaur": [
+  "ramp:F"
+ ],
  "Tundra": [
   "goodstuff:E"
  ],
- "Twinned Vision": [
-  "spells:E"
+ "Twilight Diviner": [
+  "reanimator:F"
  ],
- "Twisted Fates": [],
  "Twisted Landscape": [
   "goodstuff:E",
   "lands:E"
@@ -2552,14 +2886,29 @@
  "Ugin, Eye of the Storms": [
   "artifacts:P"
  ],
+ "Ulamog, the Ceaseless Hunger": [
+  "reanimator:P"
+ ],
+ "Ulamog, the Infinite Gyre": [
+  "reanimator:P"
+ ],
  "Uldaros Theorix": [
   "graveyard:P"
+ ],
+ "Ultima": [
+  "control:E"
+ ],
+ "Ultron, Artificial Malevolence": [
+  "artifacts:P"
  ],
  "Ulvenwald Oddity // Ulvenwald Behemoth": [
   "ramp:P"
  ],
  "Umezawa's Jitte": [
   "aggro:P"
+ ],
+ "Unburial Rites": [
+  "reanimator:E"
  ],
  "Undercity Sewers": [
   "goodstuff:E"
@@ -2578,19 +2927,20 @@
   "storm:P",
   "graveyard:P"
  ],
- "Undulating Witness": [],
  "Unearth": [
   "reanimator:E"
  ],
  "Unexpectedly Absent": [],
- "Unflinching Hortimancer": [],
  "Unholy Heat": [
   "graveyard:P"
  ],
+ "Unlicensed Hearse": [],
  "Unmarked Grave": [
   "reanimator:E"
  ],
- "Unsummon": [],
+ "Up the Beanstalk": [
+  "ramp:F"
+ ],
  "Upheaval": [
   "control:F",
   "artifacts:F"
@@ -2616,41 +2966,50 @@
   "artifacts:P",
   "lands:E"
  ],
+ "Usher of the Fallen": [
+  "aggro:E",
+  "tokens:F"
+ ],
  "Utopia Sprawl": [
   "ramp:E"
  ],
+ "Valki, God of Lies // Tibalt, Cosmic Impostor": [],
+ "Vampire Hexmage": [],
  "Vampiric Tutor": [
   "storm:E"
  ],
- "Variable Chaser // Arc of Fortune": [
-  "spells:F"
+ "Vastlands Scavenger // Bind to Life": [
+  "reanimator:E",
+  "graveyard:E"
  ],
  "Vaultborn Tyrant": [
   "reanimator:P",
   "ramp:P"
  ],
+ "Vengevine": [
+  "graveyard:F"
+ ],
  "Verdant Catacombs": [
   "goodstuff:E",
   "lands:E"
  ],
- "Verdant Kraken": [],
+ "Verdurous Gearhulk": [
+  "gw:F",
+  "ramp:F"
+ ],
  "Vibrance": [],
  "Vicious Rivalry": [
   "control:F"
  ],
- "Vigorbloom Annex": [
-  "goodstuff:E"
- ],
- "Vigorbloom Charm": [],
- "Vigorbloom Vanguard // Seed Suture": [
+ "Vindicate": [],
+ "Virtue of Loyalty // Ardenvale Fealty": [
+  "tokens:F",
   "gw:F"
  ],
- "Vindicate": [],
- "Vindictive Triumph": [],
- "Vinelasher Adept": [
-  "reanimator:E"
+ "Virtue of Persistence // Locthwain Scorn": [
+  "reanimator:E",
+  "control:F"
  ],
- "Violent Echoes": [],
  "Vivi Ornitier": [
   "spells:P",
   "storm:E"
@@ -2658,9 +3017,6 @@
  "Voice of Victory": [
   "aggro:F",
   "tokens:F"
- ],
- "Void Extrapolator // Omit Variables": [
-  "graveyard:F"
  ],
  "Volcanic Island": [
   "goodstuff:E"
@@ -2671,16 +3027,10 @@
  "Voltaic Key": [
   "artifacts:E"
  ],
- "Vraska, Soul of Stone": [
-  "spells:P",
-  "goodstuff:P",
-  "tokens:P"
- ],
- "Vraska, the Cutting Glare": [
-  "ramp:F",
-  "lands:F"
- ],
  "Vraska's Final Mercy": [],
+ "Walk-In Closet // Forgotten Cellar": [
+  "lands:P"
+ ],
  "Walking Ballista": [
   "gw:P",
   "artifacts:F"
@@ -2692,8 +3042,11 @@
  "Wan Shi Tong, Librarian": [
   "blink:E"
  ],
- "Warrior's Blades": [
-  "aggro:F"
+ "Wanderbrine Trapper": [
+  "aggro:E"
+ ],
+ "Warren Soultrader": [
+  "tokens:E"
  ],
  "Wasteland": [
   "lands:E"
@@ -2708,16 +3061,6 @@
  "Watery Grave": [
   "goodstuff:E"
  ],
- "Way of the Cryomancer": [],
- "Way of the Deathbringer": [],
- "Way of the Healer": [],
- "Way of the Mentor": [],
- "Way of the Mind Sculptor": [],
- "Way of the Necromancer": [],
- "Way of the Paradox": [],
- "Way of the Pyromancer": [],
- "Way of the Warlord": [],
- "Way of the Wildspeaker": [],
  "We Say Thee Nay!": [
   "tempo:F"
  ],
@@ -2725,13 +3068,15 @@
   "storm:E",
   "wheels:E"
  ],
- "Whiplash Wordsmith // Vicious Verse": [],
  "White Plume Adventurer": [
   "initiative:P"
  ],
  "Wight of the Reliquary": [
   "graveyard:F",
   "lands:E"
+ ],
+ "Wildgrowth Archaic": [
+  "goodstuff:P"
  ],
  "Willowrush Verge": [
   "goodstuff:E"
@@ -2743,10 +3088,10 @@
   "goodstuff:E",
   "lands:E"
  ],
- "Winter, Team Player": [
-  "spells:F"
+ "Winternight Stories": [
+  "reanimator:E",
+  "control:F"
  ],
- "Winter, Tormented Loner": [],
  "Wishclaw Talisman": [
   "storm:E"
  ],
@@ -2758,12 +3103,20 @@
   "storm:P",
   "spells:P"
  ],
+ "Witherbloom Charm": [],
  "Witherbloom Command": [
   "graveyard:E"
  ],
  "Wizard's Rockets": [
   "artifacts:E",
   "goodstuff:E"
+ ],
+ "Woe Strider": [
+  "tokens:E",
+  "graveyard:F"
+ ],
+ "Wolverine, Fierce Fighter": [
+  "ramp:F"
  ],
  "Wooded Foothills": [
   "goodstuff:E",
@@ -2773,9 +3126,11 @@
   "reanimator:P",
   "blink:E"
  ],
- "Woodwork Prodigy // Soul Tether": [
-  "ramp:E",
-  "artifacts:E"
+ "World War Hulk": [
+  "ramp:F"
+ ],
+ "Worldly Tutor": [
+  "reanimator:E"
  ],
  "Worldspine Wurm": [
   "reanimator:P"
@@ -2783,16 +3138,12 @@
  "Wrath of God": [
   "control:P"
  ],
- "Wrath of the Bloodmane": [],
- "Wrecking Gecko": [],
  "Wrenn and Six": [
   "lands:P"
  ],
  "Xander's Lounge": [
   "goodstuff:E"
  ],
- "Yargle, Glutton of Urborg": [],
- "Yargle, Goliath of Otaria": [],
  "Yavimaya, Cradle of Growth": [
   "lands:E"
  ],
@@ -2803,21 +3154,18 @@
   "storm:E",
   "graveyard:F"
  ],
- "Yoshimaru, Beloved Companion": [
-  "gw:P"
+ "Young Pyromancer": [
+  "spells:P",
+  "tokens:P"
  ],
- "Yoshimaru, Scrappy Stray": [],
- "Your Fate Ends Here": [],
- "Yuriko, Blade of the Mighty": [
+ "Yuffie, Materia Hunter": [
   "aggro:F"
- ],
- "Yuriko, Hope from the Shadows": [
-  "graveyard:E"
  ],
  "Zagoth Triome": [
   "goodstuff:E"
  ],
  "Zealous Conscripts": [],
+ "Zhao, the Moon Slayer": [],
  "Ziatora's Proving Ground": [
   "goodstuff:E"
  ],
