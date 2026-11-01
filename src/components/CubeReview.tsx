@@ -69,6 +69,7 @@ import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
 import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
 import { CubeShape } from "./CubeShape";
+import { combosFor, comboState, inCubeAfter, type Combo, type ComboState } from "../lib/combos";
 import { ARCHETYPES, ROLES, ROLE_LABEL, parseTag, type Role } from "../lib/archetypes";
 import { CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
@@ -1810,6 +1811,7 @@ function CardDetail({
   const c = card(ids[index]);
   const status = normalizeStatus(c.id, decisions[c.id]?.status);
   const base = !!decisions[c.id]?.base;
+  const combos = useMemo(() => combosFor(c.id).map((combo) => ({ combo, ...comboState(combo, decisions) })), [c.id, decisions]);
   const stepping = ids.length > 1;
   useBackToClose(onClose);
 
@@ -1896,6 +1898,8 @@ function CardDetail({
           owned={owns(c.id, decisions)}
           ownedByHand={!!decisions[c.id]?.owned}
           onOwned={onOwned}
+          combos={combos}
+          decisions={decisions}
           artVersion={artVersion}
           onChooseArt={onChooseArt}
         />
@@ -2032,6 +2036,8 @@ function CardBody({
   owned,
   ownedByHand,
   onOwned,
+  combos,
+  decisions,
   artVersion,
   onChooseArt,
 }: {
@@ -2044,6 +2050,8 @@ function CardBody({
   owned: boolean;
   ownedByHand: boolean;
   onOwned: (id: string, on: boolean) => void;
+  combos: { combo: Combo; state: ComboState; missing: Combo["slots"] }[];
+  decisions: Decisions;
   artVersion: number;
   onChooseArt: (id: string, p: Printing | null) => void;
 }) {
@@ -2185,6 +2193,44 @@ function CardBody({
                   )}
                   {owned && !inMyCube(c.id) && <span className="text-[11px] text-(--color-text-dim)">· on the bench unless you add it</span>}
                 </div>
+                {combos.length > 0 && (
+                  <div>
+                    <div className="text-(--color-text)">Combos:</div>
+                    <ul className="mt-0.5 space-y-1">
+                      {combos.map(({ combo, state }) => (
+                        <li key={combo.id} className="flex flex-wrap items-center gap-1">
+                          {combo.slots
+                            .filter((slot) => !slot.some((x) => x.id === c.id))
+                            .map((slot, i) => (
+                              <span key={i} className="inline-flex flex-wrap items-center gap-1">
+                                {i > 0 && <span>+</span>}
+                                {slot.map((x, j) => {
+                                  const here = inCubeAfter(x.id, decisions);
+                                  return (
+                                    <span key={x.name} className="inline-flex items-center gap-1">
+                                      {j > 0 && <span className="text-(--color-text-dim)">/</span>}
+                                      <span
+                                        className={"rounded-full px-2 py-0.5 text-[11px] " + (here ? "bg-white/10 text-(--color-text)" : "border border-(--color-border) text-(--color-text-dim) line-through")}
+                                        title={here ? "In the cube" : "Not in the cube after your decisions"}
+                                      >
+                                        {x.name}
+                                      </span>
+                                    </span>
+                                  );
+                                })}
+                              </span>
+                            ))}
+                          <span className="text-(--color-text-dim)">→ {combo.result}</span>
+                          {state !== "complete" && (
+                            <span className={"rounded px-1.5 py-0.5 text-[10px] font-semibold " + (state === "broken" ? "bg-red-500/25 text-red-200" : "bg-slate-500/30 text-slate-200")}>
+                              {state === "broken" ? "Broken by your cuts" : "Incomplete"}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {isLookedUp(c.id) && (
                   <div className="text-(--color-accent)">Looked up — tag it or add a note to keep it on your list</div>
                 )}

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { ARCHETYPES, parseTag } from "../lib/archetypes";
+import { COMBOS, comboState } from "../lib/combos";
 import {
   BALANCE_ROWS,
   balanceRow,
@@ -143,6 +144,11 @@ function shapeOf(decisions: Decisions) {
 export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; onOpenCards: (ids: string[]) => void }) {
   const shape = useMemo(() => shapeOf(decisions), [decisions]);
   const s = useMemo(() => summarize(decisions), [decisions]);
+  // Combos, the ones your cuts break first.
+  const combos = useMemo(() => {
+    const order = { broken: 0, incomplete: 1, complete: 2 };
+    return COMBOS.map((c) => ({ c, ...comboState(c, decisions) })).sort((a, b) => order[a.state] - order[b.state]);
+  }, [decisions]);
 
   const num = (c: Cell | undefined, strong = false) => {
     const after = c?.after.length ?? 0;
@@ -251,6 +257,39 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
           </table>
         </Section>
       )}
+
+      <Section
+        title="Combos"
+        hint={`${combos.filter((x) => x.state === "complete").length} of ${combos.length} complete after your decisions. A combo breaks when a cut empties one of its slots; "incomplete" means a piece was never in the cube (check the bench). Tap to open the pieces.`}
+      >
+        <ul className="divide-y divide-(--color-border)">
+          {combos.map(({ c, state, missing }) => {
+            const ids = c.slots.flat().map((x) => x.id).filter((x): x is string => !!x);
+            const names = (slots: typeof c.slots) => slots.map((slot) => slot.map((x) => x.name).join(" / ")).join(" + ");
+            return (
+              <li key={c.id}>
+                <button type="button" onClick={() => onOpenCards(ids)} className="flex w-full items-start gap-2 py-1.5 text-left text-xs hover:bg-white/5">
+                  <span
+                    className={
+                      "mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold " +
+                      (state === "complete" ? "bg-emerald-500/20 text-emerald-200" : state === "broken" ? "bg-red-500/25 text-red-200" : "bg-slate-500/30 text-slate-200")
+                    }
+                  >
+                    {state === "complete" ? "OK" : state === "broken" ? "Broken" : "Missing"}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-(--color-text)">{names(c.slots)}</span>
+                    <span className="block text-(--color-text-dim)">
+                      {c.result}
+                      {state !== "complete" && <> · needs {names(missing)}</>}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </Section>
 
       <Section title="Colours" hint="By colour identity. Lands are counted on their own line. Flex = after, minus the cards marked base.">
         <table className="w-full text-sm">
