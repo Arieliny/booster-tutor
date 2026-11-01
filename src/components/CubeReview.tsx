@@ -89,7 +89,7 @@ type View = "home" | "compare" | "changelog" | "all" | "decisions" | "summary" |
 type Member = "in" | "out" | "any";
 type LogTag = "all" | "current" | "past" | "tried";
 type Layout = "grid" | "list";
-type SortKey = "name" | "cmc" | "recent" | "grade";
+type SortKey = "name" | "cmc" | "recent" | "grade" | "role";
 type StatusFilter = Status | "none";
 
 interface Ui {
@@ -433,7 +433,17 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
   };
 
   const layout: Layout = view === "home" ? "grid" : (ui.layout[view] ?? (view === "changelog" ? "list" : "grid"));
-  const sort: SortKey = view === "home" ? "name" : (ui.sort[view] ?? (view === "changelog" ? "recent" : "name"));
+  const sort: SortKey = view === "home" ? "name" : (ui.sort[view] ?? (view === "changelog" ? "recent" : ui.archetype ? "role" : "name"));
+
+  /** The card's role (P/E/F) in the archetype being filtered on, if any. */
+  const roleIn = useCallback(
+    (id: string): Role | undefined => {
+      if (!ui.archetype) return undefined;
+      const tag = cardTags(id, decisions).find((t) => t.startsWith(ui.archetype + ":"));
+      return tag ? parseTag(tag)?.role : undefined;
+    },
+    [ui.archetype, decisions],
+  );
 
   const presetCounts = useMemo(
     () => PRESETS.map((p) => cubeUnion.filter((id) => matchesMembers(id, p.m)).length),
@@ -491,7 +501,12 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
     const keep = facetFilter(ui, q, decisions);
     const list = baseIds.filter((id) => hasCard(id) && keep(card(id)));
     const byName = (a: string, b: string) => card(a).name.localeCompare(card(b).name);
+    const roleRank = (id: string) => {
+      const r = roleIn(id);
+      return r ? ROLES.indexOf(r) : ROLES.length;
+    };
     if (sort === "cmc") list.sort((a, b) => card(a).cmc - card(b).cmc || byName(a, b));
+    else if (sort === "role" && ui.archetype) list.sort((a, b) => roleRank(a) - roleRank(b) || byName(a, b));
     else if (sort === "grade") list.sort((a, b) => gradeSortValue(card(b)) - gradeSortValue(card(a)) || byName(a, b));
     else if (sort === "recent" && view === "changelog") {
       const log = logById[ui.log];
@@ -502,7 +517,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
     // stepped through in the popup - one question at a time.
     if (view === "decisions") return [...list.filter(inMyCube), ...list.filter((id) => !inMyCube(id))];
     return list;
-  }, [baseIds, ui, q, decisions, sort, view]);
+  }, [baseIds, ui, q, decisions, sort, view, roleIn]);
 
   const shownIds = useMemo(() => new Set(ids), [ids]);
 
@@ -1018,6 +1033,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
               >
                 <option value="name">Name</option>
                 <option value="cmc">Mana value</option>
+                {ui.archetype && <option value="role">Role (P · E · F)</option>}
                 {view === "changelog" && <option value="recent">Newest change</option>}
               </select>
               <Segmented
@@ -1056,6 +1072,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                         src={imageUrl(card(id), "small")}
                         status={normalizeStatus(id, decisions[id]?.status)}
                         base={!!decisions[id]?.base}
+                        role={roleIn(id)}
                         hasNote={!!decisions[id]?.note}
                         selected={selId === id}
                         onOpen={open}
@@ -1071,6 +1088,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
                         log={view === "changelog" ? ui.log : null}
                         status={normalizeStatus(id, decisions[id]?.status)}
                         base={!!decisions[id]?.base}
+                        role={roleIn(id)}
                         selected={selId === id}
                         onOpen={open}
                       />
@@ -1580,6 +1598,15 @@ function MemberDots({ id }: { id: string }) {
   );
 }
 
+/** The card's role in the archetype being filtered on: P, E or F. */
+function RolePill({ role }: { role: Role }) {
+  return (
+    <span className="rounded bg-sky-500/35 px-1.5 py-0.5 text-[10px] font-semibold text-sky-100" title={ROLE_LABEL[role]}>
+      {role}
+    </span>
+  );
+}
+
 function BasePill() {
   return <span className="rounded bg-violet-500/35 px-1.5 py-0.5 text-[10px] font-semibold text-violet-100">Base</span>;
 }
@@ -1598,6 +1625,7 @@ const Tile = memo(function Tile({
   src,
   status,
   base,
+  role,
   hasNote,
   selected,
   onOpen,
@@ -1606,6 +1634,7 @@ const Tile = memo(function Tile({
   src: string | null;
   status?: Status;
   base?: boolean;
+  role?: Role;
   hasNote: boolean;
   selected: boolean;
   onOpen: (id: string) => void;
@@ -1637,8 +1666,9 @@ const Tile = memo(function Tile({
             {c.name}
           </span>
         )}
-        {(status || base) && (
+        {(status || base || role) && (
           <span className="absolute top-1 right-1 flex gap-0.5">
+            {role && <RolePill role={role} />}
             {base && <BasePill />}
             <StatusPill status={status} />
           </span>
@@ -1665,6 +1695,7 @@ const Row = memo(function Row({
   log,
   status,
   base,
+  role,
   selected,
   onOpen,
 }: {
@@ -1672,6 +1703,7 @@ const Row = memo(function Row({
   log: LogKey | null;
   status?: Status;
   base?: boolean;
+  role?: Role;
   selected: boolean;
   onOpen: (id: string) => void;
 }) {
@@ -1703,6 +1735,7 @@ const Row = memo(function Row({
             {entry.current ? "Current" : "Past"}
           </span>
         )}
+        {role && <RolePill role={role} />}
         {base && <BasePill />}
         <StatusPill status={status} />
       </span>
