@@ -71,7 +71,7 @@ import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
 import { CubeShape } from "./CubeShape";
 import { combosFor, comboState, inCubeAfter, type Combo, type ComboState } from "../lib/combos";
-import { ARCHETYPES, ROLES, ROLE_LABEL, parseTag, type Role } from "../lib/archetypes";
+import { ARCHETYPES, ROLES, ROLE_LABEL, ROLE_HELP, parseTag, type Role } from "../lib/archetypes";
 import { CardLookup } from "./CardLookup";
 import { useCardDb } from "../lib/card-db";
 import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
@@ -1033,7 +1033,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
               >
                 <option value="name">Name</option>
                 <option value="cmc">Mana value</option>
-                {ui.archetype && <option value="role">Role (P · E · F)</option>}
+                {ui.archetype && <option value="role">Role (payoff, enabler, fits)</option>}
                 {view === "changelog" && <option value="recent">Newest change</option>}
               </select>
               <Segmented
@@ -1601,8 +1601,8 @@ function MemberDots({ id }: { id: string }) {
 /** The card's role in the archetype being filtered on: P, E or F. */
 function RolePill({ role }: { role: Role }) {
   return (
-    <span className="rounded bg-sky-500/35 px-1.5 py-0.5 text-[10px] font-semibold text-sky-100" title={ROLE_LABEL[role]}>
-      {role}
+    <span className="rounded bg-sky-500/35 px-1.5 py-0.5 text-[10px] font-semibold text-sky-100" title={ROLE_HELP[role]}>
+      {ROLE_LABEL[role]}
     </span>
   );
 }
@@ -2071,13 +2071,13 @@ function TagRow({
               type="button"
               onClick={() => onOpen(t.key)}
               className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[11px] text-violet-100 hover:bg-violet-500/40"
-              title={`${ROLE_LABEL[t.role]} · tap to see the archetype's cards`}
+              title={`${ROLE_HELP[t.role]} · tap to see the archetype's cards`}
             >
-              {ARCHETYPES.find((a) => a.key === t.key)?.label} · {t.role}
+              {ARCHETYPES.find((a) => a.key === t.key)?.label} · {ROLE_LABEL[t.role]}
             </button>
           ) : (
-            <span key={t.key} className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[11px] text-violet-100" title={ROLE_LABEL[t.role]}>
-              {ARCHETYPES.find((a) => a.key === t.key)?.label} · {t.role}
+            <span key={t.key} className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[11px] text-violet-100" title={ROLE_HELP[t.role]}>
+              {ARCHETYPES.find((a) => a.key === t.key)?.label} · {ROLE_LABEL[t.role]}
             </span>
           ),
         )}
@@ -2093,13 +2093,13 @@ function TagRow({
               <span className="min-w-0 truncate text-(--color-text)">{a.label}</span>
               <Segmented<Role | "">
                 value={roleOf(a.key)}
-                options={[["", "–"], ...ROLES.map((r): [Role, string] => [r, r])]}
+                options={[["", "–"], ...ROLES.map((r): [Role, string] => [r, ROLE_LABEL[r]])]}
                 onChange={(v) => set(a.key, v)}
               />
             </div>
           ))}
-          <div className="flex items-center justify-between pt-1 text-[11px]">
-            <span>P payoff · E enabler · F fits</span>
+          <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
+            <span className="text-(--color-text-dim)">{ROLES.map((r) => ROLE_HELP[r]).join(" · ")}</span>
             {overridden && (
               <button type="button" onClick={() => onTags(undefined)} className="rounded border border-(--color-border) px-2 py-0.5 hover:bg-white/5">
                 Back to suggested

@@ -226,7 +226,7 @@ export function CubeShape({
             {shape.staples.length} staples
           </button>{" "}
           (go in any deck; they keep their archetype tags)
-        </p>`
+        </p>
         <p className="mt-1 text-xs text-(--color-text-dim)">
           Every number is the count after your cuts and adds, with the change from today beside it. Tap a number to open those cards.
         </p>
@@ -235,7 +235,7 @@ export function CubeShape({
       {shape.anyTags && (
         <Section
           title="Archetypes"
-          hint="Cards tagged for each archetype (see docs/ARCHETYPES.md). P = payoffs, E = enablers, F = fits, counted after your decisions. Cut and Add show which archetypes lose or gain support. Tap a name for its cards as a list."
+          hint="Cards tagged for each archetype (see docs/ARCHETYPES.md), counted after your decisions. Payoff = the card the deck is built around, Enabler = makes the payoff work, Fits = a good card for the deck that doesn't define it. Cut and Add show which archetypes lose or gain support. Tap a name for its cards as a list."
         >
           <table className="w-full text-sm">
             <thead>
@@ -245,9 +245,15 @@ export function CubeShape({
                 <th className={th}>Cut</th>
                 <th className={th}>Add</th>
                 <th className={th}>After</th>
-                <th className={th}>P</th>
-                <th className={th}>E</th>
-                <th className={th}>F</th>
+                <th className={th} title="The card the deck is built around">
+                  Payoff
+                </th>
+                <th className={th} title="Makes the payoff work">
+                  Enabler
+                </th>
+                <th className={th} title="A good card for the deck that doesn't define it">
+                  Fits
+                </th>
               </tr>
             </thead>
             <tbody>

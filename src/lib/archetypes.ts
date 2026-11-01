@@ -13,6 +13,12 @@
 export type Role = "P" | "E" | "F";
 export const ROLES: Role[] = ["P", "E", "F"];
 export const ROLE_LABEL: Record<Role, string> = { P: "Payoff", E: "Enabler", F: "Fits" };
+/** What each role means, for legends and tooltips. */
+export const ROLE_HELP: Record<Role, string> = {
+  P: "Payoff: the card the deck is built around",
+  E: "Enabler: makes the payoff work",
+  F: "Fits: a good card for the deck that doesn't define it",
+};
 
 export interface Archetype {
   key: string;
