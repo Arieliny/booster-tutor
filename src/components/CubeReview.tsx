@@ -416,6 +416,13 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
     window.scrollTo(0, 0);
   };
 
+  /** The cards in your cube tagged for an archetype, as a list with filters (Compare, "mine" only). */
+  const openArchetype = (key: string) => {
+    setDetail(null);
+    const label = ARCHETYPES.find((a) => a.key === key)?.label ?? key;
+    goView("compare", { member: { mine: "in", lsv: "any", mtgo: "any", arena: "any" }, archetype: key }, `${label} in your cube`);
+  };
+
   const goHome = () => {
     if ((window.history.state as { fromHome?: boolean } | null)?.fromHome) {
       window.history.back();
@@ -614,6 +621,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
       onTags={st.setTags}
       onOwned={st.setOwned}
       onStaple={st.setStaple}
+      onOpenArchetype={openArchetype}
       onClose={() => setDetail(null)}
     />
   );
@@ -757,7 +765,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
           <CubeReviewSummary decisions={decisions} onOpenCard={(id) => setDetail({ ids: [id], index: 0 })} />
         </>
       ) : view === "shape" ? (
-        <CubeShape decisions={decisions} onOpenCards={(ids) => setDetail({ ids, index: 0 })} />
+        <CubeShape decisions={decisions} onOpenCards={(ids) => setDetail({ ids, index: 0 })} onOpenArchetype={openArchetype} />
       ) : (
         <>
           {/* View-specific controls */}
@@ -1379,6 +1387,7 @@ export function LookUp() {
           onTags={st.setTags}
           onOwned={st.setOwned}
           onStaple={st.setStaple}
+          onOpenArchetype={undefined}
           onClose={() => setDetail(null)}
         />
       )}
@@ -1812,6 +1821,7 @@ function CardDetail({
   onTags,
   onOwned,
   onStaple,
+  onOpenArchetype,
   onClose,
 }: {
   ids: string[];
@@ -1829,6 +1839,8 @@ function CardDetail({
   onTags: (id: string, tags: string[] | undefined) => void;
   onOwned: (id: string, on: boolean) => void;
   onStaple: (id: string, on: boolean | undefined) => void;
+  /** Open an archetype's cards as a list (not available from the lookup screen). */
+  onOpenArchetype?: (key: string) => void;
   onClose: () => void;
 }) {
   const c = card(ids[index]);
@@ -1926,6 +1938,7 @@ function CardDetail({
           staple={isStaple(c.id, decisions)}
           stapleEdited={decisions[c.id]?.staple !== undefined}
           onStaple={onStaple}
+          onOpenArchetype={onOpenArchetype}
           artVersion={artVersion}
           onChooseArt={onChooseArt}
         />
@@ -1998,12 +2011,14 @@ function TagRow({
   editing,
   onEdit,
   onTags,
+  onOpen,
 }: {
   tags: string[];
   overridden: boolean;
   editing: boolean;
   onEdit: () => void;
   onTags: (tags: string[] | undefined) => void;
+  onOpen?: (key: string) => void;
 }) {
   const parsed = tags.map(parseTag).filter((t): t is { key: string; role: Role } => !!t);
   const roleOf = (key: string): Role | "" => parsed.find((t) => t.key === key)?.role ?? "";
@@ -2016,11 +2031,23 @@ function TagRow({
       <div className="flex flex-wrap items-center gap-1">
         <span className="text-(--color-text)">Archetypes:</span>
         {parsed.length === 0 && <span>none</span>}
-        {parsed.map((t) => (
-          <span key={t.key} className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[11px] text-violet-100" title={ROLE_LABEL[t.role]}>
-            {ARCHETYPES.find((a) => a.key === t.key)?.label} · {t.role}
-          </span>
-        ))}
+        {parsed.map((t) =>
+          onOpen ? (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => onOpen(t.key)}
+              className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[11px] text-violet-100 hover:bg-violet-500/40"
+              title={`${ROLE_LABEL[t.role]} · tap to see the archetype's cards`}
+            >
+              {ARCHETYPES.find((a) => a.key === t.key)?.label} · {t.role}
+            </button>
+          ) : (
+            <span key={t.key} className="rounded-full bg-violet-500/25 px-2 py-0.5 text-[11px] text-violet-100" title={ROLE_LABEL[t.role]}>
+              {ARCHETYPES.find((a) => a.key === t.key)?.label} · {t.role}
+            </span>
+          ),
+        )}
         <button type="button" onClick={onEdit} className="ml-1 rounded border border-(--color-border) px-2 py-0.5 text-[11px] hover:bg-white/5">
           {editing ? "Done" : "Edit"}
         </button>
@@ -2067,6 +2094,7 @@ function CardBody({
   staple,
   stapleEdited,
   onStaple,
+  onOpenArchetype,
   artVersion,
   onChooseArt,
 }: {
@@ -2084,6 +2112,7 @@ function CardBody({
   staple: boolean;
   stapleEdited: boolean;
   onStaple: (id: string, on: boolean | undefined) => void;
+  onOpenArchetype?: (key: string) => void;
   artVersion: number;
   onChooseArt: (id: string, p: Printing | null) => void;
 }) {
@@ -2226,7 +2255,7 @@ function CardBody({
                     </button>
                   )}
                 </div>
-                <TagRow tags={tags} overridden={tagsOverridden} editing={editingTags} onEdit={() => setEditingTags((v) => !v)} onTags={(t) => onTags(c.id, t)} />
+                <TagRow tags={tags} overridden={tagsOverridden} editing={editingTags} onEdit={() => setEditingTags((v) => !v)} onTags={(t) => onTags(c.id, t)} onOpen={onOpenArchetype} />
                 {/* Owned: from the proxy orders, from the cube itself, or flagged by hand. */}
                 <div className="flex flex-wrap items-center gap-1">
                   <span className="text-(--color-text)">Owned:</span>

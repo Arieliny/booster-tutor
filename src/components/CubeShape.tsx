@@ -143,7 +143,16 @@ function shapeOf(decisions: Decisions) {
   return { byType, byCurve, byGuild, byBase, byArch, archCuts, archAdds, anyTags, staples, cuts: cuts.size, adds: adds.size, base: base.size, after: after.length };
 }
 
-export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; onOpenCards: (ids: string[]) => void }) {
+export function CubeShape({
+  decisions,
+  onOpenCards,
+  onOpenArchetype,
+}: {
+  decisions: Decisions;
+  onOpenCards: (ids: string[]) => void;
+  /** The archetype's cards in your cube as a list with filters. */
+  onOpenArchetype: (key: string) => void;
+}) {
   const shape = useMemo(() => shapeOf(decisions), [decisions]);
   const s = useMemo(() => summarize(decisions), [decisions]);
   // Combos, the ones your cuts break first.
@@ -226,7 +235,7 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
       {shape.anyTags && (
         <Section
           title="Archetypes"
-          hint="Cards tagged for each archetype (see docs/ARCHETYPES.md). P = payoffs, E = enablers, F = fits, counted after your decisions. Cut and Add show which archetypes lose or gain support."
+          hint="Cards tagged for each archetype (see docs/ARCHETYPES.md). P = payoffs, E = enablers, F = fits, counted after your decisions. Cut and Add show which archetypes lose or gain support. Tap a name for its cards as a list."
         >
           <table className="w-full text-sm">
             <thead>
@@ -248,8 +257,10 @@ export function CubeShape({ decisions, onOpenCards }: { decisions: Decisions; on
                 const add = shape.archAdds.get(a.key) ?? [];
                 return (
                   <tr key={a.key} className="border-t border-(--color-border)">
-                    <td className={rowHead}>
-                      {a.label} <span className="text-(--color-text-dim)">{a.colors}</span>
+                    <td className="py-0 pr-2">
+                      <button type="button" onClick={() => onOpenArchetype(a.key)} className="py-1 text-left text-xs text-(--color-text) hover:underline">
+                        {a.label} <span className="text-(--color-text-dim)">{a.colors}</span>
+                      </button>
                     </td>
                     <td className="py-1 text-right tabular-nums text-(--color-text-dim)">{all?.now.length ?? 0}</td>
                     <td className="py-0">{list(cut, "text-red-300", "−")}</td>
