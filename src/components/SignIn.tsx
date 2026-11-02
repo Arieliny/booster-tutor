@@ -53,7 +53,7 @@ export function SignInForm({ message, onSignedIn }: { message?: string; onSigned
         <button
           type="submit"
           disabled={busy || !link.trim()}
-          className="w-full rounded-lg bg-(--color-accent) py-2.5 text-sm font-medium text-black hover:bg-(--color-accent-bright) disabled:opacity-50"
+          className="w-full rounded-lg bg-(--color-accent) py-2.5 text-sm font-medium text-(--color-accent-ink) hover:bg-(--color-accent-bright) disabled:opacity-50"
         >
           {busy && !pinOpen ? "Signing in…" : "Sign in"}
         </button>

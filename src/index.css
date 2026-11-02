@@ -8,8 +8,34 @@
   --color-text-dim: #9ca3af;
   --color-accent: #c084fc;
   --color-accent-bright: #d8b4fe;
+  /* Text on an accent-filled button. */
+  --color-accent-ink: #000000;
+  /* The life counter's table: the gutters between seats, the tray bar and what's drawn on it. */
+  --color-table: #000000;
+  --color-tray: #14161c;
+  --color-tray-ink: #ffffff;
   /* The life counter's numbers (Nunito Black, bundled so it works offline). */
   --font-life: "Nunito", ui-rounded, system-ui, sans-serif;
+}
+
+/*
+ * Light mode (LifeTutor's Settings > Appearance; lib/appearance.ts sets data-theme).
+ * The seats keep their colors and white numbers; the screens, the gutters and the
+ * tray go light. The round tray button is white in both modes.
+ */
+:root[data-theme="light"] {
+  --color-bg: #f6f7fb;
+  --color-bg-elev: #ffffff;
+  --color-border: #d9dde6;
+  --color-text: #15171d;
+  --color-text-dim: #5b6472;
+  --color-accent: #7c3aed;
+  --color-accent-bright: #6d28d9;
+  --color-accent-ink: #ffffff;
+  --color-table: #e9ecf2;
+  --color-tray: #ffffff;
+  --color-tray-ink: #15171d;
+  color-scheme: light;
 }
 
 html, body, #root {

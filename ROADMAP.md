@@ -399,6 +399,14 @@ Why: Ari wants to hand the counter to his friend group. Decided 2026-11-02, revi
   the window, whenever the window is wide and has a mouse; inside the iframe the app renders
   plainly (`window.self !== window.top`), so it's a real phone viewport and nothing in the
   counter needs to know. Same origin, so the game and settings are shared with the plain view.
+- **Light mode** (Ari picked "option B" from a mock-up canvas, 2026-11-02): Settings > Appearance =
+  Follow phone / Light / Dark (`lib/appearance.ts`, `data-theme` on <html>, key
+  `booster-tutor-appearance-v1`; LifeTutor only, Booster Tutor stays dark). Light tokens in
+  `index.css` under `:root[data-theme="light"]`; new tokens `--color-accent-ink` (text on an
+  accent button), `--color-table` (gutters), `--color-tray` / `--color-tray-ink` (the bar and
+  its icons). The seats keep their colours and white numbers; the round tray button is white in
+  both modes, its ring takes the gutter colour and it has a soft shadow. The seat menu is on
+  tokens; the dungeon map, Ring and emblem screens stay dark for now (hard-coded whites).
 - Shared pieces: `components/SignIn.tsx` (the form, used by Booster Tutor's gate and LifeTutor's
   Settings), `takeLinkToken` in `lib/auth.ts`, `LifeHome` / `LifeSettingsPage` in
   `components/LifeHome.tsx` (Booster Tutor's Life tab opens on the same home screen, with a

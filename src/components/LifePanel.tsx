@@ -605,29 +605,29 @@ function CmdrStrip({
 
 function Menu(props: Props & { onClose: () => void }) {
   const { name, player, others } = props;
-  const head = "text-[11px] font-medium tracking-wide text-white/60 uppercase";
+  const head = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
   // A card shows at most `most` rows under the total (fewer at a bigger table); when it's full, only removing is offered.
   const most = maxTracked(others.length + 1);
   const full = trackedCount(player) >= most;
-  const off = "border-white/20 text-white/75 hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent";
+  const off = "border-(--color-border) text-(--color-text-dim) hover:bg-(--color-text)/10 disabled:opacity-35 disabled:hover:bg-transparent";
   const { show } = props;
   const manaOn = COUNTERS.some((c) => c.pip && player.counters[c.key] !== undefined);
   const ring = show.ring || !!player.ring;
   const blessing = show.blessing || !!player.blessing;
   const emblems = show.emblems || !!player.emblems?.length;
   return (
-    <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] px-3 pb-3 text-left text-white">
+    <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-(--color-bg-elev) px-3 pb-3 text-left text-(--color-text)">
       {/* Stays at the top while the menu scrolls, so x is always in reach. */}
-      <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center bg-[#14161c] px-3 pt-3 pb-2">
+      <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center bg-(--color-bg-elev) px-3 pt-3 pb-2">
         <span className="flex-1 text-sm font-medium">{name}</span>
-        <button type="button" onClick={props.onClose} aria-label="Close" className="rounded-full p-1 text-white/70 hover:bg-white/10">
+        <button type="button" onClick={props.onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-(--color-text)/10">
           <Icon name="close" className="h-5 w-5" />
         </button>
       </div>
 
       <div className="space-y-3">
         {full && (
-          <p className="rounded-lg bg-white/10 px-3 py-2 text-xs text-white/80">
+          <p className="rounded-lg bg-(--color-text)/10 px-3 py-2 text-xs text-(--color-text-dim)">
             Your card shows {most}, the most it can with {others.length + 1} players. Remove one to add another.
           </p>
         )}
@@ -645,7 +645,7 @@ function Menu(props: Props & { onClose: () => void }) {
                     disabled={!on && full}
                     className={
                       "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
-                      (on ? "border-white bg-white/15" : off)
+                      (on ? "border-(--color-text) bg-(--color-text)/15" : off)
                     }
                   >
                     <Icon name={counterIcon(props, c.key)} className="h-5 w-5 shrink-0" />
@@ -654,7 +654,7 @@ function Menu(props: Props & { onClose: () => void }) {
                   </button>
                   {c.icons && (
                     // Which symbol this counter shows (poison: Phyrexian or droplet).
-                    <span className="flex flex-col overflow-hidden rounded-lg border border-white/20">
+                    <span className="flex flex-col overflow-hidden rounded-lg border border-(--color-border)">
                       {c.icons.map((ic) => (
                         <button
                           key={ic}
@@ -662,7 +662,7 @@ function Menu(props: Props & { onClose: () => void }) {
                           onClick={() => props.onCounterIcon(c.key, ic)}
                           aria-label={`Show ${c.label} as ${ic}`}
                           aria-pressed={counterIcon(props, c.key) === ic}
-                          className={"flex flex-1 items-center px-1.5 " + (counterIcon(props, c.key) === ic ? "bg-white/20" : "opacity-50 hover:opacity-100")}
+                          className={"flex flex-1 items-center px-1.5 " + (counterIcon(props, c.key) === ic ? "bg-(--color-text)/20" : "opacity-50 hover:opacity-100")}
                         >
                           <Icon name={ic} className="h-3.5 w-3.5" />
                         </button>
@@ -692,7 +692,7 @@ function Menu(props: Props & { onClose: () => void }) {
                   disabled={!on && full}
                   className={
                     "flex h-11 w-11 items-center justify-center rounded-lg border " +
-                    (on ? "border-white bg-white/15" : "border-white/20 opacity-60 hover:bg-white/10 hover:opacity-100 disabled:opacity-25 disabled:hover:bg-transparent")
+                    (on ? "border-(--color-text) bg-(--color-text)/15" : "border-(--color-border) opacity-60 hover:bg-(--color-text)/10 hover:opacity-100 disabled:opacity-25 disabled:hover:bg-transparent")
                   }
                 >
                   <Pip sym={c.pip!} size={26} />
@@ -713,13 +713,13 @@ function Menu(props: Props & { onClose: () => void }) {
             aria-pressed={tracksCmdr(player)}
             className={
               "flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
-              (tracksCmdr(player) ? "border-white bg-white/15" : "border-white/20 text-white/75 hover:bg-white/10")
+              (tracksCmdr(player) ? "border-(--color-text) bg-(--color-text)/15" : "border-(--color-border) text-(--color-text-dim) hover:bg-(--color-text)/10")
             }
           >
             <Icon name="sword" className="h-5 w-5 shrink-0" />
             <span className="flex shrink-0 -space-x-1">
               {others.map((o) => (
-                <span key={o.index} className="h-3 w-3 rounded-full ring-1 ring-[#14161c]" style={{ background: colorHex(o.color) }} />
+                <span key={o.index} className="h-3 w-3 rounded-full ring-1 ring-(--color-bg-elev)" style={{ background: colorHex(o.color) }} />
               ))}
             </span>
             <span className="min-w-0 flex-1 truncate">From each opponent</span>
@@ -736,11 +736,11 @@ function Menu(props: Props & { onClose: () => void }) {
             <button
               type="button"
               onClick={() => (props.onClose(), props.onRing())}
-              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.ring ? "border-white bg-white/15" : off)}
+              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.ring ? "border-(--color-text) bg-(--color-text)/15" : off)}
             >
               <Icon name="ring" className="h-5 w-5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">The Ring</span>
-              <span className="text-xs text-white/70">{player.ring ? `Tempted ${player.ring}×` : "Not yet"}</span>
+              <span className="text-xs text-(--color-text-dim)">{player.ring ? `Tempted ${player.ring}×` : "Not yet"}</span>
             </button>
             )}
             {blessing && (
@@ -748,7 +748,7 @@ function Menu(props: Props & { onClose: () => void }) {
               type="button"
               onClick={() => props.onBlessing(!player.blessing)}
               aria-pressed={!!player.blessing}
-              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.blessing ? "border-white bg-white/15" : off)}
+              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.blessing ? "border-(--color-text) bg-(--color-text)/15" : off)}
             >
               <Icon name="castle" className="h-5 w-5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">City's blessing</span>
@@ -759,11 +759,11 @@ function Menu(props: Props & { onClose: () => void }) {
             <button
               type="button"
               onClick={() => (props.onClose(), props.onEmblems())}
-              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.emblems?.length ? "border-white bg-white/15" : off)}
+              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.emblems?.length ? "border-(--color-text) bg-(--color-text)/15" : off)}
             >
               <Icon name="emblem" className="h-5 w-5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">Emblems</span>
-              <span className="text-xs text-white/70">{player.emblems?.length || "None"}</span>
+              <span className="text-xs text-(--color-text-dim)">{player.emblems?.length || "None"}</span>
             </button>
             )}
           </div>
@@ -786,7 +786,7 @@ function Menu(props: Props & { onClose: () => void }) {
                   aria-pressed={player.color === c.key}
                   className={
                     "relative flex h-9 w-9 items-center justify-center rounded-full border-2 " +
-                    (player.color === c.key ? "border-white" : "border-transparent")
+                    (player.color === c.key ? "border-(--color-text)" : "border-transparent")
                   }
                 >
                   <span className={"absolute inset-0 rounded-full " + (owner ? "opacity-30" : "")} style={{ background: c.hex }} />

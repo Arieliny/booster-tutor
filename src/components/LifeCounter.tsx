@@ -248,6 +248,7 @@ export function LifeCounter({
   canJudge = false,
   welcome,
   judgeAccess,
+  appearance,
 }: {
   /** The home screen's heading. */
   title?: string;
@@ -261,6 +262,8 @@ export function LifeCounter({
    * judge, the tray still shows the judge, locked, pointing at Settings.
    */
   judgeAccess?: React.ReactNode;
+  /** The first section of Settings (LifeTutor: light or dark). */
+  appearance?: React.ReactNode;
 }) {
   const [game, setGame] = useState<Game>(load);
   const [screen, setScreen] = useState<"home" | "settings" | "game">("home");
@@ -368,7 +371,7 @@ export function LifeCounter({
   if (screen === "settings") {
     return (
       <div className="fixed inset-0 z-[60] bg-(--color-bg)">
-        <LifeSettingsPage settings={settings} onSettings={setSettings} onBack={() => setScreen("home")} more={judgeAccess} />
+        <LifeSettingsPage settings={settings} onSettings={setSettings} onBack={() => setScreen("home")} appearance={appearance} more={judgeAccess} />
       </div>
     );
   }
@@ -397,7 +400,7 @@ export function LifeCounter({
 
   return (
     // Edge to edge: no gap for the camera cutout at the top (the top seats pad their own contents instead).
-    <div className="fixed inset-0 z-[60] flex flex-col bg-black p-1.5 select-none" style={{ paddingTop: 0, paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
+    <div className="fixed inset-0 z-[60] flex flex-col bg-(--color-table) p-1.5 select-none" style={{ paddingTop: 0, paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
       <div className="relative min-h-0 flex-1">
         <div
           className="grid h-full gap-1.5"
@@ -456,14 +459,14 @@ export function LifeCounter({
             <button
               type="button"
               onClick={() => setGiving(null)}
-              className="pointer-events-auto rounded-full border-4 border-black bg-white px-5 py-3 text-sm font-semibold text-black"
+              className="pointer-events-auto rounded-full border-4 border-(--color-table) bg-white px-5 py-3 text-sm font-semibold text-black shadow-[0_2px_10px_rgba(0,0,0,0.22)]"
             >
               Cancel
             </button>
           ) : (
             <div className="relative flex w-full justify-center">
               <div
-                className="pointer-events-auto flex items-center overflow-hidden border-4 border-black bg-[#14161c] transition-[width,border-radius] duration-[250ms] ease-out"
+                className="pointer-events-auto flex items-center overflow-hidden border-4 border-(--color-table) bg-(--color-tray) shadow-[0_2px_10px_rgba(0,0,0,0.22)] transition-[width,border-radius] duration-[250ms] ease-out"
                 // A real radius (half the height) rather than "fully round", so the corners square off
                 // in step with the width instead of snapping at the end.
                 style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem", borderRadius: barOpen ? 0 : 30 }}
@@ -530,7 +533,7 @@ export function LifeCounter({
               {/* Day or night shows on the middle button too, so the whole table sees it with the tray shut. */}
               {game.dayNight && !barOpen && (
                 <span
-                  className="absolute top-0 flex h-6 w-6 -translate-y-1 items-center justify-center rounded-full border-2 border-black bg-[#14161c]"
+                  className="absolute top-0 flex h-6 w-6 -translate-y-1 items-center justify-center rounded-full border-2 border-(--color-table) bg-(--color-tray)"
                   style={{ left: "calc(50% + 1.1rem)", color: DAY_NIGHT_TINT[game.dayNight] }}
                   aria-label={game.dayNight === "day" ? "It's day" : "It's night"}
                 >
@@ -641,11 +644,11 @@ function Tool({ icon, label, hint, onClick, tint, disabled }: { icon: IconName; 
       disabled={disabled}
       aria-label={hint ?? label}
       title={hint ?? label}
-      className="flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
+      className="flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-full text-(--color-tray-ink) hover:bg-(--color-tray-ink)/10 disabled:opacity-30"
       style={tint ? { color: tint } : undefined}
     >
       <Icon name={icon} className="h-5.5 w-5.5" />
-      <span className="mt-0.5 hidden text-[10px] leading-none text-white/70 min-[420px]:block">{label}</span>
+      <span className="mt-0.5 hidden text-[10px] leading-none text-(--color-tray-ink)/70 min-[420px]:block">{label}</span>
     </button>
   );
 }
@@ -737,12 +740,12 @@ function DieButton({ label, coin, onClick }: { label: string; coin?: boolean; on
       type="button"
       onClick={onClick}
       aria-label={coin ? "Flip a coin" : `Roll a ${label}`}
-      className="flex h-11 min-w-0 flex-1 items-center justify-center text-white"
+      className="flex h-11 min-w-0 flex-1 items-center justify-center text-(--color-tray-ink)"
     >
       <span
         className={
           "flex h-9 min-w-9 items-center justify-center border-2 px-1 font-life text-sm font-black " +
-          (coin ? "rounded-full border-[#F5C04A] text-[#F5C04A]" : "rounded-lg border-white/70")
+          (coin ? "rounded-full border-[#F5C04A] text-[#F5C04A]" : "rounded-lg border-(--color-tray-ink)/70")
         }
       >
         {coin ? "Coin" : label}
@@ -1157,7 +1160,7 @@ function DayNightSheet({ state, onSet, onClose }: { state: DayNight | undefined;
   }, [onClose]);
   const chip = (on: boolean) =>
     "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-sm " +
-    (on ? "border-white bg-white text-black" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
+    (on ? "border-(--color-text) bg-(--color-text) text-(--color-bg)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
@@ -1240,7 +1243,7 @@ function JudgeLockedBox({ onInvite, onClose }: { onInvite: () => void; onClose: 
         <button
           type="button"
           onClick={onInvite}
-          className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-black hover:bg-(--color-accent-bright)"
+          className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-(--color-accent-ink) hover:bg-(--color-accent-bright)"
         >
           I have an invite
         </button>

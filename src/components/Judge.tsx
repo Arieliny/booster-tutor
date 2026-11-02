@@ -305,7 +305,7 @@ export function Judge({ embedded = false }: { embedded?: boolean } = {}) {
             <button
               type="submit"
               disabled={!input.trim() || outOfRulings || !online}
-              className="rounded-lg bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-black hover:bg-(--color-accent-bright) disabled:opacity-40"
+              className="rounded-lg bg-(--color-accent) px-4 py-2.5 text-sm font-semibold text-(--color-accent-ink) hover:bg-(--color-accent-bright) disabled:opacity-40"
             >
               Ask
             </button>

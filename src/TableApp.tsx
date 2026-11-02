@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import { cachedMe, can, checkAuth, redeemLink, signOut, takeLinkToken, type Me } from "./lib/auth";
 import { LifeCounter } from "./components/LifeCounter";
 import { SignInForm } from "./components/SignIn";
+import { APPEARANCES, applyAppearance, loadAppearance, saveAppearance, type Appearance } from "./lib/appearance";
 
 const INTRO_KEY = "booster-tutor-life-intro-seen";
 
@@ -78,6 +79,11 @@ function PhoneFrame() {
  */
 function TableAppInner() {
   const [me, setMe] = useState<Me | null>(cachedMe);
+  const [appearance, setAppearance] = useState<Appearance>(loadAppearance);
+  useEffect(() => {
+    saveAppearance(appearance);
+    return applyAppearance(appearance);
+  }, [appearance]);
   const [introSeen, setIntroSeen] = useState(() => {
     try {
       return localStorage.getItem(INTRO_KEY) === "1";
@@ -121,7 +127,33 @@ function TableAppInner() {
       canJudge={can(me, "judge")}
       welcome={!introSeen && <Welcome onDismiss={dismissIntro} />}
       judgeAccess={<JudgeAccess me={me} onMe={setMe} />}
+      appearance={<AppearanceSection value={appearance} onChange={setAppearance} />}
     />
+  );
+}
+
+/** Settings > Appearance: follow the phone, or light or dark whatever it says. */
+function AppearanceSection({ value, onChange }: { value: Appearance; onChange: (a: Appearance) => void }) {
+  return (
+    <section className="space-y-2">
+      <div className="text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase">Appearance</div>
+      <div role="group" aria-label="Appearance" className="grid grid-cols-3 gap-1 rounded-xl bg-(--color-text)/10 p-1">
+        {APPEARANCES.map((a) => (
+          <button
+            key={a.key}
+            type="button"
+            onClick={() => onChange(a.key)}
+            aria-pressed={value === a.key}
+            className={
+              "rounded-[9px] py-2 text-sm " +
+              (value === a.key ? "bg-(--color-bg-elev) font-semibold text-(--color-text) shadow" : "text-(--color-text-dim) hover:bg-(--color-text)/5")
+            }
+          >
+            {a.label}
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 

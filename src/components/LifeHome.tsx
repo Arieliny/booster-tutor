@@ -115,11 +115,14 @@ export function LifeSettingsPage({
   settings,
   onSettings,
   onBack,
+  appearance,
   more,
 }: {
   settings: LifeSettings;
   onSettings: (update: (s: LifeSettings) => LifeSettings) => void;
   onBack: () => void;
+  /** The first section (LifeTutor: light or dark). */
+  appearance?: React.ReactNode;
   more?: React.ReactNode;
 }) {
   return (
@@ -133,6 +136,8 @@ export function LifeSettingsPage({
         </>
       }
     >
+      {appearance}
+
       <section className="space-y-2">
         <div className={HEAD}>On the table</div>
         <p className="text-sm text-(--color-text-dim)">What this phone offers during a game. Switch off what your games don't use.</p>
@@ -174,7 +179,7 @@ function TrackerSwitch({ icon, label, hint, on, onChange }: { icon: IconName; la
         <span className="block text-sm text-(--color-text)">{label}</span>
         <span className="block text-xs text-(--color-text-dim)">{hint}</span>
       </span>
-      <span className={"relative h-6 w-10 shrink-0 rounded-full transition-colors " + (on ? "bg-(--color-accent)" : "bg-white/20")} aria-hidden="true">
+      <span className={"relative h-6 w-10 shrink-0 rounded-full transition-colors " + (on ? "bg-(--color-accent)" : "bg-(--color-text)/20")} aria-hidden="true">
         <span className={"absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-[left] " + (on ? "left-[1.125rem]" : "left-0.5")} />
       </span>
     </button>
@@ -261,7 +266,7 @@ export function NewGameForm({
       <button
         type="button"
         onClick={begin}
-        className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-black hover:bg-(--color-accent-bright)"
+        className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-(--color-accent-ink) hover:bg-(--color-accent-bright)"
       >
         {untouched(game) ? "Start" : "End this game and start"}
       </button>
