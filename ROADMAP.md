@@ -371,6 +371,46 @@ into a game with everything switched on. Instead:
 
 ---
 
+### E. The table app: the life counter for friends  *(agreed 2026-11-02; comes after the cube work)*
+
+Why: Ari wants to hand the counter to his friend group for testing. They don't need the cube
+tools, but they should get the rest of Booster Tutor too: Judge, card search, opening packs and
+random decks. Decisions taken 2026-11-02:
+
+- **Second entry, same repo, its own URL** (not a second repo; see item C). A second Vercel
+  project builds this repo with `VITE_APP=table` (name TBD, Ari's pick), which selects the
+  shell and the PWA manifest (name, icon, start_url = the opening screen, fullscreen). All of
+  `lib/` and the components stay shared; bugs are fixed once. booster-tutor.vercel.app is
+  untouched.
+- **The counter is open to anyone.** No sign-in to play: nothing of Ari's is exposed and
+  nothing costs him. The game in progress already survives a reload (localStorage).
+- **The extras need an invite**, same system as today (`/join#token`, guest features,
+  per-guest monthly Judge limits billed to Ari): Judge, "describe it" card search, Play (packs
+  from Ari's cubes, decks). Card lookup *by name* is free for everyone: it only talks to
+  Scryfall from the browser. Ari signs in with his PIN and gets everything.
+- The counter's tray keeps Judge and card search; signed out, those buttons explain they need
+  an invite and offer the paste-a-link sign-in.
+
+Phases (each shippable on its own):
+
+1. **Opening screen + settings = item D**, built into the current app first so Ari gets it
+   straight away: *Resume game* (when one is in progress), *New game* (players, starting life),
+   *Settings* (which trackers each device shows). Per device, in localStorage.
+2. **The table shell**: `main.tsx` mounts `<TableApp>` instead of `<App>` under
+   `VITE_APP=table`; it boots without `AuthGate` (auth is checked in the background and
+   provided only when signed in), opens on the opening screen, and shows Play / Judge /
+   cards only to the signed-in. Manifest + icon chosen in `vite.config.ts` from the env var.
+   Ari creates the second Vercel project (same repo, the env var, same build command).
+3. **Invite flow on the opening screen** (paste a link / owner PIN), guest Play inside the
+   table shell (the packs/decks screens assume `useAuth`, so they mount inside the
+   signed-in subtree), a short "what's this" for first-time friends.
+4. Later: store packaging = item C (Capacitor around this entry), only if the friends use it.
+
+Not changing: the Fan Content position (everything stays free), the owner-only cube tools,
+the existing guest/admin screens.
+
+---
+
 ## Out of scope (still)
 
 - Statistics / analytics.
