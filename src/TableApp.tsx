@@ -7,6 +7,8 @@ import { Icon } from "./components/Icon";
 // Booster Tutor itself (packs, decks, the judge, card search), only loaded when someone opens it.
 const App = lazy(() => import("./App"));
 
+const INTRO_KEY = "booster-tutor-life-intro-seen";
+
 /**
  * LifeTutor: the life counter for anyone, no sign-in, with Booster Tutor
  * behind an invite. Opens on the counter's home screen. Who's signed in is
@@ -17,6 +19,21 @@ const App = lazy(() => import("./App"));
 export function TableApp() {
   const [mode, setMode] = useState<"life" | "app">("life");
   const [me, setMe] = useState<Me | null>(cachedMe);
+  const [introSeen, setIntroSeen] = useState(() => {
+    try {
+      return localStorage.getItem(INTRO_KEY) === "1";
+    } catch {
+      return true;
+    }
+  });
+  const dismissIntro = () => {
+    setIntroSeen(true);
+    try {
+      localStorage.setItem(INTRO_KEY, "1");
+    } catch {
+      // Without storage the welcome just comes back next time.
+    }
+  };
 
   useEffect(() => {
     document.title = "LifeTutor";
@@ -46,7 +63,33 @@ export function TableApp() {
     );
   }
 
-  return <LifeCounter title="LifeTutor" canJudge={can(me, "judge")} more={<BoosterTutorCard me={me} onOpen={() => setMode("app")} />} />;
+  return (
+    <LifeCounter
+      title="LifeTutor"
+      canJudge={can(me, "judge")}
+      onNeedInvite={() => setMode("app")}
+      welcome={!introSeen && <Welcome onDismiss={dismissIntro} />}
+      more={<BoosterTutorCard me={me} onOpen={() => setMode("app")} />}
+    />
+  );
+}
+
+/** The first visit: what this is and how a game goes, in a few lines. */
+function Welcome({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) px-4 py-3.5">
+      <p className="text-base font-semibold text-(--color-text)">A life counter for Magic, for 2 to 6 players around one phone.</p>
+      <ul className="list-disc space-y-1 pl-5 text-sm text-(--color-text-dim)">
+        <li>Pick players and starting life below, then Start.</li>
+        <li>Tap the left half of your card to lose life, the right half to gain it; hold for 10.</li>
+        <li>The ⋯ in your corner adds counters, commander damage and your color.</li>
+        <li>The round button in the middle has the dice, the monarch, history, card lookup and a new game.</li>
+      </ul>
+      <button type="button" onClick={onDismiss} className="w-full rounded-lg border border-(--color-border) py-2 text-sm text-(--color-text) hover:bg-white/5">
+        Got it
+      </button>
+    </section>
+  );
 }
 
 /** The home screen's way into Booster Tutor: open it, or sign in with an invite first. */

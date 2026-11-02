@@ -29,6 +29,7 @@ export function LifeHome({
   onStart,
   onExit,
   more,
+  welcome,
 }: {
   title: string;
   game: Game;
@@ -41,6 +42,8 @@ export function LifeHome({
   onExit?: () => void;
   /** An extra section between New game and Settings. */
   more?: React.ReactNode;
+  /** Shown first, above the table (a first-visit welcome). */
+  welcome?: React.ReactNode;
 }) {
   const inProgress = !untouched(game);
   const head =
@@ -66,6 +69,7 @@ export function LifeHome({
         </div>
 
         <div className="space-y-7 pt-2">
+          {welcome}
           {/* The table is always a tap away; a game nobody has touched yet is just "back". */}
           <section className="space-y-2">
             <div className={head}>On the table</div>
@@ -135,6 +139,10 @@ export function LifeHome({
               ))}
             </div>
           </section>
+
+          <p className="text-center text-[11px] text-(--color-text-dim)">
+            Unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved/endorsed by Wizards.
+          </p>
         </div>
       </div>
     </div>

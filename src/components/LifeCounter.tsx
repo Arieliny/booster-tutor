@@ -217,6 +217,7 @@ type SheetKind =
   | { kind: "history" }
   | { kind: "new" }
   | { kind: "judge" }
+  | { kind: "judgeLocked" }
   | { kind: "cards" }
   | { kind: "daynight" }
   | { kind: "dungeon"; p: number }
@@ -245,6 +246,8 @@ export function LifeCounter({
   onExit,
   canJudge = false,
   more,
+  welcome,
+  onNeedInvite,
 }: {
   /** The home screen's heading. */
   title?: string;
@@ -253,6 +256,10 @@ export function LifeCounter({
   canJudge?: boolean;
   /** An extra section on the home screen (LifeTutor's way into Booster Tutor). */
   more?: React.ReactNode;
+  /** Something above everything on the home screen (LifeTutor's first-visit welcome). */
+  welcome?: React.ReactNode;
+  /** Without the judge: the tray still shows it, locked, and this is where "I have an invite" goes. */
+  onNeedInvite?: () => void;
 }) {
   const [game, setGame] = useState<Game>(load);
   const [screen, setScreen] = useState<"home" | "game">("home");
@@ -373,6 +380,7 @@ export function LifeCounter({
           }}
           onExit={onExit}
           more={more}
+          welcome={welcome}
         />
       </div>
     );
@@ -500,7 +508,11 @@ export function LifeCounter({
                       )}
                       {show.monarch && <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />}
                       <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
-                      {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
+                      {canJudge ? (
+                        <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />
+                      ) : (
+                        onNeedInvite && <Tool icon="scales" label="Judge" hint="Judge (needs an invite)" onClick={() => setSheet({ kind: "judgeLocked" })} />
+                      )}
                       <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
                     </>
                   )}
@@ -528,6 +540,7 @@ export function LifeCounter({
           <Judge embedded />
         </ToolScreen>
       )}
+      {sheet?.kind === "judgeLocked" && onNeedInvite && <JudgeLockedBox onInvite={onNeedInvite} onClose={() => setSheet(null)} />}
       {sheet?.kind === "cards" && (
         <ToolScreen icon="cardBack" title="Look up a card" what="card search" onClose={() => setSheet(null)}>
           <CardSearch
@@ -1181,6 +1194,36 @@ function MapLines({ links, state }: { links: MapLink[]; state: (l: MapLink) => L
           )}
         </svg>
       ))}
+    </div>
+  );
+}
+
+/** LifeTutor, signed out: what the judge is and that it takes an invite. */
+function JudgeLockedBox({ onInvite, onClose }: { onInvite: () => void; onClose: () => void }) {
+  useBackToClose(onClose);
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label="The judge" className="relative w-full max-w-sm space-y-4 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) p-5 shadow-2xl">
+        <div className="flex items-center gap-2">
+          <Icon name="scales" className="h-5 w-5 text-(--color-text-dim)" />
+          <h2 className="flex-1 text-lg font-semibold text-(--color-text)">The judge</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-white/10">
+            <Icon name="close" className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="text-sm text-(--color-text-dim)">
+          Ask a rules question about the cards on the table and get a ruling with the rules it rests on, without leaving the game.
+        </p>
+        <p className="text-sm text-(--color-text-dim)">It needs an invite from Ari, because each ruling costs him a little. Looking up a card doesn't: that's the Cards button.</p>
+        <button
+          type="button"
+          onClick={onInvite}
+          className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-black hover:bg-(--color-accent-bright)"
+        >
+          I have an invite
+        </button>
+      </div>
     </div>
   );
 }

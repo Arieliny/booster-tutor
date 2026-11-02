@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { AuthError, checkAuth, ownerSignIn, redeemLink, signOut, tokenFromLink, type Me } from "../lib/auth";
 import { AuthContext } from "../lib/auth-context";
+import { IS_TABLE_APP } from "../lib/app-flavor";
 
 type Gate =
   | { kind: "checking" }
@@ -118,7 +119,9 @@ function SignIn({ message, onSignedIn, onSkip }: { message?: string; onSignedIn:
       <div className="w-full max-w-sm space-y-4 rounded-xl border border-(--color-border) bg-(--color-bg-elev) p-6">
         <div className="text-center">
           <div className="text-2xl font-semibold text-(--color-text)">Booster Tutor</div>
-          <p className="mt-1 text-sm text-(--color-text-dim)">This app is invite-only.</p>
+          <p className="mt-1 text-sm text-(--color-text-dim)">
+            {IS_TABLE_APP ? "The invite-only part of LifeTutor: open packs, random decks and the rules judge." : "This app is invite-only."}
+          </p>
         </div>
 
         <p className="rounded-lg bg-(--color-bg) p-3 text-sm text-(--color-text-dim)">
