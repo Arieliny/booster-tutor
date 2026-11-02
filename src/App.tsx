@@ -36,7 +36,6 @@ import {
 import { useAuth } from "./lib/auth-context";
 import { AccountMenu } from "./components/AccountMenu";
 import { LifeCounter } from "./components/LifeCounter";
-import { IS_TABLE_APP } from "./lib/app-flavor";
 import { DeckRandomizer } from "./components/DeckRandomizer";
 import { PlaySwitch } from "./components/PlaySwitch";
 import { AppShell } from "./components/AppShell";
@@ -427,7 +426,6 @@ function App() {
       ) : tab === "life" ? (
         // Full screen over the app; Exit (in its middle bar) goes back to the screen before it.
         <LifeCounter
-          title={IS_TABLE_APP ? "LifeTutor" : "Life"}
           onExit={() => setTab(tabAllowed(beforeLife.current, me) ? beforeLife.current : "packs")}
           canJudge={tabAllowed("judge", me)}
         />

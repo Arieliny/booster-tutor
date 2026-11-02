@@ -40,7 +40,7 @@ import { useBackToClose } from "../lib/use-back-to-close";
 import { startQuestionAbout } from "../lib/judge";
 import { COIN_HEAD, COIN_TAIL } from "../lib/coin-art";
 import { loadSettings, saveSettings, type LifeSettings } from "../lib/life-settings";
-import { LifeHome, NewGameForm } from "./LifeHome";
+import { LifeHome, LifeSettingsPage, NewGameForm } from "./LifeHome";
 
 // The rules judge, opened over the counter from the tray (loaded only when first opened).
 const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
@@ -245,24 +245,24 @@ export function LifeCounter({
   title = "Life",
   onExit,
   canJudge = false,
-  more,
   welcome,
-  onNeedInvite,
+  judgeAccess,
 }: {
   /** The home screen's heading. */
   title?: string;
   /** Back to the app around the counter (from the home screen); none in the table app. */
   onExit?: () => void;
   canJudge?: boolean;
-  /** An extra section on the home screen (LifeTutor's way into Booster Tutor). */
-  more?: React.ReactNode;
   /** Something above everything on the home screen (LifeTutor's first-visit welcome). */
   welcome?: React.ReactNode;
-  /** Without the judge: the tray still shows it, locked, and this is where "I have an invite" goes. */
-  onNeedInvite?: () => void;
+  /**
+   * The foot of Settings (LifeTutor: signing in for the judge). With this and no
+   * judge, the tray still shows the judge, locked, pointing at Settings.
+   */
+  judgeAccess?: React.ReactNode;
 }) {
   const [game, setGame] = useState<Game>(load);
-  const [screen, setScreen] = useState<"home" | "game">("home");
+  const [screen, setScreen] = useState<"home" | "settings" | "game">("home");
   const [settings, setSettings] = useState<LifeSettings>(loadSettings);
   const show = settings.show;
   const [sheet, setSheet] = useState<SheetKind | null>(null);
@@ -364,6 +364,14 @@ export function LifeCounter({
     setGame((g) => giveMarker(g, i, "monarch"));
   };
 
+  if (screen === "settings") {
+    return (
+      <div className="fixed inset-0 z-[60] bg-(--color-bg)">
+        <LifeSettingsPage settings={settings} onSettings={setSettings} onBack={() => setScreen("home")} more={judgeAccess} />
+      </div>
+    );
+  }
+
   if (screen === "home") {
     return (
       <div className="fixed inset-0 z-[60] bg-(--color-bg)">
@@ -378,8 +386,8 @@ export function LifeCounter({
             setFirst(null);
             setScreen("game");
           }}
+          onOpenSettings={() => setScreen("settings")}
           onExit={onExit}
-          more={more}
           welcome={welcome}
         />
       </div>
@@ -511,7 +519,7 @@ export function LifeCounter({
                       {canJudge ? (
                         <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />
                       ) : (
-                        onNeedInvite && <Tool icon="scales" label="Judge" hint="Judge (needs an invite)" onClick={() => setSheet({ kind: "judgeLocked" })} />
+                        judgeAccess && <Tool icon="scales" label="Judge" hint="Judge (needs an invite)" onClick={() => setSheet({ kind: "judgeLocked" })} />
                       )}
                       <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
                     </>
@@ -540,7 +548,16 @@ export function LifeCounter({
           <Judge embedded />
         </ToolScreen>
       )}
-      {sheet?.kind === "judgeLocked" && onNeedInvite && <JudgeLockedBox onInvite={onNeedInvite} onClose={() => setSheet(null)} />}
+      {sheet?.kind === "judgeLocked" && (
+        <JudgeLockedBox
+          onInvite={() => {
+            setSheet(null);
+            closeTray();
+            setScreen("settings");
+          }}
+          onClose={() => setSheet(null)}
+        />
+      )}
       {sheet?.kind === "cards" && (
         <ToolScreen icon="cardBack" title="Look up a card" what="card search" onClose={() => setSheet(null)}>
           <CardSearch
@@ -1215,7 +1232,10 @@ function JudgeLockedBox({ onInvite, onClose }: { onInvite: () => void; onClose: 
         <p className="text-sm text-(--color-text-dim)">
           Ask a rules question about the cards on the table and get a ruling with the rules it rests on, without leaving the game.
         </p>
-        <p className="text-sm text-(--color-text-dim)">It needs an invite from Ari, because each ruling costs him a little. Looking up a card doesn't: that's the Cards button.</p>
+        <p className="text-sm text-(--color-text-dim)">
+          It needs an invite from Ari, because each ruling costs him a little; you sign in with it under Settings. Looking up a card doesn't: that's the Cards
+          button.
+        </p>
         <button
           type="button"
           onClick={onInvite}

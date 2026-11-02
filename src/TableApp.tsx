@@ -1,23 +1,17 @@
-import { Suspense, lazy, useEffect, useState } from "react";
-import { cachedMe, can, checkAuth, type Me } from "./lib/auth";
+import { useEffect, useState } from "react";
+import { cachedMe, can, checkAuth, redeemLink, signOut, takeLinkToken, type Me } from "./lib/auth";
 import { LifeCounter } from "./components/LifeCounter";
-import { AuthGate } from "./components/AuthGate";
-import { Icon } from "./components/Icon";
-
-// Booster Tutor itself (packs, decks, the judge, card search), only loaded when someone opens it.
-const App = lazy(() => import("./App"));
+import { SignInForm } from "./components/SignIn";
 
 const INTRO_KEY = "booster-tutor-life-intro-seen";
 
 /**
- * LifeTutor: the life counter for anyone, no sign-in, with Booster Tutor
- * behind an invite. Opens on the counter's home screen. Who's signed in is
- * checked in the background, so the tray can offer the judge to people who
- * have it; the home screen's Booster Tutor card opens the full app (or its
- * sign-in, which can be skipped back to the counter).
+ * LifeTutor: the life counter on its own. No sign-in to play, and nothing of
+ * Booster Tutor beyond the game: the home screen, the table, Settings. The
+ * one thing an invite unlocks is the judge in the tray; signing in lives at
+ * the foot of Settings (a /join link signs in on the spot).
  */
 export function TableApp() {
-  const [mode, setMode] = useState<"life" | "app">("life");
   const [me, setMe] = useState<Me | null>(cachedMe);
   const [introSeen, setIntroSeen] = useState(() => {
     try {
@@ -41,35 +35,27 @@ export function TableApp() {
     document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')?.setAttribute("href", "/lifetutor-apple-touch-icon.png");
   }, []);
 
-  // Re-check whenever we come back to the counter: a sign-in or sign-out may have happened in the app.
+  // Who's here, in the background: a /join link signs in; otherwise the server
+  // confirms (or drops) the cached profile. The game never waits for this.
   useEffect(() => {
-    if (mode !== "life") return;
     let live = true;
-    void checkAuth().then((r) => {
-      if (live) setMe(r.kind === "signedIn" ? r.me : null);
+    const fromServer = () => checkAuth().then((r) => (r.kind === "signedIn" ? r.me : null));
+    const token = takeLinkToken();
+    const who = token ? redeemLink(token).catch(fromServer) : fromServer();
+    void who.then((m) => {
+      if (live) setMe(m);
     });
     return () => {
       live = false;
     };
-  }, [mode]);
-
-  if (mode === "app") {
-    return (
-      <Suspense fallback={<div className="flex min-h-screen items-center justify-center text-(--color-text-dim)">Loading…</div>}>
-        <AuthGate onSkip={() => setMode("life")}>
-          <App />
-        </AuthGate>
-      </Suspense>
-    );
-  }
+  }, []);
 
   return (
     <LifeCounter
       title="LifeTutor"
       canJudge={can(me, "judge")}
-      onNeedInvite={() => setMode("app")}
       welcome={!introSeen && <Welcome onDismiss={dismissIntro} />}
-      more={<BoosterTutorCard me={me} onOpen={() => setMode("app")} />}
+      judgeAccess={<JudgeAccess me={me} onMe={setMe} />}
     />
   );
 }
@@ -92,29 +78,40 @@ function Welcome({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
-/** The home screen's way into Booster Tutor: open it, or sign in with an invite first. */
-function BoosterTutorCard({ me, onOpen }: { me: Me | null; onOpen: () => void }) {
+/** The foot of Settings: the judge needs an invite; sign in here, or see who's signed in and sign out. */
+function JudgeAccess({ me, onMe }: { me: Me | null; onMe: (me: Me | null) => void }) {
   const head = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
-  const what = me
-    ? [can(me, "play") && "open packs and random decks", can(me, "judge") && "the rules judge", "card search"].filter(Boolean).join(", ")
-    : "open packs from Ari's cubes, random decks and the rules judge";
+  const box = "space-y-3 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) px-4 py-3.5";
+  if (me) {
+    return (
+      <section className="space-y-2">
+        <div className={head}>The judge</div>
+        <div className={box}>
+          <p className="text-sm text-(--color-text)">
+            Signed in as <strong>{me.name}</strong>.{" "}
+            {can(me, "judge") ? "The judge is in the tray during a game." : "This invite doesn't include the judge; ask Ari if you'd like it."}
+          </p>
+          <button
+            type="button"
+            onClick={() => void signOut().finally(() => onMe(null))}
+            className="rounded-lg border border-(--color-border) px-3 py-2 text-sm text-(--color-text) hover:bg-white/5"
+          >
+            Sign out of this device
+          </button>
+        </div>
+      </section>
+    );
+  }
   return (
     <section className="space-y-2">
-      <div className={head}>Booster Tutor</div>
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex w-full items-center gap-3 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) px-4 py-3.5 text-left hover:bg-white/5"
-      >
-        <Icon name="cube" className="h-6 w-6 shrink-0 text-(--color-accent)" />
-        <span className="min-w-0 flex-1">
-          <span className="block text-base font-semibold">{me ? `Open Booster Tutor` : "I have an invite"}</span>
-          <span className="block text-sm text-(--color-text-dim)">
-            {me ? `Signed in as ${me.name}: ${what}.` : `With an invite from Ari: ${what}. Looking up a card needs no invite: it's in the tray during a game.`}
-          </span>
-        </span>
-        <Icon name="chevron" className="h-5 w-5 shrink-0 text-(--color-text-dim)" />
-      </button>
+      <div className={head}>The judge</div>
+      <div className={box}>
+        <p className="text-sm text-(--color-text-dim)">
+          Ask a rules question about the cards on the table and get a ruling with the rules it rests on, without leaving the game. It needs an invite from Ari,
+          because each ruling costs him a little: he sends you a personal link, and opening it on this phone (or pasting it here) keeps you signed in.
+        </p>
+        <SignInForm onSignedIn={onMe} />
+      </div>
     </section>
   );
 }

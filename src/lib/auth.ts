@@ -153,6 +153,15 @@ export function tokenFromLink(input: string): string | null {
   return /^[A-Za-z0-9_-]{20,}$/.test(hash) ? hash : null;
 }
 
+/** A sign-in link the page was opened with (/join#<token>), taken off the URL. */
+export function takeLinkToken(): string | null {
+  if (location.pathname.replace(/\/+$/, "") !== "/join") return null;
+  const token = tokenFromLink(location.hash);
+  // Tidy the address bar either way; the token must not linger in history.
+  history.replaceState(null, "", "/");
+  return token;
+}
+
 export async function signOut(): Promise<void> {
   try {
     await fetch("/api/auth", {

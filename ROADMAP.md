@@ -371,55 +371,37 @@ into a game with everything switched on. Instead:
 
 ---
 
-### E. LifeTutor: the life counter for friends  *(agreed 2026-11-02; phases 1-2 built 2026-11-02)*
+### E. LifeTutor: the life counter for friends  *(built 2026-11-02; live at lifetutorapp.vercel.app)*
 
-Why: Ari wants to hand the counter to his friend group for testing. They don't need the cube
-tools, but they should get the rest of Booster Tutor too: Judge, card search, opening packs and
-random decks. Decisions taken 2026-11-02:
+Why: Ari wants to hand the counter to his friend group. Decided 2026-11-02, revised the same day:
 
-- **Second entry, same repo, its own URL** (not a second repo; see item C). A second Vercel
-  project builds this repo with `VITE_APP=table` (name TBD, Ari's pick), which selects the
-  shell and the PWA manifest (name, icon, start_url = the opening screen, fullscreen). All of
-  `lib/` and the components stay shared; bugs are fixed once. booster-tutor.vercel.app is
-  untouched.
+- **A standalone life counter, nothing else.** LifeTutor shows the home screen, the table and
+  Settings, and that's all, even to the owner. No packs, decks or cube tools inside it (an
+  earlier version opened the whole guest app from the home screen; Ari didn't want that).
 - **The counter is open to anyone.** No sign-in to play: nothing of Ari's is exposed and
-  nothing costs him. The game in progress already survives a reload (localStorage).
-- **The extras need an invite**, same system as today (`/join#token`, guest features,
-  per-guest monthly Judge limits billed to Ari): Judge, "describe it" card search, Play (packs
-  from Ari's cubes, decks). Card lookup *by name* is free for everyone: it only talks to
-  Scryfall from the browser. Ari signs in with his PIN and gets everything.
-- The counter's tray keeps Judge and card search; signed out, those buttons explain they need
-  an invite and offer the paste-a-link sign-in.
-
-Phases (each shippable on its own):
-
-1. **Opening screen + settings = item D**, built into the current app first so Ari gets it
-   straight away: *Resume game* (when one is in progress), *New game* (players, starting life),
-   *Settings* (which trackers each device shows). Per device, in localStorage.
-2. **The table shell**: `main.tsx` mounts `<TableApp>` instead of `<App>` under
-   `VITE_APP=table`; it boots without `AuthGate` (auth is checked in the background and
-   provided only when signed in), opens on the opening screen, and shows Play / Judge /
-   cards only to the signed-in. Manifest + icon chosen in `vite.config.ts` from the env var.
-   Ari creates the second Vercel project (same repo, the env var, same build command).
-3. **Invite flow on the opening screen** (paste a link / owner PIN), guest Play inside the
-   table shell (the packs/decks screens assume `useAuth`, so they mount inside the
-   signed-in subtree), a short "what's this" for first-time friends.
-4. Later: store packaging = item C (Capacitor around this entry), only if the friends use it.
+  nothing costs him. The game in progress survives a reload (localStorage). Card lookup by
+  name is in the tray for everyone (it only talks to Scryfall from the browser).
+- **The judge is the one thing an invite unlocks.** Signed out, the tray still shows the Judge,
+  locked: a box explains it and points at Settings. Signing in lives at the foot of Settings
+  (paste the personal link, or the owner PIN; a `/join#token` link signs in on the spot), with
+  "Signed in as … / Sign out" once in. Same accounts, invites and per-guest judge limits as
+  Booster Tutor (shared Upstash store).
+- **Settings is its own page** (gear top-right on the home screen): the tracker switches, then
+  the judge section. The home screen is just the table, New game and a first-visit welcome.
+- **Second entry, same repo, its own Vercel project.** `src/lib/app-flavor.ts` reads `VITE_APP`;
+  `main.tsx` loads `TableApp` (LifeTutor) or `BoosterTutor` (AuthGate + App); `vite.config.ts`
+  picks the manifest and icons (`public/lifetutor-*.png`) the same way. Locally
+  `npm run dev:table` (reads `.env.table`; the desktop app's `lifetutor-dev` entry, port 5188).
+  The Vercel project `lifetutorapp` builds this repo with `VITE_APP=table`, the same
+  `ANTHROPIC_API_KEY` / `EDIT_PIN`, and the existing Upstash store connected.
+- Shared pieces: `components/SignIn.tsx` (the form, used by Booster Tutor's gate and LifeTutor's
+  Settings), `takeLinkToken` in `lib/auth.ts`, `LifeHome` / `LifeSettingsPage` in
+  `components/LifeHome.tsx` (Booster Tutor's Life tab opens on the same home screen, with a
+  back arrow to the rest of the app and no judge section).
 
 Not changing: the Fan Content position (everything stays free), the owner-only cube tools,
-the existing guest/admin screens.
-
-**Status.** Phase 1 (home screen + settings) and phase 2 (the shell) are in. The name is
-**LifeTutor**. How it is wired: `src/lib/app-flavor.ts` reads `VITE_APP`; `main.tsx` loads
-`TableApp` (LifeTutor) or `BoosterTutor` (the usual AuthGate + App); `vite.config.ts` picks the
-manifest and icons (`public/lifetutor-*.png`) the same way. Locally `npm run dev:table` (reads
-`.env.table`; the desktop app's `lifetutor-dev` entry, port 5188). TableApp shows the counter with
-no sign-in, checks `/api/auth` in the background for the judge, and its home screen's Booster
-Tutor card opens the full app behind AuthGate (whose sign-in screen gets a "Just the life
-counter" way back). **Done 2026-11-02, live at lifetutorapp.vercel.app:** a second Vercel project on this repo named
-`lifetutor`, env var `VITE_APP=table` (Production + Preview), `ANTHROPIC_API_KEY` and `EDIT_PIN`
-copied from the Booster Tutor project, and the existing Upstash store connected to it (Storage ->
-Connect Project) so invites, guests and judge usage are shared. Phase 3 (guest polish: the locked Judge, a first-visit welcome, the fan-content line) shipped the same day.
+the existing guest/admin screens. Later: store packaging = item C (Capacitor around this
+entry), only if the friends use it.
 
 ---
 
