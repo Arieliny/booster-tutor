@@ -394,6 +394,11 @@ Why: Ari wants to hand the counter to his friend group. Decided 2026-11-02, revi
   `npm run dev:table` (reads `.env.table`; the desktop app's `lifetutor-dev` entry, port 5188).
   The Vercel project `lifetutorapp` builds this repo with `VITE_APP=table`, the same
   `ANTHROPIC_API_KEY` / `EDIT_PIN`, and the existing Upstash store connected.
+- **On a laptop, LifeTutor sits in a drawn phone** (Ari, 2026-11-02: to try it on the PC as it
+  looks on a phone). `TableApp` renders a 412×915 iframe of itself inside a bezel, scaled to fit
+  the window, whenever the window is wide and has a mouse; inside the iframe the app renders
+  plainly (`window.self !== window.top`), so it's a real phone viewport and nothing in the
+  counter needs to know. Same origin, so the game and settings are shared with the plain view.
 - Shared pieces: `components/SignIn.tsx` (the form, used by Booster Tutor's gate and LifeTutor's
   Settings), `takeLinkToken` in `lib/auth.ts`, `LifeHome` / `LifeSettingsPage` in
   `components/LifeHome.tsx` (Booster Tutor's Life tab opens on the same home screen, with a

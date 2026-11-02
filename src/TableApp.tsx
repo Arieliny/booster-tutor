@@ -1,9 +1,74 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { cachedMe, can, checkAuth, redeemLink, signOut, takeLinkToken, type Me } from "./lib/auth";
 import { LifeCounter } from "./components/LifeCounter";
 import { SignInForm } from "./components/SignIn";
 
 const INTRO_KEY = "booster-tutor-life-intro-seen";
+
+/** A phone's worth of screen, for the frame on a wide display. */
+const PHONE = { w: 412, h: 915 };
+
+/** True inside the phone frame's iframe (or any iframe): the app renders plainly there. */
+const framed = window.self !== window.top;
+
+function useWideScreen() {
+  const q = `(min-width: ${PHONE.w + 120}px) and (min-height: 600px) and (pointer: fine)`;
+  const [wide, setWide] = useState(() => window.matchMedia(q).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(q);
+    const on = () => setWide(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, [q]);
+  return wide;
+}
+
+/**
+ * On a laptop, LifeTutor sits centred in a drawn phone, so it looks and
+ * behaves as it does on one. The phone's screen is an iframe of the app
+ * itself: a real phone-sized viewport, so nothing inside needs to know.
+ * Same origin, so the game and settings are the same ones as when the
+ * window is narrow and the app renders plainly.
+ */
+export function TableApp() {
+  const wide = useWideScreen();
+  if (framed || !wide) return <TableAppInner />;
+  return <PhoneFrame />;
+}
+
+function PhoneFrame() {
+  // The phone shrinks to fit the window, never grows.
+  const [scale, setScale] = useState(1);
+  useLayoutEffect(() => {
+    const fit = () => setScale(Math.min(1, (window.innerWidth - 64) / (PHONE.w + 24), (window.innerHeight - 64) / (PHONE.h + 24)));
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, []);
+  // The screen opens whatever this window opened (a /join link included); the address bar is then tidied.
+  const [src] = useState(() => location.pathname + location.search + location.hash);
+  useEffect(() => {
+    document.title = "LifeTutor";
+    document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute("href", "/lifetutor-192.png");
+    if (location.hash) history.replaceState(null, "", "/");
+  }, []);
+  return (
+    <div className="flex h-dvh items-center justify-center overflow-hidden bg-[#05060a] p-8">
+      <div
+        className="shrink-0 rounded-[3.5rem] border-[12px] border-[#262a35] bg-black shadow-[0_40px_100px_rgba(0,0,0,0.7),inset_0_0_0_2px_#0b0d12]"
+        style={{ transform: `scale(${scale})`, transformOrigin: "center" }}
+      >
+        <iframe
+          src={src}
+          title="LifeTutor"
+          allow="screen-wake-lock"
+          className="block rounded-[2.75rem] bg-black"
+          style={{ width: PHONE.w, height: PHONE.h }}
+        />
+      </div>
+    </div>
+  );
+}
 
 /**
  * LifeTutor: the life counter on its own. No sign-in to play, and nothing of
@@ -11,7 +76,7 @@ const INTRO_KEY = "booster-tutor-life-intro-seen";
  * one thing an invite unlocks is the judge in the tray; signing in lives at
  * the foot of Settings (a /join link signs in on the spot).
  */
-export function TableApp() {
+function TableAppInner() {
   const [me, setMe] = useState<Me | null>(cachedMe);
   const [introSeen, setIntroSeen] = useState(() => {
     try {

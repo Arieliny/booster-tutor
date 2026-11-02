@@ -108,7 +108,8 @@ function useFullscreen() {
     const el = document.documentElement;
     // The installed app already runs full screen (manifest display: fullscreen). Asking again
     // would only bring up Chrome's "to exit full screen" banner, so only do it in a browser tab.
-    if (!el.requestFullscreen || !window.matchMedia("(display-mode: browser)").matches) return;
+    // Inside LifeTutor's phone frame (an iframe) the frame is the point, so not there either.
+    if (!el.requestFullscreen || !window.matchMedia("(display-mode: browser)").matches || window.self !== window.top) return;
     const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
     const enter = () => {
       if (document.fullscreenElement) return;
