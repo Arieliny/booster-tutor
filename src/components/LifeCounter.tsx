@@ -5,9 +5,6 @@ import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, mapLinks, roomsAhead,
 import {
   COUNTERS,
   MARKERS,
-  MAX_PLAYERS,
-  MIN_PLAYERS,
-  STARTING_LIFE,
   addCounter,
   addEmblem,
   changeCmdr,
@@ -30,7 +27,6 @@ import {
   setDayNight,
   temptRing,
   undo,
-  untouched,
   type DayNight,
   type Entry,
   type Game,
@@ -43,6 +39,8 @@ import { Sheet } from "./Sheet";
 import { useBackToClose } from "../lib/use-back-to-close";
 import { startQuestionAbout } from "../lib/judge";
 import { COIN_HEAD, COIN_TAIL } from "../lib/coin-art";
+import { loadSettings, saveSettings, type LifeSettings } from "../lib/life-settings";
+import { LifeHome, NewGameForm } from "./LifeHome";
 
 // The rules judge, opened over the counter from the tray (loaded only when first opened).
 const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
@@ -57,6 +55,8 @@ const CardSearch = lazy(() => import("./CardSearch").then((m) => ({ default: m.C
  * takes it), who goes first, and a die. Taking the initiative ventures into
  * Undercity on the dungeon map, where each room says what it does.
  * The game is kept on this device, and the screen stays awake while it's open.
+ * It opens on a home screen (resume, new game, settings), which the tray's
+ * Home button comes back to.
  */
 
 const KEY = "booster-tutor-life-v2";
@@ -240,8 +240,21 @@ interface Roll {
   seed: number;
 }
 
-export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; canJudge?: boolean }) {
+export function LifeCounter({
+  title = "Life",
+  onExit,
+  canJudge = false,
+}: {
+  /** The home screen's heading. */
+  title?: string;
+  /** Back to the app around the counter (from the home screen); none in the table app. */
+  onExit?: () => void;
+  canJudge?: boolean;
+}) {
   const [game, setGame] = useState<Game>(load);
+  const [screen, setScreen] = useState<"home" | "game">("home");
+  const [settings, setSettings] = useState<LifeSettings>(loadSettings);
+  const show = settings.show;
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [barOpen, setBarOpen] = useState(false);
   const [giving, setGiving] = useState<"monarch" | null>(null);
@@ -264,6 +277,7 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
       // Blocked storage: the game still works until the page closes.
     }
   }, [game]);
+  useEffect(() => saveSettings(settings), [settings]);
   useEffect(
     () => () => {
       timers.current.forEach((t) => window.clearTimeout(t));
@@ -340,6 +354,26 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
     setGame((g) => giveMarker(g, i, "monarch"));
   };
 
+  if (screen === "home") {
+    return (
+      <div className="fixed inset-0 z-[60] bg-(--color-bg)">
+        <LifeHome
+          title={title}
+          game={game}
+          settings={settings}
+          onSettings={setSettings}
+          onResume={() => setScreen("game")}
+          onStart={(count, start) => {
+            setGame((g) => newGame(count, start, g));
+            setFirst(null);
+            setScreen("game");
+          }}
+          onExit={onExit}
+        />
+      </div>
+    );
+  }
+
   return (
     // Edge to edge: no gap for the camera cutout at the top (the top seats pad their own contents instead).
     <div className="fixed inset-0 z-[60] flex flex-col bg-black p-1.5 select-none" style={{ paddingTop: 0, paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
@@ -361,6 +395,7 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                 others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: seatName(n, j), color: o.color }]))}
                 highlight={first === i ? "first" : spin === i ? "spin" : null}
                 trayOpen={barOpen && !diceTray}
+                show={show}
                 doorCorner={doors[i]}
                 picking={giving ? "Becomes the monarch" : null}
                 onPick={() => pick(i)}
@@ -423,7 +458,7 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                     </>
                   ) : (
                     <>
-                      <Tool icon="exit" label="Exit" onClick={onExit} />
+                      <Tool icon="exit" label="Home" hint="Home: resume, new game, settings" onClick={() => (closeTray(), setScreen("home"))} />
                       <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
                       <Tool icon="refresh" label="New" hint="New game" onClick={() => setSheet({ kind: "new" })} />
                       <Tool icon="flag" label="Chooser" hint="Choose who goes first" onClick={whoGoesFirst} />
@@ -449,14 +484,17 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
                     </>
                   ) : (
                     <>
-                      <Tool
-                        icon={game.dayNight === "night" ? "moon" : "sun"}
-                        label={game.dayNight === "night" ? "Night" : game.dayNight === "day" ? "Day" : "Day/night"}
-                        hint="Day and night"
-                        tint={game.dayNight ? DAY_NIGHT_TINT[game.dayNight] : undefined}
-                        onClick={() => setSheet({ kind: "daynight" })}
-                      />
-                      <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />
+                      {/* Hidden trackers keep their button while they're in play, so they can be put away. */}
+                      {(show.dayNight || game.dayNight) && (
+                        <Tool
+                          icon={game.dayNight === "night" ? "moon" : "sun"}
+                          label={game.dayNight === "night" ? "Night" : game.dayNight === "day" ? "Day" : "Day/night"}
+                          hint="Day and night"
+                          tint={game.dayNight ? DAY_NIGHT_TINT[game.dayNight] : undefined}
+                          onClick={() => setSheet({ kind: "daynight" })}
+                        />
+                      )}
+                      {show.monarch && <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />}
                       <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                       {canJudge && <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />}
                       <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
@@ -543,6 +581,8 @@ export function LifeCounter({ onExit, canJudge = false }: { onExit: () => void; 
       {sheet?.kind === "new" && (
         <NewGameSheet
           game={game}
+          customLife={settings.customLife}
+          onCustomLife={(n) => setSettings((s) => ({ ...s, customLife: n }))}
           onStart={(count, start) => {
             setGame((g) => newGame(count, start, g));
             setFirst(null);
@@ -1141,12 +1181,19 @@ function MapLines({ links, state }: { links: MapLink[]; state: (l: MapLink) => L
   );
 }
 
-function NewGameSheet({ game, onStart, onClose }: { game: Game; onStart: (count: number, start: number) => void; onClose: () => void }) {
-  const [count, setCount] = useState(game.players.length);
-  const [start, setStart] = useState(game.start);
-  const chip = (on: boolean) =>
-    "rounded-full border px-3.5 py-1.5 text-sm " +
-    (on ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
+function NewGameSheet({
+  game,
+  customLife,
+  onCustomLife,
+  onStart,
+  onClose,
+}: {
+  game: Game;
+  customLife: number;
+  onCustomLife: (n: number) => void;
+  onStart: (count: number, start: number) => void;
+  onClose: () => void;
+}) {
   useBackToClose(onClose);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -1164,34 +1211,7 @@ function NewGameSheet({ game, onStart, onClose }: { game: Game; onStart: (count:
             <Icon name="close" className="h-5 w-5" />
           </button>
         </div>
-        <div className="space-y-1.5">
-          <div className="text-sm text-(--color-text-dim)">Players</div>
-          <div className="flex flex-wrap gap-1.5">
-            {Array.from({ length: MAX_PLAYERS - MIN_PLAYERS + 1 }, (_, k) => k + MIN_PLAYERS).map((c) => (
-              <button key={c} type="button" onClick={() => setCount(c)} aria-pressed={count === c} className={chip(count === c)}>
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <div className="text-sm text-(--color-text-dim)">Starting life</div>
-          <div className="flex flex-wrap gap-1.5">
-            {STARTING_LIFE.map((s) => (
-              <button key={s} type="button" onClick={() => setStart(s)} aria-pressed={start === s} className={chip(start === s)}>
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => onStart(count, start)}
-          className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-black hover:bg-(--color-accent-bright)"
-        >
-          {untouched(game) ? "Start" : "End this game and start"}
-        </button>
-        <p className="text-xs text-(--color-text-dim)">Seats keep their colors. Life, counters, dungeons, the Ring, emblems, day/night and history start fresh.</p>
+        <NewGameForm game={game} customLife={customLife} onCustomLife={onCustomLife} onStart={onStart} />
       </div>
     </div>
   );

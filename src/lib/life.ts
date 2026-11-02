@@ -11,7 +11,8 @@ import { isLastRoom, type DungeonKey } from "./dungeons";
 
 export const MIN_PLAYERS = 2;
 export const MAX_PLAYERS = 6;
-export const STARTING_LIFE = [20, 25, 30, 40];
+/** The usual totals; New game also takes a custom number. */
+export const STARTING_LIFE = [20, 40];
 /** Taps on the same thing this close together become one history entry. */
 export const MERGE_MS = 4000;
 const MAX_HISTORY = 200;

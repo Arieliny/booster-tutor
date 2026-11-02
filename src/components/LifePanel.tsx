@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { dungeonOf } from "../lib/dungeons";
 import { emblemChips } from "../lib/emblems";
+import type { TrackerKey } from "../lib/life-settings";
 import {
   COLORS,
   COUNTERS,
@@ -110,6 +111,8 @@ interface Props {
   highlight: "first" | "spin" | null;
   /** The middle tray is open: show this seat's door to the dungeon tracker. */
   trayOpen: boolean;
+  /** Which trackers this device offers (Settings on the home screen). One already in play on this card still shows. */
+  show: Record<TrackerKey, boolean>;
   /** Where the dungeons door goes while the tray is open: a corner away from the tray bar (never the ⋯ corner). */
   doorCorner: Corner;
   /** Giving out the monarch: what to say, and the tap that picks this seat. */
@@ -348,7 +351,7 @@ function Face(props: Props & { w: number; h: number }) {
 
       {/* With the tray open, each seat gets a door to the dungeon tracker, facing them: in a corner,
           clear of the crown and the total in the middle, and of the tray bar (see doorCorner). */}
-      {trayOpen && !picking && (
+      {trayOpen && !picking && (props.show.dungeons || player.dungeon || player.completed) && (
         <button
           type="button"
           onClick={props.onDungeon}
@@ -607,6 +610,11 @@ function Menu(props: Props & { onClose: () => void }) {
   const most = maxTracked(others.length + 1);
   const full = trackedCount(player) >= most;
   const off = "border-white/20 text-white/75 hover:bg-white/10 disabled:opacity-35 disabled:hover:bg-transparent";
+  const { show } = props;
+  const manaOn = COUNTERS.some((c) => c.pip && player.counters[c.key] !== undefined);
+  const ring = show.ring || !!player.ring;
+  const blessing = show.blessing || !!player.blessing;
+  const emblems = show.emblems || !!player.emblems?.length;
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-[#14161c] px-3 pb-3 text-left text-white">
       {/* Stays at the top while the menu scrolls, so x is always in reach. */}
@@ -667,6 +675,7 @@ function Menu(props: Props & { onClose: () => void }) {
           </div>
         </section>
 
+        {(show.mana || manaOn) && (
         <section className="space-y-1.5">
           <div className={head}>Unspent mana</div>
           <div className="flex flex-wrap gap-1.5">
@@ -692,7 +701,9 @@ function Menu(props: Props & { onClose: () => void }) {
             })}
           </div>
         </section>
+        )}
 
+        {(show.cmdr || tracksCmdr(player)) && (
         <section className="space-y-1.5">
           <div className={head}>Commander damage</div>
           {/* One strip with every opponent; it doesn't use up counter space. */}
@@ -715,10 +726,13 @@ function Menu(props: Props & { onClose: () => void }) {
             {tracksCmdr(player) && <Icon name="check" className="h-4 w-4 shrink-0" />}
           </button>
         </section>
+        )}
 
+        {(ring || blessing || emblems) && (
         <section className="space-y-1.5">
-          <div className={head}>Ring, blessing and emblems</div>
+          <div className={head}>{[ring && "Ring", blessing && "blessing", emblems && "emblems"].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " and $1")}</div>
           <div className="grid grid-cols-1 gap-1.5">
+            {ring && (
             <button
               type="button"
               onClick={() => (props.onClose(), props.onRing())}
@@ -728,6 +742,8 @@ function Menu(props: Props & { onClose: () => void }) {
               <span className="min-w-0 flex-1 truncate">The Ring</span>
               <span className="text-xs text-white/70">{player.ring ? `Tempted ${player.ring}×` : "Not yet"}</span>
             </button>
+            )}
+            {blessing && (
             <button
               type="button"
               onClick={() => props.onBlessing(!player.blessing)}
@@ -738,6 +754,8 @@ function Menu(props: Props & { onClose: () => void }) {
               <span className="min-w-0 flex-1 truncate">City's blessing</span>
               {player.blessing && <Icon name="check" className="h-4 w-4 shrink-0" />}
             </button>
+            )}
+            {emblems && (
             <button
               type="button"
               onClick={() => (props.onClose(), props.onEmblems())}
@@ -747,8 +765,10 @@ function Menu(props: Props & { onClose: () => void }) {
               <span className="min-w-0 flex-1 truncate">Emblems</span>
               <span className="text-xs text-white/70">{player.emblems?.length || "None"}</span>
             </button>
+            )}
           </div>
         </section>
+        )}
 
         <section className="space-y-1.5">
           <div className={head}>Color</div>
