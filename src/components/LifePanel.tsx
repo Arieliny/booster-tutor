@@ -108,7 +108,11 @@ interface Props {
   /** The game's chosen counter symbols. */
   icons: Game["icons"];
   index: number;
-  highlight: "first" | "spin" | null;
+  /**
+   * The chooser: "spin" while the flicker is on this seat, "waiting" while it's
+   * elsewhere, then "first" for the pick and "out" for everyone else.
+   */
+  highlight: "first" | "spin" | "waiting" | "out" | null;
   /** The middle tray is open: show this seat's door to the dungeon tracker. */
   trayOpen: boolean;
   /** Which trackers this device offers (Settings on the home screen). One already in play on this card still shows. */
@@ -147,11 +151,22 @@ export function LifePanel(props: Props) {
         // clip, not hidden: hidden still lets the browser scroll the card when an overhanging tap half gets focus,
         // which shoved the total and the ⋯ off-centre.
         "relative h-full min-h-0 overflow-clip rounded-2xl transition-shadow " +
-        (highlight === "first" ? "ring-4 ring-white" : highlight === "spin" ? "ring-2 ring-white/70" : "")
+        (highlight === "spin" ? "ring-4 ring-white" : "")
       }
       style={{ background: colorHex(player.color), color: colorInk(player.color) }}
       aria-label={name}
     >
+      {/* The chooser: the others fade back so the pick stands out; taps still go through. */}
+      {(highlight === "out" || highlight === "waiting") && (
+        <span aria-hidden="true" className={"pointer-events-none absolute inset-0 z-20 bg-black transition-opacity duration-300 " + (highlight === "out" ? "opacity-60" : "opacity-30")} />
+      )}
+      {highlight === "first" && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-20 rounded-2xl border-[6px] border-white"
+          style={{ animation: "bt-first 1.1s ease-in-out infinite" }}
+        />
+      )}
       {/* A seat along the top of the screen: its colour runs up behind the phone's camera, its contents stay below it. */}
       <div className="h-full" style={topEdge ? { paddingTop: "env(safe-area-inset-top)" } : undefined}>
         <Turned turn={turn}>{(w, h) => <Face {...props} w={w} h={h} key={name} />}</Turned>
@@ -242,11 +257,28 @@ function Face(props: Props & { w: number; h: number }) {
   const somethingBelow = tracked > 0 || cmdrOn || roomChip || otherChips;
   const half = "h-full flex-1 select-none touch-manipulation active:bg-black/10";
   const sign = Math.max(22, Math.min(36, big * 0.4));
+  // The chooser's banner: along the top when the card has room above the total
+  // (and whatever sits on it), else across the middle with the total faded behind.
+  const bannerFont = Math.max(16, Math.min(28, w * 0.07));
+  const bannerOnTop = (h - big * 0.8) / 2 - crown > bannerFont * 2.6 + 12;
+  const bannerCentred = highlight === "first" && !bannerOnTop;
 
   return (
     <div className="relative h-full w-full">
+      {/* The chooser picked this seat: a banner along its top edge, facing its player. */}
+      {highlight === "first" && (
+        <div className={"pointer-events-none absolute inset-x-0 z-30 flex justify-center " + (bannerOnTop ? "top-[8%]" : "inset-y-0 items-center")}>
+          <span
+            className="flex items-center gap-2 rounded-full bg-white px-4 py-1.5 font-life font-black tracking-wide uppercase shadow-lg"
+            style={{ color: colorHex(player.color), fontSize: bannerFont }}
+          >
+            <Icon name="flag" className="h-[1.1em] w-[1.1em]" />
+            Goes first
+          </span>
+        </div>
+      )}
       {/* Only buttons take taps here. */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+      <div className={"pointer-events-none absolute inset-0 flex flex-col items-center justify-center transition-opacity " + (bannerCentred ? "opacity-25" : "")}>
         {/* The total and everything above it. */}
         <div className="relative flex flex-col items-center">
           {/* The tap halves (their − and + are drawn beside the total). They span the seat's width from its
@@ -259,7 +291,6 @@ function Face(props: Props & { w: number; h: number }) {
             <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={half} {...minus} />
             <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} {...plus} />
           </div>
-          {highlight === "first" && <div className="relative mb-1 text-xs font-bold tracking-wide uppercase">Goes first</div>}
           {crown > 0 && (
             <div className="relative mb-1 flex items-end gap-5">
               {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch" />}

@@ -314,24 +314,40 @@ export function LifeCounter({
   const rows = wide ? Math.ceil(n / cols) : n === 2 ? 2 : Math.ceil(n / 2);
   const doors = doorCorners(seats, cols, rows);
 
-  /** Flicker around the table, then land on someone. */
+  /**
+   * Flicker around the table, slowing down, then land on someone: the seat
+   * the flicker reaches next, so the pick never jumps. Everyone else dims and
+   * the winner gets a breathing frame and a banner facing them, with a buzz
+   * on phones that can. It clears on the first life change, or after 8 s.
+   */
   const whoGoesFirst = () => {
     setBarOpen(false);
     timers.current.forEach((t) => window.clearTimeout(t));
     setFirst(null);
+    const buzz = (ms: number | number[]) => {
+      try {
+        navigator.vibrate?.(ms);
+      } catch {
+        // No vibration motor or not allowed: the screen still shows it.
+      }
+    };
     let at = Math.floor(Math.random() * n);
+    // Random start and length, so the landing seat is random too.
     const ticks = 12 + Math.floor(Math.random() * n);
     timers.current = Array.from({ length: ticks }, (_, k) =>
       window.setTimeout(() => {
         at = (at + 1) % n;
-        if (k < ticks - 1) setSpin(at);
-        else {
+        if (k < ticks - 1) {
+          setSpin(at);
+          buzz(8);
+        } else {
           setSpin(null);
-          setFirst(Math.floor(Math.random() * n));
+          setFirst(at);
+          buzz([60, 60, 120]);
         }
       }, 70 + k * k * 4),
     );
-    timers.current.push(window.setTimeout(() => setFirst(null), 70 + ticks * ticks * 4 + 5000));
+    timers.current.push(window.setTimeout(() => setFirst(null), 70 + ticks * ticks * 4 + 8000));
   };
 
   /** Roll a die (or flip the coin): it tumbles through faces for a moment, then lands. */
@@ -417,13 +433,16 @@ export function LifeCounter({
                 markers={game.markers}
                 icons={game.icons}
                 others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: seatName(n, j), color: o.color }]))}
-                highlight={first === i ? "first" : spin === i ? "spin" : null}
+                highlight={first === i ? "first" : spin === i ? "spin" : first !== null ? "out" : spin !== null ? "waiting" : null}
                 trayOpen={barOpen && !diceTray}
                 show={show}
                 doorCorner={doors[i]}
                 picking={giving ? "Becomes the monarch" : null}
                 onPick={() => pick(i)}
-                onLife={(by) => setGame((g) => changeLife(g, i, by))}
+                onLife={(by) => {
+                  setFirst(null);
+                  setGame((g) => changeLife(g, i, by));
+                }}
                 onCounter={(key, by) => setGame((g) => changeCounter(g, i, key, by))}
                 onAddCounter={(key) => setGame((g) => addCounter(g, i, key))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
