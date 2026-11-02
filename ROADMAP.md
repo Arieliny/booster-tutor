@@ -419,8 +419,7 @@ Tutor card opens the full app behind AuthGate (whose sign-in screen gets a "Just
 counter" way back). **Done 2026-11-02, live at lifetutorapp.vercel.app:** a second Vercel project on this repo named
 `lifetutor`, env var `VITE_APP=table` (Production + Preview), `ANTHROPIC_API_KEY` and `EDIT_PIN`
 copied from the Booster Tutor project, and the existing Upstash store connected to it (Storage ->
-Connect Project) so invites, guests and judge usage are shared. Phase 3 (polish for guests inside
-the table shell) is still to do.
+Connect Project) so invites, guests and judge usage are shared. Phase 3 (guest polish: the locked Judge, a first-visit welcome, the fan-content line) shipped the same day.
 
 ---
 
