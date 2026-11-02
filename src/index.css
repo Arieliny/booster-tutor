@@ -14,6 +14,8 @@
   --color-table: #000000;
   --color-tray: #14161c;
   --color-tray-ink: #ffffff;
+  /* The gold of the monarch, the coin and the Ring, readable on either tray. */
+  --color-gold: #F5C26B;
   /* The life counter's numbers (Nunito Black, bundled so it works offline). */
   --font-life: "Nunito", ui-rounded, system-ui, sans-serif;
 }
@@ -35,6 +37,7 @@
   --color-table: #e9ecf2;
   --color-tray: #ffffff;
   --color-tray-ink: #15171d;
+  --color-gold: #b45309;
   color-scheme: light;
 }
 

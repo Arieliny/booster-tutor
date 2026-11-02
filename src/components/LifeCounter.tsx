@@ -182,7 +182,7 @@ function ToolScreen({ icon, title, what, onClose, children }: { icon: IconName; 
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-(--color-border) px-4">
         <Icon name={icon} className="h-5 w-5 text-(--color-text-dim)" />
         <span className="flex-1 text-lg font-semibold">{title}</span>
-        <button type="button" onClick={onClose} aria-label={`Close ${what}`} className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-white/10">
+        <button type="button" onClick={onClose} aria-label={`Close ${what}`} className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-(--color-text)/10">
           <Icon name="close" className="h-6 w-6" />
         </button>
       </div>
@@ -518,7 +518,7 @@ export function LifeCounter({
                           onClick={() => setSheet({ kind: "daynight" })}
                         />
                       )}
-                      {show.monarch && <Tool icon="crown" label="Monarch" tint="#F5C04A" onClick={() => (setBarOpen(false), setGiving("monarch"))} />}
+                      {show.monarch && <Tool icon="crown" label="Monarch" tint="var(--color-gold)" onClick={() => (setBarOpen(false), setGiving("monarch"))} />}
                       <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                       {canJudge ? (
                         <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />
@@ -700,7 +700,7 @@ function HistorySheet({ game, onUndo, onClose }: { game: Game; onUndo: () => voi
           type="button"
           onClick={onUndo}
           disabled={!entries.length}
-          className="flex items-center gap-1 rounded border border-(--color-border) px-2.5 py-1 text-sm text-(--color-text) hover:bg-white/5 disabled:opacity-35"
+          className="flex items-center gap-1 rounded border border-(--color-border) px-2.5 py-1 text-sm text-(--color-text) hover:bg-(--color-text)/5 disabled:opacity-35"
         >
           <Icon name="undo" className="h-4 w-4" /> Undo last
         </button>
@@ -745,7 +745,7 @@ function DieButton({ label, coin, onClick }: { label: string; coin?: boolean; on
       <span
         className={
           "flex h-9 min-w-9 items-center justify-center border-2 px-1 font-life text-sm font-black " +
-          (coin ? "rounded-full border-[#F5C04A] text-[#F5C04A]" : "rounded-lg border-(--color-tray-ink)/70")
+          (coin ? "rounded-full border-(--color-gold) text-(--color-gold)" : "rounded-lg border-(--color-tray-ink)/70")
         }
       >
         {coin ? "Coin" : label}
@@ -879,14 +879,14 @@ function DungeonTracker({
     game.players.flatMap((pl, i) => (pl.dungeon?.key === key && (!room || pl.dungeon.room === room) ? [{ i, color: pl.color }] : []));
   const dot = (color: string, mine: boolean) => (
     <span
-      className={"inline-block shrink-0 rounded-full " + (mine ? "h-3.5 w-3.5 ring-2 ring-white" : "h-3 w-3 ring-1 ring-white/60")}
+      className={"inline-block shrink-0 rounded-full " + (mine ? "h-3.5 w-3.5 ring-2 ring-(--color-text)" : "h-3 w-3 ring-1 ring-(--color-text)/60")}
       style={{ background: color }}
     />
   );
 
   return (
     <PlayerScreen turn={turn} color={hex} title="Dungeons" name={name} onClose={onClose}>
-              <div className="rounded-xl bg-white/5 p-3 text-sm">
+              <div className="rounded-xl bg-(--color-text)/5 p-3 text-sm">
                 <p className="flex items-start gap-2">
                   <Icon name="door" className="mt-0.5 h-5 w-5 shrink-0 text-[#C9B8FF]" />
                   <span>
@@ -901,7 +901,7 @@ function DungeonTracker({
                     )}
                   </span>
                 </p>
-                <p className="mt-2 text-xs text-white/60">{INITIATIVE_TEXT}</p>
+                <p className="mt-2 text-xs text-(--color-text-dim)">{INITIATIVE_TEXT}</p>
               </div>
 
               <div className="flex flex-wrap gap-1.5">
@@ -915,7 +915,7 @@ function DungeonTracker({
                       aria-pressed={tab === x.key}
                       className={
                         "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs " +
-                        (tab === x.key ? "border-white bg-white text-black" : "border-white/25 text-white/80 hover:bg-white/10")
+                        (tab === x.key ? "border-(--color-text) bg-(--color-text) text-(--color-bg)" : "border-(--color-border) text-(--color-text) hover:bg-(--color-text)/10")
                       }
                     >
                       {x.name}
@@ -954,7 +954,7 @@ function DungeonTracker({
                             onClick={() => onEnter(tab, roomName)}
                             className={
                               "min-w-0 flex-1 rounded-xl border p-2.5 text-left " +
-                              (go ? "border-2 border-dashed border-[#B9A4FF] bg-[#B9A4FF]/10" : mineHere ? "border-2" : "border-white/15") +
+                              (go ? "border-2 border-dashed border-(--color-accent) bg-(--color-accent)/10" : mineHere ? "border-2" : "border-(--color-border)") +
                               (inside && !mineHere && !ahead.has(roomName) ? " opacity-35" : "")
                             }
                             style={mineHere ? { borderColor: hex, background: `color-mix(in srgb, ${hex} 22%, transparent)` } : undefined}
@@ -965,9 +965,9 @@ function DungeonTracker({
                                 <span key={m.i}>{dot(colorHex(m.color), m.i === p)}</span>
                               ))}
                             </span>
-                            <span className="mt-1 block text-xs leading-snug text-white/75">{d.rooms[roomName].effect}</span>
+                            <span className="mt-1 block text-xs leading-snug text-(--color-text-dim)">{d.rooms[roomName].effect}</span>
                             {go && (
-                              <span className="mt-1.5 block text-xs leading-snug text-[#B9A4FF]">
+                              <span className="mt-1.5 block text-xs leading-snug text-(--color-accent)">
                                 <b className="font-semibold">Venture here</b>
                                 {next.length ? <> · then {next.join(" or ")}</> : <> · the last room</>}
                               </span>
@@ -981,11 +981,11 @@ function DungeonTracker({
               </div>
 
               {cur && cur.key === tab && isLastRoom(cur.key, cur.room) && (
-                <button type="button" onClick={onComplete} className="w-full rounded-lg bg-white py-2.5 text-sm font-semibold text-black">
+                <button type="button" onClick={onComplete} className="w-full rounded-lg bg-(--color-text) py-2.5 text-sm font-semibold text-(--color-bg)">
                   Complete the dungeon
                 </button>
               )}
-              {player.completed ? <p className="text-xs text-white/60">Dungeons you've completed this game: {player.completed}</p> : null}
+              {player.completed ? <p className="text-xs text-(--color-text-dim)">Dungeons you've completed this game: {player.completed}</p> : null}
     </PlayerScreen>
   );
 }
@@ -1011,15 +1011,15 @@ function PlayerScreen({
 }) {
   useBackToClose(onClose);
   return (
-    <div className="absolute inset-0 z-40 bg-[#0f1115] text-white">
+    <div className="absolute inset-0 z-40 bg-(--color-bg) text-(--color-text)">
       <Turned turn={turn}>
         {() => (
           <div className="flex h-full flex-col">
-            <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
-              <span className="inline-block h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-white" style={{ background: color }} />
+            <div className="flex items-center gap-2 border-b border-(--color-border) px-4 py-3">
+              <span className="inline-block h-3.5 w-3.5 shrink-0 rounded-full ring-2 ring-(--color-text)" style={{ background: color }} />
               <span className="flex-1 text-base font-semibold">{title}</span>
               <span className="sr-only">for {name}</span>
-              <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-white/70 hover:bg-white/10">
+              <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1.5 text-(--color-text-dim) hover:bg-(--color-text)/10">
                 <Icon name="close" className="h-6 w-6" />
               </button>
             </div>
@@ -1036,7 +1036,7 @@ function RingScreen({ player, turn, name, onTempt, onClose }: { player: Player; 
   const times = player.ring ?? 0;
   return (
     <PlayerScreen turn={turn} color={colorHex(player.color)} title="The Ring" name={name} onClose={onClose}>
-      <p className="text-sm text-white/75">
+      <p className="text-sm text-(--color-text-dim)">
         {times ? `The Ring has tempted you ${times === 1 ? "once" : `${times} times`}.` : "The Ring hasn't tempted you yet."} Each time, choose a creature you
         control as your Ring-bearer.
       </p>
@@ -1044,17 +1044,17 @@ function RingScreen({ player, turn, name, onTempt, onClose }: { player: Player; 
         {RING_ABILITIES.map((text, k) => (
           <li
             key={k}
-            className={"flex gap-2.5 rounded-xl border p-2.5 text-sm leading-snug " + (k < times ? "border-[#F5C26B] bg-[#F5C26B]/10" : "border-white/15 text-white/45")}
+            className={"flex gap-2.5 rounded-xl border p-2.5 text-sm leading-snug " + (k < times ? "border-(--color-gold) bg-(--color-gold)/10" : "border-(--color-border) text-(--color-text-dim)")}
           >
-            <span className={"font-semibold " + (k < times ? "text-[#F5C26B]" : "")}>{k + 1}</span>
+            <span className={"font-semibold " + (k < times ? "text-(--color-gold)" : "")}>{k + 1}</span>
             <span>{text}</span>
           </li>
         ))}
       </ol>
-      <button type="button" onClick={onTempt} className="w-full rounded-lg bg-white py-2.5 text-sm font-semibold text-black">
+      <button type="button" onClick={onTempt} className="w-full rounded-lg bg-(--color-text) py-2.5 text-sm font-semibold text-(--color-bg)">
         The Ring tempts you
       </button>
-      <p className="text-xs text-white/55">
+      <p className="text-xs text-(--color-text-dim)">
         Abilities come in order and stay for the rest of the game. A mistap? Undo it from History.
       </p>
     </PlayerScreen>
@@ -1085,52 +1085,52 @@ function EmblemScreen({
       {mine.length > 0 && (
         <ul className="space-y-1.5">
           {mine.map((e) => (
-            <li key={e.name} className="rounded-xl border border-white/20 bg-white/5 p-2.5 text-sm">
+            <li key={e.name} className="rounded-xl border border-(--color-border) bg-(--color-text)/5 p-2.5 text-sm">
               <div className="flex items-start gap-2">
                 <span className="min-w-0 flex-1 font-semibold">
                   {e.name}
-                  {e.count > 1 && <span className="ml-1.5 text-white/60">×{e.count}</span>}
+                  {e.count > 1 && <span className="ml-1.5 text-(--color-text-dim)">×{e.count}</span>}
                 </span>
                 <button
                   type="button"
                   onClick={() => onRemove(e.name)}
                   aria-label={`Remove ${e.count > 1 ? "one" : "the"} ${e.name} emblem`}
-                  className="-m-1 rounded-full p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                  className="-m-1 rounded-full p-1 text-(--color-text-dim) hover:bg-(--color-text)/10 hover:text-(--color-text)"
                 >
                   <Icon name="close" className="h-4 w-4" />
                 </button>
               </div>
-              <p className="mt-1 text-xs leading-snug text-white/75">{emblemText(e.name)}</p>
+              <p className="mt-1 text-xs leading-snug text-(--color-text-dim)">{emblemText(e.name)}</p>
             </li>
           ))}
         </ul>
       )}
       <div className="relative">
-        <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-4.5 w-4.5 -translate-y-1/2 text-white/50" />
+        <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 h-4.5 w-4.5 -translate-y-1/2 text-(--color-text-dim)" />
         <input
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="A planeswalker, or what it does"
           aria-label="Search emblems"
-          className="w-full rounded-lg border border-white/20 bg-white/5 py-2 pr-3 pl-9 text-base text-white placeholder:text-white/40"
+          className="w-full rounded-lg border border-(--color-border) bg-(--color-text)/5 py-2 pr-3 pl-9 text-base text-(--color-text) placeholder:text-(--color-text-dim)"
         />
       </div>
       {found.length === 0 ? (
-        <p className="text-sm text-white/60">No emblem matches “{q.trim()}”.</p>
+        <p className="text-sm text-(--color-text-dim)">No emblem matches “{q.trim()}”.</p>
       ) : (
-        <ul className="divide-y divide-white/10">
+        <ul className="divide-y divide-(--color-border)">
           {found.map((e) => (
             <li key={e.name} className="flex items-start gap-2 py-2">
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold">{e.name}</div>
-                <p className="text-xs leading-snug text-white/70">{e.text}</p>
+                <p className="text-xs leading-snug text-(--color-text-dim)">{e.text}</p>
               </div>
               <button
                 type="button"
                 onClick={() => onAdd(e.name)}
                 aria-label={`Add the ${e.name} emblem`}
-                className="shrink-0 rounded-full border border-[#B9A4FF] px-2.5 py-1 text-xs font-semibold text-[#B9A4FF] hover:bg-[#B9A4FF]/10"
+                className="shrink-0 rounded-full border border-(--color-accent) px-2.5 py-1 text-xs font-semibold text-(--color-accent) hover:bg-(--color-accent)/10"
               >
                 Add
               </button>
@@ -1160,7 +1160,7 @@ function DayNightSheet({ state, onSet, onClose }: { state: DayNight | undefined;
   }, [onClose]);
   const chip = (on: boolean) =>
     "flex flex-1 items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-sm " +
-    (on ? "border-(--color-text) bg-(--color-text) text-(--color-bg)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
+    (on ? "border-(--color-text) bg-(--color-text) text-(--color-bg)" : "border-(--color-border) text-(--color-text-dim) hover:bg-(--color-text)/5");
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
@@ -1168,7 +1168,7 @@ function DayNightSheet({ state, onSet, onClose }: { state: DayNight | undefined;
         <div className="flex items-center gap-2">
           <Icon name={state === "night" ? "moon" : "sun"} className="h-5 w-5" />
           <h2 className="flex-1 text-lg font-semibold text-(--color-text)">{state === "day" ? "It's day" : state === "night" ? "It's night" : "Day and night"}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-white/10">
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-(--color-text)/10">
             <Icon name="close" className="h-5 w-5" />
           </button>
         </div>
@@ -1190,8 +1190,8 @@ function DayNightSheet({ state, onSet, onClose }: { state: DayNight | undefined;
 }
 
 type LineState = "plain" | "open" | "closed";
-const LINE_CLASS: Record<LineState, string> = { plain: "bg-white/40", open: "bg-[#B9A4FF]", closed: "bg-white/10" };
-const ARROW_CLASS: Record<LineState, string> = { plain: "text-white/40", open: "text-[#B9A4FF]", closed: "text-white/10" };
+const LINE_CLASS: Record<LineState, string> = { plain: "bg-(--color-text)/40", open: "bg-(--color-accent)", closed: "bg-(--color-text)/10" };
+const ARROW_CLASS: Record<LineState, string> = { plain: "text-(--color-text)/40", open: "text-(--color-accent)", closed: "text-(--color-text)/10" };
 
 /** The moves from one row of a dungeon map to the next: an arrow straight down for each. */
 function MapLines({ links, state }: { links: MapLink[]; state: (l: MapLink) => LineState }) {
@@ -1229,7 +1229,7 @@ function JudgeLockedBox({ onInvite, onClose }: { onInvite: () => void; onClose: 
         <div className="flex items-center gap-2">
           <Icon name="scales" className="h-5 w-5 text-(--color-text-dim)" />
           <h2 className="flex-1 text-lg font-semibold text-(--color-text)">The judge</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-white/10">
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-(--color-text)/10">
             <Icon name="close" className="h-5 w-5" />
           </button>
         </div>
@@ -1278,7 +1278,7 @@ function NewGameSheet({
       <div role="dialog" aria-modal="true" aria-label="New game" className="relative w-full max-w-sm space-y-4 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) p-5 shadow-2xl">
         <div className="flex items-center">
           <h2 className="flex-1 text-lg font-semibold text-(--color-text)">New game</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-white/10">
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-(--color-text)/10">
             <Icon name="close" className="h-5 w-5" />
           </button>
         </div>

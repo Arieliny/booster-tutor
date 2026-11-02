@@ -405,8 +405,10 @@ Why: Ari wants to hand the counter to his friend group. Decided 2026-11-02, revi
   `index.css` under `:root[data-theme="light"]`; new tokens `--color-accent-ink` (text on an
   accent button), `--color-table` (gutters), `--color-tray` / `--color-tray-ink` (the bar and
   its icons). The seats keep their colours and white numbers; the round tray button is white in
-  both modes, its ring takes the gutter colour and it has a soft shadow. The seat menu is on
-  tokens; the dungeon map, Ring and emblem screens stay dark for now (hard-coded whites).
+  both modes, its ring takes the gutter colour and it has a soft shadow. The seat menu, the
+  dungeon map, the Ring and the emblem screens are all on tokens too (Ari: light mode across
+  everything), with `--color-gold` for the monarch / coin / Ring gold (darker in light mode) and
+  the accent standing in for the old lavender on the dungeon map.
 - Shared pieces: `components/SignIn.tsx` (the form, used by Booster Tutor's gate and LifeTutor's
   Settings), `takeLinkToken` in `lib/auth.ts`, `LifeHome` / `LifeSettingsPage` in
   `components/LifeHome.tsx` (Booster Tutor's Life tab opens on the same home screen, with a
