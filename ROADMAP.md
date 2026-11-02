@@ -371,7 +371,7 @@ into a game with everything switched on. Instead:
 
 ---
 
-### E. The table app: the life counter for friends  *(agreed 2026-11-02; comes after the cube work)*
+### E. LifeTutor: the life counter for friends  *(agreed 2026-11-02; phases 1-2 built 2026-11-02)*
 
 Why: Ari wants to hand the counter to his friend group for testing. They don't need the cube
 tools, but they should get the rest of Booster Tutor too: Judge, card search, opening packs and
@@ -408,6 +408,19 @@ Phases (each shippable on its own):
 
 Not changing: the Fan Content position (everything stays free), the owner-only cube tools,
 the existing guest/admin screens.
+
+**Status.** Phase 1 (home screen + settings) and phase 2 (the shell) are in. The name is
+**LifeTutor**. How it is wired: `src/lib/app-flavor.ts` reads `VITE_APP`; `main.tsx` loads
+`TableApp` (LifeTutor) or `BoosterTutor` (the usual AuthGate + App); `vite.config.ts` picks the
+manifest and icons (`public/lifetutor-*.png`) the same way. Locally `npm run dev:table` (reads
+`.env.table`; the desktop app's `lifetutor-dev` entry, port 5188). TableApp shows the counter with
+no sign-in, checks `/api/auth` in the background for the judge, and its home screen's Booster
+Tutor card opens the full app behind AuthGate (whose sign-in screen gets a "Just the life
+counter" way back). **Ari's part, once:** a second Vercel project on this repo named
+`lifetutor`, env var `VITE_APP=table` (Production + Preview), `ANTHROPIC_API_KEY` and `EDIT_PIN`
+copied from the Booster Tutor project, and the existing Upstash store connected to it (Storage ->
+Connect Project) so invites, guests and judge usage are shared. Phase 3 (polish for guests inside
+the table shell) is still to do.
 
 ---
 

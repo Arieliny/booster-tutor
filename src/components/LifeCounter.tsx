@@ -244,12 +244,15 @@ export function LifeCounter({
   title = "Life",
   onExit,
   canJudge = false,
+  more,
 }: {
   /** The home screen's heading. */
   title?: string;
   /** Back to the app around the counter (from the home screen); none in the table app. */
   onExit?: () => void;
   canJudge?: boolean;
+  /** An extra section on the home screen (LifeTutor's way into Booster Tutor). */
+  more?: React.ReactNode;
 }) {
   const [game, setGame] = useState<Game>(load);
   const [screen, setScreen] = useState<"home" | "game">("home");
@@ -369,6 +372,7 @@ export function LifeCounter({
             setScreen("game");
           }}
           onExit={onExit}
+          more={more}
         />
       </div>
     );

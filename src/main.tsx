@@ -1,8 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.tsx'
-import { AuthGate } from './components/AuthGate.tsx'
+import { IS_TABLE_APP } from './lib/app-flavor.ts'
 
 /**
  * Recover from a stale build after a deploy.
@@ -59,10 +58,23 @@ if ('serviceWorker' in navigator) {
   })
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AuthGate>
-      <App />
-    </AuthGate>
-  </StrictMode>,
-)
+// One build, two apps (lib/app-flavor.ts). Each loads only its own root; the
+// flavor is a build-time constant, so the other branch is dropped from the bundle.
+const root = createRoot(document.getElementById('root')!)
+if (IS_TABLE_APP) {
+  void import('./TableApp.tsx').then(({ TableApp }) =>
+    root.render(
+      <StrictMode>
+        <TableApp />
+      </StrictMode>,
+    ),
+  )
+} else {
+  void import('./BoosterTutor.tsx').then(({ BoosterTutor }) =>
+    root.render(
+      <StrictMode>
+        <BoosterTutor />
+      </StrictMode>,
+    ),
+  )
+}

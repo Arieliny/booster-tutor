@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -9,7 +9,34 @@ import { VitePWA } from 'vite-plugin-pwa'
 // calls simply fail, which the app already treats as "offline".
 const devApi = { '/api': { target: 'http://localhost:5186', changeOrigin: false } }
 
-export default defineConfig({
+// The installable app's identity, per flavor (src/lib/app-flavor.ts): Booster Tutor,
+// or LifeTutor when VITE_APP=table (the LifeTutor Vercel project sets it; locally
+// `vite --mode table` reads .env.table).
+const manifests = {
+  booster: {
+    name: 'Booster Tutor',
+    short_name: 'Booster Tutor',
+    description: 'Magic cube tools, rules judge, set grades and a life counter',
+    apple: 'apple-touch-icon.png',
+    icon192: '/icon-192.png',
+    icon512: '/icon-512.png',
+    maskable: '/icon-512.png',
+  },
+  table: {
+    name: 'LifeTutor',
+    short_name: 'LifeTutor',
+    description: 'A life counter for Magic, with a rules judge and card search',
+    apple: 'lifetutor-apple-touch-icon.png',
+    icon192: '/lifetutor-192.png',
+    icon512: '/lifetutor-512.png',
+    maskable: '/lifetutor-maskable-512.png',
+  },
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const app = manifests[env.VITE_APP === 'table' ? 'table' : 'booster']
+  return {
   server: { proxy: devApi },
   preview: { proxy: devApi },
   plugins: [
@@ -21,11 +48,11 @@ export default defineConfig({
     // which can pre-warm the whole set in one go while you're still on wifi).
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['apple-touch-icon.png'],
+      includeAssets: [app.apple],
       manifest: {
-        name: 'Booster Tutor',
-        short_name: 'Booster Tutor',
-        description: 'Magic cube tools, rules judge, set grades and a life counter',
+        name: app.name,
+        short_name: app.short_name,
+        description: app.description,
         theme_color: '#0b0d12',
         background_color: '#0b0d12',
         // Installed, the app runs full screen (no status bar), so the life counter needs no
@@ -34,10 +61,10 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         icons: [
-          { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: app.icon192, sizes: '192x192', type: 'image/png' },
+          { src: app.icon512, sizes: '512x512', type: 'image/png' },
           {
-            src: '/icon-512.png',
+            src: app.maskable,
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
@@ -67,4 +94,5 @@ export default defineConfig({
       },
     }),
   ],
+  }
 })

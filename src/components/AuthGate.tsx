@@ -43,7 +43,14 @@ async function decide(): Promise<Gate> {
  * A /join link signs in on the spot. With no signal, the cached profile lets
  * the app open (see lib/auth.ts).
  */
-export function AuthGate({ children }: { children: ReactNode }) {
+export function AuthGate({
+  children,
+  onSkip,
+}: {
+  children: ReactNode;
+  /** LifeTutor: the sign-in screen offers a way back to the counter, which needs no account. */
+  onSkip?: () => void;
+}) {
   const [gate, setGate] = useState<Gate>({ kind: "checking" });
 
   useEffect(() => {
@@ -60,7 +67,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
     return <div className="flex min-h-screen items-center justify-center text-(--color-text-dim)">Loading…</div>;
   }
   if (gate.kind === "out") {
-    return <SignIn message={gate.message} onSignedIn={(me) => setGate({ kind: "in", me, offline: false })} />;
+    return <SignIn message={gate.message} onSignedIn={(me) => setGate({ kind: "in", me, offline: false })} onSkip={onSkip} />;
   }
   return (
     <AuthContext.Provider
@@ -78,7 +85,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   );
 }
 
-function SignIn({ message, onSignedIn }: { message?: string; onSignedIn: (me: Me) => void }) {
+function SignIn({ message, onSignedIn, onSkip }: { message?: string; onSignedIn: (me: Me) => void; onSkip?: () => void }) {
   const [link, setLink] = useState("");
   const [pinOpen, setPinOpen] = useState(false);
   const [pin, setPin] = useState("");
@@ -179,6 +186,12 @@ function SignIn({ message, onSignedIn }: { message?: string; onSignedIn: (me: Me
             </form>
           )}
         </div>
+
+        {onSkip && (
+          <button type="button" onClick={onSkip} className="w-full rounded-lg border border-(--color-border) py-2.5 text-sm text-(--color-text) hover:bg-white/5">
+            Just the life counter
+          </button>
+        )}
 
         <p className="text-center text-[11px] text-(--color-text-dim)">
           Booster Tutor is unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy.

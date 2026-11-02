@@ -28,6 +28,7 @@ export function LifeHome({
   onResume,
   onStart,
   onExit,
+  more,
 }: {
   title: string;
   game: Game;
@@ -38,6 +39,8 @@ export function LifeHome({
   onStart: (count: number, start: number) => void;
   /** Back to the app around the counter; none in the table app. */
   onExit?: () => void;
+  /** An extra section between New game and Settings. */
+  more?: React.ReactNode;
 }) {
   const inProgress = !untouched(game);
   const head =
@@ -105,6 +108,8 @@ export function LifeHome({
               onStart={onStart}
             />
           </section>
+
+          {more}
 
           <section className="space-y-2">
             <div className={head}>Settings</div>
