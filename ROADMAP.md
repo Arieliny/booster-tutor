@@ -416,7 +416,7 @@ manifest and icons (`public/lifetutor-*.png`) the same way. Locally `npm run dev
 `.env.table`; the desktop app's `lifetutor-dev` entry, port 5188). TableApp shows the counter with
 no sign-in, checks `/api/auth` in the background for the judge, and its home screen's Booster
 Tutor card opens the full app behind AuthGate (whose sign-in screen gets a "Just the life
-counter" way back). **Done 2026-11-02, live at lifetutor-mu.vercel.app:** a second Vercel project on this repo named
+counter" way back). **Done 2026-11-02, live at lifetutorapp.vercel.app:** a second Vercel project on this repo named
 `lifetutor`, env var `VITE_APP=table` (Production + Preview), `ANTHROPIC_API_KEY` and `EDIT_PIN`
 copied from the Booster Tutor project, and the existing Upstash store connected to it (Storage ->
 Connect Project) so invites, guests and judge usage are shared. Phase 3 (polish for guests inside
