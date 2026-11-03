@@ -210,35 +210,30 @@ export async function rollDie(canvas: HTMLCanvasElement, roll: DieRoll): Promise
       else mat.opacity = 1 - 0.82 * k;
     });
 
-  // Tumble around a seeded axis, slowing down, then ease onto the rolled face.
+  // One continuous tumble around a seeded axis that slows to a stop exactly on the
+  // rolled face: the total turn is chosen first and the START is worked back from
+  // the resting rotation, so nothing has to steer at the end. (An earlier version
+  // tumbled freely and then blended onto the face, which visibly changed direction.)
   const rand = mulberry32(roll.seed);
   const axis = new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize();
-  die.quaternion.setFromAxisAngle(new THREE.Vector3(rand() - 0.5, rand() - 0.5, rand() - 0.5).normalize(), rand() * Math.PI * 2);
-  const startQ = die.quaternion.clone();
   const endQ = restingRotation(faces[rolled]);
-  const SPIN = 0.7;
-  const SETTLE = 0.5;
-  const speed = 16 + rand() * 6; // radians per second at the start
+  const DURATION = 1.2;
+  const total = Math.PI * 2 * (1.6 + rand() * 0.9); // full turns before it rests
+  const startQ = new THREE.Quaternion().setFromAxisAngle(axis, -total).multiply(endQ);
+  const turn = new THREE.Quaternion();
 
   let raf = 0;
   let t0 = 0;
-  let settleFrom: THREE.Quaternion | null = null;
   const frame = (now: number) => {
     if (!t0) t0 = now;
-    const t = (now - t0) / 1000;
-    if (t < SPIN) {
-      // Angle so far with the speed falling off linearly to a quarter.
-      const angle = speed * (t - (0.75 * t * t) / (2 * SPIN));
-      die.quaternion.copy(startQ).premultiply(new THREE.Quaternion().setFromAxisAngle(axis, angle));
-    } else {
-      settleFrom ??= die.quaternion.clone();
-      const k = Math.min(1, (t - SPIN) / SETTLE);
-      const ease = 1 - Math.pow(1 - k, 3);
-      die.quaternion.slerpQuaternions(settleFrom, endQ, ease);
-      settleLabels(ease);
-    }
+    const k = Math.min(1, (now - t0) / 1000 / DURATION);
+    // Fast at first, easing out to a standstill (velocity reaches zero as it lands).
+    const ease = 1 - Math.pow(1 - k, 3);
+    die.quaternion.copy(startQ).premultiply(turn.setFromAxisAngle(axis, total * ease));
+    // The numbers settle over the last stretch, once the die is clearly slowing.
+    settleLabels(Math.max(0, (k - 0.55) / 0.45));
     renderer.render(scene, camera);
-    if (t < SPIN + SETTLE) raf = requestAnimationFrame(frame);
+    if (k < 1) raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);
 
