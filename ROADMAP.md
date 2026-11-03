@@ -333,8 +333,15 @@ For handing the counter to friends (Ari). All in the player's ⋯ menu:
   a marker like the city's blessing (`Player.story`, `setStory`, the rose book icon above the
   total, a toggle in the menu, a tracker switch in Settings).
 
-Still wanted (Ari, 2026-11-03): eliminated players; a round timer; 2-3 editable custom counters
-(grey tappable letters with presets like treasures, food, clues).
+- **Two custom counters** (same day): tickets and rad are gone (stripped from saved games in
+  `parseGame`); in their place two *Custom* tiles. Tapping one opens a picker in the menu:
+  presets (Treasure, Food, Clue, Blood, Map, Powerstone, Prowess) or any name with any of the
+  symbols; `Game.custom[custom1|custom2] = {name, icon}`, kept for the next game like the poison
+  symbol; `counterLabel()` / `counterIcon()` resolve them everywhere (card rows, menu, history).
+  The grid stays even at eight. Energy now shows the official {E} symbol (Scryfall, inlined by
+  `scripts/build-mana-symbols.mjs` like the mana pips) instead of a generic bolt.
+
+Still wanted (Ari, 2026-11-03): eliminated players; a round timer.
 
 ## Future / under consideration
 

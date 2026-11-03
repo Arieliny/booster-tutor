@@ -20,12 +20,14 @@ describe("life counter settings", () => {
 
   it("offers the common counters until switched otherwise", () => {
     const keys = CARD_COUNTERS.map((c) => c.key);
-    expect(keys).toContain("ticket");
+    expect(keys).toContain("custom1");
+    expect(keys).not.toContain("ticket");
     expect(keys.some((k) => k.startsWith("mana"))).toBe(false);
-    expect(keys.filter((k) => DEFAULT_SETTINGS.cardCounters[k])).toEqual(["poison", "energy", "tax", "storm"]);
+    expect(keys.filter((k) => DEFAULT_SETTINGS.cardCounters[k])).toEqual(["poison", "energy", "tax", "storm", "custom1", "custom2"]);
     for (const k of keys) expect(typeof DEFAULT_SETTINGS.cardCounters[k]).toBe("boolean");
-    const s = parseSettings({ cardCounters: { ticket: true, poison: false, energy: "no", manaW: false } });
-    expect(s.cardCounters.ticket).toBe(true);
+    const s = parseSettings({ cardCounters: { speed: true, poison: false, energy: "no", manaW: false, ticket: true } });
+    expect(s.cardCounters.speed).toBe(true);
+    expect("ticket" in s.cardCounters).toBe(false);
     expect(s.cardCounters.poison).toBe(false);
     expect(s.cardCounters.energy).toBe(true);
     expect("manaW" in s.cardCounters).toBe(false);

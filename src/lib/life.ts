@@ -21,11 +21,11 @@ export type CounterKey =
   | "poison"
   | "energy"
   | "experience"
-  | "rad"
   | "tax"
   | "speed"
-  | "ticket"
   | "storm"
+  | "custom1"
+  | "custom2"
   | "manaW"
   | "manaU"
   | "manaB"
@@ -33,18 +33,45 @@ export type CounterKey =
   | "manaG"
   | "manaC";
 /** Each counter's symbol: names from components/Icon.tsx. */
-export type CounterIcon = "phyrexian" | "droplet" | "bolt" | "star" | "rad" | "coins" | "gauge" | "ticket" | "storm";
+export type CounterIcon = "phyrexian" | "droplet" | "star" | "coins" | "gauge" | "storm" | CustomIcon;
+/** The symbols a custom counter can have. */
+export type CustomIcon = "chest" | "food" | "search" | "droplet" | "map" | "gem" | "flame" | "sparkle";
+export type CustomKey = "custom1" | "custom2";
+/** What a custom counter counts this game: its name and symbol. */
+export interface CustomDef {
+  name: string;
+  icon: CustomIcon;
+}
+/** Ready-made custom counters: the things tables count most (Ari, 2026-11-03). */
+export const CUSTOM_PRESETS: CustomDef[] = [
+  { name: "Treasure", icon: "chest" },
+  { name: "Food", icon: "food" },
+  { name: "Clue", icon: "search" },
+  { name: "Blood", icon: "droplet" },
+  { name: "Map", icon: "map" },
+  { name: "Powerstone", icon: "gem" },
+  { name: "Prowess", icon: "flame" },
+];
+export const CUSTOM_ICONS: CustomIcon[] = ["chest", "food", "search", "droplet", "map", "gem", "flame", "sparkle"];
+/** Counters this version no longer has; stripped from saved games (parseGame). */
+const RETIRED_COUNTERS = ["ticket", "rad"];
 /**
  * Player counters, each with its symbol: an icon (`icons` lists the ones a
- * player can switch between, default first), or for unspent mana a mana pip.
+ * player can switch between, default first), a card symbol from Scryfall
+ * (`symbol`: energy), or for unspent mana a mana pip. Custom counters get
+ * their name and symbol from the game (Game.custom).
  */
 export interface CounterDef {
   key: CounterKey;
   label: string;
   icon?: CounterIcon;
   icons?: CounterIcon[];
+  /** A Scryfall card symbol shown instead of an icon (the official energy symbol). */
+  symbol?: string;
   /** Mana counters: the mana symbol (W, U, B, R, G, C) shown instead of an icon. */
   pip?: string;
+  /** A custom counter: named by the player (see CUSTOM_PRESETS). */
+  custom?: true;
   step?: number;
   lethal?: number;
   max?: number;
@@ -52,15 +79,16 @@ export interface CounterDef {
 
 export const COUNTERS: CounterDef[] = [
   { key: "poison", label: "Poison", icon: "phyrexian", icons: ["phyrexian", "droplet"], lethal: 10 },
-  { key: "energy", label: "Energy", icon: "bolt" },
+  { key: "energy", label: "Energy", symbol: "E" },
   { key: "experience", label: "Experience", icon: "star" },
-  { key: "rad", label: "Rad", icon: "rad" },
   // Each cast of the commander costs 2 more.
   { key: "tax", label: "Commander tax", icon: "coins", step: 2 },
   // Speed (Aetherdrift) tops out at 4.
   { key: "speed", label: "Speed", icon: "gauge", max: 4 },
-  { key: "ticket", label: "Tickets", icon: "ticket" },
   { key: "storm", label: "Storm count", icon: "storm" },
+  // Two slots the player names (Treasure, Food, ...): the grid stays even at eight.
+  { key: "custom1", label: "Custom 1", icon: "sparkle", custom: true },
+  { key: "custom2", label: "Custom 2", icon: "sparkle", custom: true },
   // Unspent (floating) mana, one counter per color plus colorless.
   { key: "manaW", label: "White mana", pip: "W" },
   { key: "manaU", label: "Blue mana", pip: "U" },
@@ -184,6 +212,8 @@ export interface Game {
   markers: Partial<Record<MarkerKey, number>>;
   /** Symbols picked for counters that have a choice (e.g. poison: Phyrexian or droplet). */
   icons?: Partial<Record<CounterKey, CounterIcon>>;
+  /** What the custom counters count this game (kept for the next one, like `icons`). */
+  custom?: Partial<Record<CustomKey, CustomDef>>;
   /** Day or night, once a card has started it (it's never neither again that game). */
   dayNight?: DayNight;
   history: Entry[];
@@ -207,8 +237,9 @@ export function newGame(count: number, start: number, previous?: Game): Game {
       cmdr: {},
     })),
     markers: {},
-    // The symbols picked carry over to the next game.
+    // The symbols picked, and what the custom counters count, carry over to the next game.
     ...(previous?.icons && { icons: { ...previous.icons } }),
+    ...(previous?.custom && { custom: { ...previous.custom } }),
     history: [],
   };
 }
@@ -534,9 +565,27 @@ export function toggleMarker(g: Game, p: number, key: MarkerKey, now = Date.now(
   );
 }
 
-/** The symbol a counter shows in this game. */
-export function counterIcon(g: Pick<Game, "icons">, key: CounterKey): CounterIcon {
+export const isCustomKey = (key: CounterKey): key is CustomKey => key === "custom1" || key === "custom2";
+
+/** The symbol a counter shows in this game (a custom one: whatever it was set to count). */
+export function counterIcon(g: Pick<Game, "icons" | "custom">, key: CounterKey): CounterIcon {
+  if (isCustomKey(key)) return g.custom?.[key]?.icon ?? "sparkle";
   return g.icons?.[key] ?? COUNTERS.find((c) => c.key === key)?.icon ?? "star";
+}
+
+/** What a counter is called in this game (a custom one: its name, or "Custom N" until it's set). */
+export function counterLabel(g: Pick<Game, "custom">, key: CounterKey): string {
+  if (isCustomKey(key) && g.custom?.[key]?.name) return g.custom[key]!.name;
+  return COUNTERS.find((c) => c.key === key)?.label ?? key;
+}
+
+export const MAX_COUNTER_NAME = 14;
+
+/** Set what a custom counter counts (a preference, not a game action: no history). */
+export function setCustom(g: Game, key: CustomKey, def: CustomDef): Game {
+  const name = def.name.replace(/\s+/g, " ").trim().slice(0, MAX_COUNTER_NAME);
+  if (!name) return g;
+  return { ...g, custom: { ...g.custom, [key]: { name, icon: def.icon } } };
 }
 
 /** Pick a counter's symbol (a preference, not a game action: no history). */
@@ -622,7 +671,17 @@ export function parseGame(raw: unknown): Game | null {
   }
   if (g.v !== 2 || !Array.isArray(g.players) || g.players.length < MIN_PLAYERS || g.players.length > MAX_PLAYERS) return null;
   const game = g as unknown as Game;
-  // Seats on a retired color (cream "white", "gold") move to its replacement.
-  if (!game.players.some((p) => RETIRED_COLORS[p.color])) return game;
-  return { ...game, players: game.players.map((p) => (RETIRED_COLORS[p.color] ? { ...p, color: RETIRED_COLORS[p.color] } : p)) };
+  // Seats on a retired color (cream "white", "gold") move to its replacement, and
+  // counters this version no longer has (tickets, rad) are dropped.
+  const stale = (p: Player) => !!RETIRED_COLORS[p.color] || RETIRED_COUNTERS.some((k) => k in p.counters);
+  if (!game.players.some(stale)) return game;
+  return {
+    ...game,
+    players: game.players.map((p) => {
+      if (!stale(p)) return p;
+      const counters = { ...p.counters } as Record<string, number>;
+      for (const k of RETIRED_COUNTERS) delete counters[k];
+      return { ...p, color: RETIRED_COLORS[p.color] ?? p.color, counters };
+    }),
+  };
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MAX_PLAYERS, MIN_PLAYERS, STARTING_LIFE, colorHex, untouched, type Game } from "../lib/life";
 import { CARD_COUNTERS, TRACKERS, type LifeSettings, type TrackerKey } from "../lib/life-settings";
 import { Icon, type IconName } from "./Icon";
+import { Pip } from "./ManaCost";
 
 const HEAD = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
 
@@ -176,7 +177,7 @@ export function LifeSettingsPage({
                   (on ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
                 }
               >
-                {c.icon && <Icon name={c.icon} className="h-5 w-5 shrink-0" />}
+                {c.symbol ? <Pip sym={c.symbol} size={20} /> : c.icon && <Icon name={c.icon} className="h-5 w-5 shrink-0" />}
                 <span className="min-w-0 flex-1 leading-tight">{c.label}</span>
                 {on && <Icon name="check" className="h-4 w-4 shrink-0" />}
               </button>

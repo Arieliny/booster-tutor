@@ -5,10 +5,14 @@ import type { TrackerKey } from "../lib/life-settings";
 import {
   COLORS,
   COUNTERS,
+  CUSTOM_ICONS,
+  CUSTOM_PRESETS,
+  MAX_COUNTER_NAME,
   MAX_NAME,
   colorHex,
   colorInk,
   counterIcon,
+  counterLabel,
   maxTracked,
   seatName,
   trackedCount,
@@ -17,6 +21,9 @@ import {
   type CounterDef,
   type CounterIcon,
   type CounterKey,
+  type CustomDef,
+  type CustomIcon,
+  type CustomKey,
   type Game,
   type MarkerKey,
   type Player,
@@ -109,6 +116,8 @@ interface Props {
   markers: Partial<Record<MarkerKey, number>>;
   /** The game's chosen counter symbols. */
   icons: Game["icons"];
+  /** What the custom counters count this game. */
+  custom: Game["custom"];
   index: number;
   /**
    * The chooser: "spin" while the flicker is on this seat, "waiting" while it's
@@ -133,6 +142,8 @@ interface Props {
   /** A counter switched off in Settings was added from "More counters": switch it back on. */
   onOfferCounter: (key: CounterKey) => void;
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
+  /** A custom counter was named (or renamed). */
+  onCustom: (key: CustomKey, def: CustomDef) => void;
   /** The ... menu is opening (the tray closes so it doesn't cover the menu). */
   onMenu: () => void;
   onCmdr: (from: number, by: number, second?: boolean) => void;
@@ -362,10 +373,10 @@ function Face(props: Props & { w: number; h: number }) {
               return (
                 <TrackRow
                   key={c.key}
-                  label={c.label}
+                  label={counterLabel(props, c.key)}
                   value={v}
                   lethal={!!c.lethal && v >= c.lethal}
-                  icon={<CounterSymbol c={c} icons={props.icons} size={20} />}
+                  icon={<CounterSymbol c={c} game={props} size={20} />}
                   onStep={(steps) => props.onCounter(c.key, steps * (c.step ?? 1))}
                   who={name}
                 />
@@ -515,12 +526,79 @@ function Chip({ children, onClick, danger, strong }: { children: React.ReactNode
 }
 
 /** A counter's symbol: its mana pip, or its icon (poison can be Phyrexian or a droplet). */
-function CounterSymbol({ c, icons, size }: { c: CounterDef; icons: Props["icons"]; size: number }) {
-  if (c.pip) return <Pip sym={c.pip} size={size} />;
+/** A counter's symbol: a mana pip, a card symbol (energy), or its icon (custom: whatever it was set to count). */
+function CounterSymbol({ c, game, size }: { c: CounterDef; game: Pick<Game, "icons" | "custom">; size: number }) {
+  if (c.pip || c.symbol) return <Pip sym={c.pip ?? c.symbol!} size={size} />;
   return (
     <span className="block shrink-0" style={{ width: size, height: size }}>
-      <Icon name={counterIcon({ icons }, c.key)} className="h-full w-full" />
+      <Icon name={counterIcon(game, c.key)} className="h-full w-full" />
     </span>
+  );
+}
+
+/**
+ * Naming a custom counter: one of the usual things tables count, or any name
+ * with any of the symbols. Small enough for a seat on a four-player table.
+ */
+function CustomPicker({ current, onPick, onClose }: { current?: CustomDef; onPick: (def: CustomDef) => void; onClose: () => void }) {
+  const [name, setName] = useState(current?.name ?? "");
+  const [icon, setIcon] = useState<CustomIcon>(current?.icon ?? "sparkle");
+  const clean = name.replace(/\s+/g, " ").trim().slice(0, MAX_COUNTER_NAME);
+  const chip = (on: boolean) =>
+    "flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-left text-sm " +
+    (on ? "border-(--color-text) bg-(--color-text)/15" : "border-(--color-border) text-(--color-text-dim) hover:bg-(--color-text)/10");
+  return (
+    <div className="space-y-2 rounded-lg border border-(--color-border) p-2">
+      <div className="grid grid-cols-2 gap-1.5">
+        {CUSTOM_PRESETS.map((p) => (
+          <button
+            key={p.name}
+            type="button"
+            onClick={() => (setName(p.name), setIcon(p.icon))}
+            aria-pressed={clean === p.name && icon === p.icon}
+            className={chip(clean === p.name && icon === p.icon)}
+          >
+            <Icon name={p.icon} className="h-4 w-4 shrink-0" />
+            <span className="truncate">{p.name}</span>
+          </button>
+        ))}
+      </div>
+      <input
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Or any name"
+        maxLength={MAX_COUNTER_NAME}
+        aria-label="Custom counter name"
+        className="w-full rounded-lg border border-(--color-border) bg-(--color-bg) px-2.5 py-1.5 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
+      />
+      <div className="flex flex-wrap gap-1">
+        {CUSTOM_ICONS.map((ic) => (
+          <button
+            key={ic}
+            type="button"
+            onClick={() => setIcon(ic)}
+            aria-label={`Symbol: ${ic}`}
+            aria-pressed={icon === ic}
+            className={"flex h-8 w-8 items-center justify-center rounded-lg border " + (icon === ic ? "border-(--color-text) bg-(--color-text)/15" : "border-(--color-border) opacity-60 hover:opacity-100")}
+          >
+            <Icon name={ic} className="h-4.5 w-4.5" />
+          </button>
+        ))}
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          disabled={!clean}
+          onClick={() => onPick({ name: clean, icon })}
+          className="rounded-lg bg-(--color-accent) px-3 py-1.5 text-sm font-medium text-(--color-accent-ink) hover:bg-(--color-accent-bright) disabled:opacity-40"
+        >
+          Count {clean || "it"}
+        </button>
+        <button type="button" onClick={onClose} className="rounded-lg border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text-dim) hover:bg-(--color-text)/10">
+          Cancel
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -693,6 +771,9 @@ function Menu(props: Props & { onClose: () => void }) {
   const [more, setMore] = useState(false);
   const hidden = COUNTERS.filter((c) => !c.pip && !isOffered(c.key));
   const listed = COUNTERS.filter((c) => !c.pip && (isOffered(c.key) || more));
+  // The custom counter being named (its picker shows under the grid).
+  const [naming, setNaming] = useState<CustomKey | null>(null);
+  const customDef = (key: CustomKey) => props.custom?.[key];
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-(--color-bg-elev) px-3 pb-3 text-left text-(--color-text)">
       {/* Stays at the top while the menu scrolls, so x is always in reach. */}
@@ -727,27 +808,42 @@ function Menu(props: Props & { onClose: () => void }) {
             {listed.map((c) => {
               const on = player.counters[c.key] !== undefined;
               const extra = !isOffered(c.key);
+              // A custom counter that hasn't been named yet: the tap names it (and adds it).
+              const unnamed = !!c.custom && !customDef(c.key as CustomKey);
               return (
                 <div key={c.key} className="flex items-stretch gap-1">
                   <button
                     type="button"
                     onClick={() => {
+                      if (unnamed) return setNaming(c.key as CustomKey);
                       if (on) return props.onRemoveCounter(c.key);
                       if (extra) props.onOfferCounter(c.key);
                       props.onAddCounter(c.key);
                     }}
                     aria-pressed={on}
-                    disabled={!on && full}
+                    disabled={!on && full && !unnamed}
                     className={
                       "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
                       (on ? "border-(--color-text) bg-(--color-text)/15" : off) +
-                      (extra ? " border-dashed" : "")
+                      (extra ? " border-dashed" : "") +
+                      (unnamed ? " italic" : "")
                     }
                   >
-                    <Icon name={counterIcon(props, c.key)} className="h-5 w-5 shrink-0" />
-                    <span className="min-w-0 flex-1 truncate">{c.label}</span>
+                    <CounterSymbol c={c} game={props} size={20} />
+                    <span className="min-w-0 flex-1 truncate">{unnamed ? "Custom" : counterLabel(props, c.key)}</span>
                     {on && <Icon name="check" className="h-4 w-4 shrink-0" />}
                   </button>
+                  {c.custom && !unnamed && (
+                    // Rename it, or make it count something else.
+                    <button
+                      type="button"
+                      onClick={() => setNaming(c.key as CustomKey)}
+                      aria-label={`Change what ${counterLabel(props, c.key)} counts`}
+                      className="flex items-center rounded-lg border border-(--color-border) px-1.5 opacity-60 hover:opacity-100"
+                    >
+                      <Icon name="pencil" className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                   {c.icons && (
                     // Which symbol this counter shows (poison: Phyrexian or droplet).
                     <span className="flex flex-col overflow-hidden rounded-lg border border-(--color-border)">
@@ -769,6 +865,20 @@ function Menu(props: Props & { onClose: () => void }) {
               );
             })}
           </div>
+          {naming && (
+            <CustomPicker
+              current={customDef(naming)}
+              onPick={(def) => {
+                props.onCustom(naming, def);
+                if (player.counters[naming] === undefined && !full) {
+                  if (!isOffered(naming)) props.onOfferCounter(naming);
+                  props.onAddCounter(naming);
+                }
+                setNaming(null);
+              }}
+              onClose={() => setNaming(null)}
+            />
+          )}
           {hidden.length > 0 &&
             (more ? (
               <p className="text-xs text-(--color-text-dim)">Adding one of these also switches it on in Settings.</p>
@@ -778,7 +888,7 @@ function Menu(props: Props & { onClose: () => void }) {
                 onClick={() => setMore(true)}
                 className="w-full rounded-lg border border-dashed border-(--color-border) px-2.5 py-2 text-left text-sm text-(--color-text-dim) hover:bg-(--color-text)/10"
               >
-                More counters: {hidden.map((c) => c.label).join(", ")}
+                More counters: {hidden.map((c) => counterLabel(props, c.key)).join(", ")}
               </button>
             ))}
         </section>

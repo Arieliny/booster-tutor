@@ -267,7 +267,8 @@ describe("counter symbols", () => {
     const { counterIcon, setCounterIcon } = await import("../src/lib/life");
     let g = newGame(2, 20);
     expect(counterIcon(g, "poison")).toBe("phyrexian");
-    expect(counterIcon(g, "energy")).toBe("bolt");
+    // Energy shows the official card symbol rather than an icon.
+    expect(COUNTERS.find((c) => c.key === "energy")?.symbol).toBe("E");
     g = setCounterIcon(g, "poison", "droplet");
     expect(counterIcon(g, "poison")).toBe("droplet");
     expect(g.history).toHaveLength(0);
@@ -366,8 +367,8 @@ describe("rows on a life card", () => {
     let g = newGame(4, 40);
     for (const key of ["poison", "energy", "manaW", "manaU"] as const) g = addCounter(g, 0, key);
     expect(trackedCount(g.players[0])).toBe(4);
-    expect(addCounter(g, 0, "rad")).toBe(g);
-    const six = addCounter(addCounter(newGame(6, 40), 0, "poison"), 0, "rad");
+    expect(addCounter(g, 0, "speed")).toBe(g);
+    const six = addCounter(addCounter(newGame(6, 40), 0, "poison"), 0, "speed");
     expect(addCounter(six, 0, "energy")).toBe(six);
   });
 });
@@ -481,5 +482,32 @@ describe("the Enduring Story", () => {
     expect(setStory(g1, 0, true, T)).toBe(g1); // already has it
     expect(undo(g1).players[0].story).toBeUndefined();
     expect(setStory(g1, 0, false, T + 1).players[0].story).toBeUndefined();
+  });
+});
+
+describe("custom counters", () => {
+  it("are named per game, keep the name for the next game, and read as their name", async () => {
+    const { CUSTOM_PRESETS, counterIcon, counterLabel, setCustom } = await import("../src/lib/life");
+    const g0 = newGame(2, 20);
+    expect(counterLabel(g0, "custom1")).toBe("Custom 1");
+    expect(counterIcon(g0, "custom1")).toBe("sparkle");
+    const g1 = setCustom(g0, "custom1", CUSTOM_PRESETS[0]);
+    expect(counterLabel(g1, "custom1")).toBe("Treasure");
+    expect(counterIcon(g1, "custom1")).toBe("chest");
+    expect(g1.history).toHaveLength(0);
+    const g2 = setCustom(g1, "custom2", { name: "  Dragons   seen ", icon: "flame" });
+    expect(counterLabel(g2, "custom2")).toBe("Dragons seen");
+    expect(setCustom(g2, "custom2", { name: "   ", icon: "gem" })).toBe(g2);
+    expect(counterLabel(newGame(3, 40, g2), "custom1")).toBe("Treasure");
+    // It counts like any other counter.
+    const g3 = changeCounter(addCounter(g2, 0, "custom1"), 0, "custom1", 3, T);
+    expect(g3.players[0].counters.custom1).toBe(3);
+  });
+
+  it("drops tickets and rad from a saved game", () => {
+    const old = JSON.parse(JSON.stringify(newGame(2, 20)));
+    old.players[0].counters = { poison: 2, ticket: 4, rad: 1 };
+    const g = parseGame(old)!;
+    expect(g.players[0].counters).toEqual({ poison: 2 });
   });
 });

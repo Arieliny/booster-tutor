@@ -3,11 +3,12 @@ import { Fragment, Suspense, lazy, useEffect, useRef, useState } from "react";
 import "@fontsource/nunito/latin-900.css";
 import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, mapLinks, roomsAhead, type DungeonKey, type MapLink } from "../lib/dungeons";
 import {
-  COUNTERS,
+  type CounterKey,
   MARKERS,
   addCounter,
   addEmblem,
   changeCmdr,
+  counterLabel,
   playerName,
   changeCounter,
   changeLife,
@@ -23,6 +24,7 @@ import {
   rollDice,
   setBlessing,
   setCmdrTracking,
+  setCustom,
   setName,
   setPartners,
   setStory,
@@ -443,6 +445,7 @@ export function LifeCounter({
                 topEdge={seats[0].span ? k === 0 : k < cols}
                 markers={game.markers}
                 icons={game.icons}
+                custom={game.custom}
                 others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: playerName(game, j), color: o.color, partners: o.partners }]))}
                 highlight={first === i ? "first" : spin === i ? "spin" : first !== null ? "out" : spin !== null ? "waiting" : null}
                 trayOpen={barOpen && !diceTray}
@@ -460,6 +463,7 @@ export function LifeCounter({
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
                 onOfferCounter={(key) => setSettings((s) => ({ ...s, cardCounters: { ...s.cardCounters, [key]: true } }))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
+                onCustom={(key, def) => setGame((g) => setCustom(g, key, def))}
                 onMenu={closeTray}
                 onCmdr={(from, by, second) => setGame((g) => changeCmdr(g, i, from, by, Date.now(), false, second))}
                 onCmdrTracking={(on) => setGame((g) => setCmdrTracking(g, i, on))}
@@ -699,7 +703,7 @@ function describe(g: Game, e: Entry, index: number): string {
     case "set":
       return `${who} set to ${e.d}`;
     case "counter":
-      return `${who} ${COUNTERS.find((c) => c.key === e.key)?.label ?? e.key} ${sign(e.d)}`;
+      return `${who} ${counterLabel(g, e.key as CounterKey)} ${sign(e.d)}`;
     case "cmdr": {
       const life = e.withLife ? ` → ${lifeAfter(g, index)}` : "";
       return e.d > 0

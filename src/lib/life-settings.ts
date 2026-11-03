@@ -7,7 +7,7 @@
  * drives that.
  *
  * The same goes for the player counters a life card offers (poison, energy,
- * tickets...): switched off, a counter leaves each player's menu, but one
+ * speed...): switched off, a counter leaves each player's menu, but one
  * already on a card stays until it's removed.
  *
  * Kept per device in localStorage: guests aren't signed in, and the people
@@ -17,8 +17,8 @@ import { COUNTERS, type CounterKey } from "./life";
 
 /** The counters Settings can switch off: all but unspent mana, which is a tracker of its own. */
 export const CARD_COUNTERS = COUNTERS.filter((c) => !c.pip);
-/** The ones most tables use (Ari, 2026-11-03); experience, rad, speed and tickets start switched off. */
-const COUNTERS_ON: CounterKey[] = ["poison", "energy", "tax", "storm"];
+/** The ones most tables use (Ari, 2026-11-03), plus the two custom slots; experience and speed start switched off. */
+const COUNTERS_ON: CounterKey[] = ["poison", "energy", "tax", "storm", "custom1", "custom2"];
 
 export type TrackerKey = "cmdr" | "monarch" | "dungeons" | "dayNight" | "ring" | "blessing" | "story" | "emblems" | "mana";
 

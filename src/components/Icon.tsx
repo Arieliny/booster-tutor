@@ -138,6 +138,13 @@ const PATHS = {
   ),
   // The city's blessing.
   castle: <path d="M4 21V9h3v2h2V9h2v2h2V9h2v2h2V9h3v12zM10 21v-4a2 2 0 0 1 4 0v4M3 21h18" />,
+  // Custom counters: a treasure chest, food (an apple), a folded map, a powerstone, a prowess flame.
+  chest: <path d="M3 10V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2M3 10h18v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1zM3 13h18M12 10v3.5" />,
+  food: <path d="M12 7.5c-1.6-1.4-4-1.3-5.4.3C4.2 10.5 5 15 7.4 18.2c1 1.3 2 1.8 2.9 1.8.7 0 1.2-.5 1.7-.5s1 .5 1.7.5c.9 0 1.9-.5 2.9-1.8C19 15 19.8 10.5 17.4 7.8c-1.4-1.6-3.8-1.7-5.4-.3zM12 7.5V4.5M12 4.5c.8-1 2-1.5 3.5-1.5" />,
+  map: <path d="m3 6 6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14" />,
+  gem: <path d="M6 3h12l4 6-10 12L2 9zM2 9h20M8 3l4 6 4-6M12 9v12" />,
+  flame: <path d="M12 2.5c.8 3 4.5 5 4.5 9.5a4.5 4.5 0 0 1-9 0c0-1.7.6-3 1.3-4.1.4 1.4 1.2 2.1 1.9 2.4.6-2.6.1-5.3 1.3-7.8z" />,
+  pencil: <path d="M4 20h4L18.5 9.5a1.5 1.5 0 0 0 0-2.1l-1.9-1.9a1.5 1.5 0 0 0-2.1 0L4 16zM13 7l4 4" />,
   // The Enduring Story: an open book.
   book: <path d="M12 7c-1.5-1.3-3.6-2-6.3-2H4v13.5h1.7c2.7 0 4.8.7 6.3 2 1.5-1.3 3.6-2 6.3-2H20V5h-1.7c-2.7 0-4.8.7-6.3 2zM12 7v13.5" />,
   minus: <path d="M5 12h14" />,
