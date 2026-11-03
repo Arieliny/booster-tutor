@@ -159,23 +159,6 @@ export function LifeSettingsPage({
       {appearance}
 
       <section className="space-y-2">
-        <div className={HEAD}>On the table</div>
-        <p className="text-sm text-(--color-text-dim)">What this phone offers during a game. Switch off what your games don't use.</p>
-        <div className="divide-y divide-(--color-border) rounded-2xl border border-(--color-border) bg-(--color-bg-elev)">
-          {TRACKERS.map((t) => (
-            <TrackerSwitch
-              key={t.key}
-              icon={TRACKER_ICON[t.key]}
-              label={t.label}
-              hint={t.hint}
-              on={settings.show[t.key]}
-              onChange={(on) => onSettings((s) => ({ ...s, show: { ...s.show, [t.key]: on } }))}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-2">
         <div className={HEAD}>Counters</div>
         <p className="text-sm text-(--color-text-dim)">Which counters each player's menu offers. One already on a card stays until it's removed.</p>
         <div className="grid grid-cols-2 gap-1.5">
@@ -199,6 +182,23 @@ export function LifeSettingsPage({
               </button>
             );
           })}
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <div className={HEAD}>On the table</div>
+        <p className="text-sm text-(--color-text-dim)">What this phone offers during a game. Switch off what your games don't use.</p>
+        <div className="divide-y divide-(--color-border) rounded-2xl border border-(--color-border) bg-(--color-bg-elev)">
+          {TRACKERS.map((t) => (
+            <TrackerSwitch
+              key={t.key}
+              icon={TRACKER_ICON[t.key]}
+              label={t.label}
+              hint={t.hint}
+              on={settings.show[t.key]}
+              onChange={(on) => onSettings((s) => ({ ...s, show: { ...s.show, [t.key]: on } }))}
+            />
+          ))}
         </div>
       </section>
 

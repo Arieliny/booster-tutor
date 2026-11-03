@@ -267,7 +267,9 @@ function Face(props: Props & { w: number; h: number }) {
     </div>
   );
   const crown = marked && !compact ? tall : 0;
-  const big = compact ? fit(0, below, (w - 2 * BADGE - 2 * SIGN - 32) / (0.6 * chars), 0) : fit(crown, below, roomy);
+  // The markers float above the total rather than pushing it down (Ari: the total shouldn't move when
+  // someone becomes the monarch), so the total only has to leave them room: as much above as below.
+  const big = compact ? fit(0, below, (w - 2 * BADGE - 2 * SIGN - 32) / (0.6 * chars), 0) : fit(2 * crown, below, roomy);
   const change = delta !== 0 && (delta > 0 ? `+${delta}` : `−${-delta}`);
   // The change in life hangs just under the total, so the total itself sits in the middle of the card;
   // whatever comes below (counters, commander damage, chips) keeps a gap for it.
@@ -309,7 +311,7 @@ function Face(props: Props & { w: number; h: number }) {
             <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} {...plus} />
           </div>
           {crown > 0 && (
-            <div className="relative mb-1 flex items-end gap-5">
+            <div className="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 items-end gap-5 whitespace-nowrap">
               {monarch && <Marker icon="crown" label="Monarch" size={crown} onClick={props.onPassMonarch} title="Pass the monarch" />}
               {ring > 0 && <Marker icon="ring" label={`Ring · ${ring}`} size={crown} onClick={props.onRing} title="The Ring" />}
               {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}

@@ -2,9 +2,12 @@
  * Download every emblem from Scryfall and save them for the life counter's
  * emblem picker, which works offline:
  *
- *   node --use-system-ca scripts/fetch-emblems.mjs
+ *   node --use-system-ca scripts/fetch-emblems.mjs [--soft]
  *
- * -> src/lib/emblems-data.ts  (committed; rerun when a set adds emblems)
+ * -> src/lib/emblems-data.ts  (committed, so the picker works from a plain
+ *    checkout; the Vercel build reruns this (vercel.json) so a new set's
+ *    emblems arrive with the rebuild the data-refresh cron triggers).
+ *    --soft: if Scryfall can't be reached, keep the committed file and go on.
  *
  * The Ring is left out: the life counter tracks it on its own.
  */
@@ -12,23 +15,31 @@ import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const soft = process.argv.includes("--soft");
 const out = join(dirname(fileURLToPath(import.meta.url)), "..", "src", "lib", "emblems-data.ts");
 const headers = { "User-Agent": "BoosterTutor/1.0", Accept: "application/json" };
 
 const emblems = [];
-let url = "https://api.scryfall.com/cards/search?q=t%3Aemblem&unique=oracle&order=name";
-while (url) {
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error(`HTTP ${res.status} from Scryfall`);
-  const page = await res.json();
-  for (const c of page.data) {
-    if (c.card_faces || !c.oracle_text) continue; // The Ring (a two-faced helper card)
-    emblems.push({ name: c.name.replace(/ Emblem$/, ""), text: c.oracle_text });
+try {
+  let url = "https://api.scryfall.com/cards/search?q=t%3Aemblem&unique=oracle&order=name";
+  while (url) {
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`HTTP ${res.status} from Scryfall`);
+    const page = await res.json();
+    for (const c of page.data) {
+      if (c.card_faces || !c.oracle_text) continue; // The Ring (a two-faced helper card)
+      emblems.push({ name: c.name.replace(/ Emblem$/, ""), text: c.oracle_text });
+    }
+    url = page.has_more ? page.next_page : null;
+    if (url) await new Promise((r) => setTimeout(r, 120));
   }
-  url = page.has_more ? page.next_page : null;
-  if (url) await new Promise((r) => setTimeout(r, 120));
+  if (emblems.length < 50) throw new Error(`only ${emblems.length} emblems - Scryfall's answer may have changed`);
+} catch (err) {
+  console.error(`fetch-emblems: ${err instanceof Error ? err.message : err}`);
+  if (!soft) process.exit(1);
+  console.error("--soft: continuing with the committed emblem list.");
+  process.exit(0);
 }
-if (emblems.length < 50) throw new Error(`only ${emblems.length} emblems - Scryfall's answer may have changed`);
 
 const body = emblems.map((e) => `  { name: ${JSON.stringify(e.name)}, text: ${JSON.stringify(e.text)} },`).join("\n");
 writeFileSync(
