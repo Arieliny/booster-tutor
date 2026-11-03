@@ -3,7 +3,7 @@ import { searchDb, toReviewCard, useCardDb, type DbCard } from "../lib/card-db";
 import type { ReviewCard } from "../lib/cube-review";
 import { scryfallCard, scryfallSuggest } from "../lib/scryfall";
 import { useBackToClose } from "../lib/use-back-to-close";
-import { CardDbPanel } from "./CardDbPanel";
+import { CardDbNotice } from "./CardDbPanel";
 import { Icon } from "./Icon";
 import { ManaCost } from "./ManaCost";
 import { Rulings } from "./Rulings";
@@ -116,7 +116,7 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
           ) : "error" in names ? (
             <Note>
               {names.error}
-              {!navigator.onLine && " Download the card database below to search with no connection."}
+              {!navigator.onLine && " Download the card database in Settings to search with no connection."}
             </Note>
           ) : names.names.length === 0 ? (
             <Note>No card matches “{needle}”.</Note>
@@ -138,7 +138,7 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
         </Results>
       )}
 
-      <CardDbPanel db={db} />
+      <CardDbNotice db={db} />
     </div>
   );
 }

@@ -150,6 +150,7 @@ export async function downloadDb(): Promise<CardDb> {
   const cache = await caches.open(CACHE);
   await cache.put(DB_URL, new Response(text, { headers: { "Content-Type": "application/json" } }));
   writeInfo(db.info);
+  writeNewer(null);
   loaded = Promise.resolve(db);
   return db;
 }
@@ -157,6 +158,25 @@ export async function downloadDb(): Promise<CardDb> {
 const CHECKED_KEY = "booster-tutor-card-db-checked";
 const CHECK_EVERY_MS = 12 * 60 * 60 * 1000;
 const WIFI_ONLY_KEY = "booster-tutor-card-db-wifi-only";
+/** The build time of a newer database the site has, found by a check but not downloaded yet. */
+const NEWER_KEY = "booster-tutor-card-db-newer";
+
+function readNewer(): string | null {
+  try {
+    return localStorage.getItem(NEWER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeNewer(builtAt: string | null) {
+  try {
+    if (builtAt) localStorage.setItem(NEWER_KEY, builtAt);
+    else localStorage.removeItem(NEWER_KEY);
+  } catch {
+    // Without storage the next check finds it again.
+  }
+}
 
 /** Automatic updates on Wi-Fi only (the default), or on any connection. */
 export function loadWifiOnly(): boolean {
@@ -201,34 +221,65 @@ export function isNewer(deployedBuiltAt: string | undefined, mine: string): bool
 /**
  * If this device keeps the database and the site now has a newer one (a new
  * set, new previews, errata: the site rebuilds itself, see api/_data-refresh.ts),
- * download it in the background. Asks the site at most every 12 hours, only
- * when online, on Wi-Fi unless the person turned that off (Settings), and not
- * when the phone asks to save data. Never throws.
+ * download it in the background.
+ *
+ * The check is a tiny file, so it runs on any connection (at most every 12
+ * hours, only when online) and remembers a newer database it finds, which
+ * screens show as a notice. The download (~1.7 MB) waits for Wi-Fi unless the
+ * person turned that off in Settings, and for the phone not to be saving data.
+ * Never throws.
  */
 export async function refreshDbIfNewer(now = Date.now()): Promise<CardDb | null> {
   try {
     if (!cachesOk() || !navigator.onLine) return null;
-    const net = connection();
-    if (net?.saveData) return null;
-    const touch = window.matchMedia("(pointer: coarse)").matches;
-    if (!networkAllows(loadWifiOnly(), net?.type, touch)) return null; // not checked: try again on Wi-Fi
     const mine = await dbInfo();
     if (!mine) return null; // never downloaded here: nothing to keep current
+    let deployed = readNewer();
     const last = Number(localStorage.getItem(CHECKED_KEY) ?? 0);
-    if (now - last < CHECK_EVERY_MS) return null;
-    localStorage.setItem(CHECKED_KEY, String(now));
-    const res = await fetch("/data-version.json", { cache: "no-store" });
-    if (!res.ok) return null;
-    const deployed = (await res.json()) as { cards?: { builtAt?: string } | null };
-    return isNewer(deployed.cards?.builtAt, mine.builtAt) ? await downloadDb() : null;
+    if (now - last >= CHECK_EVERY_MS) {
+      localStorage.setItem(CHECKED_KEY, String(now));
+      const res = await fetch("/data-version.json", { cache: "no-store" });
+      if (res.ok) {
+        const v = (await res.json()) as { cards?: { builtAt?: string } | null };
+        deployed = isNewer(v.cards?.builtAt, mine.builtAt) ? (v.cards?.builtAt ?? null) : null;
+        writeNewer(deployed);
+        announce();
+      }
+    }
+    if (!deployed || !isNewer(deployed, mine.builtAt)) return null;
+    const net = connection();
+    if (net?.saveData) return null;
+    if (!networkAllows(loadWifiOnly(), net?.type, window.matchMedia("(pointer: coarse)").matches)) return null;
+    const db = await downloadDb();
+    announce();
+    return db;
   } catch {
     return null; // an older site with no version file, offline mid-way: try again later
   }
 }
 
+/**
+ * Keeps this device's database current: on opening, and again when the device
+ * comes back online or changes network (e.g. joins Wi-Fi). Mount once per app.
+ */
+export function useCardDbAutoUpdate() {
+  useEffect(() => {
+    const check = () => void refreshDbIfNewer();
+    check();
+    const net = connection();
+    window.addEventListener("online", check);
+    net?.addEventListener?.("change", check);
+    return () => {
+      window.removeEventListener("online", check);
+      net?.removeEventListener?.("change", check);
+    };
+  }, []);
+}
+
 export async function removeDb(): Promise<void> {
   loaded = null;
   writeInfo(null);
+  writeNewer(null);
   if (cachesOk()) await caches.delete(CACHE);
 }
 
@@ -299,15 +350,21 @@ export type DbState =
 /** Download state + the parsed database, shared by the lookup and its panel. */
 /** Fired when the database is downloaded or removed, so every screen using it catches up (e.g. Settings vs Look up). */
 const CHANGED = "bt-card-db-changed";
+function announce() {
+  window.dispatchEvent(new Event(CHANGED));
+}
 
 export function useCardDb() {
   const [state, setState] = useState<DbState>({ kind: "checking" });
+  const [newer, setNewer] = useState(readNewer);
 
   useEffect(() => {
     let live = true;
     const check = () =>
       void dbInfo().then((info) => {
-        if (live) setState(info ? { kind: "ready", info, db: null } : { kind: "absent" });
+        if (!live) return;
+        setNewer(readNewer());
+        setState((s) => (info ? { kind: "ready", info, db: s.kind === "ready" && s.info.builtAt === info.builtAt ? s.db : null } : { kind: "absent" }));
       });
     check();
     window.addEventListener(CHANGED, check);
@@ -344,5 +401,8 @@ export function useCardDb() {
     window.dispatchEvent(new Event(CHANGED));
   }, []);
 
-  return { state, download, load, remove };
+  /** The site has a newer database than this device's, not downloaded yet. */
+  const updateWaiting = state.kind === "ready" && !!newer && isNewer(newer, state.info.builtAt);
+
+  return { state, download, load, remove, updateWaiting };
 }

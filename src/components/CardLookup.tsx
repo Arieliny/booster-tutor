@@ -3,6 +3,7 @@ import { searchDb, toReviewCard, type useCardDb } from "../lib/card-db";
 import type { ReviewCard } from "../lib/cube-review";
 import { scryfallSuggest } from "../lib/scryfall";
 import { openSettings } from "../lib/routes";
+import { CardDbNotice } from "./CardDbPanel";
 import { ManaCost } from "./ManaCost";
 
 type CardDbHook = ReturnType<typeof useCardDb>;
@@ -47,6 +48,9 @@ export function CardLookup({
     if (!results) return <Box>Loading the card database…</Box>;
     return (
       <Box>
+        <div className="mb-2 empty:hidden">
+          <CardDbNotice db={db} />
+        </div>
         <div className="mb-1 text-xs text-(--color-text-dim)">
           {results.total === 0
             ? `No other card matches “${needle}”.`

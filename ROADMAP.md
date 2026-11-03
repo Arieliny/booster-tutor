@@ -257,7 +257,12 @@ New sets reach the offline card list and the judge's Comprehensive Rules without
   (`refreshDbIfNewer` in `lib/card-db.ts`), and again when the phone comes back online or changes network.
   **Wi-Fi only** (Ari, 2026-11-02): on by default, a checkbox under the card database in Settings turns it
   off. Uses Chrome's `navigator.connection.type`; where the browser won't say (iPhone, Firefox) a touch
-  device waits and a computer goes ahead (`networkAllows`).
+  device waits and a computer goes ahead (`networkAllows`). The CHECK (tiny `/data-version.json`) runs on any
+  connection; only the download waits. A newer database found but not downloaded is remembered
+  (`booster-tutor-card-db-newer`) and shown as a notice (`CardDbNotice`: "New cards are out" + Update now) on
+  the life counter's Look up a card and the Look up tab's other-cards box; nothing shows there otherwise.
+  The panel with the settings lives only in Settings (Booster Tutor's Settings sheet; LifeTutor's Settings
+  page via `CardDbSettings`, and LifeTutor runs `useCardDbAutoUpdate` too).
 - Not covered: Set grades for a new set are still a manual build (`build-set-review.mjs`).
 
 ---

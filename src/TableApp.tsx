@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import { cachedMe, can, checkAuth, redeemLink, signOut, takeLinkToken, type Me } from "./lib/auth";
 import { LifeCounter } from "./components/LifeCounter";
 import { SignInForm } from "./components/SignIn";
+import { CardDbSettings } from "./components/CardDbPanel";
+import { useCardDbAutoUpdate } from "./lib/card-db";
 import { APPEARANCES, applyAppearance, loadAppearance, saveAppearance, type Appearance } from "./lib/appearance";
 
 const INTRO_KEY = "booster-tutor-life-intro-seen";
@@ -100,6 +102,9 @@ function TableAppInner() {
     }
   };
 
+  // Keep the offline card database current (new sets) if this phone downloaded it.
+  useCardDbAutoUpdate();
+
   useEffect(() => {
     document.title = "LifeTutor";
     document.querySelector<HTMLLinkElement>('link[rel="icon"]')?.setAttribute("href", "/lifetutor-192.png");
@@ -127,6 +132,7 @@ function TableAppInner() {
       canJudge={can(me, "judge")}
       welcome={!introSeen && <Welcome onDismiss={dismissIntro} />}
       judgeAccess={<JudgeAccess me={me} onMe={setMe} />}
+      cardDbSettings={<CardDbSettings />}
       appearance={<AppearanceSection value={appearance} onChange={setAppearance} />}
     />
   );
