@@ -10,7 +10,7 @@
  *    (bundled with the cron function). Both gitignored.
  *
  *   { builtAt,
- *     cards: { builtAt, count, total },   // card-db.json's build + Scryfall's card count then
+ *     cards: { builtAt, count, total, version },   // the card database's build, Scryfall's card count then, and its content version
  *     cr: { source, effective } }         // the Comprehensive Rules file the judge got
  *
  * Runs in the Vercel build after build-card-db and fetch-cr. Never fails the
@@ -30,7 +30,7 @@ const readJson = (p) => {
   }
 };
 
-const db = readJson(join(root, "public", "card-db.json"));
+const db = readJson(join(root, "public", "card-db", "index.json"));
 const cr = readJson(join(root, "data", "cr.json"));
 let total = null;
 try {
@@ -41,7 +41,7 @@ try {
 
 const version = {
   builtAt: new Date().toISOString(),
-  cards: db ? { builtAt: db.builtAt, count: db.count, total } : null,
+  cards: db ? { builtAt: db.builtAt, count: db.count, total, version: db.version } : null,
   cr: cr ? { source: cr.source, effective: cr.effective } : null,
 };
 const text = JSON.stringify(version);

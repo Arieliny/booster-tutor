@@ -19,9 +19,11 @@ export function CardDbPanel({ db }: { db: CardDbHook }) {
             {state.info.builtAt && ` · updated ${shortDate(state.info.builtAt.slice(0, 10))}`}
           </span>
           {db.updateWaiting && <span className="text-(--color-gold)">New cards are out</span>}
+          {!db.updateWaiting && db.upToDate && <span>Up to date</span>}
           <span className="ml-auto flex gap-2">
+            {/* Updates download only the parts that changed (lib/card-db.ts downloadDb), so with nothing new this only checks. */}
             <button type="button" onClick={download} className="rounded border border-(--color-border) px-2 py-1 hover:bg-(--color-text)/5">
-              Update ({DB_DOWNLOAD_LABEL})
+              {db.updateWaiting ? `Update (${db.updateLabel})` : "Check for updates"}
             </button>
             <button type="button" onClick={remove} className="rounded border border-(--color-border) px-2 py-1 hover:bg-(--color-text)/5">
               Remove
@@ -78,7 +80,7 @@ export function CardDbNotice({ db }: { db: CardDbHook }) {
         {loadWifiOnly() ? " and updates on Wi-Fi." : "."}
       </span>
       <button type="button" onClick={download} className="shrink-0 rounded border border-(--color-border) px-2 py-1 font-medium hover:bg-(--color-text)/5">
-        Update now ({DB_DOWNLOAD_LABEL})
+        Update now ({db.updateLabel ?? DB_DOWNLOAD_LABEL})
       </button>
     </div>
   );

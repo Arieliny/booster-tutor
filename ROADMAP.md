@@ -252,17 +252,27 @@ New sets reach the offline card list and the judge's Comprehensive Rules without
   Hook (env `DEPLOY_HOOK_URL`, one per Vercel project: Booster Tutor and LifeTutor each rebuild
   themselves). At most one rebuild per project per 20 hours (Redis key per `VERCEL_PROJECT_ID`).
   The cron's JSON answer says what it decided (`current` / `rebuilding` / `waiting` / `no-hook`).
-- Devices that downloaded the offline database check `/data-version.json` when the app opens (at
-  most every 12 hours, online, not on Data Saver) and download a newer database in the background
+- Devices that downloaded the offline database check `/card-db/index.json` when the app opens (at
+  most every 12 hours, online, not on Data Saver) and download a changed database in the background
   (`refreshDbIfNewer` in `lib/card-db.ts`), and again when the phone comes back online or changes network.
   **Wi-Fi only** (Ari, 2026-11-02): on by default, a checkbox under the card database in Settings turns it
   off. Uses Chrome's `navigator.connection.type`; where the browser won't say (iPhone, Firefox) a touch
-  device waits and a computer goes ahead (`networkAllows`). The CHECK (tiny `/data-version.json`) runs on any
+  device waits and a computer goes ahead (`networkAllows`). The CHECK (the small index) runs on any
   connection; only the download waits. A newer database found but not downloaded is remembered
   (`booster-tutor-card-db-newer`) and shown as a notice (`CardDbNotice`: "New cards are out" + Update now) on
   the life counter's Look up a card and the Look up tab's other-cards box; nothing shows there otherwise.
   The panel with the settings lives only in Settings (Booster Tutor's Settings sheet; LifeTutor's Settings
   page via `CardDbSettings`, and LifeTutor runs `useCardDbAutoUpdate` too).
+- **Updates download only what changed** (Ari, 2026-11-02). The database is ~220 parts under
+  `/card-db/`, one per month of first printing (`scripts/lib/card-db-parts.mjs`), each named by a hash of
+  its content, plus `index.json` (parts, gzip sizes, and a `version` hashed from them). A phone fetches
+  only the part files it lacks, writes the index last, then deletes parts no longer listed. "Newer"
+  means a different `version`, not a later build time: before this, every deploy (any code push)
+  made every phone re-download the whole 4 MB. Measured against the Oct 11 database (358 new cards,
+  8 changed): 0.2 MB by month vs 1.4 MB by year vs 4 MB whole. The notice and Settings show the
+  update's real size ("Update (~50 KB)"); with nothing waiting the button is "Check for updates".
+  Phones holding the old one-file `/card-db.json` keep reading it and move to parts on their first
+  update (a full download, once).
 - Not covered: Set grades for a new set are still a manual build (`build-set-review.mjs`).
 
 ---

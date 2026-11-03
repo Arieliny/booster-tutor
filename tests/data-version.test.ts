@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { MAX_AGE_DAYS, staleReasons } from "../api/_data-version";
-import { isNewer, networkAllows } from "../src/lib/card-db";
+import { splitParts } from "../scripts/lib/card-db-parts.mjs";
+import { hasUpdate, networkAllows, planUpdate, sizeLabel, type DbIndex } from "../src/lib/card-db";
 
 const now = new Date("2026-11-13T09:00:00Z");
 const built = {
@@ -37,13 +38,72 @@ describe("staleReasons", () => {
   });
 });
 
-describe("isNewer", () => {
-  it("compares the deployed database's build time with this device's", () => {
-    expect(isNewer("2026-11-12T08:00:00Z", "2026-11-10T08:00:00Z")).toBe(true);
-    expect(isNewer("2026-11-10T08:00:00Z", "2026-11-10T08:00:00Z")).toBe(false);
-    expect(isNewer(undefined, "2026-11-10T08:00:00Z")).toBe(false);
-    // An unknown local build time (info lost) counts as old.
-    expect(isNewer("2026-11-10T08:00:00Z", "")).toBe(true);
+describe("hasUpdate", () => {
+  it("compares the cards, not when they were built", () => {
+    expect(hasUpdate("46e70a05f384", "a29660e9afca")).toBe(true);
+    expect(hasUpdate("46e70a05f384", "46e70a05f384")).toBe(false);
+    expect(hasUpdate(undefined, "46e70a05f384")).toBe(false);
+    // The old one-file database has no version: any site version updates it.
+    expect(hasUpdate("46e70a05f384", "")).toBe(true);
+  });
+});
+
+describe("splitParts", () => {
+  const card = (id: string, n: string) => ({ id, n });
+  const month: Record<string, string> = { a1: "1993-08", a2: "1993-08", b1: "2026-11", c1: "nonsense!" };
+  const split = (cards: { id: string; n: string }[]) => splitParts(cards, (c: { id: string }) => month[c.id]);
+
+  it("groups by month, with anything unknown in 'other'", () => {
+    const { parts } = split([card("b1", "New"), card("a2", "Two"), card("a1", "One"), card("c1", "Odd")]);
+    expect(parts.map((p) => [p.key, p.count])).toEqual([
+      ["1993-08", 2],
+      ["2026-11", 1],
+      ["other", 1],
+    ]);
+  });
+
+  it("the same cards in any order make the same files; a change renames only its part", () => {
+    const a = split([card("a1", "One"), card("a2", "Two"), card("b1", "New")]);
+    const b = split([card("b1", "New"), card("a2", "Two"), card("a1", "One")]);
+    expect(b.parts).toEqual(a.parts);
+    expect(b.version).toBe(a.version);
+    const errata = split([card("a1", "One"), card("a2", "Two"), card("b1", "Newer")]);
+    expect(errata.parts[0].file).toBe(a.parts[0].file);
+    expect(errata.parts[1].file).not.toBe(a.parts[1].file);
+    expect(errata.version).not.toBe(a.version);
+  });
+});
+
+describe("planUpdate", () => {
+  const site: DbIndex = {
+    builtAt: "2026-11-10T08:00:00Z",
+    count: 3,
+    version: "v2",
+    parts: [
+      { key: "1993-08", file: "1993-08-aaa.json", count: 2, gz: 50_000 },
+      { key: "2026-11", file: "2026-11-ccc.json", count: 1, gz: 30_000 },
+    ],
+  };
+
+  it("downloads only the parts this device lacks", () => {
+    const plan = planUpdate(site, new Set(["1993-08-aaa.json", "2026-11-bbb.json"]));
+    expect(plan.missing.map((p) => p.key)).toEqual(["2026-11"]);
+    expect(plan.bytes).toBe(30_000);
+  });
+
+  it("everything on a first download, nothing when current", () => {
+    expect(planUpdate(site, new Set()).bytes).toBe(80_000);
+    expect(planUpdate(site, new Set(["1993-08-aaa.json", "2026-11-ccc.json"])).missing).toEqual([]);
+  });
+});
+
+describe("sizeLabel", () => {
+  it("reads like the size a phone shows", () => {
+    expect(sizeLabel(3_000)).toBe("~10 KB");
+    expect(sizeLabel(53_346)).toBe("~50 KB");
+    expect(sizeLabel(221_000)).toBe("~220 KB");
+    expect(sizeLabel(3_808_000)).toBe("~3.8 MB");
+    expect(sizeLabel(12_300_000)).toBe("~12 MB");
   });
 });
 

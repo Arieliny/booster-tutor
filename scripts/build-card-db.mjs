@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Builds the offline card database: public/card-db.json
+ * Builds the offline card database: public/card-db/
  *
  *   node --use-system-ca scripts/build-card-db.mjs [--soft]
  *
@@ -8,6 +8,10 @@
  * Cards bulk file: ~34k cards, ~12 MB on disk, ~4 MB over the wire with
  * Vercel's compression. The app downloads it once on demand and keeps it in
  * Cache Storage, so card lookup works with no connection.
+ *
+ * Written as one part per month of first printing plus index.json listing them
+ * (scripts/lib/card-db-parts.mjs), so an update downloads only the parts that
+ * changed: a new set costs a few hundred KB, not the whole 4 MB.
  *
  * Runs as part of the Vercel build (see vercel.json), so every deploy ships
  * current cards and the file is never committed. --soft makes a failure (e.g.
@@ -25,13 +29,14 @@
 import { createGunzip } from "node:zlib";
 import { Readable } from "node:stream";
 import { createInterface } from "node:readline";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { oldestPrintings } from "./lib/oldest-printings.mjs";
+import { splitParts } from "./lib/card-db-parts.mjs";
 
 const SOFT = process.argv.includes("--soft");
-const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "card-db.json");
+const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "card-db");
 const UA = "BoosterTutor/1.0 (card database build)";
 const SKIP_LAYOUTS = new Set([
   "token",
@@ -60,6 +65,7 @@ async function build() {
 
   const pt = (x) => (x.power != null ? `${x.power}/${x.toughness}` : undefined);
   const cards = [];
+  const firstMonth = new Map(); // oracle id -> "1993-08", the month of its first printing: which part it goes in
   let seen = 0;
   for await (let line of lines) {
     if (!jsonl) line = line.trim().replace(/^\[|,$|\]$/g, "");
@@ -68,8 +74,10 @@ async function build() {
     seen++;
     if (SKIP_LAYOUTS.has(c.layout) || c.set_type === "alchemy" || /^A-/.test(c.name)) continue;
     const faces = c.card_faces;
+    const id = c.oracle_id ?? faces?.[0]?.oracle_id;
+    firstMonth.set(id, c.released_at?.slice(0, 7)); // the representative printing's, until the oldest-printing pass below
     cards.push({
-      id: c.oracle_id ?? faces?.[0]?.oracle_id,
+      id,
       s: c.id, // Scryfall id: image URLs are derived from it
       n: c.name,
       c: c.mana_cost || undefined,
@@ -101,6 +109,7 @@ async function build() {
     let changed = 0;
     for (const card of cards) {
       const o = oldest.get(card.id);
+      if (o?.released) firstMonth.set(card.id, o.released.slice(0, 7));
       if (!o || o.sid === card.s) continue;
       card.s = o.sid;
       card.b = o.back ? 1 : undefined;
@@ -111,11 +120,17 @@ async function build() {
     console.warn(`card-db: oldest-artwork pass failed (${err instanceof Error ? err.message : err}); keeping default printings`);
   }
 
-  const doc = { builtAt: new Date().toISOString(), source: meta.updated_at, count: cards.length, cards };
-  mkdirSync(dirname(OUT), { recursive: true });
-  const json = JSON.stringify(doc);
-  writeFileSync(OUT, json);
-  console.log(`card-db: ${cards.length} cards (of ${seen} Scryfall entries), ${(json.length / 1048576).toFixed(1)} MB -> public/card-db.json`);
+  // Without the oldest-printing pass many cards change month, so the next update downloads nearly everything once.
+  const { version, parts, files } = splitParts(cards, (card) => firstMonth.get(card.id));
+  rmSync(OUT, { recursive: true, force: true });
+  mkdirSync(OUT, { recursive: true });
+  for (const [file, json] of files) writeFileSync(join(OUT, file), json);
+  const doc = { builtAt: new Date().toISOString(), source: meta.updated_at, count: cards.length, version, parts };
+  writeFileSync(join(OUT, "index.json"), JSON.stringify(doc));
+  const mb = (n) => (n / 1e6).toFixed(1);
+  const raw = [...files.values()].reduce((n, j) => n + j.length, 0);
+  const zipped = parts.reduce((n, p) => n + p.gz, 0);
+  console.log(`card-db: ${cards.length} cards (of ${seen} Scryfall entries) in ${parts.length} parts, ${mb(raw)} MB (${mb(zipped)} MB gzipped) -> public/card-db/, version ${version}`);
 }
 
 try {
