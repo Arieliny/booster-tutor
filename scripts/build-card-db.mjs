@@ -5,7 +5,7 @@
  *   node --use-system-ca scripts/build-card-db.mjs [--soft]
  *
  * Every real Magic card's text (no images), trimmed from Scryfall's Oracle
- * Cards bulk file: ~34k cards, ~10 MB on disk, ~1.7 MB over the wire with
+ * Cards bulk file: ~34k cards, ~12 MB on disk, ~4 MB over the wire with
  * Vercel's compression. The app downloads it once on demand and keeps it in
  * Cache Storage, so card lookup works with no connection.
  *

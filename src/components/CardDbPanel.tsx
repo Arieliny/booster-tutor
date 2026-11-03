@@ -21,7 +21,7 @@ export function CardDbPanel({ db }: { db: CardDbHook }) {
           {db.updateWaiting && <span className="text-(--color-gold)">New cards are out</span>}
           <span className="ml-auto flex gap-2">
             <button type="button" onClick={download} className="rounded border border-(--color-border) px-2 py-1 hover:bg-(--color-text)/5">
-              Update
+              Update ({DB_DOWNLOAD_LABEL})
             </button>
             <button type="button" onClick={remove} className="rounded border border-(--color-border) px-2 py-1 hover:bg-(--color-text)/5">
               Remove
@@ -78,7 +78,7 @@ export function CardDbNotice({ db }: { db: CardDbHook }) {
         {loadWifiOnly() ? " and updates on Wi-Fi." : "."}
       </span>
       <button type="button" onClick={download} className="shrink-0 rounded border border-(--color-border) px-2 py-1 font-medium hover:bg-(--color-text)/5">
-        Update now
+        Update now ({DB_DOWNLOAD_LABEL})
       </button>
     </div>
   );
@@ -92,7 +92,7 @@ export function CardDbSettings() {
       <div className="text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase">Card database</div>
       <p className="text-sm text-(--color-text-dim)">
         Every Magic card's text on this phone, so Look up a card finds any card by name or rules text with no connection.
-        Without it, cards come from Scryfall.
+        Without it, cards come from Scryfall. The download is about {DB_DOWNLOAD_LABEL.replace("~", "")}, text only.
       </p>
       <CardDbPanel db={db} />
     </section>

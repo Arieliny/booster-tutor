@@ -2,7 +2,7 @@
  * Offline card database: every real Magic card's text, no images.
  *
  * Built by scripts/build-card-db.mjs during the Vercel build and served as the
- * static file /card-db.json (~1.7 MB compressed, ~11 MB parsed). It is NOT
+ * static file /card-db.json (~4 MB as Vercel sends it, gzip; ~12 MB raw). It is NOT
  * precached with the app - you download it on demand - and it's kept in its own
  * Cache Storage entry, read directly rather than through the service worker, so
  * lookups work with no connection once downloaded.
@@ -64,8 +64,12 @@ const DB_URL = "/card-db.json";
 const CACHE = "booster-tutor-card-db";
 const INFO_KEY = "booster-tutor-card-db-info";
 
-/** Rough compressed download size, for the button label. */
-export const DB_DOWNLOAD_LABEL = "~1.7 MB";
+/**
+ * What a download costs, for every place one can start. Vercel sends the file
+ * gzipped (4.1 MB for 34.6k cards, measured 2026-11-02; it grows slowly with
+ * each set): re-measure with Accept-Encoding "gzip, deflate, br" if it drifts.
+ */
+export const DB_DOWNLOAD_LABEL = "~4 MB";
 
 const cachesOk = () => typeof caches !== "undefined";
 
@@ -226,7 +230,7 @@ export function isNewer(deployedBuiltAt: string | undefined, mine: string): bool
  *
  * The check is a tiny file, so it runs on any connection (at most every 12
  * hours, only when online) and remembers a newer database it finds, which
- * screens show as a notice. The download (~1.7 MB) waits for Wi-Fi unless the
+ * screens show as a notice. The download (~4 MB) waits for Wi-Fi unless the
  * person turned that off in Settings, and for the phone not to be saving data.
  * Never throws.
  */

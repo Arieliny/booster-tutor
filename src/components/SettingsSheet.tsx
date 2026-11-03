@@ -1,4 +1,4 @@
-import { useCardDb } from "../lib/card-db";
+import { DB_DOWNLOAD_LABEL, useCardDb } from "../lib/card-db";
 import { CardDbPanel } from "./CardDbPanel";
 import { Sheet } from "./Sheet";
 
@@ -11,7 +11,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
         <h3 className="text-sm font-medium text-(--color-text)">Card database</h3>
         <p className="text-sm text-(--color-text-dim)">
           Every Magic card's text on this device, so Look up finds any card by name or rules text with no connection. Without
-          it, cards outside your cubes come from Scryfall.
+          it, cards outside your cubes come from Scryfall. The download is about {DB_DOWNLOAD_LABEL.replace("~", "")}, text only.
         </p>
         <CardDbPanel db={cardDb} />
       </section>
