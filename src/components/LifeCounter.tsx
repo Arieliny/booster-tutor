@@ -444,7 +444,7 @@ export function LifeCounter({
                 highlight={first === i ? "first" : spin === i ? "spin" : first !== null ? "out" : spin !== null ? "waiting" : null}
                 trayOpen={barOpen && !diceTray}
                 show={show}
-                counters={settings.counters}
+                counters={settings.cardCounters}
                 doorCorner={doors[i]}
                 picking={giving ? "Becomes the monarch" : null}
                 onPick={() => pick(i)}

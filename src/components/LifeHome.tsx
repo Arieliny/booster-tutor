@@ -180,14 +180,14 @@ export function LifeSettingsPage({
         <p className="text-sm text-(--color-text-dim)">Which counters each player's menu offers. One already on a card stays until it's removed.</p>
         <div className="grid grid-cols-2 gap-1.5">
           {CARD_COUNTERS.map((c) => {
-            const on = settings.counters[c.key] !== false;
+            const on = settings.cardCounters[c.key] !== false;
             return (
               <button
                 key={c.key}
                 type="button"
                 role="switch"
                 aria-checked={on}
-                onClick={() => onSettings((s) => ({ ...s, counters: { ...s.counters, [c.key]: !on } }))}
+                onClick={() => onSettings((s) => ({ ...s, cardCounters: { ...s.cardCounters, [c.key]: !on } }))}
                 className={
                   "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
                   (on ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")

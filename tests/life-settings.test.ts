@@ -18,17 +18,20 @@ describe("life counter settings", () => {
     expect("nonsense" in s.show).toBe(false);
   });
 
-  it("offers every counter until one is switched off", () => {
+  it("offers the common counters until switched otherwise", () => {
     const keys = CARD_COUNTERS.map((c) => c.key);
     expect(keys).toContain("ticket");
     expect(keys.some((k) => k.startsWith("mana"))).toBe(false);
-    for (const k of keys) expect(DEFAULT_SETTINGS.counters[k]).toBe(true);
-    const s = parseSettings({ counters: { ticket: false, poison: "no", manaW: false } });
-    expect(s.counters.ticket).toBe(false);
-    expect(s.counters.poison).toBe(true);
-    expect("manaW" in s.counters).toBe(false);
-    // Settings saved before counters existed.
-    expect(parseSettings({ show: { ring: false } }).counters).toEqual(DEFAULT_SETTINGS.counters);
+    expect(keys.filter((k) => DEFAULT_SETTINGS.cardCounters[k])).toEqual(["poison", "energy", "tax", "storm"]);
+    for (const k of keys) expect(typeof DEFAULT_SETTINGS.cardCounters[k]).toBe("boolean");
+    const s = parseSettings({ cardCounters: { ticket: true, poison: false, energy: "no", manaW: false } });
+    expect(s.cardCounters.ticket).toBe(true);
+    expect(s.cardCounters.poison).toBe(false);
+    expect(s.cardCounters.energy).toBe(true);
+    expect("manaW" in s.cardCounters).toBe(false);
+    // Settings saved before counters existed, or by the first version (every counter on).
+    expect(parseSettings({ show: { ring: false } }).cardCounters).toEqual(DEFAULT_SETTINGS.cardCounters);
+    expect(parseSettings({ counters: { ticket: true } }).cardCounters).toEqual(DEFAULT_SETTINGS.cardCounters);
   });
 
   it("ignores a custom life that makes no sense", () => {
