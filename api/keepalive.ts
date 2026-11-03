@@ -31,5 +31,6 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     console.error("data refresh failed:", err);
     data = { action: "error" };
   }
-  res.status(200).json({ ok: true, data });
+  // hookSet: whether this project has its Deploy Hook, which refreshData only looks at once data is stale. Never the URL.
+  res.status(200).json({ ok: true, data, hookSet: !!process.env.DEPLOY_HOOK_URL });
 }
