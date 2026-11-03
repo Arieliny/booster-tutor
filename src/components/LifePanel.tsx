@@ -109,14 +109,14 @@ interface Props {
   name: string;
   player: Player;
   turn: Turn;
-  /** The seat touches the top of the screen (it reaches up behind the camera cutout). */
-  topEdge?: boolean;
   /**
-   * The seat touches the bottom of the screen: it pads by the same amount the top
-   * seats do, so every total sits the same distance from the middle button
-   * (Ari noticed the top seat's total sitting closer, 2026-11-03).
+   * The seat touches the top of the screen. The table is laid out below the
+   * camera cutout (every seat gets the same height, the middle button sits in
+   * the middle of that), and this seat's colour reaches up behind the cutout:
+   * the card grows upward by the inset and pads its contents by the same, so
+   * its total sits exactly where the other seats' do (Ari, 2026-11-03).
    */
-  bottomEdge?: boolean;
+  topEdge?: boolean;
   /** The other seats, for commander damage (`partners`: that seat has two commanders). */
   others: { index: number; name: string; color: ColorKey; partners?: boolean; out?: boolean }[];
   markers: Partial<Record<MarkerKey, number>>;
@@ -175,8 +175,8 @@ interface Props {
 }
 
 export function LifePanel(props: Props) {
-  const { name, player, turn, highlight, topEdge, bottomEdge } = props;
-  const edgePad = topEdge || bottomEdge ? { paddingTop: topEdge ? "env(safe-area-inset-top)" : undefined, paddingBottom: bottomEdge ? "env(safe-area-inset-top)" : undefined } : undefined;
+  const { name, player, turn, highlight, topEdge } = props;
+  const edgePad = topEdge ? { paddingTop: "env(safe-area-inset-top)" } : undefined;
   return (
     <div
       className={
@@ -185,7 +185,12 @@ export function LifePanel(props: Props) {
         "relative h-full min-h-0 overflow-clip rounded-2xl transition-shadow " +
         (highlight === "spin" ? "ring-4 ring-white" : "")
       }
-      style={{ background: colorHex(player.color), color: colorInk(player.color) }}
+      style={{
+        background: colorHex(player.color),
+        color: colorInk(player.color),
+        // Up behind the cutout: taller by the inset, pulled up by the same.
+        ...(topEdge && { marginTop: "calc(-1 * env(safe-area-inset-top))", height: "calc(100% + env(safe-area-inset-top))" }),
+      }}
       aria-label={name}
     >
       {/* The chooser: the others fade back so the pick stands out; taps still go through. */}

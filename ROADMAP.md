@@ -352,8 +352,13 @@ For handing the counter to friends (Ari). All in the player's ⋯ menu:
   shows the time on every screen; a countdown turns red and buzzes once at zero and keeps counting
   past it. Settings switch `timer`.
 - **Four custom slots** (same day): custom3/custom4 (off by default), Tickets and Rad as presets,
-  Powerstone dropped. Bottom-row seats pad by the top inset too (`bottomEdge`), so every total sits
-  the same distance from the middle button on a phone with a camera cutout.
+  Powerstone dropped.
+- **The camera cutout** (same day, Ari asked for per-phone handling): the table is laid out below
+  `env(safe-area-inset-top)` (every seat the same height, the middle button in the middle of them)
+  and the top seats reach up behind the cutout on their own (`topEdge`: the card grows upward by
+  the inset and pads its contents by the same). So every total sits the same distance from the
+  middle button whatever the phone's cutout; a browser tab (inset 0) is unchanged. The web only
+  ever learns the strip's height, not where the hole is; nothing matters in that strip anyway.
 
 ## Future / under consideration
 

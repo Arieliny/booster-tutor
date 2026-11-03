@@ -470,8 +470,9 @@ export function LifeCounter({
   }
 
   return (
-    // Edge to edge: no gap for the camera cutout at the top (the top seats pad their own contents instead).
-    <div className="fixed inset-0 z-[60] flex flex-col bg-(--color-table) p-1.5 select-none" style={{ paddingTop: 0, paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
+    // The table sits below the camera cutout, so every seat is the same height and the middle button is
+    // in the middle of them; the top seats then reach up behind the cutout on their own (LifePanel topEdge).
+    <div className="fixed inset-0 z-[60] flex flex-col bg-(--color-table) p-1.5 select-none" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
       <div className="relative min-h-0 flex-1">
         <div
           className="grid h-full gap-1.5"
@@ -485,7 +486,6 @@ export function LifeCounter({
                 player={game.players[i]}
                 turn={turn}
                 topEdge={seats[0].span ? k === 0 : k < cols}
-                bottomEdge={k >= seats.length - cols}
                 markers={game.markers}
                 icons={game.icons}
                 custom={game.custom}
