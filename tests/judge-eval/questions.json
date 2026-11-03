@@ -1,0 +1,858 @@
+{
+  "about": "The judge test set: questions with known answers, weighted toward the areas rulings commonly go wrong in. Each expected answer was checked against the CR effective with data/cr.json and the cards' current Oracle text and official rulings (scripts/judge-brief.ts), not from memory. mustSay: facts a correct answer has to state (in any wording). mustNotSay: the usual wrong answers. api: one of the few also run through the real judge (scripts/judge-eval.ts).",
+  "questions": [
+    {
+      "id": "saga-blood-moon",
+      "area": "Ability removal",
+      "cards": [
+        "Urza's Saga",
+        "Blood Moon"
+      ],
+      "ask": "My Urza's Saga has 2 lore counters (chapters I and II have resolved). My opponent resolves Blood Moon. What happens to the Saga on my next turn?",
+      "ruling": "It stays. As a Mountain it loses its chapter abilities, so no lore counter is added in my precombat main phase and it isn't sacrificed; it keeps the two abilities chapters I and II gave it, and also taps for {R}.",
+      "mustSay": [
+        "Urza's Saga loses its chapter abilities (it loses the abilities from its rules text)",
+        "It keeps the abilities it gained from chapters I and II, because those were granted by an effect (CR 305.7 / the Urza's Saga ruling)",
+        "No lore counter is put on it: the precombat main phase action only applies to Sagas with one or more chapter abilities (CR 714.3c)",
+        "It isn't sacrificed: the sacrifice rule only applies to a Saga with one or more chapter abilities (CR 714.4)",
+        "It can tap for {R}"
+      ],
+      "mustNotSay": [
+        "It is sacrificed",
+        "Chapter III triggers",
+        "It loses the {T}: Add {C} ability"
+      ],
+      "sources": [
+        "CR 305.7",
+        "CR 714.3c",
+        "CR 714.4",
+        "Urza's Saga ruling 2021-06-18 (keeps gained abilities)",
+        "Blood Moon rulings"
+      ],
+      "api": true
+    },
+    {
+      "id": "humility-opalescence",
+      "area": "Layers",
+      "cards": [
+        "Humility",
+        "Opalescence"
+      ],
+      "ask": "Opalescence came down first, then my opponent cast Humility. What are Humility and Opalescence now? Would it be different if Humility had come down first?",
+      "ruling": "Humility (later timestamp) wins in layer 7b: Humility is a 1/1 enchantment creature with no abilities, and Opalescence isn't a creature (it doesn't animate itself). If Humility had come first, Opalescence's later 7b effect makes Humility a 4/4 with no abilities.",
+      "mustSay": [
+        "Opalescence doesn't affect itself, so it isn't a creature",
+        "Humility is a creature (Opalescence, layer 4) and loses its abilities (layer 6)",
+        "Both set base power and toughness in layer 7b, so timestamp order decides",
+        "Opalescence first then Humility: Humility is 1/1",
+        "Humility first then Opalescence: Humility is 4/4",
+        "Effects that started applying keep applying in later layers even after the ability is removed (CR 613.6)"
+      ],
+      "mustNotSay": [
+        "Opalescence is a creature",
+        "Humility stops working because it lost its own ability"
+      ],
+      "sources": [
+        "CR 613.6",
+        "CR 613.4b",
+        "Opalescence and Humility rulings 2009-10-01 and 2006-02-01"
+      ],
+      "api": true
+    },
+    {
+      "id": "dryad-arbor-blood-moon",
+      "area": "Ability removal",
+      "cards": [
+        "Dryad Arbor",
+        "Blood Moon"
+      ],
+      "ask": "What does Blood Moon do to Dryad Arbor?",
+      "ruling": "Dryad Arbor is nonbasic, so it becomes a Mountain instead of a Forest. It's still a 1/1 green Dryad creature land, and it taps for {R} (it's still a creature, so summoning sickness applies to tapping it).",
+      "mustSay": [
+        "Dryad Arbor is a nonbasic land, so Blood Moon affects it",
+        "It loses the Forest type and becomes a Mountain; it taps for {R}, not {G}",
+        "It's still a creature (setting a land subtype doesn't remove card types, CR 305.7) and still a Dryad",
+        "It's still green (its color indicator isn't changed)"
+      ],
+      "mustNotSay": [
+        "It stops being a creature",
+        "It's unaffected because it's a Forest"
+      ],
+      "sources": [
+        "CR 305.7",
+        "Blood Moon rulings"
+      ]
+    },
+    {
+      "id": "frog-counters-pump",
+      "area": "Layers",
+      "cards": [
+        "Turn to Frog",
+        "Giant Growth"
+      ],
+      "ask": "My 2/2 has two +1/+1 counters and I already cast Giant Growth on it this turn. My opponent responds to my attack with Turn to Frog on it. How big is it?",
+      "ruling": "6/6: Turn to Frog sets base power and toughness to 1/1 (layer 7b), then the counters (+2/+2) and Giant Growth (+3/+3) still apply in layer 7c, whenever they started. It has no abilities and is a blue Frog until end of turn.",
+      "mustSay": [
+        "Turn to Frog sets base P/T to 1/1 (layer 7b)",
+        "Counters and Giant Growth still apply on top (layer 7c), no matter when they started",
+        "It's a 6/6",
+        "It loses all abilities and is a blue Frog until end of turn"
+      ],
+      "mustNotSay": [
+        "It's a 1/1",
+        "Giant Growth is overwritten"
+      ],
+      "sources": [
+        "CR 613.4b",
+        "CR 613.4c",
+        "Turn to Frog ruling 2014-07-18 (Titanic Growth, counters)"
+      ],
+      "api": true
+    },
+    {
+      "id": "scales-doubling-season",
+      "area": "Replacement effects",
+      "cards": [
+        "Hardened Scales",
+        "Doubling Season"
+      ],
+      "ask": "I control Hardened Scales and Doubling Season. An effect puts one +1/+1 counter on my creature. How many does it get?",
+      "ruling": "I choose the order (it's my creature). Hardened Scales first, then Doubling Season: (1+1)x2 = 4. The other order gives 3. So 4 if I want.",
+      "mustSay": [
+        "The creature's controller (me) chooses the order to apply the replacement effects (CR 616.1)",
+        "Scales then Season gives 4 counters",
+        "Season then Scales gives 3 counters"
+      ],
+      "mustNotSay": [
+        "It's always 3",
+        "Timestamps decide the order"
+      ],
+      "sources": [
+        "CR 616.1",
+        "Hardened Scales ruling 2023-09-01 (you choose the order)"
+      ],
+      "api": true
+    },
+    {
+      "id": "leyline-void-persist",
+      "area": "Replacement effects",
+      "cards": [
+        "Leyline of the Void",
+        "Kitchen Finks"
+      ],
+      "ask": "My opponent has Leyline of the Void. My Kitchen Finks gets destroyed. Does persist bring it back?",
+      "ruling": "No. Finks is exiled instead of going to the graveyard, so it never dies and persist doesn't trigger.",
+      "mustSay": [
+        "Kitchen Finks is exiled instead of being put into the graveyard",
+        "It doesn't die, so persist doesn't trigger"
+      ],
+      "mustNotSay": [
+        "Persist returns it",
+        "It returns from exile"
+      ],
+      "sources": [
+        "Leyline of the Void ruling 2024-09-20 (nontoken creatures won't die)",
+        "Kitchen Finks rulings"
+      ]
+    },
+    {
+      "id": "rip-commander",
+      "area": "Commander",
+      "cards": [
+        "Rest in Peace"
+      ],
+      "ask": "Rest in Peace is out and my commander gets destroyed. Can it go back to the command zone? Do my 'whenever a creature dies' triggers go off?",
+      "ruling": "It's exiled instead (it doesn't die, so dies triggers don't trigger), and then I may move it from exile to the command zone as a state-based action.",
+      "mustSay": [
+        "The commander is exiled instead of going to the graveyard",
+        "It didn't die, so dies triggers don't trigger",
+        "I may put it into the command zone from exile (CR 903.9a, a state-based action)"
+      ],
+      "mustNotSay": [
+        "It's stuck in exile",
+        "It goes to the command zone instead of being exiled, so it died"
+      ],
+      "sources": [
+        "CR 903.9a",
+        "Rest in Peace ruling 2018-03-16 (dies triggers)"
+      ],
+      "api": true
+    },
+    {
+      "id": "platinum-angel",
+      "area": "State-based actions",
+      "cards": [
+        "Platinum Angel"
+      ],
+      "ask": "I'm at -3 life with Platinum Angel out. My opponent kills the Angel. What happens?",
+      "ruling": "While I controlled the Angel I couldn't lose. Once it's gone, the next time state-based actions are checked I'm still at 0 or less life, so I lose.",
+      "mustSay": [
+        "While I control Platinum Angel I can't lose the game, even at 0 or less life",
+        "Once it leaves, I lose the next time state-based actions are checked if my life is still 0 or less (CR 704.5a)"
+      ],
+      "mustNotSay": [
+        "I stay in the game",
+        "I lose immediately when the spell is cast"
+      ],
+      "sources": [
+        "CR 704.5a",
+        "Platinum Angel rulings"
+      ]
+    },
+    {
+      "id": "thassa-oracle-response",
+      "area": "Card rulings",
+      "cards": [
+        "Thassa's Oracle"
+      ],
+      "ask": "I have 3 cards left in my library. Thassa's Oracle enters; my only other blue is a permanent with {U}{U} in its mana cost. My opponent kills the Oracle in response to its trigger. Do I win?",
+      "ruling": "No. Devotion is counted as the ability resolves, and the Oracle only counts if it's still on the battlefield. Without it, devotion is 2, which is less than 3 cards, so I don't win (I look at the top 2 instead).",
+      "mustSay": [
+        "Devotion is counted when the ability resolves",
+        "The Oracle counts only if it's still on the battlefield then",
+        "Devotion is 2 and the library has 3 cards, so I don't win"
+      ],
+      "mustNotSay": [
+        "Devotion was locked in when it triggered",
+        "I win"
+      ],
+      "sources": [
+        "Thassa's Oracle ruling 2020-01-24 (counted as the ability resolves)"
+      ],
+      "api": true
+    },
+    {
+      "id": "felidar-intervening-if",
+      "area": "Triggered abilities",
+      "cards": [
+        "Felidar Sovereign",
+        "Lightning Bolt"
+      ],
+      "ask": "I'm at 41 life with Felidar Sovereign. In my upkeep the trigger goes on the stack and my opponent Bolts me in response. Do I still win?",
+      "ruling": "No. It's an intervening 'if': it checks again on resolution, and at 38 life it does nothing.",
+      "mustSay": [
+        "It's an intervening-if clause, checked both when it triggers and when it resolves (CR 603.4)",
+        "At 38 life the ability does nothing"
+      ],
+      "mustNotSay": [
+        "I still win"
+      ],
+      "sources": [
+        "CR 603.4",
+        "Felidar Sovereign ruling 2015-08-25"
+      ]
+    },
+    {
+      "id": "blood-artist-wrath",
+      "area": "Triggered abilities",
+      "cards": [
+        "Blood Artist",
+        "Wrath of God"
+      ],
+      "ask": "I have Blood Artist and three other creatures; my opponent has two creatures. Wrath of God resolves. How many times does Blood Artist trigger?",
+      "ruling": "Six: it sees all six creatures die at the same time, including itself (leaves-the-battlefield abilities look back in time).",
+      "mustSay": [
+        "Blood Artist triggers for itself and for each creature that died at the same time",
+        "Six triggers",
+        "Leaves-the-battlefield triggers look back in time (CR 603.10a)"
+      ],
+      "mustNotSay": [
+        "It doesn't trigger because it died too",
+        "Five triggers"
+      ],
+      "sources": [
+        "CR 603.10a",
+        "Blood Artist ruling 2016-06-08"
+      ]
+    },
+    {
+      "id": "apnap-upkeep",
+      "area": "Triggered abilities",
+      "cards": [
+        "Phyrexian Arena",
+        "Sulfuric Vortex"
+      ],
+      "ask": "It's my upkeep. I have Phyrexian Arena; my opponent has Sulfuric Vortex. I'm at 3 life. In what order do these resolve, and do I survive?",
+      "ruling": "APNAP: my Arena trigger goes on the stack first, then my opponent's Vortex trigger on top, so Vortex resolves first (3 to 1), then Arena (draw, lose 1, to 0). I lose.",
+      "mustSay": [
+        "The active player's triggers go on the stack first, then the non-active player's (APNAP, CR 603.3b)",
+        "Sulfuric Vortex resolves first",
+        "I end at 0 life and lose"
+      ],
+      "mustNotSay": [
+        "Arena resolves first",
+        "I choose the order of both triggers"
+      ],
+      "sources": [
+        "CR 603.3b",
+        "CR 101.4"
+      ]
+    },
+    {
+      "id": "ephemerate-aura-counters",
+      "area": "Zone changes",
+      "cards": [
+        "Ephemerate",
+        "Pacifism"
+      ],
+      "ask": "On my turn, before combat, I Ephemerate my creature that has Pacifism on it and two +1/+1 counters. What comes back, and can it attack?",
+      "ruling": "It returns as a new object: Pacifism goes to the graveyard and the counters are gone. It can't attack this turn, because I haven't controlled it continuously since the start of my turn.",
+      "mustSay": [
+        "It returns as a new object (CR 400.7)",
+        "Pacifism goes to the graveyard and the +1/+1 counters are gone",
+        "It can't attack this turn (summoning sickness, CR 302.6)"
+      ],
+      "mustNotSay": [
+        "It keeps the counters",
+        "It can attack"
+      ],
+      "sources": [
+        "CR 400.7",
+        "CR 302.6",
+        "Ephemerate ruling 2019-06-14"
+      ]
+    },
+    {
+      "id": "doom-blade-flicker",
+      "area": "Targeting",
+      "cards": [
+        "Doom Blade",
+        "Cloudshift"
+      ],
+      "ask": "My opponent casts Doom Blade on my creature. I respond with Cloudshift on it. What happens to the Doom Blade?",
+      "ruling": "The returned creature is a new object, so Doom Blade's only target is illegal: Doom Blade doesn't resolve and does nothing.",
+      "mustSay": [
+        "The creature that returns is a new object (CR 400.7)",
+        "Doom Blade's target is illegal, so it doesn't resolve (CR 608.2b)"
+      ],
+      "mustNotSay": [
+        "Doom Blade destroys the returned creature",
+        "Doom Blade is countered by Cloudshift"
+      ],
+      "sources": [
+        "CR 400.7",
+        "CR 608.2b"
+      ]
+    },
+    {
+      "id": "swords-own-hexproof",
+      "area": "Targeting",
+      "cards": [
+        "Swords to Plowshares"
+      ],
+      "ask": "Can I target my own hexproof creature with Swords to Plowshares?",
+      "ruling": "Yes. Hexproof only stops spells and abilities your opponents control from targeting it.",
+      "mustSay": [
+        "Yes",
+        "Hexproof only stops opponents' spells and abilities (CR 702.11)"
+      ],
+      "mustNotSay": [
+        "No, hexproof stops all targeting"
+      ],
+      "sources": [
+        "CR 702.11b"
+      ]
+    },
+    {
+      "id": "electrolyze-one-illegal",
+      "area": "Targeting",
+      "cards": [
+        "Electrolyze"
+      ],
+      "ask": "I cast Electrolyze dealing 1 damage to each of two creatures. One of them leaves the battlefield before it resolves. What happens?",
+      "ruling": "It still resolves: the remaining creature is dealt 1 damage (not 2) and I draw a card.",
+      "mustSay": [
+        "The damage division is set when it's cast",
+        "The remaining target is dealt 1 damage, not 2",
+        "I still draw a card"
+      ],
+      "mustNotSay": [
+        "The remaining creature takes 2",
+        "It fizzles and I don't draw"
+      ],
+      "sources": [
+        "Electrolyze rulings 2017-11-17",
+        "CR 608.2b"
+      ],
+      "api": true
+    },
+    {
+      "id": "vapor-snag-hexproof",
+      "area": "Targeting",
+      "cards": [
+        "Vapor Snag",
+        "Blossoming Defense"
+      ],
+      "ask": "I cast Vapor Snag on my opponent's creature; they respond with Blossoming Defense on it. Do they still lose 1 life?",
+      "ruling": "No. Its only target is now illegal, so Vapor Snag doesn't resolve and none of it happens, including the life loss.",
+      "mustSay": [
+        "The creature gains hexproof, so it's an illegal target",
+        "Vapor Snag doesn't resolve and none of its effects happen, including the life loss (CR 608.2b)"
+      ],
+      "mustNotSay": [
+        "They still lose 1 life"
+      ],
+      "sources": [
+        "CR 608.2b"
+      ]
+    },
+    {
+      "id": "legend-rule-dies",
+      "area": "State-based actions",
+      "cards": [
+        "Thalia, Guardian of Thraben"
+      ],
+      "ask": "I play a second Thalia, Guardian of Thraben. My first one is indestructible. Do I have to get rid of one, and does that count as dying?",
+      "ruling": "Yes: the legend rule makes me choose one; the other is put into the graveyard. That's not destruction, so indestructible doesn't help, and it does count as dying.",
+      "mustSay": [
+        "I choose one to keep and the other goes to the graveyard (the legend rule, CR 704.5j)",
+        "It isn't destroyed, so indestructible doesn't save it",
+        "Being put into the graveyard from the battlefield is dying, so dies triggers trigger"
+      ],
+      "mustNotSay": [
+        "The indestructible one can't be removed",
+        "It doesn't count as dying"
+      ],
+      "sources": [
+        "CR 704.5j",
+        "CR 700.4"
+      ]
+    },
+    {
+      "id": "indestructible-zero-toughness",
+      "area": "State-based actions",
+      "cards": [
+        "Darksteel Myr"
+      ],
+      "ask": "My Darksteel Myr gets -1/-1 until end of turn. It's indestructible, so it survives, right?",
+      "ruling": "No. With 0 toughness it's put into the graveyard as a state-based action; that isn't destruction, so indestructible doesn't stop it.",
+      "mustSay": [
+        "It's put into the graveyard for having 0 toughness (CR 704.5f)",
+        "That isn't destruction, so indestructible doesn't help"
+      ],
+      "mustNotSay": [
+        "It survives"
+      ],
+      "sources": [
+        "CR 704.5f",
+        "Darksteel Myr reminder text"
+      ]
+    },
+    {
+      "id": "both-zero-draw",
+      "area": "State-based actions",
+      "cards": [
+        "Earthquake"
+      ],
+      "ask": "We're both at 2 life. I cast Earthquake for 2. Who wins?",
+      "ruling": "Nobody: both players reach 0 at the same time and lose simultaneously, so the game is a draw.",
+      "mustSay": [
+        "Both players lose at the same time",
+        "The game is a draw (CR 104.4a)"
+      ],
+      "mustNotSay": [
+        "I win because it's my spell",
+        "The active player loses first"
+      ],
+      "sources": [
+        "CR 104.4a",
+        "CR 704.5a"
+      ]
+    },
+    {
+      "id": "clone-counters-aura",
+      "area": "Copies",
+      "cards": [
+        "Clone",
+        "Rancor"
+      ],
+      "ask": "I Clone my opponent's 3/3 that has two +1/+1 counters and Rancor on it. What does my Clone look like?",
+      "ruling": "A plain 3/3 copy: copy effects take only the copiable values (the printed card), not counters or Aura effects. No trample, no counters.",
+      "mustSay": [
+        "Clone copies only the copiable values (CR 707.2)",
+        "It's a 3/3 with no counters",
+        "It doesn't get Rancor's +2/+0 or trample"
+      ],
+      "mustNotSay": [
+        "It's a 5/5",
+        "It has trample",
+        "It's 7/5"
+      ],
+      "sources": [
+        "CR 707.2"
+      ]
+    },
+    {
+      "id": "twincast-x",
+      "area": "Copies",
+      "cards": [
+        "Twincast",
+        "Fireball"
+      ],
+      "ask": "My opponent casts Fireball with X=5 at my face. I Twincast it. What's X for my copy, and can I point it at them?",
+      "ruling": "The copy has X=5 too, and I may choose new targets for it, so I can aim it at my opponent.",
+      "mustSay": [
+        "The copy has the same X (5) (CR 707.10)",
+        "I may choose new targets, so yes"
+      ],
+      "mustNotSay": [
+        "X is 0 for the copy"
+      ],
+      "sources": [
+        "CR 707.10",
+        "Twincast rulings 2021-03-19"
+      ]
+    },
+    {
+      "id": "commander-tax-hand",
+      "area": "Commander",
+      "cards": [],
+      "ask": "I've cast my commander from the command zone twice already. It got bounced to my hand. How much extra does it cost now, from my hand?",
+      "ruling": "Nothing extra: commander tax only applies when casting it from the command zone. (Cast from the command zone it would be {4} more.)",
+      "mustSay": [
+        "Commander tax only applies to casting from the command zone (CR 903.8)",
+        "From the hand there's no tax"
+      ],
+      "mustNotSay": [
+        "It costs {4} more from my hand",
+        "It costs {6} more"
+      ],
+      "sources": [
+        "CR 903.8"
+      ]
+    },
+    {
+      "id": "commander-damage-zones",
+      "area": "Commander",
+      "cards": [],
+      "ask": "My opponent's commander hit me for 12 combat damage, then died and went to the command zone. They recast it and it hit me for 9 more. Am I dead?",
+      "ruling": "Yes. Commander damage counts per commander over the whole game, through zone changes: 21 total, so I lose.",
+      "mustSay": [
+        "Commander damage is tracked per commander over the course of the game (CR 903.10a)",
+        "Zone changes don't reset it",
+        "21 total, so I lose"
+      ],
+      "mustNotSay": [
+        "It reset when it went to the command zone"
+      ],
+      "sources": [
+        "CR 903.10a"
+      ]
+    },
+    {
+      "id": "stolen-commander-damage",
+      "area": "Commander",
+      "cards": [
+        "Control Magic"
+      ],
+      "ask": "Player B stole player A's commander with Control Magic and hit me with it. Does that combat damage count toward commander damage, and whose?",
+      "ruling": "Yes: it's still the same commander, whoever controls it. It counts toward the 21 from that commander.",
+      "mustSay": [
+        "It counts: commander damage is by the commander, whoever controls it",
+        "It adds to the total from that one commander"
+      ],
+      "mustNotSay": [
+        "It doesn't count because B doesn't own it"
+      ],
+      "sources": [
+        "CR 903.10a",
+        "CR 903.3"
+      ]
+    },
+    {
+      "id": "color-identity-hybrid",
+      "area": "Commander",
+      "cards": [
+        "Figure of Destiny"
+      ],
+      "ask": "Can I play Figure of Destiny in my mono-red Commander deck? I'd only ever pay red for it.",
+      "ruling": "No. Its mana symbols include {R/W} hybrid, so its color identity is red and white, which doesn't fit a mono-red commander.",
+      "mustSay": [
+        "Color identity counts every mana symbol in its mana cost and rules text, including hybrid (CR 903.4)",
+        "Its color identity is red and white",
+        "Not allowed in mono-red"
+      ],
+      "mustNotSay": [
+        "Yes, because hybrid can be paid with red"
+      ],
+      "sources": [
+        "CR 903.4",
+        "Figure of Destiny color identity RW"
+      ]
+    },
+    {
+      "id": "thalia-baral-bolt",
+      "area": "Costs",
+      "cards": [
+        "Thalia, Guardian of Thraben",
+        "Baral, Chief of Compliance",
+        "Lightning Bolt"
+      ],
+      "ask": "My opponent has Thalia, Guardian of Thraben; I have Baral, Chief of Compliance. What does Lightning Bolt cost me?",
+      "ruling": "{R}: start from {R}, Thalia adds {1}, then Baral takes off {1}.",
+      "mustSay": [
+        "Increases are added, then reductions applied (CR 601.2f)",
+        "It costs {R}"
+      ],
+      "mustNotSay": [
+        "It costs {1}{R}",
+        "Baral can't reduce it"
+      ],
+      "sources": [
+        "CR 601.2f",
+        "Thalia and Baral rulings"
+      ]
+    },
+    {
+      "id": "omniscience-x",
+      "area": "Costs",
+      "cards": [
+        "Omniscience",
+        "Stroke of Genius"
+      ],
+      "ask": "With Omniscience out, can I cast Stroke of Genius for free with X=10?",
+      "ruling": "I can cast it for free, but X must be 0 when casting without paying the mana cost.",
+      "mustSay": [
+        "Casting without paying the mana cost means X is 0 (CR 107.3b)"
+      ],
+      "mustNotSay": [
+        "X can be 10",
+        "I pay X and Omniscience covers the rest"
+      ],
+      "sources": [
+        "CR 107.3b",
+        "Omniscience ruling 2018-07-13"
+      ]
+    },
+    {
+      "id": "force-of-will-thalia",
+      "area": "Costs",
+      "cards": [
+        "Force of Will",
+        "Thalia, Guardian of Thraben"
+      ],
+      "ask": "My opponent has Thalia. Can I still Force of Will for its alternative cost, and what do I pay?",
+      "ruling": "Yes, but Thalia's tax applies to the alternative cost: 1 life, exile a blue card, and {1}.",
+      "mustSay": [
+        "Cost increases apply to alternative costs too (CR 601.2f)",
+        "I pay 1 life, exile a blue card and {1}"
+      ],
+      "mustNotSay": [
+        "Thalia doesn't affect the alternative cost"
+      ],
+      "sources": [
+        "CR 601.2f",
+        "Force of Will ruling 2022-12-08",
+        "Thalia rulings"
+      ]
+    },
+    {
+      "id": "mana-ability-response",
+      "area": "Priority and the stack",
+      "cards": [
+        "Birds of Paradise",
+        "Lightning Bolt"
+      ],
+      "ask": "My opponent taps Birds of Paradise for mana to cast something. Can I Bolt the Birds in response so they don't get the mana?",
+      "ruling": "No. Mana abilities don't use the stack and can't be responded to; the mana is already made. To stop it I'd have to kill the Birds earlier, when I have priority.",
+      "mustSay": [
+        "Mana abilities don't use the stack (CR 605.3)",
+        "You can't respond to it; they get the mana"
+      ],
+      "mustNotSay": [
+        "Yes, Bolt in response"
+      ],
+      "sources": [
+        "CR 605.3"
+      ]
+    },
+    {
+      "id": "deathtouch-trample",
+      "area": "Combat",
+      "cards": [],
+      "ask": "My 5/5 with deathtouch and trample is blocked by a 4/4. How much can I trample over?",
+      "ruling": "4: with deathtouch, 1 damage counts as lethal to the blocker, so I assign 1 to it and 4 to the player.",
+      "mustSay": [
+        "With deathtouch, any nonzero damage counts as lethal for assigning trample damage (CR 702.2c)",
+        "1 to the blocker, 4 to the player"
+      ],
+      "mustNotSay": [
+        "Only 1 tramples over"
+      ],
+      "sources": [
+        "CR 702.2c",
+        "CR 702.19b"
+      ]
+    },
+    {
+      "id": "blocker-removed",
+      "area": "Combat",
+      "cards": [],
+      "ask": "My 3/3 attacker (no trample) got blocked, then my opponent sacrificed the blocker. Does my creature deal damage to them?",
+      "ruling": "No. It stays blocked even with no blocker left, so without trample it deals no combat damage.",
+      "mustSay": [
+        "It remains a blocked creature (CR 509.1h)",
+        "Without trample it deals no combat damage"
+      ],
+      "mustNotSay": [
+        "It deals 3 to the player"
+      ],
+      "sources": [
+        "CR 509.1h",
+        "CR 702.19d"
+      ]
+    },
+    {
+      "id": "double-strike-trample",
+      "area": "Combat",
+      "cards": [],
+      "ask": "My 4/4 with double strike and trample is blocked by a 2/2. How much damage does the defending player take?",
+      "ruling": "6: first-strike damage is 2 to the blocker and 2 to the player; the blocker dies, and in the regular damage step all 4 go to the player, since a blocked trampler with no blockers assigns all its damage to the player.",
+      "mustSay": [
+        "First strike damage step: 2 to the blocker, 2 to the player",
+        "Regular damage step: all 4 to the player (CR 702.19d)",
+        "6 total"
+      ],
+      "mustNotSay": [
+        "4 total",
+        "It deals no damage in the second step"
+      ],
+      "sources": [
+        "CR 702.4b",
+        "CR 702.19d"
+      ],
+      "api": true
+    },
+    {
+      "id": "split-second",
+      "area": "Priority and the stack",
+      "cards": [
+        "Krosan Grip"
+      ],
+      "ask": "My opponent casts Krosan Grip on my artifact. Can I sacrifice it to its own ability in response? Can I tap it for mana?",
+      "ruling": "I can't activate its non-mana abilities while a split second spell is on the stack, but I can activate mana abilities (and special actions like turning a face-down creature up).",
+      "mustSay": [
+        "Split second stops casting spells and activating non-mana abilities (CR 702.61a)",
+        "So no sacrificing it with a non-mana ability (a sacrifice ability that is itself a mana ability, like Lotus Petal's, still works: CR 702.61b, 605.1a)",
+        "Mana abilities are still allowed"
+      ],
+      "mustNotSay": [
+        "I can sacrifice it in response"
+      ],
+      "sources": [
+        "CR 702.61a",
+        "Krosan Grip rulings 2021-03-19"
+      ]
+    },
+    {
+      "id": "day-night",
+      "area": "Game mechanics",
+      "cards": [],
+      "ask": "It's night. I cast two spells during my turn. What happens with day and night?",
+      "ruling": "As the next turn begins (in the untap step), it becomes day, because the previous turn's active player cast two or more spells.",
+      "mustSay": [
+        "It becomes day as the next turn begins (untap step, CR 502.2)",
+        "Because the active player cast two or more spells that turn"
+      ],
+      "mustNotSay": [
+        "It becomes day immediately"
+      ],
+      "sources": [
+        "CR 502.2",
+        "CR 731.2b"
+      ]
+    },
+    {
+      "id": "monarch-concedes",
+      "area": "Game mechanics",
+      "cards": [],
+      "ask": "Four-player game. Player C is the monarch and concedes during player B's turn. Who's the monarch now?",
+      "ruling": "Player B, the active player, becomes the monarch as C leaves the game.",
+      "mustSay": [
+        "The active player becomes the monarch (CR 725.4)",
+        "So B"
+      ],
+      "mustNotSay": [
+        "Nobody is the monarch",
+        "The next player after C"
+      ],
+      "sources": [
+        "CR 725.4"
+      ]
+    },
+    {
+      "id": "initiative-damage",
+      "area": "Game mechanics",
+      "cards": [],
+      "ask": "My opponent has the initiative. My creature deals combat damage to them. What happens?",
+      "ruling": "I take the initiative, and taking it triggers a venture into Undercity (an inherent triggered ability, so it uses the stack), without waiting for my upkeep.",
+      "mustSay": [
+        "I take the initiative (CR 726.2)",
+        "Taking it makes me venture into Undercity (it triggers on taking the initiative, not only at upkeep)"
+      ],
+      "mustNotSay": [
+        "I venture only at my next upkeep"
+      ],
+      "sources": [
+        "CR 726.2",
+        "Glossary: Initiative"
+      ]
+    },
+    {
+      "id": "mana-crypt-commander",
+      "area": "Formats",
+      "cards": [
+        "Mana Crypt"
+      ],
+      "ask": "Is Mana Crypt legal in Commander?",
+      "ruling": "No, it's banned in Commander.",
+      "mustSay": [
+        "Banned in Commander"
+      ],
+      "mustNotSay": [
+        "Legal in Commander"
+      ],
+      "sources": [
+        "Scryfall legality (banned: commander)"
+      ]
+    },
+    {
+      "id": "missed-trigger-competitive",
+      "area": "Tournament policy",
+      "cards": [],
+      "ask": "Competitive REL. My opponent forgot their own trigger that would have helped them, and I noticed. Do I have to tell them? Is it a penalty?",
+      "ruling": "No, I don't have to point out my opponent's triggers. It's Game Play Error - Missed Trigger for the opponent; no penalty for a trigger that would have benefited them.",
+      "mustSay": [
+        "I'm not required to point out my opponent's missed triggers",
+        "The infraction is Game Play Error - Missed Trigger (IPG 2.1)",
+        "Cites the IPG"
+      ],
+      "mustNotSay": [
+        "I get a penalty for not pointing it out"
+      ],
+      "sources": [
+        "IPG 2.1 (web search: blogs.magicjudges.org)"
+      ],
+      "api": true
+    },
+    {
+      "id": "unknown-card",
+      "area": "Not found",
+      "cards": [
+        "Glimmerwing Sovereign"
+      ],
+      "ask": "How does Glimmerwing Sovereign interact with Blood Moon?",
+      "ruling": "There's no such card: it should say it couldn't find Glimmerwing Sovereign, not invent its text.",
+      "mustSay": [
+        "It couldn't find the card"
+      ],
+      "mustNotSay": [
+        "Any rules text for Glimmerwing Sovereign stated as fact"
+      ],
+      "sources": [
+        "Scryfall: NOT FOUND"
+      ],
+      "api": true
+    }
+  ]
+}

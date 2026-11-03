@@ -73,7 +73,7 @@ const WEB_SEARCH: ToolUnion = {
   allowed_domains: ["magic.wizards.com", "blogs.magicjudges.org", "magicjudges.org", "wpn.wizards.com"],
 };
 
-interface BriefInput {
+export interface BriefInput {
   cards?: string[];
   search?: string;
   rules?: string[];
@@ -94,7 +94,7 @@ function describe(input: BriefInput): string {
   return s[0].toUpperCase() + s.slice(1);
 }
 
-async function runBrief(input: BriefInput, cr: Cr | null): Promise<string> {
+export async function runBrief(input: BriefInput, cr: Cr | null): Promise<string> {
   const out: string[] = [];
   if (input.cards?.length) out.push("########## CARDS ##########", ...(await lookupCards(input.cards, input.legality !== false)));
   const wantsCr = input.search || input.rules?.length || input.refs?.length || input.glossary?.length;

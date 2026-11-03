@@ -1,0 +1,378 @@
+{
+  "ran": "2026-11-03",
+  "how": "Claude Code subagents (Opus) standing in for the judge: same prompt (scripts/print-judge-prompt.ts) and lookups (scripts/judge-brief.ts), not the live API call. Graded by a separate subagent.",
+  "results": [
+    {
+      "id": "saga-blood-moon",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Nothing happens to it. Under Blood Moon your Urza's Saga gets no lore counter on your next turn, chapter III doesn't trigger, and it isn't sacrificed. It stays on the battlefield with 2 lore counters. It can still tap for {C}, make Constructs, and now also tap for {R}.\n\n**Why:**\n1. Blood Moon: \"Nonbasic lands are Mountains.\" That sets the land's subtype, so per CR 305.7 the Saga \"loses all abilities generated from its rules text\" and its old land type (Urza's), and gains \"{T}: Add {R}.\" That removes chapters I, II and III. Saga is an enchantment subtype, not a land type, so it is still an Enchantment Land Saga (now also a Mountain).\n2. Abilities granted by other effects are kept. CR 305.7: \"this doesn't remove any abilities that were granted to the land by other effects.\" Chapters I and II already resolved and granted \"{T}: Add {C}.\" and \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token with 'This token gets +1/+1 for each artifact you control.'\" Official ruling (2021-06-18): \"It keeps those abilities for as long as it's on the battlefield.\"\n3. No lore counter is added. The precombat-main turn-based action only covers \"each Saga they control with one or more chapter abilities\" (CR 714.3c). Your Saga now has none, so it gets no counter, and chapter III can't trigger anyway because the ability is gone.\n4. It isn't sacrificed. With no chapter abilities its final chapter number is 0 (CR 714.2d), and 2 lore counters is more than 0. But the sacrifice state-based action applies only to \"a Saga permanent with one or more chapter abilities\" (CR 714.4, also CR 704.5s). Your Saga doesn't qualify, so it stays put, frozen at 2 counters.\n\n**Watch out for:** If Blood Moon leaves the battlefield, the chapter abilities come back. The Saga still has only 2 counters, so it isn't sacrificed right away (CR 714.4). On your next precombat main phase it gets its third counter, chapter III triggers, and it's sacrificed after that ability leaves the stack.\n\n**Sources:** Urza's Saga and Blood Moon (Oracle text + Urza's Saga rulings 2021-06-18); CR 305.7, 613.1d/f, 704.5s, 714.2d, 714.3c, 714.4. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Urza's Saga\",\"Blood Moon\"],\"rules\":[\"714.2\",\"714.3\",\"714.4\",\"305.7\",\"613.1\"],\"search\":\"Saga chapter abilities lore counter\",\"refs\":[\"714.4\"]}"
+      ]
+    },
+    {
+      "id": "humility-opalescence",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** If Opalescence came first and Humility second (your case), Humility is a 1/1 enchantment creature with no abilities, and Opalescence is still just an enchantment with its ability. If Humility had come first, Humility would be a 4/4 enchantment creature with no abilities, and Opalescence would be unchanged.\n\n**Why:** Humility: \"All creatures lose all abilities and have base power and toughness 1/1.\" Opalescence: \"Each other non-Aura enchantment is a creature in addition to its other types and has base power and base toughness each equal to its mana value.\" Effects apply in layers (CR 613.1), and within a sublayer in timestamp order (CR 613.4, 613.7).\n\nOpalescence first, then Humility:\n1. Layer 4 (CR 613.1d): Opalescence makes Humility (and every other non-Aura enchantment) a creature. Opalescence doesn't animate itself.\n2. Layer 6 (CR 613.1f): Humility makes all creatures lose all abilities, including Humility itself. Its effect keeps applying anyway. Official ruling (2009-10-01): \"The rest of it will apply even if the permanent loses its ability before it's finished applying.\"\n3. Layer 7b (CR 613.4b): both effects set base P/T, so timestamp order decides. Opalescence (earlier) makes Humility 4/4, then Humility (later) makes it 1/1.\nResult: Humility is a 1/1 with no abilities. Every other creature, including any other animated enchantment, is also a 1/1 with no abilities. Opalescence isn't a creature, so Humility doesn't touch it.\n\nHumility first, then Opalescence: layers 4 and 6 work the same. In layer 7b Humility applies first (1/1), then Opalescence sets each animated enchantment to its mana value. Result: Humility is a 4/4 with no abilities, and other non-Aura enchantments are creatures with P/T equal to their mana value and no abilities. Non-enchantment creatures are still 1/1 with no abilities, because Opalescence only affects enchantments. The 2009-10-01 ruling walks through both orders the same way.\n\n**Watch out for:** Counters and pump effects still apply on top in layer 7c (CR 613.4c), whatever the order. Dependency (CR 613.8) doesn't change this: it only applies between effects in the same layer or sublayer (CR 613.8a), and the official rulings settle this pair by timestamp.\n\n**Sources:** Humility and Opalescence (Oracle text + rulings 2009-10-01, 2006-02-01, 2004-10-04); CR 613.1, 613.4, 613.7, 613.8a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Humility\",\"Opalescence\"],\"rules\":[\"613.1\",\"613.4\",\"613.7\",\"613.8\"],\"search\":\"Humility Opalescence dependency timestamp\"}"
+      ]
+    },
+    {
+      "id": "dryad-arbor-blood-moon",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Dryad Arbor becomes a green 1/1 Land Creature — Mountain Dryad that taps for {R} instead of {G}. It is still a creature, still a Dryad, and still green.\n\n**Why:**\n1. Dryad Arbor is a \"Land Creature — Forest Dryad\" with no basic supertype, so it's a nonbasic land (CR 305.8) and Blood Moon (\"Nonbasic lands are Mountains.\") applies to it.\n2. Setting a land's subtype to a basic land type means \"the land no longer has its old land type… and it gains the appropriate mana ability for each new basic land type\" (CR 305.7). Forest becomes Mountain, so it loses the Forest mana ability \"{T}: Add {G}\" and gains \"{T}: Add {R}.\" This is a layer 4 type-changing effect (CR 613.1d).\n3. Only land types change. Dryad is a creature type, not a land type (official ruling 2021-03-19: \"Forest is a land type and Dryad is a creature type\"), and CR 305.7 says setting a land's subtype \"doesn't add or remove any card types (such as creature).\" It's still a 1/1 creature.\n4. Its color doesn't change. Dryad Arbor is green because of its color indicator (ruling 2021-03-19, CR 105.2), and Blood Moon doesn't change colors. Official ruling (2021-03-19): \"If Dryad Arbor is changed into another basic land type, it continues to be a green Dryad creature.\"\n\n**Watch out for:** It's still a creature, so summoning sickness still applies. You can't tap a newly played Arbor for {R} until you've controlled it continuously since the start of your turn (per its reminder text, \"it's affected by summoning sickness\").\n\n**Sources:** Dryad Arbor (Oracle text + rulings 2021-03-19, 2011-09-22); Blood Moon (Oracle text + rulings 2020-08-07); CR 105.2, 205.3i, 305.7, 305.8, 613.1d. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Dryad Arbor\",\"Blood Moon\"],\"rules\":[\"305.7\",\"205.3i\",\"613.1\",\"105.2\"],\"search\":\"land creature color basic land type\"}"
+      ]
+    },
+    {
+      "id": "frog-counters-pump",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** It's a 6/6 blue Frog with no abilities until end of turn: base 1/1, plus 2 from the counters, plus 3 from Giant Growth.\n\n**Why:**\n1. Turn to Frog: \"Until end of turn, target creature loses all abilities and becomes a blue Frog with base power and toughness 1/1.\" Setting base P/T applies in layer 7b (CR 613.4b), so the creature's printed 2/2 is overwritten to 1/1.\n2. The +1/+1 counters and Giant Growth (\"Target creature gets +3/+3 until end of turn.\") modify P/T without setting it, so they apply in layer 7c (CR 613.4c), after 7b, no matter when they started. 1/1 + 2/2 + 3/3 = 6/6.\n3. Official ruling (2014-07-18): \"Effects that modify a creature's power and/or toughness, such as the effect of Titanic Growth, will apply to the creature no matter when they started to take effect. The same is true for any counters that change its power and/or toughness.\"\n4. It also loses all abilities, its other colors and its creature types (ruling 2014-07-18). It stays attacking.\n\n**Watch out for:** Turn to Frog only overwrites P/T-*setting* effects, not pumps. A pump from one of the creature's own static abilities (e.g. an anthem it grants itself) would be gone, because it lost that ability. A static pump from a different permanent would still apply in 7c.\n\n**Sources:** Turn to Frog (Oracle text + rulings 2014-07-18); Giant Growth (Oracle text); CR 613.4b, 613.4c. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Turn to Frog\",\"Giant Growth\"],\"rules\":[\"613.4\",\"613.4a\",\"613.4b\",\"613.4c\",\"613.4d\"],\"search\":\"power toughness layer 7 counters\"}"
+      ]
+    },
+    {
+      "id": "scales-doubling-season",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** It gets 4 if you apply Hardened Scales first and then Doubling Season (1 → 2 → 4). You choose the order, so 4 is the most. The other order gives 3 (1 → 2 → 3).\n\n**Why:**\n1. Both are replacement effects (\"instead,\" CR 614.1a). Hardened Scales: \"If one or more +1/+1 counters would be put on a creature you control, that many plus one +1/+1 counters are put on it instead.\" Doubling Season: \"If an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.\"\n2. When several replacement effects apply to the same event, the affected object's controller (you) picks one to apply, then repeats with the ones still applicable (CR 616.1, 616.1e, 616.1f). Official Hardened Scales ruling (2023-09-01): \"you choose the order to apply those effects, no matter who controls the sources of those effects.\"\n3. Scales first: 1 + 1 = 2, then Doubling Season doubles it to 4. Doubling Season first: 2, then Scales adds one for 3.\n4. Each replacement effect applies only once to the event (CR 614.5), so neither one loops.\n\n**Watch out for:** This applies to counters put on by an effect. Doubling Season doesn't double counters put on as a cost (Doubling Season ruling 2024-11-08, about planeswalker loyalty costs). Hardened Scales still works on those, because it doesn't say \"effect.\"\n\n**Sources:** Hardened Scales (Oracle text + rulings 2023-09-01); Doubling Season (Oracle text + rulings 2024-11-08); CR 614.1, 614.5, 616.1. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Hardened Scales\",\"Doubling Season\"],\"rules\":[\"614.1\",\"616.1\",\"616.1e\",\"614.5\"],\"search\":\"replacement effects order counters\"}"
+      ]
+    },
+    {
+      "id": "leyline-void-persist",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. Kitchen Finks is exiled instead of going to your graveyard, so it never dies and persist never triggers.\n\n**Why:**\n1. Leyline of the Void: \"If a card would be put into an opponent's graveyard from anywhere, exile it instead.\" Finks is a card headed to your graveyard, and you're the Leyline controller's opponent, so this replacement effect applies (CR 614.1a).\n2. A replaced event never happens (CR 614.6). Finks goes straight from the battlefield to exile.\n3. Persist means \"When this permanent is put into a graveyard from the battlefield, if it had no -1/-1 counters on it, return it…\" (CR 702.79a), and \"dies\" means \"is put into a graveyard from the battlefield\" (CR 700.4). Finks never reaches the graveyard, so persist has nothing to trigger on.\n4. Official Leyline ruling (2024-09-20): \"nontoken creatures your opponents control won't die. They'll be exiled instead. Abilities that would trigger when those creatures die won't trigger.\"\n\n**Watch out for:** Tokens aren't cards, so Leyline doesn't stop them dying (ruling 2024-09-20). A token copy of Finks would trigger persist, but a token can't come back from the graveyard (Finks ruling 2013-06-07), so this only matters for other dies triggers.\n\n**Sources:** Leyline of the Void (Oracle text + rulings 2024-09-20); Kitchen Finks (Oracle text + rulings 2013-06-07); CR 614.1a, 614.6, 700.4, 702.79a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Leyline of the Void\",\"Kitchen Finks\"],\"rules\":[\"702.79a\",\"700.4\",\"603.10a\",\"614.1\",\"614.6\"],\"search\":\"persist dies graveyard replacement\",\"glossary\":[\"dies\"]}"
+      ]
+    },
+    {
+      "id": "rip-commander",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Yes, your commander can still go to the command zone. Rest in Peace exiles it, and then you may move it from exile to the command zone. But it never died, so \"whenever a creature dies\" triggers don't go off.\n\n**Why:**\n1. Rest in Peace: \"If a card or token would be put into a graveyard from anywhere, exile it instead.\" The destroyed commander goes to exile instead of your graveyard (CR 614.1a).\n2. The command-zone return is a state-based action that also covers exile: \"If a commander is in a graveyard or in exile and that object was put into that zone since the last time state-based actions were checked, its owner may put it into the command zone\" (CR 903.9a, CR 704.6d). The next SBA check lets you move it.\n3. \"Dies\" means \"is put into a graveyard from the battlefield\" (CR 700.4). The commander went to exile, so it didn't die. Official Rest in Peace ruling (2018-03-16): \"abilities that trigger whenever a creature dies won't trigger because cards and tokens are never put into a player's graveyard.\"\n\n**Watch out for:** Moving it is optional (\"may,\" CR 903.9a). If you don't move it at that SBA check, it stays in exile, because the option only covers a commander put there \"since the last time state-based actions were checked.\"\n\n**Sources:** Rest in Peace (Oracle text + rulings 2018-03-16); CR 614.1a, 700.4, 704.6d, 903.9a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Rest in Peace\"],\"rules\":[\"903.9\",\"903.9a\",\"903.9b\",\"700.4\",\"704.6d\"],\"search\":\"commander command zone graveyard exile\",\"glossary\":[\"dies\"]}"
+      ]
+    },
+    {
+      "id": "platinum-angel",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** You lose the game as soon as the Angel is gone, the next time state-based actions are checked. That's right after the removal resolves, before anyone gets priority. Your only window is in response, while the removal is still on the stack: get your life above 0 (from -3 you need to gain at least 4) or protect the Angel.\n\n**Why:**\n1. Platinum Angel: \"You can't lose the game and your opponents can't win the game.\" That only works while you control it. Official ruling (2009-10-01): \"No game effect can cause you to lose the game… while you control Platinum Angel. It doesn't matter whether you have 0 or less life.\"\n2. Being at -3 life is a standing condition: \"If a player has 0 or less life, that player loses the game\" (CR 704.5a). CR 104.3b: that player \"loses the game the next time a player would receive priority.\"\n3. When the removal resolves and the Angel leaves, the game checks state-based actions before anyone gets priority (CR 704.3). With no Angel, CR 704.5a applies and you lose immediately. Nobody gets a chance to act in between.\n\n**Watch out for:** If the Angel dies from combat damage, there's no spell to respond to. It's destroyed in a state-based action check, and the check repeats (CR 704.3), so you lose in that same sequence unless your life was already above 0.\n\n**Sources:** Platinum Angel (Oracle text + rulings 2009-10-01); CR 104.3b, 119.6, 704.3, 704.5a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Platinum Angel\"],\"rules\":[\"704.5a\",\"704.3\",\"104.3b\",\"119.6\"],\"search\":\"can't lose the game state-based actions life 0\"}"
+      ]
+    },
+    {
+      "id": "thassa-oracle-response",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. With the Oracle gone, X is only 2 (from your other permanent's {U}{U}), and 2 is less than the 3 cards in your library, so you don't win. You look at the top 2 cards, keep up to one on top, and put the rest on the bottom.\n\n**Why:**\n1. Thassa's Oracle reads: \"When this creature enters, look at the top X cards of your library, where X is your devotion to blue. ... If X is greater than or equal to the number of cards in your library, you win the game.\"\n2. Killing the Oracle doesn't stop the trigger. Once triggered, an ability \"exists on the stack independently of its source\" (CR 113.7a).\n3. X is counted when the trigger resolves, not when it triggered. Official ruling (2020-01-24): for an ability that depends on devotion, \"you count the number of mana symbols of that color among the mana costs of permanents you control as the ability resolves. The permanent with that ability will be counted if it's still on the battlefield at that time.\"\n4. Devotion only counts permanents you control (CR 700.5). The Oracle is in the graveyard, so its {U}{U} doesn't count. Your devotion to blue is 2.\n5. 2 is not \"greater than or equal to\" 3, so the win clause does nothing. The rest of the ability still happens: look at 2, put up to one on top and the other on the bottom.\n\n**Watch out for:** If the trigger had resolved with the Oracle still on the battlefield, X would be 4 (4 is 3 or more), and you'd win. Even with the Oracle dead, you'd still win if your library had 2 or fewer cards when the trigger resolved. The ruling says that with 0 cards in your library, you win even at devotion 0.\n\n**Sources:** Thassa's Oracle (Oracle text and 2020-01-24 rulings); CR 113.7a, 700.5 (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Thassa's Oracle\"],\"rules\":[\"202.2\",\"603.4\",\"608.2h\",\"113.7a\",\"104.3a\"],\"search\":\"devotion\",\"glossary\":[\"devotion\"],\"refs\":[\"700.5\"]}"
+      ]
+    },
+    {
+      "id": "felidar-intervening-if",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. The Bolt drops you to 38. Felidar Sovereign's trigger checks your life again as it resolves, finds less than 40, and does nothing.\n\n**Why:**\n1. Felidar Sovereign: \"At the beginning of your upkeep, if you have 40 or more life, you win the game.\" The \"if\" right after the trigger condition makes it an intervening \"if\" clause (CR 603.4).\n2. Your upkeep begins at 41, so the condition is true and the ability triggers.\n3. In response, Lightning Bolt (\"deals 3 damage to any target\") deals 3 damage to you, and damage to a player makes them lose that much life (CR 120.3a). You go to 38.\n4. As the trigger resolves, the condition is checked again. If it's false, \"the ability is removed from the stack and does nothing\" (CR 603.4, CR 608.2a). The official ruling (2015-08-25) agrees: \"If you don't have 40 or more life at that time, the ability won't do anything.\"\n5. You don't win this turn. The trigger checks again at the start of your next upkeep.\n\n**Watch out for:** Getting back to 40 or more before the trigger resolves would win you the game. You'd need a life-gain response that isn't in the question. The Sovereign's own lifelink only helps if it deals damage before that point.\n\n**Sources:** Felidar Sovereign (Oracle text and 2015-08-25 ruling); Lightning Bolt; CR 603.4, 608.2a, 120.3a (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Felidar Sovereign\",\"Lightning Bolt\"],\"rules\":[\"603.4\",\"104.3a\"],\"search\":\"intervening if\"}",
+        "{\"rules\":[\"120.3a\"]}"
+      ]
+    },
+    {
+      "id": "blood-artist-wrath",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Six times, once for each creature that dies: Blood Artist itself, your other three, and your opponent's two.\n\n**Why:**\n1. Blood Artist: \"Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.\" \"Another creature\" means any creature, on either side.\n2. Wrath of God (\"Destroy all creatures. They can't be regenerated.\") destroys all six at the same time.\n3. \"Dies\" triggers are leaves-the-battlefield abilities, and those \"look back in time\" (CR 603.6c, CR 603.10a). So Blood Artist sees every creature that died with it, including itself. The official ruling (2016-06-08) says: \"If Blood Artist and one or more other creatures die at the same time, its ability will trigger for each of those creatures.\"\n4. One event with several occurrences triggers once per occurrence (CR 603.2c). That makes 6 triggers.\n5. You choose a target player for each trigger as you put it on the stack, and you order them as you like (CR 603.3b). If all six target your opponent, they lose 6 and you gain 6.\n\n**Watch out for:** A creature that doesn't actually die doesn't trigger Blood Artist (for example, an indestructible creature, which isn't in the question). Wrath's \"can't be regenerated\" means regeneration won't save anything here.\n\n**Sources:** Blood Artist (Oracle text and 2016-06-08 ruling); Wrath of God; CR 603.2c, 603.3b, 603.6c, 603.10a (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Blood Artist\",\"Wrath of God\"],\"rules\":[\"603.10a\",\"603.6c\",\"603.2\",\"603.3b\"],\"search\":\"leaves-the-battlefield abilities look back\"}"
+      ]
+    },
+    {
+      "id": "apnap-upkeep",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Sulfuric Vortex resolves first and puts you at 1. Phyrexian Arena resolves second, and you draw and go to 0. You lose the game (unless you have a response that prevents the damage or the life loss).\n\n**Why:**\n1. Both trigger at the beginning of your upkeep. Phyrexian Arena: \"At the beginning of your upkeep, you draw a card and lose 1 life.\" Sulfuric Vortex: \"At the beginning of each player's upkeep, this enchantment deals 2 damage to that player.\" Both go on the stack before anyone gets priority (CR 503.1a, CR 117.3a).\n2. They go on the stack in APNAP order (CR 603.3b, CR 101.4). You're the active player, so your Arena trigger goes on first. Your opponent's Vortex trigger goes on top of it.\n3. The top of the stack resolves first (CR 405.5, CR 608.1). Vortex deals 2 damage to you, and you lose 2 life (CR 120.3a): 3 → 1.\n4. Arena resolves next: you draw a card and lose 1 life: 1 → 0.\n5. State-based actions: \"If a player has 0 or less life, that player loses the game\" (CR 704.5a).\n\n**Watch out for:** The order doesn't change the result: 3 − 2 − 1 = 0 either way. You get priority with both triggers on the stack, but gaining life won't save you, because Vortex says \"If a player would gain life, that player gains no life instead.\" Only something that prevents the Vortex damage or stops the Arena's life loss (not in the question) keeps you alive.\n\n**Sources:** Phyrexian Arena; Sulfuric Vortex; CR 101.4, 117.3a, 120.3a, 405.5, 503.1a, 603.3b, 608.1, 704.5a (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Phyrexian Arena\",\"Sulfuric Vortex\"],\"rules\":[\"101.4\",\"603.3b\",\"704.5a\",\"503.1a\",\"117.3a\"],\"glossary\":[\"APNAP order\"]}",
+        "{\"rules\":[\"405.5\",\"120.3a\",\"608.1\"]}"
+      ]
+    },
+    {
+      "id": "ephemerate-aura-counters",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Your creature comes back as a brand-new creature with no +1/+1 counters, and Pacifism goes to the graveyard. It can't attack this turn, because it's newly under your control (summoning sickness).\n\n**Why:**\n1. Ephemerate: \"Exile target creature you control, then return it to the battlefield under its owner's control.\"\n2. The returned creature is a new object (CR 400.7). Counters don't move between zones; they \"simply cease to exist\" (CR 122.2). Both +1/+1 counters are gone.\n3. Pacifism is no longer attached to anything, so state-based actions put it into its owner's graveyard (CR 704.5m, CR 303.4c). The official ruling (2019-06-14) says: \"Auras attached to the exiled creature will be put into their owners' graveyards... Any counters on the exiled creature will cease to exist.\"\n4. Pacifism no longer stops it from attacking, but the summoning sickness rule does: \"A creature can't attack unless it has been under its controller's control continuously since their most recent turn began\" (CR 302.6). It entered this turn, so it can't attack this turn. It can block on your opponent's turn, and it can attack next turn.\n5. If you cast Ephemerate from your hand, rebound exiles it, and you may cast it again at your next upkeep.\n\n**Watch out for:** Haste (not in the question) would let it attack this turn. If you control a creature someone else owns, Ephemerate returns it \"under its owner's control,\" so you'd lose it.\n\n**Sources:** Ephemerate (Oracle text and 2019-06-14 rulings); Pacifism; CR 122.2, 302.6, 303.4c, 400.7, 704.5m (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Ephemerate\",\"Pacifism\"],\"rules\":[\"400.7\",\"704.5m\",\"302.6\",\"303.4c\",\"122.2\",\"603.6d\"],\"search\":\"summoning sickness\"}"
+      ]
+    },
+    {
+      "id": "doom-blade-flicker",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Doom Blade doesn't resolve. Its only target is gone, so it's removed from the stack and goes to the graveyard with no effect. Your creature comes back as a new object that Doom Blade can't touch.\n\n**Why:**\n1. Cloudshift was cast last, so it resolves first (top of the stack). Cloudshift: \"Exile target creature you control, then return that card to the battlefield under your control.\"\n2. The returned creature is a new object with no relation to the old one (CR 400.7). The official ruling (2018-03-16) says: \"The returned card won't be the target of any spells or abilities that targeted it before.\"\n3. Doom Blade (\"Destroy target nonblack creature.\") checks its target as it tries to resolve. \"A target that's no longer in the zone it was in when it was targeted is illegal,\" and if all targets are illegal, \"the spell or ability doesn't resolve. It's removed from the stack and... put into its owner's graveyard\" (CR 608.2b).\n4. Your opponent can't move Doom Blade to the returned creature. Targets can only be changed by an effect that explicitly says so (CR 115.1).\n\n**Watch out for:** The flicker resets the creature. Any Auras on it go to the graveyard, and its counters disappear (Cloudshift ruling, 2018-03-16). An effect that doesn't target, like a wrath, would still hit the returned creature (same ruling).\n\n**Sources:** Doom Blade; Cloudshift (Oracle text and 2018-03-16 rulings); CR 115.1, 400.7, 608.2b (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Doom Blade\",\"Cloudshift\"],\"rules\":[\"400.7\",\"608.2b\",\"115.1\",\"701.6\"],\"search\":\"new object\"}"
+      ]
+    },
+    {
+      "id": "swords-own-hexproof",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Yes. Hexproof only stops your opponents' spells and abilities, so you can target your own hexproof creature with Swords to Plowshares.\n\n**Why:**\n1. CR 702.11b: \"'Hexproof' on a permanent means 'This permanent can't be the target of spells or abilities your opponents control.'\" You aren't your opponent, so your Swords can target it.\n2. Swords to Plowshares: \"Exile target creature. Its controller gains life equal to its power.\" You control the creature, so you gain the life. The official ruling (2022-12-08) says the amount uses \"the power of the creature from when it was last on the battlefield.\"\n\n**Watch out for:** Shroud is different. It means \"This permanent or player can't be the target of spells or abilities\" (CR 702.18a), so even you couldn't target a creature with shroud.\n\n**Sources:** Swords to Plowshares (Oracle text and 2022-12-08 ruling); CR 702.11b, 702.18a (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Swords to Plowshares\"],\"rules\":[\"702.11b\",\"702.11a\",\"115.1\"],\"glossary\":[\"hexproof\"]}",
+        "{\"rules\":[\"702.18a\",\"702.18b\"]}"
+      ]
+    },
+    {
+      "id": "electrolyze-one-illegal",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Electrolyze still resolves. The creature that's still there takes 1 damage (not 2), and you draw a card.\n\n**Why:**\n1. Electrolyze: \"Electrolyze deals 2 damage divided as you choose among one or two targets. Draw a card.\"\n2. You split the damage when you cast it, and each target must get at least 1 (CR 601.2d). The official ruling (2017-11-17) says: \"You divide the damage as you cast Electrolyze, not as it resolves.\" The split is locked at 1 and 1.\n3. On resolution, the creature that left is an illegal target, because it's \"no longer in the zone it was in when it was targeted.\" Not every target is illegal, so the spell resolves normally, and the illegal target isn't affected (CR 608.2b).\n4. The official ruling (2017-11-17) confirms it: \"If Electrolyze targets two creatures and one becomes an illegal target, the remaining target is dealt 1 damage, not 2. You'll still draw a card.\"\n\n**Watch out for:** If both targets become illegal, Electrolyze doesn't resolve at all, so no damage is dealt and you don't draw a card (ruling 2017-11-17; CR 608.2b).\n\n**Sources:** Electrolyze (Oracle text and 2017-11-17 rulings); CR 601.2d, 608.2b (Comprehensive Rules effective September 25, 2026).",
+      "lookups": [
+        "{\"cards\":[\"Electrolyze\"],\"rules\":[\"608.2b\",\"115.7\",\"601.2d\",\"608.2c\"],\"search\":\"divided damage\"}"
+      ]
+    },
+    {
+      "id": "vapor-snag-hexproof",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. Once their creature has hexproof, Vapor Snag's only target is illegal, so the whole spell doesn't resolve: the creature stays on the battlefield and nobody loses 1 life.\n\n**Why:**\n1. Vapor Snag: \"Return target creature to its owner's hand. Its controller loses 1 life.\" It has one target, and the life loss is part of the same spell.\n2. Blossoming Defense resolves first (it's on top of the stack): \"Target creature you control gets +2/+2 and gains hexproof until end of turn.\" Hexproof means \"This permanent can't be the target of spells or abilities your opponents control\" (CR 702.11b). You're their opponent, so your Vapor Snag can no longer legally target it.\n3. When Vapor Snag tries to resolve, it checks its targets. \"If all its targets, for every instance of the word 'target,' are now illegal, the spell or ability doesn't resolve. It's removed from the stack and... put into its owner's graveyard\" (CR 608.2b). None of its effects happen, including \"Its controller loses 1 life.\"\n4. CR 608.2b's own example (Sorin's Thirst) is the same pattern: when its only target becomes illegal, it doesn't resolve and its controller doesn't gain the life either.\n\n**Watch out for:** If they had responded with a pump that doesn't grant hexproof (or protection), the target would still be legal, so the creature would bounce and they'd lose 1 life as normal (CR 608.2b).\n\n**Sources:** Vapor Snag and Blossoming Defense (Oracle text via Scryfall; no official rulings listed); CR 608.2b, 702.11b, 115.1. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Vapor Snag\",\"Blossoming Defense\"],\"rules\":[\"608.2b\",\"702.11\"],\"refs\":[\"115.1\"],\"search\":\"illegal target\"}"
+      ]
+    },
+    {
+      "id": "legend-rule-dies",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Yes. As soon as you control both, you choose one Thalia to keep and the other goes to your graveyard. Indestructible doesn't save it, and yes, it dies: it went from the battlefield to the graveyard.\n\n**Why:**\n1. Thalia, Guardian of Thraben is a \"Legendary Creature — Human Soldier.\" When the second one resolves, you control two legendary permanents with the same name.\n2. The legend rule is a state-based action: \"If two or more legendary permanents with the same name are controlled by the same player, that player chooses one of them, and the rest are put into their owners' graveyards\" (CR 704.5j). You choose which one stays. It can be either the old one or the new one.\n3. Indestructible only stops destruction: \"A permanent with indestructible can't be destroyed\" (CR 702.12b). The legend rule doesn't destroy anything. It just puts the extra one into the graveyard (CR 704.5j), so indestructible doesn't help. You can still choose to keep the indestructible one, though.\n4. \"The term dies means 'is put into a graveyard from the battlefield'\" (CR 700.4). The Thalia you put into the graveyard dies, so \"when this dies\" or \"whenever a creature dies\" abilities trigger. It isn't destroyed, so abilities that care about destruction don't.\n\n**Watch out for:** The legend rule only cares about legends controlled by the same player. If your opponent controls a Thalia too, nothing happens to either of you (CR 704.5j: \"controlled by the same player\").\n\n**Sources:** Thalia, Guardian of Thraben (Oracle text and rulings via Scryfall); CR 704.5j, 702.12b, 700.4. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Thalia, Guardian of Thraben\"],\"rules\":[\"704.5j\",\"700.4\",\"702.12b\"],\"search\":\"legend rule\",\"glossary\":[\"dies\",\"legend rule\"]}"
+      ]
+    },
+    {
+      "id": "indestructible-zero-toughness",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No, it dies. Darksteel Myr is a 0/1, so -1/-1 makes it -1/0. A creature with 0 or less toughness goes to the graveyard, and indestructible doesn't stop that.\n\n**Why:**\n1. Darksteel Myr is a 0/1 with \"Indestructible (Damage and effects that say 'destroy' don't destroy this creature. If its toughness is 0 or less, it still dies.)\" The reminder text answers this exact situation.\n2. With -1/-1 until end of turn, it's -1/0.\n3. State-based action: \"If a creature has toughness 0 or less, it's put into its owner's graveyard. Regeneration can't replace this event\" (CR 704.5f). That's not destruction.\n4. Indestructible only means it \"can't be destroyed... aren't destroyed by lethal damage, and they ignore the state-based action that checks for lethal damage (see rule 704.5g)\" (CR 702.12b). It does nothing against the 0-toughness check in CR 704.5f.\n\n**Watch out for:** This isn't the same as damage. If you dealt 1 damage to the Myr instead, it would survive, because indestructible ignores the lethal-damage check (CR 704.5g, 702.12b). A -1/-1 effect lowers toughness itself, so it isn't damage.\n\n**Sources:** Darksteel Myr (Oracle text via Scryfall; no official rulings listed); CR 704.5f, 704.5g, 702.12b. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Darksteel Myr\"],\"rules\":[\"704.5f\",\"704.5g\",\"702.12b\"],\"glossary\":[\"indestructible\"]}"
+      ]
+    },
+    {
+      "id": "both-zero-draw",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Nobody wins. The game is a draw. You both go to 0 at the same time, both lose to the same state-based action check, and when all remaining players lose at the same time the game is a draw.\n\n**Why:**\n1. Earthquake: \"Earthquake deals X damage to each creature without flying and each player.\" With X=2 it deals 2 damage to each of you at the same moment, so you're both at 0.\n2. The next time a player would receive priority, the game checks state-based actions and \"performs all applicable state-based actions simultaneously as a single event\" (CR 704.3).\n3. \"If a player has 0 or less life, that player loses the game\" (CR 704.5a). This applies to both of you in that one check.\n4. \"If all the players remaining in a game lose simultaneously, the game is a draw\" (CR 104.4a).\n\n**Watch out for:** In a multiplayer game where a third player is still above 0, only the players at 0 lose and the game goes on. CR 104.4a only gives a draw when all remaining players lose together.\n\n**Sources:** Earthquake (Oracle text and 2004-10-04 ruling via Scryfall); CR 704.3, 704.5a, 104.4a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Earthquake\"],\"rules\":[\"104.4a\",\"704.5a\",\"704.3\"],\"search\":\"draw\"}"
+      ]
+    },
+    {
+      "id": "clone-counters-aura",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Your Clone is a plain copy of the printed card: a 3/3 with only that card's own name, types and abilities. It doesn't get the two +1/+1 counters, Rancor's +2/+0, or Rancor's trample. Rancor stays on the original creature.\n\n**Why:**\n1. Clone: \"You may have this creature enter as a copy of any creature on the battlefield.\"\n2. A copy gets only copiable values, meaning the values \"derived from the text printed on the object\" (plus other copy effects, face-down status, and certain \"as ... enters\" abilities). \"Other effects (including type-changing and text-changing effects), status, counters, and stickers are not copied\" (CR 707.2).\n3. Clone's official ruling (2025-10-02) settles it: \"Clone copies exactly what was printed on the original creature and nothing else... It doesn't copy whether that creature is tapped or untapped, whether it has any counters on it or Auras and Equipment attached to it, or any non-copy effects that have changed its power, toughness, types, color, or so on.\"\n4. Rancor (\"Enchanted creature gets +2/+0 and has trample.\") is still attached to your opponent's creature, so its bonus only applies there. The counters stay on that creature too. Your Clone uses the printed 3/3 with no layer 7c modifications (CR 613.4c, 122.1a).\n5. Any enters abilities the original has trigger for your Clone, and its \"as this enters\" / \"enters with\" abilities work too (Clone ruling, 2025-10-02).\n\n**Watch out for:** If the creature you copied is itself copying something, or is a token, your Clone copies that copied version or the token's original characteristics instead of the printed card (Clone rulings, 2025-10-02; CR 707.3).\n\n**Sources:** Clone (Oracle text and 2025-10-02 rulings) and Rancor (Oracle text) via Scryfall; CR 707.2, 707.3, 613.4c, 122.1a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Clone\",\"Rancor\"],\"rules\":[\"707.2\",\"707.3\",\"613.1\",\"613.4c\",\"122.1\"],\"search\":\"copiable values counters\"}"
+      ]
+    },
+    {
+      "id": "twincast-x",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Your copy has X=5, and yes, you can change its target to your opponent. Your copy resolves first and deals them 5 damage. Then their original Fireball deals 5 to you.\n\n**Why:**\n1. Twincast: \"Copy target instant or sorcery spell. You may choose new targets for the copy.\"\n2. A copy of a spell \"copies both the characteristics of the spell or ability and all decisions made for it, including modes, targets, the value of X, and additional or alternative costs\" (CR 707.10). Twincast's ruling (2021-03-19): \"If the spell that's copied has an X whose value was determined as it was cast, the copy will have the same value of X.\" So X=5, and you pay nothing for it. A copy isn't cast (CR 707.10).\n3. Targets: you may leave a target alone or change it, and \"If the player chooses to change some or all of the targets, the new targets must be legal\" (CR 707.10c). Your opponent is a legal target for Fireball's \"any number of targets,\" so you can make the copy target them. You control the copy, because it was put on the stack under your control (CR 707.10).\n4. Fireball: \"Fireball deals X damage divided evenly, rounded down, among any number of targets.\" The copy has one target, so all 5 damage goes to your opponent. Fireball's ruling (2017-11-17) says the damage is divided as it resolves, among targets that are still legal.\n5. The copy goes on the stack above the original, so it resolves first (Twincast ruling, 2021-03-19). Then the original deals 5 to you.\n\n**Watch out for:** Choosing new targets lets you swap targets, not add more. The copy has the same number of targets as the original (one), so you can't split it among several players. The CR copies \"targets\" as a decision made for the spell (CR 707.10), and 707.10c only lets you change them.\n\n**Sources:** Twincast (Oracle text and 2021-03-19 rulings) and Fireball (Oracle text and 2017-11-17 rulings) via Scryfall; CR 707.10, 707.10c, 107.3a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Twincast\",\"Fireball\"],\"rules\":[\"707.10\",\"707.10c\",\"107.3\",\"601.2f\"],\"search\":\"copy value of X\"}"
+      ]
+    },
+    {
+      "id": "commander-tax-hand",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No extra cost. Commander tax only applies when you cast your commander from the command zone. From your hand it costs just its normal mana cost.\n\n**Why:**\n1. \"A player may cast a commander they own from the command zone. A commander cast from the command zone costs an additional {2} for each previous time the player casting it has cast it from the command zone that game\" (CR 903.8). Both the tax and the count only apply to casts from the command zone.\n2. Casting it from your hand isn't a cast from the command zone, so no tax is added.\n3. It's still your commander in your hand. \"The card retains this designation even when it changes zones\" (CR 903.3). Commander damage and other commander rules still apply to it.\n4. Casting it from your hand doesn't add to the count either. If it later goes back to the command zone, your next cast from there costs {4} extra (two previous casts from the command zone, CR 903.8).\n\n**Watch out for:** When it was bounced, you could have put it into the command zone instead of your hand (CR 903.9b: \"If a commander would be put into its owner's hand or library from anywhere, its owner may put it into the command zone instead\"). If you did that, casting it now costs {4} extra.\n\n**Sources:** CR 903.8, 903.9b, 903.3. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"903.8\",\"903.9\",\"903.3\"],\"search\":\"commander tax\",\"glossary\":[\"commander tax\"]}"
+      ]
+    },
+    {
+      "id": "commander-damage-zones",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Yes, you lose. 12 + 9 = 21 combat damage from the same commander, and commander damage keeps adding up across zone changes and recasts.\n\n**Why:**\n1. \"A player who's been dealt 21 or more combat damage by the same commander over the course of the game loses the game. (This is a state-based action.)\" (CR 903.10a, also CR 704.6c). The count is \"over the course of the game,\" not per time it's on the battlefield.\n2. Going to the command zone and being recast doesn't make it a different commander. The commander designation \"is not a characteristic of the object represented by the card; rather, it is an attribute of the card itself. The card retains this designation even when it changes zones\" (CR 903.3). The usual \"new object\" rule for zone changes (CR 400.7) doesn't reset this. It's the same commander, so both hits count toward one total.\n3. 12 + 9 = 21. When state-based actions are next checked after the second combat damage step, you lose the game (CR 704.6c). This doesn't depend on your life total.\n\n**Watch out for:** Only combat damage counts. Damage from that commander's abilities or from fights doesn't add to the total (CR 903.10a: \"combat damage\"). In Brawl, the 21-damage rule isn't used at all (CR 903.12h).\n\n**Sources:** CR 903.10a, 704.6c, 903.3, 903.12h, 400.7. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"903.10a\",\"704.6c\",\"903.3\",\"903.9\",\"400.7\"],\"search\":\"commander damage\",\"glossary\":[\"commander damage\"]}"
+      ]
+    },
+    {
+      "id": "stolen-commander-damage",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Yes. It's still player A's commander, so the combat damage it dealt you counts as commander damage from **A's commander**. Who controls it doesn't matter. That damage adds to the same running total as any damage it dealt you while A controlled it.\n\n**Why:**\n1. Control Magic: \"You control enchanted creature.\" It changes the creature's controller and nothing else. It doesn't make the creature stop being a commander.\n2. Being a commander isn't a characteristic of the object. CR 903.3 calls it \"an attribute of the card itself\", and \"the card retains this designation even when it changes zones.\" Changing controllers changes nothing here.\n3. CR 903.10a (also 704.6c): \"A player who's been dealt 21 or more combat damage by the same commander over the course of the game loses the game.\" The rule counts damage per commander, not per player who controls it. So you keep one tally for A's commander, and every point of combat damage it deals you goes on that tally, whoever is attacking with it.\n4. It's a state-based action (CR 903.10a). If that tally reaches 21, you lose the next time state-based actions are checked.\n\n**Watch out for:** CR 903.10a makes no exception for the owner. If B attacks **player A** with A's own stolen commander, that damage also counts toward A's 21 from that commander. Also, a permanent that is only *copying* a commander is not a commander (CR 903.3 example), so a Clone of it deals no commander damage.\n\n**Sources:** Control Magic (Oracle); CR 903.3, 903.10, 903.10a, 704.6c, 510.2. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Control Magic\"],\"rules\":[\"903.10a\",\"704.6c\",\"903.3\",\"510.2\"],\"search\":\"combat damage dealt by a commander\",\"refs\":[\"903.10a\"],\"glossary\":[\"commander\"]}",
+        "{\"search\":\"commander damage controller\",\"rules\":[\"903.10\"]}"
+      ]
+    },
+    {
+      "id": "color-identity-hybrid",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. Figure of Destiny's color identity is red **and white**. That's true no matter how you plan to pay for it, so it can't go in a deck whose commander is mono-red.\n\n**Why:**\n1. Figure of Destiny costs {R/W}, and every ability also costs {R/W} (\"{R/W}: This creature becomes a Kithkin Spirit...\", and so on). Scryfall lists its color identity as RW.\n2. CR 903.4: \"The color identity of a card is the color or colors of any mana symbols in that card's mana cost or rules text...\" CR 107.4e: \"A hybrid mana symbol is all of its component colors.\" So each {R/W} adds both red and white.\n3. CR 903.5c: \"A card can be included in a Commander deck only if every color in its color identity is also found in the color identity of the deck's commander.\" White is not in a mono-red commander's identity, so the card isn't allowed.\n4. How you'd pay is irrelevant. Color identity is set before the game begins (CR 903.4a) and depends on the symbols printed on the card, not on the mana you spend.\n\n**Watch out for:** The same applies to hybrid symbols that appear only in rules text, which still count (CR 903.4). Reminder text is the only text ignored (CR 903.4c).\n\n**Sources:** Figure of Destiny (Oracle, color identity RW); CR 903.4, 903.4a, 903.4c, 903.5c, 107.4e, 202.2d. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Figure of Destiny\"],\"rules\":[\"903.4\",\"903.5c\",\"202.2\",\"107.4e\"],\"search\":\"color identity hybrid\",\"refs\":[\"903.4\"],\"glossary\":[\"color identity\",\"hybrid mana symbol\"]}"
+      ]
+    },
+    {
+      "id": "thalia-baral-bolt",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Lightning Bolt costs you just **{R}**. Thalia adds {1}, then Baral takes that {1} away.\n\n**Why:**\n1. Start with the mana cost: Lightning Bolt is {R} (CR 601.2f).\n2. Add the cost increases. Thalia, Guardian of Thraben: \"Noncreature spells cost {1} more to cast.\" This hits every noncreature spell, yours included (Thalia ruling, 2021-11-19). Total so far: {1}{R}.\n3. Apply the cost reductions. Baral, Chief of Compliance: \"Instant and sorcery spells you cast cost {1} less to cast.\" Baral's reduction \"applies only to generic mana\" (Baral ruling, 2021-03-19), and CR 118.7a agrees. Thalia's increase put a generic {1} in the cost, so Baral can remove it. Total: {R}.\n4. CR 601.2f sets this order: \"the mana cost or alternative cost..., plus all additional costs and cost increases, and minus all cost reductions.\" Thalia's and Baral's rulings both say the same thing: \"start with the mana cost..., add any cost increases, then apply any cost reductions.\"\n\n**Watch out for:** Baral's reduction never gets Bolt below {R}, because generic reductions can't touch colored mana (CR 118.7a). Without Thalia, Bolt still costs {R}. Baral also only affects spells **you** cast, so your opponent's own noncreature spells still cost them {1} more.\n\n**Sources:** Thalia, Guardian of Thraben; Baral, Chief of Compliance; Lightning Bolt (Oracle + rulings); CR 601.2f, 118.7, 118.7a. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Thalia, Guardian of Thraben\",\"Baral, Chief of Compliance\",\"Lightning Bolt\"],\"rules\":[\"601.2f\",\"118.7\"],\"search\":\"cost increases reductions total cost\",\"glossary\":[\"total cost\"]}"
+      ]
+    },
+    {
+      "id": "omniscience-x",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** You can cast Stroke of Genius for free with Omniscience, but X **must be 0**, so you draw nothing. To get X=10 you have to cast it the normal way and pay {10}{2}{U}.\n\n**Why:**\n1. Omniscience: \"You may cast spells from your hand without paying their mana costs.\" That's an alternative cost (CR 118.9, which lists \"You may cast [this object] without paying its mana cost\" as one).\n2. Stroke of Genius is {X}{2}{U}: \"Target player draws X cards.\" Its text doesn't define X.\n3. CR 107.3b: if a spell has {X} in its mana cost, X isn't defined by its text, and an effect lets you cast it \"while paying neither its mana cost nor an alternative cost that includes X, then the only legal choice for X is 0.\"\n4. Official Omniscience ruling (2018-07-13): \"If a spell has {X} in its mana cost, you must choose 0 as the value of X when casting it without paying its mana cost.\"\n5. You also can't combine Omniscience with paying X separately. Paying the mana cost is exactly what Omniscience skips, and you can only use one alternative cost (CR 118.9a, 601.2b).\n\n**Watch out for:** This is different from cost *reductions*. CR 107.3b \"doesn't apply to effects that only reduce a cost, even if they reduce it to zero.\" With a reducer in place of Omniscience (a different card, not in this question), you could still choose a big X.\n\n**Sources:** Omniscience (Oracle + ruling 2018-07-13); Stroke of Genius (Oracle); CR 107.3b, 118.9, 118.9a, 601.2b, 601.2f. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Omniscience\",\"Stroke of Genius\"],\"rules\":[\"107.3b\",\"601.2b\",\"601.2f\",\"118.9\"],\"search\":\"without paying its mana cost X\",\"refs\":[\"107.3b\"],\"glossary\":[\"alternative cost\"]}"
+      ]
+    },
+    {
+      "id": "force-of-will-thalia",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Yes, you can still use the alternative cost. With Thalia out you pay **1 life, exile a blue card from your hand, and pay {1}**.\n\n**Why:**\n1. Force of Will: \"You may pay 1 life and exile a blue card from your hand rather than pay this spell's mana cost.\" That's an alternative cost (CR 118.9). Thalia doesn't stop you from choosing it.\n2. Thalia, Guardian of Thraben: \"Noncreature spells cost {1} more to cast.\" Force of Will is an instant, and Thalia hits every noncreature spell, including yours (Thalia ruling, 2021-11-19).\n3. CR 118.9d: \"If an alternative cost is being paid to cast a spell, any additional costs, cost increases, and cost reductions that affect that spell are applied to that alternative cost.\"\n4. CR 601.2f: the total cost is \"the mana cost or alternative cost..., plus all additional costs and cost increases.\" Official Force of Will ruling (2022-12-08): \"start with the mana cost or alternative cost you're paying (such as the alternative cost of Force of Will), add any cost increases, then apply any cost reductions.\"\n5. So the total is 1 life + exile a blue card + {1}. If you can't pay the {1}, you can't cast it that way.\n\n**Watch out for:** Force of Will's mana value stays 5 no matter what you paid (Force of Will ruling, 2022-12-08; CR 118.9c). The {1} from Thalia is generic, so any color of mana pays it.\n\n**Sources:** Force of Will; Thalia, Guardian of Thraben (Oracle + rulings); CR 118.9, 118.9c, 118.9d, 601.2b, 601.2f. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Force of Will\",\"Thalia, Guardian of Thraben\"],\"rules\":[\"118.9\",\"118.9d\",\"601.2f\",\"601.2b\"],\"search\":\"alternative cost additional cost increase\",\"glossary\":[\"alternative cost\"]}"
+      ]
+    },
+    {
+      "id": "mana-ability-response",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. Birds of Paradise's ability is a mana ability. It doesn't use the stack and resolves the moment it's activated, so there's nothing to respond to. By the time you get priority, they already have the mana. You can Bolt the Birds then, but they keep the mana and their spell.\n\n**Why:**\n1. Birds of Paradise: \"{T}: Add one mana of any color.\" It has no target and adds mana, so it's a mana ability (CR 605.1a).\n2. CR 605.3b: \"An activated mana ability doesn't go on the stack, so it can't be targeted, countered, or otherwise responded to. Rather, it resolves immediately after it is activated.\"\n3. While casting a spell, they activate mana abilities partway through casting it (CR 601.2g, 605.3a). No player gets priority in the middle of casting.\n4. You first get priority after the spell is on the stack and paid for (CR 117.3c). Bolting Birds then doesn't undo the payment. Once an ability has been activated it doesn't depend on its source anymore (CR 113.7a).\n\n**Watch out for:** To keep the mana from ever existing, you have to kill Birds *before* they tap it, at a moment when you have priority (for example, during their upkeep). If they tap it with no spell to cast, the mana sits in their pool until the end of that step or phase (CR 106.4). Killing Birds won't take that mana away either.\n\n**Sources:** Birds of Paradise; Lightning Bolt (Oracle); CR 605.1a, 605.3a, 605.3b, 601.2g, 117.3c, 113.7a, 106.4. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Birds of Paradise\",\"Lightning Bolt\"],\"rules\":[\"605.1a\",\"605.3\",\"605.3a\",\"605.3b\",\"117.1d\"],\"search\":\"mana ability doesn't use the stack\",\"glossary\":[\"mana ability\"]}",
+        "{\"rules\":[\"106.4\",\"601.2g\",\"117.3c\"]}"
+      ]
+    },
+    {
+      "id": "deathtouch-trample",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** You can trample over **4**. With deathtouch, 1 damage counts as lethal to the 4/4, so you assign 1 to the blocker and 4 to the defending player. You're also allowed to put more on the blocker if you want.\n\n**Why:**\n1. Trample, CR 702.19b: you \"first assign damage to the creature(s) blocking it. Once all those blocking creatures are assigned lethal damage, any excess damage is assigned as its controller chooses among those blocking creatures and the player, planeswalker, or battle the creature is attacking.\"\n2. Deathtouch, CR 702.2c: \"Any nonzero amount of combat damage assigned to a creature by a source with deathtouch is considered to be lethal damage for the purposes of determining if excess damage is being dealt.\"\n3. So 1 damage on the 4/4 is lethal damage assigned. The other 4 is excess and can go to the player.\n4. The damage is dealt, and the 1 deathtouch damage destroys the 4/4 when state-based actions are next checked (CR 701.8b).\n\n**Watch out for:** Lethal damage is judged on assignment only, \"not any abilities or effects that might change the amount of damage that's actually dealt\" (CR 702.19b). So you still need only 1 on the blocker even if that damage would be prevented. Also, if your creature is attacking a planeswalker or battle, the excess goes to that permanent, not the player (CR 702.19b).\n\n**Sources:** CR 702.19b, 702.2c, 701.8b, 510.1c. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"702.19b\",\"702.19c\",\"702.2c\",\"510.1c\",\"702.19e\"],\"search\":\"deathtouch trample lethal damage\",\"refs\":[\"702.19c\"],\"glossary\":[\"lethal damage\",\"deathtouch\",\"trample\"]}"
+      ]
+    },
+    {
+      "id": "blocker-removed",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. Your 3/3 stays **blocked** even though the blocker is gone. With no creature blocking it, it assigns no combat damage, so the defending player takes nothing.\n\n**Why:**\n1. Sacrificing the blocker makes it leave the battlefield, which removes it from combat (CR 506.4).\n2. CR 509.1h: once blockers are declared, your attacker \"becomes a blocked creature... A creature remains blocked even if all the creatures blocking it are removed from combat.\"\n3. CR 510.1c: \"A blocked creature assigns its combat damage to the creatures blocking it. If no creatures are currently blocking it (if, for example, they were destroyed or removed from combat), it assigns no combat damage.\"\n\n**Watch out for:** Trample (not in this question) changes this. CR 702.19d: \"If an attacking creature with trample... is blocked, but there are no creatures blocking it when damage is assigned, its damage is assigned to the defending player and/or planeswalker as though all blocking creatures have been assigned lethal damage.\"\n\n**Sources:** CR 506.4, 509.1h, 510.1c, 702.19d. Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"509.1h\",\"506.4\",\"510.1c\",\"702.19e\",\"506.4a\"],\"search\":\"blocked creature remains blocked removed from combat\",\"glossary\":[\"blocked creature\"]}",
+        "{\"rules\":[\"702.19d\"]}"
+      ]
+    },
+    {
+      "id": "double-strike-trample",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** The defending player takes **6** damage: 2 in the first-strike damage step (after 2 goes to the blocker), then all 4 in the regular damage step, because the blocker is gone and trample lets the damage go through.\n\n**Why:**\n1. **First combat damage step.** Because your creature has double strike, only first strikers and double strikers deal damage now (CR 510.4, CR 702.4b). With trample you have to assign lethal damage to the blocker first, and you can assign the rest to the player (CR 702.19b). Lethal for a 2/2 is 2, so you assign 2 to the 2/2 and 2 to the player.\n2. **State-based actions.** Before anyone gets priority, the 2/2 has damage equal to its toughness and is destroyed (CR 704.5g, CR 704.3). It never deals its own damage, because it would only have dealt damage in the second step.\n3. **Second combat damage step.** Your creature still has double strike, so it deals damage again (CR 702.4b). It's still \"blocked\", but nothing is blocking it now. Normally that means it would deal no damage (CR 510.1c), but trample overrides that: \"its damage is assigned to the defending player... as though all blocking creatures have been assigned lethal damage\" (CR 702.19d). All 4 goes to the player.\n4. Total: 2 + 4 = **6**.\n\n**Watch out for:** Without trample, the defending player would take **0**. In the second step a blocked creature with no blockers left assigns no combat damage (CR 510.1c). And if the blocker survives the first step (for example, it's indestructible, which isn't in the question), the 2 damage already marked on it still counts as lethal in the second step (CR 702.19b), so all 4 can still go to the player.\n\n**Sources:** CR 510.1c, 510.4, 702.4b, 702.19b, 702.19d, 704.3, 704.5g; Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"702.4\",\"702.19\",\"510.1\",\"510.2\",\"510.4\"],\"search\":\"double strike trample\",\"glossary\":[\"double strike\",\"trample\",\"lethal damage\"]}",
+        "{\"rules\":[\"704.5g\",\"704.3\",\"120.4a\"]}"
+      ]
+    },
+    {
+      "id": "split-second",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** You can tap your artifact for mana in response, but the artifact is still destroyed. You can sacrifice it in response only if that sacrifice ability is itself a **mana ability**. Any other sacrifice ability can't be activated while Krosan Grip is on the stack.\n\n**Why:**\n1. Krosan Grip: \"Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.) Destroy target artifact or enchantment.\" Split second is defined in CR 702.61a.\n2. You still get priority. Your options are limited to mana abilities and special actions (CR 702.61b; official ruling 2021-03-19).\n3. **Tapping for mana:** \"{T}: Add ...\" is a mana ability. It doesn't target, it can add mana, and it isn't a loyalty ability (CR 605.1a). So you can activate it (CR 702.61b). It resolves immediately (CR 605.3b), but it doesn't save the artifact: Krosan Grip then resolves and destroys it.\n4. **Sacrificing it:** It depends on what the ability does.\n   - If the sacrifice ability adds mana (like \"Sacrifice this: Add one mana of any color\"), it's a mana ability and you can activate it. The artifact leaves the battlefield, Krosan Grip's only target is illegal, and Grip doesn't resolve (CR 608.2b).\n   - If the sacrifice ability does anything else (draws, deals damage, searches, and so on), it isn't a mana ability. You can't activate it while Grip is on the stack (CR 702.61a).\n\n**Watch out for:** Split second doesn't stop **triggered** abilities. If sacrificing or tapping the artifact triggers something, that trigger still goes on the stack and resolves as normal (CR 702.61b; official ruling 2021-03-19). Also, a mana ability whose cost or effect moves a card to or from a library isn't a mana ability (CR 605.1a).\n\n**Sources:** Krosan Grip (Oracle text and rulings, 2021-03-19); CR 605.1a, 605.3b, 608.2b, 702.61a-b; Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Krosan Grip\"],\"rules\":[\"702.61\",\"605.1\",\"605.3\",\"117.1\"],\"search\":\"split second\",\"glossary\":[\"split second\",\"mana ability\"]}",
+        "{\"rules\":[\"608.2b\",\"116.2\"]}"
+      ]
+    },
+    {
+      "id": "day-night",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** Nothing changes during your turn. In the untap step of the **next** turn, the game sees that the previous turn's active player (you) cast two or more spells, and **night becomes day**. Daybound/nightbound cards then transform back to their day faces.\n\n**Why:**\n1. Day and night are checked only once per turn, as the second part of the untap step: \"If it's night and the previous turn's active player cast two or more spells during that turn, it becomes day\" (CR 502.2, CR 731.2b). The check happens right after phasing (CR 703.4b) and doesn't use the stack.\n2. So casting your second spell doesn't flip it to day on the spot. It stays night for the rest of your turn.\n3. In the next turn's untap step, the check looks back at your turn, sees two spells, and it becomes day (CR 731.2b).\n4. As it becomes day, each permanent that is back face up with nightbound transforms to its daybound face (CR 702.145e, 702.145f).\n\n**Watch out for:** Only spells cast by the **previous turn's active player** count. Spells your opponents cast during your turn don't count toward your two. In multiplayer games using the shared team turns option, any player on the active team casting two or more spells is enough (CR 731.2b).\n\n**Sources:** CR 502.2, 702.145e-f, 703.4b, 731.1-731.2; Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"726\",\"702.145\"],\"search\":\"night day spells\",\"glossary\":[\"day\",\"night\",\"daybound\",\"nightbound\"]}",
+        "{\"rules\":[\"731\",\"502.2\",\"703.4b\"]}"
+      ]
+    },
+    {
+      "id": "monarch-concedes",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** **Player B**, the active player, becomes the monarch as soon as C concedes.\n\n**Why:**\n1. Conceding takes effect immediately: \"A player who concedes leaves the game immediately\" (CR 104.3a).\n2. CR 725.4: \"If the monarch leaves the game, the active player becomes the monarch at the same time as that player leaves the game.\" It's B's turn, so B becomes the monarch. This happens as C leaves, not as a trigger and not on the stack.\n3. Because B is the monarch at the beginning of B's own end step, B draws a card then: \"At the beginning of the monarch's end step, that player draws a card\" (CR 725.2).\n\n**Watch out for:** If the monarch concedes during **their own** turn, the active player is the one leaving. Then \"the next player in turn order who can become the monarch becomes the monarch\" (CR 725.4). So it would go to the player after C, not to B.\n\n**Sources:** CR 104.3a, 725.2, 725.4; Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"724\",\"800.4\"],\"search\":\"monarch leaves the game\",\"glossary\":[\"monarch\"]}",
+        "{\"rules\":[\"725\",\"104.3a\",\"800.4j\"]}"
+      ]
+    },
+    {
+      "id": "initiative-damage",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** You take the initiative, and that immediately makes you venture into Undercity. If you aren't in a dungeon yet, you enter Undercity, and its first room (Secret Entrance) lets you search for a basic land.\n\n**Why:**\n1. The initiative has an inherent trigger: \"Whenever one or more creatures a player controls deal combat damage to the player who has the initiative, the controller of those creatures takes the initiative\" (CR 726.2). Your opponent controls this trigger, because it's controlled by the player who had the initiative when it triggered (CR 726.2). It uses the stack.\n2. When it resolves, you take the initiative and your opponent stops having it (CR 726.3).\n3. Taking it triggers another inherent ability, this one controlled by you: \"Whenever a player takes the initiative, that player ventures into Undercity\" (CR 726.2).\n4. When that trigger resolves:\n   - If you don't have a dungeon in the command zone, you put Undercity there and put your venture marker on its top room (CR 701.49d, CR 309.4a). That triggers the room ability, \"Secret Entrance — Search your library for a basic land card, reveal it, put it into your hand, then shuffle\" (CR 309.4c).\n   - If you're already in Undercity, you move to the next room instead (CR 701.49b).\n5. From now on you also venture into Undercity at the beginning of each of your upkeeps while you keep the initiative (CR 726.2).\n\n**Watch out for:** The trigger says \"one or more creatures\", so several creatures connecting at once still gives only **one** venture. And if you're already in a different dungeon, \"venture into Undercity\" just advances you in that dungeon (CR 701.49d).\n\n**Sources:** Undercity // The Initiative (Oracle text); CR 309.4a, 309.4c, 701.49b, 701.49d, 726.2, 726.3; Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"rules\":[\"725\",\"701.49\",\"309\"],\"search\":\"initiative undercity\",\"glossary\":[\"initiative\",\"venture into the dungeon\"]}",
+        "{\"cards\":[\"Undercity\"],\"rules\":[\"603.3b\"]}"
+      ]
+    },
+    {
+      "id": "mana-crypt-commander",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** No. **Mana Crypt is banned in Commander.**\n\n**Why:**\n1. Card data lists Mana Crypt as \"Banned: legacy, commander, oathbreaker, duel, predh\" (it's restricted in Vintage).\n2. I confirmed this against the official source. Mana Crypt was banned in Commander in the [Commander Banned and Restricted Announcement of September 23, 2024](https://magic.wizards.com/en/news/announcements/commander-banned-and-restricted-announcement-september-23-2024), along with Dockside Extortionist, Jeweled Lotus and Nadu, Winged Wisdom.\n3. The [April 22, 2025 update](https://magic.wizards.com/en/news/announcements/commander-bans-and-restrictions-april-22-2025) unbanned other cards but kept Mana Crypt banned. The later [February 9, 2026 update](https://magic.wizards.com/en/news/announcements/commander-banned-and-restricted-february-9-2026) didn't unban it either.\n4. The official [Banned & Restricted list](https://magic.wizards.com/en/banned-restricted-list) still shows Mana Crypt among Commander's banned cards.\n\n**Watch out for:** Mana Crypt is also banned in Oathbreaker and Duel Commander. Being colorless doesn't help: the color identity rules (CR 903.4, 903.5c) only decide which legal cards fit a deck, and a banned card isn't legal in any deck.\n\n**Sources:** Mana Crypt (card data and legality); Commander B&R announcements of September 23, 2024, April 22, 2025 and February 9, 2026; official Banned & Restricted list (magic.wizards.com); CR 903.4, 903.5c; Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Mana Crypt\"],\"legality\":true,\"rules\":[\"903\"],\"search\":\"commander banned\"}"
+      ]
+    },
+    {
+      "id": "missed-trigger-competitive",
+      "grade": "PASS",
+      "problems": [
+        "Minor: presented in quotes as IPG text, \"Players are never responsible for remembering their opponent's triggers\" -- the IPG 2.1 body actually says \"Opponents are not required to point out triggered abilities that they do not control, though they may do so if they wish.\" Substance is right, wording is not a verbatim quote."
+      ],
+      "answer": "**Ruling:** No, you don't have to tell them, and you get no penalty for staying quiet. Their missed trigger is a Game Play Error — Missed Trigger, but because the trigger would have helped them, its penalty is **none**.\n\n**Why:**\n1. **Your obligation:** The IPG says \"Players are never responsible for remembering their opponent's triggers\" (IPG 2.1, Missed Trigger). You may point it out if you want to, but you don't have to.\n2. **The limit:** You can stay silent, but you can't trick them into missing it (IPG 2.1). Don't lie, don't make misleading statements, and answer honestly if they ask you about the game state.\n3. **When it counts as missed:** A trigger is missed only once its controller fails to show they're aware of it by the first time it would affect the game in a visible way. The exact point depends on the kind of trigger. For example, a trigger with targets or choices must be announced before its controller next passes priority (IPG 2.1).\n4. **Penalty:** The base penalty for Missed Trigger is none. It goes up to a Warning only when the trigger is usually **detrimental** to its controller (or it's a symmetrical trigger that's detrimental to the player who missed it) (IPG 2.1). A trigger that helps its controller doesn't qualify.\n5. **If a judge gets involved:** If the trigger was missed before the current phase of the previous turn, or its effect would already have expired, play continues without it. Otherwise, **you** (as the opponent) choose whether the trigger is added to the stack now (IPG 2.1).\n\n**Watch out for:** This only covers triggers **they** control. Your own triggers are your responsibility, including ones that help you. And if you think something was missed on purpose, or you're not sure, call a judge rather than settling it between yourselves. The Head Judge makes the final call.\n\n**Sources:** Infraction Procedure Guide 2.1, Game Play Error — Missed Trigger ([annotated IPG 2.1, blogs.magicjudges.org](https://blogs.magicjudges.org/rules/ipg2-1/)).",
+      "lookups": []
+    },
+    {
+      "id": "unknown-card",
+      "grade": "PASS",
+      "problems": [],
+      "answer": "**Ruling:** I can't find a card named **Glimmerwing Sovereign** in the card database, so I can't give a ruling on it. Please check the exact name, or read me its Oracle text. It may be misspelled, unreleased, or a custom card. What I can tell you is what Blood Moon does, which settles most cases once we know what the card is.\n\n**Why:**\n1. Blood Moon's Oracle text is \"Nonbasic lands are Mountains.\" It affects **nonbasic lands** and nothing else.\n2. **If Glimmerwing Sovereign isn't a land** (for example, a creature): Blood Moon does nothing to it.\n3. **If it is a nonbasic land** (or a land creature): Blood Moon sets its land subtype to Mountain. CR 305.7 says it then \"loses all abilities generated from its rules text, its old land types, and any copiable effects affecting that land, and it gains\" \"{T}: Add {R}.\" Blood Moon's effect applies in layer 4 (type-changing; CR 613.1d).\n   - Abilities that **other effects** gave it are kept (CR 305.7).\n   - Its card types (such as creature) and supertypes (such as legendary or snow) stay (CR 305.7). Its name stays too (official ruling 2020-08-07).\n   - \"When this enters\" triggers and \"enters tapped\" or \"as this enters\" abilities are lost before they can apply (official rulings 2020-08-07).\n\n**Watch out for:** If it's a land that some other effect turns into a creature, that effect keeps working, because Blood Moon doesn't remove card types (CR 305.7).\n\n**Sources:** Blood Moon (Oracle text and rulings, 2020-08-07); Glimmerwing Sovereign NOT FOUND (unverified); CR 305.7, 613.1d; Comprehensive Rules effective September 25, 2026.",
+      "lookups": [
+        "{\"cards\":[\"Glimmerwing Sovereign\",\"Blood Moon\"],\"rules\":[\"305.7\",\"613.1\"],\"search\":\"Glimmerwing Sovereign\"}",
+        "{\"cards\":[\"Glimmerwing\"],\"search\":\"Glimmerwing\"}"
+      ]
+    }
+  ]
+}
