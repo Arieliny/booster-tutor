@@ -443,7 +443,9 @@ Why: Ari wants to hand the counter to his friend group. Decided 2026-11-02, revi
   "Signed in as … / Sign out" once in. Same accounts, invites and per-guest judge limits as
   Booster Tutor (shared Upstash store).
 - **Settings is its own page** (gear top-right on the home screen): the tracker switches, then
-  the judge section. The home screen is just the table, New game and a first-visit welcome.
+  the counter switches (which player counters the ⋯ menu offers; one already on a card stays),
+  then the judge section. The home screen is just the table, New game and a first-visit
+  welcome, centred on the screen both ways (2026-11-03).
 - **Second entry, same repo, its own Vercel project.** `src/lib/app-flavor.ts` reads `VITE_APP`;
   `main.tsx` loads `TableApp` (LifeTutor) or `BoosterTutor` (AuthGate + App); `vite.config.ts`
   picks the manifest and icons (`public/lifetutor-*.png`) the same way. Locally

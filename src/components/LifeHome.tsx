@@ -1,23 +1,38 @@
 import { useState } from "react";
 import { MAX_PLAYERS, MIN_PLAYERS, STARTING_LIFE, colorHex, untouched, type Game } from "../lib/life";
-import { TRACKERS, type LifeSettings, type TrackerKey } from "../lib/life-settings";
+import { CARD_COUNTERS, TRACKERS, type LifeSettings, type TrackerKey } from "../lib/life-settings";
 import { Icon, type IconName } from "./Icon";
 
 const HEAD = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
 
-/** The page frame both screens share: a top row, a narrow column, the fan-content line at the foot. */
-function Page({ bar, children }: { bar: React.ReactNode; children: React.ReactNode }) {
+/**
+ * The page frame both screens share: a top row, a narrow column, the
+ * fan-content line at the foot. `center` puts the column in the middle of the
+ * screen, both ways (the home screen); a column taller than the screen just scrolls.
+ */
+function Page({ bar, center, children }: { bar: React.ReactNode; center?: boolean; children: React.ReactNode }) {
+  const fan = (
+    <p className="text-center text-[11px] text-(--color-text-dim)">
+      Unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved/endorsed by Wizards.
+    </p>
+  );
   return (
     <div className="absolute inset-0 z-40 overflow-y-auto overscroll-contain bg-(--color-bg) text-(--color-text)" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-      <div className="mx-auto w-full max-w-sm px-4 pb-10">
-        <div className="flex h-14 items-center gap-1">{bar}</div>
-        <div className="space-y-7 pt-2">
-          {children}
-          <p className="text-center text-[11px] text-(--color-text-dim)">
-            Unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved/endorsed by Wizards.
-          </p>
+      {center ? (
+        <div className="mx-auto flex min-h-full w-full max-w-sm flex-col px-4 pb-6">
+          <div className="flex h-14 items-center gap-1">{bar}</div>
+          <div className="my-auto space-y-7 py-6 text-center">{children}</div>
+          {fan}
         </div>
-      </div>
+      ) : (
+        <div className="mx-auto w-full max-w-sm px-4 pb-10">
+          <div className="flex h-14 items-center gap-1">{bar}</div>
+          <div className="space-y-7 pt-2">
+            {children}
+            {fan}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -55,6 +70,7 @@ export function LifeHome({
   const inProgress = !untouched(game);
   return (
     <Page
+      center
       bar={
         <>
           {onExit && (
@@ -62,13 +78,14 @@ export function LifeHome({
               <Icon name="back" className="h-6 w-6" />
             </button>
           )}
-          <h1 className="flex-1 font-life text-2xl font-black">{title}</h1>
-          <button type="button" onClick={onOpenSettings} aria-label="Settings" className="-mr-2 rounded-full p-2 text-(--color-text-dim) hover:bg-white/10">
+          <button type="button" onClick={onOpenSettings} aria-label="Settings" className="-mr-2 ml-auto rounded-full p-2 text-(--color-text-dim) hover:bg-white/10">
             <Icon name="gear" className="h-6 w-6" />
           </button>
         </>
       }
     >
+      <h1 className="font-life text-3xl font-black">{title}</h1>
+
       {welcome}
 
       {/* The table is always a tap away; a game nobody has touched yet is just "back". */}
@@ -77,11 +94,13 @@ export function LifeHome({
         <button
           type="button"
           onClick={onResume}
-          className="flex w-full items-center gap-3 rounded-2xl border border-(--color-accent) bg-(--color-accent)/15 px-4 py-3.5 text-left hover:bg-(--color-accent)/25"
+          className="flex w-full items-center gap-3 rounded-2xl border border-(--color-accent) bg-(--color-accent)/15 px-4 py-3.5 hover:bg-(--color-accent)/25"
         >
+          {/* Balances the play icon, so the words sit in the middle. */}
+          <span className="h-6 w-6 shrink-0" aria-hidden="true" />
           <span className="min-w-0 flex-1">
             <span className="block text-base font-semibold">{inProgress ? "Resume game" : "Back to the table"}</span>
-            <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-(--color-text-dim)">
+            <span className="mt-1 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-sm text-(--color-text-dim)">
               {game.players.map((p, i) => (
                 <span key={i} className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-full" style={{ background: colorHex(p.color) }} />
@@ -101,6 +120,7 @@ export function LifeHome({
           customLife={settings.customLife}
           onCustomLife={(n) => onSettings((s) => ({ ...s, customLife: n }))}
           onStart={onStart}
+          center
         />
       </section>
     </Page>
@@ -155,6 +175,33 @@ export function LifeSettingsPage({
         </div>
       </section>
 
+      <section className="space-y-2">
+        <div className={HEAD}>Counters</div>
+        <p className="text-sm text-(--color-text-dim)">Which counters each player's menu offers. One already on a card stays until it's removed.</p>
+        <div className="grid grid-cols-2 gap-1.5">
+          {CARD_COUNTERS.map((c) => {
+            const on = settings.counters[c.key] !== false;
+            return (
+              <button
+                key={c.key}
+                type="button"
+                role="switch"
+                aria-checked={on}
+                onClick={() => onSettings((s) => ({ ...s, counters: { ...s.counters, [c.key]: !on } }))}
+                className={
+                  "flex min-w-0 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
+                  (on ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5")
+                }
+              >
+                {c.icon && <Icon name={c.icon} className="h-5 w-5 shrink-0" />}
+                <span className="min-w-0 flex-1 leading-tight">{c.label}</span>
+                {on && <Icon name="check" className="h-4 w-4 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       {more}
     </Page>
   );
@@ -195,12 +242,16 @@ export function NewGameForm({
   customLife,
   onCustomLife,
   onStart,
+  center,
 }: {
   game: Game;
   customLife: number;
   onCustomLife: (n: number) => void;
   onStart: (count: number, start: number) => void;
+  /** Chips in the middle of each row (the home screen). */
+  center?: boolean;
 }) {
+  const row = "flex flex-wrap items-center gap-1.5" + (center ? " justify-center" : "");
   const [count, setCount] = useState(game.players.length);
   // A game at an unusual total was started with a custom number: offer that again.
   const [custom, setCustom] = useState(!STARTING_LIFE.includes(game.start));
@@ -219,7 +270,7 @@ export function NewGameForm({
     <div className="space-y-4">
       <div className="space-y-1.5">
         <div className="text-sm text-(--color-text-dim)">Players</div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className={row}>
           {Array.from({ length: MAX_PLAYERS - MIN_PLAYERS + 1 }, (_, k) => k + MIN_PLAYERS).map((c) => (
             <button key={c} type="button" onClick={() => setCount(c)} aria-pressed={count === c} className={chip(count === c)}>
               {c}
@@ -229,7 +280,7 @@ export function NewGameForm({
       </div>
       <div className="space-y-1.5">
         <div className="text-sm text-(--color-text-dim)">Starting life</div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className={row}>
           {STARTING_LIFE.map((s) => (
             <button
               key={s}

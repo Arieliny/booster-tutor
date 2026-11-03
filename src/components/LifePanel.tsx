@@ -117,6 +117,8 @@ interface Props {
   trayOpen: boolean;
   /** Which trackers this device offers (Settings on the home screen). One already in play on this card still shows. */
   show: Record<TrackerKey, boolean>;
+  /** Which counters the menu offers, the same way: one already on this card still shows. */
+  counters: Partial<Record<CounterKey, boolean>>;
   /** Where the dungeons door goes while the tray is open: a corner away from the tray bar (never the ⋯ corner). */
   doorCorner: Corner;
   /** Giving out the monarch: what to say, and the tap that picks this seat. */
@@ -650,6 +652,7 @@ function Menu(props: Props & { onClose: () => void }) {
   const ring = show.ring || !!player.ring;
   const blessing = show.blessing || !!player.blessing;
   const emblems = show.emblems || !!player.emblems?.length;
+  const offered = COUNTERS.filter((c) => !c.pip && (props.counters[c.key] !== false || player.counters[c.key] !== undefined));
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-(--color-bg-elev) px-3 pb-3 text-left text-(--color-text)">
       {/* Stays at the top while the menu scrolls, so x is always in reach. */}
@@ -666,10 +669,11 @@ function Menu(props: Props & { onClose: () => void }) {
             Your card shows {most}, the most it can with {others.length + 1} players. Remove one to add another.
           </p>
         )}
+        {offered.length > 0 && (
         <section className="space-y-1.5">
           <div className={head}>Counters on your life card</div>
           <div className="grid grid-cols-2 gap-1.5">
-            {COUNTERS.filter((c) => !c.pip).map((c) => {
+            {offered.map((c) => {
               const on = player.counters[c.key] !== undefined;
               return (
                 <div key={c.key} className="flex items-stretch gap-1">
@@ -709,6 +713,7 @@ function Menu(props: Props & { onClose: () => void }) {
             })}
           </div>
         </section>
+        )}
 
         {(show.mana || manaOn) && (
         <section className="space-y-1.5">

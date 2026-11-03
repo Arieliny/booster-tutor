@@ -6,9 +6,17 @@
  * being tracked) still shows and can still be put away, since the game state
  * drives that.
  *
+ * The same goes for the player counters a life card offers (poison, energy,
+ * tickets...): switched off, a counter leaves each player's menu, but one
+ * already on a card stays until it's removed.
+ *
  * Kept per device in localStorage: guests aren't signed in, and the people
  * around one phone share its settings anyway.
  */
+import { COUNTERS, type CounterKey } from "./life";
+
+/** The counters Settings can switch off: all but unspent mana, which is a tracker of its own. */
+export const CARD_COUNTERS = COUNTERS.filter((c) => !c.pip);
 
 export type TrackerKey = "cmdr" | "monarch" | "dungeons" | "dayNight" | "ring" | "blessing" | "emblems" | "mana";
 
@@ -25,12 +33,15 @@ export const TRACKERS: { key: TrackerKey; label: string; hint: string }[] = [
 
 export interface LifeSettings {
   show: Record<TrackerKey, boolean>;
+  /** Which counters each player's menu offers (keys of CARD_COUNTERS). */
+  counters: Partial<Record<CounterKey, boolean>>;
   /** The last custom starting life typed into New game. */
   customLife: number;
 }
 
 export const DEFAULT_SETTINGS: LifeSettings = {
   show: { cmdr: true, monarch: true, dungeons: true, dayNight: true, ring: true, blessing: true, emblems: true, mana: true },
+  counters: Object.fromEntries(CARD_COUNTERS.map((c) => [c.key, true])),
   customLife: 30,
 };
 
@@ -38,13 +49,19 @@ const KEY = "booster-tutor-life-settings-v1";
 
 /** A saved settings object, with anything missing or malformed falling back to the default. */
 export function parseSettings(raw: unknown): LifeSettings {
-  const out: LifeSettings = { show: { ...DEFAULT_SETTINGS.show }, customLife: DEFAULT_SETTINGS.customLife };
+  const out: LifeSettings = { show: { ...DEFAULT_SETTINGS.show }, counters: { ...DEFAULT_SETTINGS.counters }, customLife: DEFAULT_SETTINGS.customLife };
   if (!raw || typeof raw !== "object") return out;
-  const r = raw as { show?: unknown; customLife?: unknown };
+  const r = raw as { show?: unknown; counters?: unknown; customLife?: unknown };
   if (r.show && typeof r.show === "object") {
     for (const t of TRACKERS) {
       const v = (r.show as Record<string, unknown>)[t.key];
       if (typeof v === "boolean") out.show[t.key] = v;
+    }
+  }
+  if (r.counters && typeof r.counters === "object") {
+    for (const c of CARD_COUNTERS) {
+      const v = (r.counters as Record<string, unknown>)[c.key];
+      if (typeof v === "boolean") out.counters[c.key] = v;
     }
   }
   if (typeof r.customLife === "number" && Number.isInteger(r.customLife) && r.customLife >= 1 && r.customLife <= 999) {
