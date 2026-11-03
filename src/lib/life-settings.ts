@@ -17,10 +17,10 @@ import { COUNTERS, type CounterKey } from "./life";
 
 /** The counters Settings can switch off: all but unspent mana, which is a tracker of its own. */
 export const CARD_COUNTERS = COUNTERS.filter((c) => !c.pip);
-/** The ones most tables use (Ari, 2026-11-03), plus the two custom slots; experience and speed start switched off. */
+/** The ones most tables use (Ari, 2026-11-03), plus two of the four custom slots; experience, speed and the other two start switched off. */
 const COUNTERS_ON: CounterKey[] = ["poison", "energy", "tax", "storm", "custom1", "custom2"];
 
-export type TrackerKey = "cmdr" | "monarch" | "dungeons" | "dayNight" | "ring" | "blessing" | "story" | "emblems" | "mana";
+export type TrackerKey = "cmdr" | "monarch" | "dungeons" | "dayNight" | "ring" | "blessing" | "story" | "emblems" | "mana" | "timer";
 
 export const TRACKERS: { key: TrackerKey; label: string; hint: string }[] = [
   { key: "cmdr", label: "Commander damage", hint: "A strip on your card with the damage taken from each opponent" },
@@ -32,6 +32,7 @@ export const TRACKERS: { key: TrackerKey; label: string; hint: string }[] = [
   { key: "story", label: "The Enduring Story", hint: "Storied: three permanents that are artifacts, Sagas or legendary" },
   { key: "emblems", label: "Emblems", hint: "Planeswalker emblems, by name" },
   { key: "mana", label: "Unspent mana", hint: "Mana counters on your card, one per color" },
+  { key: "timer", label: "Round timer", hint: "A clock in the tray, with an optional countdown" },
 ];
 
 export interface LifeSettings {
@@ -43,7 +44,7 @@ export interface LifeSettings {
 }
 
 export const DEFAULT_SETTINGS: LifeSettings = {
-  show: { cmdr: true, monarch: true, dungeons: true, dayNight: true, ring: true, blessing: true, story: true, emblems: true, mana: true },
+  show: { cmdr: true, monarch: true, dungeons: true, dayNight: true, ring: true, blessing: true, story: true, emblems: true, mana: true, timer: true },
   cardCounters: Object.fromEntries(CARD_COUNTERS.map((c) => [c.key, COUNTERS_ON.includes(c.key)])),
   customLife: 30,
 };

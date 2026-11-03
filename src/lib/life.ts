@@ -26,6 +26,8 @@ export type CounterKey =
   | "storm"
   | "custom1"
   | "custom2"
+  | "custom3"
+  | "custom4"
   | "manaW"
   | "manaU"
   | "manaB"
@@ -35,8 +37,8 @@ export type CounterKey =
 /** Each counter's symbol: names from components/Icon.tsx. */
 export type CounterIcon = "phyrexian" | "droplet" | "star" | "coins" | "gauge" | "storm" | CustomIcon;
 /** The symbols a custom counter can have. */
-export type CustomIcon = "chest" | "food" | "search" | "droplet" | "map" | "gem" | "flame" | "sparkle";
-export type CustomKey = "custom1" | "custom2";
+export type CustomIcon = "chest" | "food" | "search" | "droplet" | "map" | "flame" | "ticket" | "rad" | "sparkle";
+export type CustomKey = "custom1" | "custom2" | "custom3" | "custom4";
 /** What a custom counter counts this game: its name and symbol. */
 export interface CustomDef {
   name: string;
@@ -49,11 +51,12 @@ export const CUSTOM_PRESETS: CustomDef[] = [
   { name: "Clue", icon: "search" },
   { name: "Blood", icon: "droplet" },
   { name: "Map", icon: "map" },
-  { name: "Powerstone", icon: "gem" },
   { name: "Prowess", icon: "flame" },
+  { name: "Tickets", icon: "ticket" },
+  { name: "Rad", icon: "rad" },
 ];
-export const CUSTOM_ICONS: CustomIcon[] = ["chest", "food", "search", "droplet", "map", "gem", "flame", "sparkle"];
-/** Counters this version no longer has; stripped from saved games (parseGame). */
+export const CUSTOM_ICONS: CustomIcon[] = ["chest", "food", "search", "droplet", "map", "flame", "ticket", "rad", "sparkle"];
+/** Counters this version no longer has of its own (now custom presets); stripped from saved games (parseGame). */
 const RETIRED_COUNTERS = ["ticket", "rad"];
 /**
  * Player counters, each with its symbol: an icon (`icons` lists the ones a
@@ -86,9 +89,11 @@ export const COUNTERS: CounterDef[] = [
   // Speed (Aetherdrift) tops out at 4.
   { key: "speed", label: "Speed", icon: "gauge", max: 4 },
   { key: "storm", label: "Storm count", icon: "storm" },
-  // Two slots the player names (Treasure, Food, ...): the grid stays even at eight.
+  // Four slots the player names (Treasure, Food, ...): the grid stays even at ten.
   { key: "custom1", label: "Custom 1", icon: "sparkle", custom: true },
   { key: "custom2", label: "Custom 2", icon: "sparkle", custom: true },
+  { key: "custom3", label: "Custom 3", icon: "sparkle", custom: true },
+  { key: "custom4", label: "Custom 4", icon: "sparkle", custom: true },
   // Unspent (floating) mana, one counter per color plus colorless.
   { key: "manaW", label: "White mana", pip: "W" },
   { key: "manaU", label: "Blue mana", pip: "U" },
@@ -177,9 +182,21 @@ export interface Player {
   emblems?: string[];
   /** The Enduring Story (storied: three permanents that are artifacts, Sagas and/or legendary). Once a player has it, it stays. */
   story?: boolean;
+  /** Out of the game (eliminated): the card dims, life taps are off, opponents stop tracking their commanders. */
+  out?: boolean;
 }
 
-export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color" | "dungeon" | "ring" | "blessing" | "emblem" | "story";
+export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color" | "dungeon" | "ring" | "blessing" | "emblem" | "story" | "out";
+
+/** The round timer: a clock that survives a reload, with an optional countdown (a store round). */
+export interface Timer {
+  /** When it was last started (epoch ms), while running. */
+  running?: number;
+  /** Time counted before that, ms. */
+  elapsed: number;
+  /** A countdown, ms, if one was set. */
+  limit?: number;
+}
 
 export interface Entry {
   t: number;
@@ -216,6 +233,8 @@ export interface Game {
   custom?: Partial<Record<CustomKey, CustomDef>>;
   /** Day or night, once a card has started it (it's never neither again that game). */
   dayNight?: DayNight;
+  /** The round timer, once it has been used. */
+  timer?: Timer;
   history: Entry[];
 }
 
@@ -240,6 +259,8 @@ export function newGame(count: number, start: number, previous?: Game): Game {
     // The symbols picked, and what the custom counters count, carry over to the next game.
     ...(previous?.icons && { icons: { ...previous.icons } }),
     ...(previous?.custom && { custom: { ...previous.custom } }),
+    // A countdown stays set (a store's rounds are all the same length); the clock itself starts over.
+    ...(previous?.timer?.limit && { timer: { elapsed: 0, limit: previous.timer.limit } }),
     history: [],
   };
 }
@@ -502,6 +523,68 @@ export function setBlessing(g: Game, p: number, on: boolean, now = Date.now()): 
   );
 }
 
+/**
+ * p is out of the game (or back in). Going out releases the monarch or the
+ * initiative if p held it, for the table to give out again (the rules pass
+ * it to the active player, whom the counter doesn't track).
+ */
+export function setOut(g: Game, p: number, on: boolean, now = Date.now()): Game {
+  if (on === !!g.players[p].out) return g;
+  return record(
+    g,
+    { p, kind: "out", d: on ? 1 : -1 },
+    [p],
+    (ps, m) => {
+      if (on) {
+        ps[p].out = true;
+        for (const { key } of MARKERS) if (m[key] === p) delete m[key];
+      } else delete ps[p].out;
+    },
+    now,
+    false,
+    true,
+  );
+}
+
+// ---------------------------------------------------------------- the round timer
+
+/** Time on the clock, ms. */
+export function timerElapsed(t: Timer | undefined, now = Date.now()): number {
+  return t ? t.elapsed + (t.running ? Math.max(0, now - t.running) : 0) : 0;
+}
+
+/** Not game actions (no history): the clock is bookkeeping around the game. */
+export function startTimer(g: Game, now = Date.now()): Game {
+  if (g.timer?.running) return g;
+  return { ...g, timer: { ...g.timer, elapsed: g.timer?.elapsed ?? 0, running: now } };
+}
+
+export function pauseTimer(g: Game, now = Date.now()): Game {
+  if (!g.timer?.running) return g;
+  return { ...g, timer: { elapsed: timerElapsed(g.timer, now), ...(g.timer.limit && { limit: g.timer.limit }) } };
+}
+
+export function resetTimer(g: Game): Game {
+  if (!g.timer) return g;
+  return { ...g, timer: { elapsed: 0, ...(g.timer.limit && { limit: g.timer.limit }) } };
+}
+
+/** Set (or clear) the countdown; the clock keeps going as it was. */
+export function setTimerLimit(g: Game, ms: number | undefined): Game {
+  const t = g.timer ?? { elapsed: 0 };
+  return { ...g, timer: { elapsed: t.elapsed, ...(t.running && { running: t.running }), ...(ms && { limit: ms }) } };
+}
+
+/** "12:05", or "1:02:05" past an hour; a countdown past zero shows how far over ("−0:42"). */
+export function formatClock(ms: number): string {
+  const neg = ms < 0;
+  const s = Math.round(Math.abs(ms) / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (neg ? "−" : "") + (h ? `${h}:${pad(m)}:${pad(s % 60)}` : `${m}:${pad(s % 60)}`);
+}
+
 /** Give p the Enduring Story, or take it back (a mistap). */
 export function setStory(g: Game, p: number, on: boolean, now = Date.now()): Game {
   if (on === !!g.players[p].story) return g;
@@ -565,7 +648,7 @@ export function toggleMarker(g: Game, p: number, key: MarkerKey, now = Date.now(
   );
 }
 
-export const isCustomKey = (key: CounterKey): key is CustomKey => key === "custom1" || key === "custom2";
+export const isCustomKey = (key: CounterKey): key is CustomKey => /^custom[1-4]$/.test(key);
 
 /** The symbol a counter shows in this game (a custom one: whatever it was set to count). */
 export function counterIcon(g: Pick<Game, "icons" | "custom">, key: CounterKey): CounterIcon {
@@ -633,6 +716,10 @@ export function undo(g: Game): Game {
     if (last.kind === "story") {
       if (was.story) p.story = true;
       else delete p.story;
+    }
+    if (last.kind === "out") {
+      if (was.out) p.out = true;
+      else delete p.out;
     }
     if (last.kind === "emblem") {
       if (was.emblems) p.emblems = [...was.emblems];

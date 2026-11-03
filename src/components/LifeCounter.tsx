@@ -4,12 +4,16 @@ import "@fontsource/nunito/latin-900.css";
 import { DUNGEONS, INITIATIVE_TEXT, dungeonOf, isLastRoom, mapLinks, roomsAhead, type DungeonKey, type MapLink } from "../lib/dungeons";
 import {
   type CounterKey,
+  type Timer,
   MARKERS,
   addCounter,
   addEmblem,
   changeCmdr,
   counterLabel,
+  formatClock,
+  pauseTimer,
   playerName,
+  resetTimer,
   changeCounter,
   changeLife,
   colorHex,
@@ -26,8 +30,12 @@ import {
   setCmdrTracking,
   setCustom,
   setName,
+  setOut,
   setPartners,
   setStory,
+  setTimerLimit,
+  startTimer,
+  timerElapsed,
   setColor,
   setCounterIcon,
   setDayNight,
@@ -226,6 +234,7 @@ type SheetKind =
   | { kind: "judgeLocked" }
   | { kind: "cards" }
   | { kind: "daynight" }
+  | { kind: "timer" }
   | { kind: "dungeon"; p: number }
   | { kind: "ring"; p: number }
   | { kind: "emblems"; p: number };
@@ -280,6 +289,39 @@ export function LifeCounter({
   const [sheet, setSheet] = useState<SheetKind | null>(null);
   const [barOpen, setBarOpen] = useState(false);
   const [giving, setGiving] = useState<"monarch" | null>(null);
+  // The round timer: a tick a second while it runs, and one buzz when a countdown hits zero.
+  // Only read while the clock runs (a paused clock is just its stored time), so render stays pure.
+  const [now, setNow] = useState(0);
+  const timerRunning = !!game.timer?.running;
+  useEffect(() => {
+    if (!timerRunning) return;
+    const tick = () => setNow(Date.now());
+    const first = window.setTimeout(tick, 0);
+    const id = window.setInterval(tick, 1000);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(id);
+    };
+  }, [timerRunning]);
+  const timerElapsedNow = timerRunning ? timerElapsed(game.timer, now) : (game.timer?.elapsed ?? 0);
+  const timeLeft = game.timer?.limit ? game.timer.limit - timerElapsedNow : undefined;
+  const timeUp = timeLeft !== undefined && timeLeft <= 0;
+  const timerShown = timerRunning || timerElapsedNow > 0;
+  const clockText = formatClock(timeLeft ?? timerElapsedNow);
+  const buzzed = useRef(false);
+  useEffect(() => {
+    if (!timeUp) {
+      buzzed.current = false;
+      return;
+    }
+    if (buzzed.current || !timerRunning) return;
+    buzzed.current = true;
+    try {
+      navigator.vibrate?.([200, 100, 200, 100, 400]);
+    } catch {
+      // No vibration motor: the clock turns red anyway.
+    }
+  }, [timeUp, timerRunning]);
   const [spin, setSpin] = useState<number | null>(null);
   const [first, setFirst] = useState<number | null>(null);
   // The tray shows the dice instead of the tools; the latest roll.
@@ -443,16 +485,17 @@ export function LifeCounter({
                 player={game.players[i]}
                 turn={turn}
                 topEdge={seats[0].span ? k === 0 : k < cols}
+                bottomEdge={k >= seats.length - cols}
                 markers={game.markers}
                 icons={game.icons}
                 custom={game.custom}
-                others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: playerName(game, j), color: o.color, partners: o.partners }]))}
+                others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: playerName(game, j), color: o.color, partners: o.partners, out: o.out }]))}
                 highlight={first === i ? "first" : spin === i ? "spin" : first !== null ? "out" : spin !== null ? "waiting" : null}
                 trayOpen={barOpen && !diceTray}
                 show={show}
                 counters={settings.cardCounters}
                 doorCorner={doors[i]}
-                picking={giving ? "Becomes the monarch" : null}
+                picking={giving && !game.players[i].out ? "Becomes the monarch" : null}
                 onPick={() => pick(i)}
                 onLife={(by) => {
                   setFirst(null);
@@ -476,6 +519,7 @@ export function LifeCounter({
                 onEmblems={() => (closeTray(), setSheet({ kind: "emblems", p: i }))}
                 onBlessing={(on) => setGame((g) => setBlessing(g, i, on))}
                 onStory={(on) => setGame((g) => setStory(g, i, on))}
+                onOut={(on) => setGame((g) => setOut(g, i, on))}
                 onName={(name) => setGame((g) => setName(g, i, name))}
                 onPartners={(on) => setGame((g) => setPartners(g, i, on))}
                 // 1v1: the crown just switches sides. More players: pick who gets it.
@@ -558,6 +602,9 @@ export function LifeCounter({
                         />
                       )}
                       {show.monarch && <Tool icon="crown" label="Monarch" tint="var(--color-gold)" onClick={() => (setBarOpen(false), setGiving("monarch"))} />}
+                      {(show.timer || game.timer?.running) && (
+                        <Tool icon="clock" label={timerShown ? clockText : "Timer"} hint="Round timer" tint={timeUp ? "#fca5a5" : undefined} onClick={() => setSheet({ kind: "timer" })} />
+                      )}
                       <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                       {canJudge ? (
                         <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />
@@ -569,6 +616,18 @@ export function LifeCounter({
                   )}
                 </div>
               </div>
+              {/* The clock hangs under the middle button while it runs (or a countdown is set), for the whole table. */}
+              {timerShown && !barOpen && (
+                <button
+                  type="button"
+                  onClick={() => setSheet({ kind: "timer" })}
+                  aria-label={`Round timer: ${clockText}`}
+                  className="pointer-events-auto absolute top-full left-1/2 mt-0.5 -translate-x-1/2 rounded-full border-2 border-(--color-table) bg-(--color-tray) px-2 py-0.5 font-life text-xs font-black text-(--color-tray-ink) tabular-nums"
+                  style={timeUp ? { color: "#fca5a5" } : undefined}
+                >
+                  {clockText}
+                </button>
+              )}
               {/* Day or night shows on the middle button too, so the whole table sees it with the tray shut. */}
               {game.dayNight && !barOpen && (
                 <span
@@ -635,6 +694,17 @@ export function LifeCounter({
       )}
       {sheet?.kind === "daynight" && (
         <DayNightSheet state={game.dayNight} onSet={(to) => setGame((g) => setDayNight(g, to))} onClose={() => setSheet(null)} />
+      )}
+      {sheet?.kind === "timer" && (
+        <TimerSheet
+          timer={game.timer}
+          now={now}
+          onStart={() => setGame((g) => startTimer(g))}
+          onPause={() => setGame((g) => pauseTimer(g))}
+          onReset={() => setGame((g) => resetTimer(g))}
+          onLimit={(ms) => setGame((g) => setTimerLimit(g, ms))}
+          onClose={() => setSheet(null)}
+        />
       )}
       {sheet?.kind === "ring" && (
         <RingScreen
@@ -722,6 +792,8 @@ function describe(g: Game, e: Entry, index: number): string {
       return e.d > 0 ? `${who} got the city's blessing` : `${who}: city's blessing taken back`;
     case "story":
       return e.d > 0 ? `${who} got the Enduring Story` : `${who}: Enduring Story taken back`;
+    case "out":
+      return e.d > 0 ? `${who} is out of the game` : `${who} is back in the game`;
     case "emblem":
       return e.d > 0 ? `${who} got the ${e.name} emblem` : `${who}: ${e.name} emblem removed`;
     default:
@@ -1224,6 +1296,94 @@ function DayNightSheet({ state, onSet, onClose }: { state: DayNight | undefined;
           </button>
         </div>
         <p className="text-sm text-(--color-text-dim)">{DAY_NIGHT_RULE[state ?? "off"]}</p>
+      </div>
+    </div>
+  );
+}
+
+const TIMER_LIMITS = [20, 30, 50, 60];
+
+/** The round timer: the clock, start/pause/reset, and an optional countdown for a store's round. */
+function TimerSheet({
+  timer,
+  now,
+  onStart,
+  onPause,
+  onReset,
+  onLimit,
+  onClose,
+}: {
+  timer: Timer | undefined;
+  now: number;
+  onStart: () => void;
+  onPause: () => void;
+  onReset: () => void;
+  onLimit: (ms: number | undefined) => void;
+  onClose: () => void;
+}) {
+  useBackToClose(onClose);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const elapsed = timerElapsed(timer, now);
+  const limit = timer?.limit;
+  const left = limit ? limit - elapsed : undefined;
+  const running = !!timer?.running;
+  const chip = (on: boolean) =>
+    "rounded-full border px-3 py-1.5 text-sm " +
+    (on ? "border-(--color-text) bg-(--color-text) text-(--color-bg)" : "border-(--color-border) text-(--color-text-dim) hover:bg-(--color-text)/5");
+  return (
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
+      <div role="dialog" aria-modal="true" aria-label="Round timer" className="relative w-full max-w-sm space-y-4 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) p-5 shadow-2xl">
+        <div className="flex items-center gap-2">
+          <Icon name="clock" className="h-5 w-5" />
+          <h2 className="flex-1 text-lg font-semibold text-(--color-text)">Round timer</h2>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-(--color-text)/10">
+            <Icon name="close" className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="text-center">
+          <div className={"font-life text-6xl font-black tabular-nums " + (left !== undefined && left <= 0 ? "text-red-400" : "text-(--color-text)")} aria-live="polite">
+            {formatClock(left ?? elapsed)}
+          </div>
+          <div className="mt-1 text-xs text-(--color-text-dim)">
+            {left === undefined ? "Time played" : left <= 0 ? `Time's up · ${formatClock(elapsed)} played` : `Left in the round · ${formatClock(elapsed)} played`}
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={running ? onPause : onStart}
+            className="flex-1 rounded-lg bg-(--color-accent) py-2.5 text-base font-semibold text-(--color-accent-ink) hover:bg-(--color-accent-bright)"
+          >
+            {running ? "Pause" : elapsed ? "Resume" : "Start"}
+          </button>
+          <button
+            type="button"
+            onClick={onReset}
+            disabled={!elapsed && !running}
+            className="rounded-lg border border-(--color-border) px-4 py-2.5 text-sm text-(--color-text) hover:bg-(--color-text)/5 disabled:opacity-35"
+          >
+            Reset
+          </button>
+        </div>
+        <div className="space-y-1.5">
+          <div className="text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase">Countdown</div>
+          <div className="flex flex-wrap gap-1.5">
+            <button type="button" onClick={() => onLimit(undefined)} aria-pressed={!limit} className={chip(!limit)}>
+              Off
+            </button>
+            {TIMER_LIMITS.map((min) => (
+              <button key={min} type="button" onClick={() => onLimit(min * 60_000)} aria-pressed={limit === min * 60_000} className={chip(limit === min * 60_000)}>
+                {min} min
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-(--color-text-dim)">A countdown buzzes at zero and keeps counting past it. It stays set for the next game.</p>
+        </div>
       </div>
     </div>
   );

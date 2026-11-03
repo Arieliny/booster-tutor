@@ -341,7 +341,19 @@ For handing the counter to friends (Ari). All in the player's ⋯ menu:
   The grid stays even at eight. Energy now shows the official {E} symbol (Scryfall, inlined by
   `scripts/build-mana-symbols.mjs` like the mana pips) instead of a generic bolt.
 
-Still wanted (Ari, 2026-11-03): eliminated players; a round timer.
+- **Eliminated players** (same day): "Out of the game" in the ⋯ menu (`Player.out`, `setOut`, a
+  history entry so undo works). The card dims, its life taps are off, an "Out of the game" pill
+  sits above the total, opponents' commander-damage strips drop that seat, the monarch picker skips
+  it, and going out releases the monarch or initiative if held (the rules pass it to the active
+  player, whom the counter doesn't track). A new game starts everyone in.
+- **Round timer** (same day): a clock in the tray (`Game.timer`, `startTimer`/`pauseTimer`/
+  `resetTimer`/`setTimerLimit`, not in history). The sheet has start/pause/reset and a countdown
+  (20/30/50/60 min, kept for the next game); while it runs a small pill under the middle button
+  shows the time on every screen; a countdown turns red and buzzes once at zero and keeps counting
+  past it. Settings switch `timer`.
+- **Four custom slots** (same day): custom3/custom4 (off by default), Tickets and Rad as presets,
+  Powerstone dropped. Bottom-row seats pad by the top inset too (`bottomEdge`), so every total sits
+  the same distance from the middle button on a phone with a camera cutout.
 
 ## Future / under consideration
 

@@ -111,8 +111,14 @@ interface Props {
   turn: Turn;
   /** The seat touches the top of the screen (it reaches up behind the camera cutout). */
   topEdge?: boolean;
+  /**
+   * The seat touches the bottom of the screen: it pads by the same amount the top
+   * seats do, so every total sits the same distance from the middle button
+   * (Ari noticed the top seat's total sitting closer, 2026-11-03).
+   */
+  bottomEdge?: boolean;
   /** The other seats, for commander damage (`partners`: that seat has two commanders). */
-  others: { index: number; name: string; color: ColorKey; partners?: boolean }[];
+  others: { index: number; name: string; color: ColorKey; partners?: boolean; out?: boolean }[];
   markers: Partial<Record<MarkerKey, number>>;
   /** The game's chosen counter symbols. */
   icons: Game["icons"];
@@ -155,6 +161,8 @@ interface Props {
   onName: (name: string) => void;
   /** The Enduring Story, on or off. */
   onStory: (on: boolean) => void;
+  /** Out of the game, or back in. */
+  onOut: (on: boolean) => void;
   onDungeon: () => void;
   /** Tap the crown: pass the monarch (1v1: to the other player; more: pick who). */
   onPassMonarch: () => void;
@@ -167,7 +175,8 @@ interface Props {
 }
 
 export function LifePanel(props: Props) {
-  const { name, player, turn, highlight, topEdge } = props;
+  const { name, player, turn, highlight, topEdge, bottomEdge } = props;
+  const edgePad = topEdge || bottomEdge ? { paddingTop: topEdge ? "env(safe-area-inset-top)" : undefined, paddingBottom: bottomEdge ? "env(safe-area-inset-top)" : undefined } : undefined;
   return (
     <div
       className={
@@ -191,7 +200,7 @@ export function LifePanel(props: Props) {
         />
       )}
       {/* A seat along the top of the screen: its colour runs up behind the phone's camera, its contents stay below it. */}
-      <div className="h-full" style={topEdge ? { paddingTop: "env(safe-area-inset-top)" } : undefined}>
+      <div className="h-full" style={edgePad}>
         <Turned turn={turn}>{(w, h) => <Face {...props} w={w} h={h} key={name} />}</Turned>
       </div>
       {highlight === "first" && <span className="sr-only">{name} goes first</span>}
@@ -203,7 +212,7 @@ export function LifePanel(props: Props) {
           onClick={props.onPick}
           className="absolute inset-0 z-20 rounded-2xl bg-black/25 text-sm font-semibold text-white ring-4 ring-white/80 ring-inset"
         >
-          <span className="block h-full" style={topEdge ? { paddingTop: "env(safe-area-inset-top)" } : undefined}>
+          <span className="block h-full" style={edgePad}>
             <Turned turn={turn}>{() => <span className="flex h-full items-end justify-center pb-3">{props.picking}</span>}</Turned>
           </span>
         </button>
@@ -230,6 +239,10 @@ function Face(props: Props & { w: number; h: number }) {
 
   const monarch = markers.monarch === index;
   const initiative = markers.initiative === index;
+  // Out of the game: the card dims, life taps are off (the menu still works, to come back in).
+  const out = !!player.out;
+  // Players still in the game, for commander damage.
+  const inPlay = others.filter((o) => !o.out);
   const shown = COUNTERS.filter((c) => player.counters[c.key] !== undefined);
   // Commander damage, switched on in the menu: one strip with every opponent (their color on the sword).
   const cmdrOn = tracksCmdr(player);
@@ -319,8 +332,22 @@ function Face(props: Props & { w: number; h: number }) {
           </span>
         </div>
       )}
+      {/* "Out" sits just above the total (above any markers), undimmed, clear of the middle button at the card's edge. */}
+      {out && (
+        <div
+          className="pointer-events-none absolute left-1/2 z-10 -translate-x-1/2 -translate-y-full rounded-full bg-black/55 px-3 py-1 text-xs font-bold tracking-wide text-white uppercase"
+          style={{ top: `calc(50% - ${big / 2 + (crown ? crown + 12 : 6)}px)` }}
+        >
+          Out of the game
+        </div>
+      )}
       {/* Only buttons take taps here. */}
-      <div className={"pointer-events-none absolute inset-0 flex flex-col items-center justify-center transition-opacity " + (bannerCentred ? "opacity-25" : "")}>
+      <div
+        className={
+          "pointer-events-none absolute inset-0 flex flex-col items-center justify-center transition-opacity " +
+          (bannerCentred ? "opacity-25" : out ? "opacity-35 grayscale" : "")
+        }
+      >
         {/* The total and everything above it. */}
         <div className="relative flex flex-col items-center">
           {/* The tap halves (their − and + are drawn beside the total). They span the seat's width from its
@@ -330,8 +357,8 @@ function Face(props: Props & { w: number; h: number }) {
             className="pointer-events-auto absolute flex"
             style={{ left: "50%", width: w, transform: "translateX(-50%)", top: -h, bottom: tracked > 0 || cmdrOn ? 0 : -h }}
           >
-            <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={half} {...minus} />
-            <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} {...plus} />
+            <button type="button" aria-label={`${name}: lose 1 life (hold for 10)`} className={half} disabled={out} {...minus} />
+            <button type="button" aria-label={`${name}: gain 1 life (hold for 10)`} className={half} disabled={out} {...plus} />
           </div>
           {crown > 0 && (
             <div className="absolute bottom-full left-1/2 mb-1 flex -translate-x-1/2 items-end gap-5 whitespace-nowrap">
@@ -385,7 +412,7 @@ function Face(props: Props & { w: number; h: number }) {
           </div>
         )}
 
-        {cmdrOn && <CmdrStrip others={others} values={player.cmdr} values2={player.cmdr2 ?? {}} who={name} onCmdr={props.onCmdr} />}
+        {cmdrOn && <CmdrStrip others={inPlay} values={player.cmdr} values2={player.cmdr2 ?? {}} who={name} onCmdr={props.onCmdr} />}
 
         {((player.dungeon && roomChip) || otherChips) && (
           <div className="relative mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
@@ -957,9 +984,11 @@ function Menu(props: Props & { onClose: () => void }) {
           >
             <Icon name="sword" className="h-5 w-5 shrink-0" />
             <span className="flex shrink-0 -space-x-1">
-              {others.map((o) => (
-                <span key={o.index} className="h-3 w-3 rounded-full ring-1 ring-(--color-bg-elev)" style={{ background: colorHex(o.color) }} />
-              ))}
+              {others
+                .filter((o) => !o.out)
+                .map((o) => (
+                  <span key={o.index} className="h-3 w-3 rounded-full ring-1 ring-(--color-bg-elev)" style={{ background: colorHex(o.color) }} />
+                ))}
             </span>
             <span className="min-w-0 flex-1 truncate">From each opponent</span>
             {tracksCmdr(player) && <Icon name="check" className="h-4 w-4 shrink-0" />}
@@ -1020,6 +1049,24 @@ function Menu(props: Props & { onClose: () => void }) {
           </div>
         </section>
         )}
+
+        <section className="space-y-1.5">
+          <div className={head}>This game</div>
+          {/* Eliminated: the card dims and stops taking life taps; opponents stop tracking this seat's commanders. */}
+          <button
+            type="button"
+            onClick={() => props.onOut(!player.out)}
+            aria-pressed={!!player.out}
+            className={"flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.out ? "border-(--color-text) bg-(--color-text)/15" : off)}
+          >
+            <Icon name="exit" className="h-5 w-5 shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{player.out ? "Back in the game" : "Out of the game"}</span>
+              <span className="block text-xs text-(--color-text-dim)">{player.out ? "Eliminated: tap to come back" : "Eliminated; frees the monarch or initiative if held"}</span>
+            </span>
+            {player.out && <Icon name="check" className="h-4 w-4 shrink-0" />}
+          </button>
+        </section>
 
         <section className="space-y-1.5">
           <div className={head}>Color</div>

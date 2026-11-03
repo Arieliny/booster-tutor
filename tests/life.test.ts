@@ -497,7 +497,7 @@ describe("custom counters", () => {
     expect(g1.history).toHaveLength(0);
     const g2 = setCustom(g1, "custom2", { name: "  Dragons   seen ", icon: "flame" });
     expect(counterLabel(g2, "custom2")).toBe("Dragons seen");
-    expect(setCustom(g2, "custom2", { name: "   ", icon: "gem" })).toBe(g2);
+    expect(setCustom(g2, "custom2", { name: "   ", icon: "flame" })).toBe(g2);
     expect(counterLabel(newGame(3, 40, g2), "custom1")).toBe("Treasure");
     // It counts like any other counter.
     const g3 = changeCounter(addCounter(g2, 0, "custom1"), 0, "custom1", 3, T);
@@ -509,5 +509,62 @@ describe("custom counters", () => {
     old.players[0].counters = { poison: 2, ticket: 4, rad: 1 };
     const g = parseGame(old)!;
     expect(g.players[0].counters).toEqual({ poison: 2 });
+  });
+});
+
+describe("out of the game", () => {
+  it("marks a player out, frees a marker they held, and undoes both", async () => {
+    const { giveMarker, setOut } = await import("../src/lib/life");
+    const g0 = giveMarker(newGame(4, 40), 2, "monarch", T);
+    const g1 = setOut(g0, 2, true, T + 1);
+    expect(g1.players[2].out).toBe(true);
+    expect(g1.markers.monarch).toBeUndefined();
+    expect(g1.history.at(-1)?.kind).toBe("out");
+    const back = undo(g1);
+    expect(back.players[2].out).toBeUndefined();
+    expect(back.markers.monarch).toBe(2);
+    expect(setOut(g1, 2, true, T + 2)).toBe(g1);
+    expect(setOut(g1, 2, false, T + 2).players[2].out).toBeUndefined();
+    // A new game starts everyone in.
+    expect(newGame(4, 40, g1).players[2].out).toBeUndefined();
+  });
+});
+
+describe("the round timer", () => {
+  it("counts while running, pauses, resets, keeps its countdown for the next game, and formats", async () => {
+    const { formatClock, pauseTimer, resetTimer, setTimerLimit, startTimer, timerElapsed } = await import("../src/lib/life");
+    const g0 = newGame(2, 20);
+    expect(timerElapsed(g0.timer, T)).toBe(0);
+    const g1 = startTimer(g0, T);
+    expect(timerElapsed(g1.timer, T + 5000)).toBe(5000);
+    expect(startTimer(g1, T + 100)).toBe(g1);
+    const g2 = pauseTimer(g1, T + 5000);
+    expect(g2.timer).toEqual({ elapsed: 5000 });
+    expect(timerElapsed(g2.timer, T + 99_000)).toBe(5000);
+    const g3 = startTimer(g2, T + 10_000);
+    expect(timerElapsed(g3.timer, T + 12_000)).toBe(7000);
+    const g4 = setTimerLimit(g3, 50 * 60_000);
+    expect(g4.timer?.limit).toBe(3_000_000);
+    expect(g4.timer?.running).toBe(T + 10_000);
+    expect(resetTimer(g4).timer).toEqual({ elapsed: 0, limit: 3_000_000 });
+    expect(newGame(2, 20, g4).timer).toEqual({ elapsed: 0, limit: 3_000_000 });
+    expect(newGame(2, 20, g3).timer).toBeUndefined();
+    expect(g4.history).toHaveLength(0);
+    expect(formatClock(65_000)).toBe("1:05");
+    expect(formatClock(3_725_000)).toBe("1:02:05");
+    expect(formatClock(-42_000)).toBe("−0:42");
+  });
+});
+
+describe("four custom slots", () => {
+  it("has four custom keys, with tickets and rad as presets and no powerstone", async () => {
+    const { CUSTOM_PRESETS, isCustomKey } = await import("../src/lib/life");
+    expect(["custom1", "custom2", "custom3", "custom4"].every((k) => isCustomKey(k as never))).toBe(true);
+    expect(isCustomKey("poison")).toBe(false);
+    expect(COUNTERS.filter((c) => c.custom).map((c) => c.key)).toEqual(["custom1", "custom2", "custom3", "custom4"]);
+    const names = CUSTOM_PRESETS.map((p) => p.name);
+    expect(names).toContain("Tickets");
+    expect(names).toContain("Rad");
+    expect(names).not.toContain("Powerstone");
   });
 });
