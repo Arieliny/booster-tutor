@@ -214,6 +214,7 @@ const TRACKER_ICON: Record<TrackerKey, IconName> = {
   dayNight: "sun",
   ring: "ring",
   blessing: "castle",
+  story: "book",
   emblems: "emblem",
   mana: "sparkle",
 };

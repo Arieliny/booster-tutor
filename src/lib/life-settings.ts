@@ -20,7 +20,7 @@ export const CARD_COUNTERS = COUNTERS.filter((c) => !c.pip);
 /** The ones most tables use (Ari, 2026-11-03); experience, rad, speed and tickets start switched off. */
 const COUNTERS_ON: CounterKey[] = ["poison", "energy", "tax", "storm"];
 
-export type TrackerKey = "cmdr" | "monarch" | "dungeons" | "dayNight" | "ring" | "blessing" | "emblems" | "mana";
+export type TrackerKey = "cmdr" | "monarch" | "dungeons" | "dayNight" | "ring" | "blessing" | "story" | "emblems" | "mana";
 
 export const TRACKERS: { key: TrackerKey; label: string; hint: string }[] = [
   { key: "cmdr", label: "Commander damage", hint: "A strip on your card with the damage taken from each opponent" },
@@ -29,6 +29,7 @@ export const TRACKERS: { key: TrackerKey; label: string; hint: string }[] = [
   { key: "dayNight", label: "Day and night", hint: "Shown on the middle button, for the whole table" },
   { key: "ring", label: "The Ring", hint: "How far the Ring has tempted each player" },
   { key: "blessing", label: "The city's blessing", hint: "Ascend: ten or more permanents" },
+  { key: "story", label: "The Enduring Story", hint: "Storied: three permanents that are artifacts, Sagas or legendary" },
   { key: "emblems", label: "Emblems", hint: "Planeswalker emblems, by name" },
   { key: "mana", label: "Unspent mana", hint: "Mana counters on your card, one per color" },
 ];
@@ -42,7 +43,7 @@ export interface LifeSettings {
 }
 
 export const DEFAULT_SETTINGS: LifeSettings = {
-  show: { cmdr: true, monarch: true, dungeons: true, dayNight: true, ring: true, blessing: true, emblems: true, mana: true },
+  show: { cmdr: true, monarch: true, dungeons: true, dayNight: true, ring: true, blessing: true, story: true, emblems: true, mana: true },
   cardCounters: Object.fromEntries(CARD_COUNTERS.map((c) => [c.key, COUNTERS_ON.includes(c.key)])),
   customLife: 30,
 };

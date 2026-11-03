@@ -138,6 +138,8 @@ const PATHS = {
   ),
   // The city's blessing.
   castle: <path d="M4 21V9h3v2h2V9h2v2h2V9h2v2h2V9h3v12zM10 21v-4a2 2 0 0 1 4 0v4M3 21h18" />,
+  // The Enduring Story: an open book.
+  book: <path d="M12 7c-1.5-1.3-3.6-2-6.3-2H4v13.5h1.7c2.7 0 4.8.7 6.3 2 1.5-1.3 3.6-2 6.3-2H20V5h-1.7c-2.7 0-4.8.7-6.3 2zM12 7v13.5" />,
   minus: <path d="M5 12h14" />,
   plus: <path d="M12 5v14M5 12h14" />,
   exit: <path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l-4-4 4-4M5 12h11" />,

@@ -8,6 +8,7 @@ import {
   addCounter,
   addEmblem,
   changeCmdr,
+  playerName,
   changeCounter,
   changeLife,
   colorHex,
@@ -22,6 +23,9 @@ import {
   rollDice,
   setBlessing,
   setCmdrTracking,
+  setName,
+  setPartners,
+  setStory,
   setColor,
   setCounterIcon,
   setDayNight,
@@ -193,7 +197,6 @@ function ToolScreen({ icon, title, what, onClose, children }: { icon: IconName; 
   );
 }
 
-const seatName = (count: number, i: number) => (count === 2 ? (i === 0 ? "You" : "Opponent") : `P${i + 1}`);
 
 /**
  * Where each seat goes. On a phone: with 2 players, the opponent faces you
@@ -434,13 +437,13 @@ export function LifeCounter({
             <div key={i} className="min-h-0" style={span ? { gridColumn: "1 / -1" } : undefined}>
               <LifePanel
                 index={i}
-                name={seatName(n, i)}
+                name={playerName(game, i)}
                 player={game.players[i]}
                 turn={turn}
                 topEdge={seats[0].span ? k === 0 : k < cols}
                 markers={game.markers}
                 icons={game.icons}
-                others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: seatName(n, j), color: o.color }]))}
+                others={game.players.flatMap((o, j) => (j === i ? [] : [{ index: j, name: playerName(game, j), color: o.color, partners: o.partners }]))}
                 highlight={first === i ? "first" : spin === i ? "spin" : first !== null ? "out" : spin !== null ? "waiting" : null}
                 trayOpen={barOpen && !diceTray}
                 show={show}
@@ -458,7 +461,7 @@ export function LifeCounter({
                 onOfferCounter={(key) => setSettings((s) => ({ ...s, cardCounters: { ...s.cardCounters, [key]: true } }))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
                 onMenu={closeTray}
-                onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
+                onCmdr={(from, by, second) => setGame((g) => changeCmdr(g, i, from, by, Date.now(), false, second))}
                 onCmdrTracking={(on) => setGame((g) => setCmdrTracking(g, i, on))}
                 onDungeon={() => {
                   setBarOpen(false);
@@ -468,6 +471,9 @@ export function LifeCounter({
                 onRing={() => (closeTray(), setSheet({ kind: "ring", p: i }))}
                 onEmblems={() => (closeTray(), setSheet({ kind: "emblems", p: i }))}
                 onBlessing={(on) => setGame((g) => setBlessing(g, i, on))}
+                onStory={(on) => setGame((g) => setStory(g, i, on))}
+                onName={(name) => setGame((g) => setName(g, i, name))}
+                onPartners={(on) => setGame((g) => setPartners(g, i, on))}
                 // 1v1: the crown just switches sides. More players: pick who gets it.
                 onPassMonarch={() => {
                   if (n === 2) setGame((g) => giveMarker(g, i === 0 ? 1 : 0, "monarch"));
@@ -611,7 +617,7 @@ export function LifeCounter({
           game={game}
           p={sheet.p}
           turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
-          name={seatName(n, sheet.p)}
+          name={playerName(game, sheet.p)}
           // Venturing into Undercity is how the initiative works, so it takes the initiative too.
           onEnter={(key, room) => {
             const who = sheet.p;
@@ -630,7 +636,7 @@ export function LifeCounter({
         <RingScreen
           player={game.players[sheet.p]}
           turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
-          name={seatName(n, sheet.p)}
+          name={playerName(game, sheet.p)}
           onTempt={() => setGame((g) => temptRing(g, sheet.p))}
           onClose={() => setSheet(null)}
         />
@@ -639,7 +645,7 @@ export function LifeCounter({
         <EmblemScreen
           player={game.players[sheet.p]}
           turn={seats.find((x) => x.i === sheet.p)?.turn ?? 0}
-          name={seatName(n, sheet.p)}
+          name={playerName(game, sheet.p)}
           onAdd={(name) => setGame((g) => addEmblem(g, sheet.p, name))}
           onRemove={(name) => setGame((g) => removeEmblem(g, sheet.p, name))}
           onClose={() => setSheet(null)}
@@ -685,8 +691,7 @@ function Tool({ icon, label, hint, onClick, tint, disabled }: { icon: IconName; 
 // ---------------------------------------------------------------- sheets
 
 function describe(g: Game, e: Entry, index: number): string {
-  const n = g.players.length;
-  const who = seatName(n, e.p);
+  const who = playerName(g, e.p);
   const sign = (d: number) => (d > 0 ? `+${d}` : `−${-d}`);
   switch (e.kind) {
     case "life":
@@ -698,8 +703,8 @@ function describe(g: Game, e: Entry, index: number): string {
     case "cmdr": {
       const life = e.withLife ? ` → ${lifeAfter(g, index)}` : "";
       return e.d > 0
-        ? `${who} took ${e.d} commander damage from ${seatName(n, e.from ?? 0)}${life}`
-        : `${who}: ${-e.d} commander damage from ${seatName(n, e.from ?? 0)} taken back${life}`;
+        ? `${who} took ${e.d} commander damage from ${playerName(g, e.from ?? 0)}${e.second ? "'s second commander" : ""}${life}`
+        : `${who}: ${-e.d} commander damage from ${playerName(g, e.from ?? 0)}${e.second ? "'s second commander" : ""} taken back${life}`;
     }
     case "marker": {
       const label = MARKERS.find((m) => m.key === e.key)?.label ?? e.key;
@@ -711,6 +716,8 @@ function describe(g: Game, e: Entry, index: number): string {
       return `The Ring tempted ${who} (${(e.before[0]?.player.ring ?? 0) + 1})`;
     case "blessing":
       return e.d > 0 ? `${who} got the city's blessing` : `${who}: city's blessing taken back`;
+    case "story":
+      return e.d > 0 ? `${who} got the Enduring Story` : `${who}: Enduring Story taken back`;
     case "emblem":
       return e.d > 0 ? `${who} got the ${e.name} emblem` : `${who}: ${e.name} emblem removed`;
     default:

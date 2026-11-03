@@ -127,10 +127,16 @@ export function seatColors(count: number, previous: (ColorKey | undefined)[] = [
 export interface Player {
   life: number;
   color: ColorKey;
+  /** What this player is called at the table (empty or missing: the seat's name). Kept from game to game, like the color. */
+  name?: string;
+  /** This deck has two commanders (partners, a Background, a Doctor's companion): opponents track damage from each. */
+  partners?: boolean;
   /** Only counters that have been added to this player appear here. */
   counters: Partial<Record<CounterKey, number>>;
   /** Commander damage taken, by the seat it came from. */
   cmdr: Partial<Record<number, number>>;
+  /** Commander damage taken from a seat's SECOND commander (only seats with partners). */
+  cmdr2?: Partial<Record<number, number>>;
   /** The dungeon room this player is in, if any. */
   dungeon?: { key: DungeonKey; room: string };
   /** Dungeons completed this game. */
@@ -141,9 +147,11 @@ export interface Player {
   blessing?: boolean;
   /** Emblems this player has, by name (see emblems.ts); the same one can be there twice. */
   emblems?: string[];
+  /** The Enduring Story (storied: three permanents that are artifacts, Sagas and/or legendary). Once a player has it, it stays. */
+  story?: boolean;
 }
 
-export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color" | "dungeon" | "ring" | "blessing" | "emblem";
+export type EntryKind = "life" | "set" | "counter" | "cmdr" | "marker" | "color" | "dungeon" | "ring" | "blessing" | "emblem" | "story";
 
 export interface Entry {
   t: number;
@@ -159,6 +167,8 @@ export interface Entry {
   withLife?: boolean;
   /** Commander damage: the seat it came from. */
   from?: number;
+  /** Commander damage from that seat's second commander. */
+  second?: boolean;
   /** Net change (life, counter or commander damage); for "set", the new life. */
   d: number;
   /** The players this changed, as they were before it. */
@@ -187,10 +197,12 @@ export function newGame(count: number, start: number, previous?: Game): Game {
   return {
     v: 2,
     start,
-    // Seats keep the colors they had last game; added seats get colors nobody has.
+    // Seats keep the colors (and names, and whether they run partners) they had last game; added seats get colors nobody has.
     players: Array.from({ length: n }, (_, i) => ({
       life: start,
       color: colors[i],
+      ...(previous?.players[i]?.name && { name: previous.players[i].name }),
+      ...(previous?.players[i]?.partners && { partners: true }),
       counters: {},
       cmdr: {},
     })),
@@ -210,6 +222,7 @@ const clone = (p: Player): Player => ({
   ...p,
   counters: { ...p.counters },
   cmdr: { ...p.cmdr },
+  ...(p.cmdr2 && { cmdr2: { ...p.cmdr2 } }),
   ...(p.dungeon && { dungeon: { ...p.dungeon } }),
   ...(p.emblems && { emblems: [...p.emblems] }),
 });
@@ -236,7 +249,8 @@ function record(
     last.p === entry.p &&
     last.kind === entry.kind &&
     last.key === entry.key &&
-    last.from === entry.from;
+    last.from === entry.from &&
+    last.second === entry.second;
   const history = merge
     ? [...g.history.slice(0, -1), { ...last, t: now, d: last.d + entry.d }]
     : [
@@ -327,24 +341,69 @@ export function setCmdrTracking(g: Game, p: number, on: boolean): Game {
 }
 
 /**
- * Commander damage to p from seat `from`. With `takesLife` (a setting, off by
+ * Commander damage to p from seat `from` (its second commander with `second`:
+ * each of a pair counts to 21 on its own). With `takesLife` (a setting, off by
  * default) it's also taken off p's life; otherwise players adjust life themselves.
  */
-export function changeCmdr(g: Game, p: number, from: number, by: number, now = Date.now(), takesLife = false): Game {
-  const cur = g.players[p].cmdr[from] ?? 0;
+export function changeCmdr(g: Game, p: number, from: number, by: number, now = Date.now(), takesLife = false, second = false): Game {
+  const cur = (second ? g.players[p].cmdr2?.[from] : g.players[p].cmdr[from]) ?? 0;
   const by2 = Math.max(-cur, by);
   if (!by2) return g;
   return record(
     g,
-    { p, kind: "cmdr", from, d: by2, ...(takesLife && { withLife: true }) },
+    { p, kind: "cmdr", from, d: by2, ...(takesLife && { withLife: true }), ...(second && { second: true }) },
     [p],
     (ps) => {
-      ps[p].cmdr[from] = cur + by2;
+      if (second) ps[p].cmdr2 = { ...ps[p].cmdr2, [from]: cur + by2 };
+      else ps[p].cmdr[from] = cur + by2;
       if (takesLife) ps[p].life -= by2;
     },
     now,
     true,
   );
+}
+
+/** p's deck has two commanders (or one again). Not a game action: no history. */
+export function setPartners(g: Game, p: number, on: boolean): Game {
+  if (on === !!g.players[p].partners) return g;
+  return {
+    ...g,
+    players: g.players.map((pl, i) => {
+      if (i !== p) return pl;
+      const out = { ...pl };
+      if (on) out.partners = true;
+      else delete out.partners;
+      return out;
+    }),
+  };
+}
+
+/** What seat i is called when nobody has named it. */
+export function seatName(count: number, i: number): string {
+  return count === 2 ? (i === 0 ? "You" : "Opponent") : `P${i + 1}`;
+}
+
+export const MAX_NAME = 16;
+
+/** The player's name at the table: what they typed, or their seat's name. */
+export function playerName(g: Pick<Game, "players">, i: number): string {
+  return g.players[i]?.name?.trim() || seatName(g.players.length, i);
+}
+
+/** Name p (empty: back to the seat's name). Not a game action: no history. */
+export function setName(g: Game, p: number, name: string): Game {
+  const clean = name.replace(/\s+/g, " ").trim().slice(0, MAX_NAME);
+  if (clean === (g.players[p].name ?? "")) return g;
+  return {
+    ...g,
+    players: g.players.map((pl, i) => {
+      if (i !== p) return pl;
+      const out = { ...pl };
+      if (clean) out.name = clean;
+      else delete out.name;
+      return out;
+    }),
+  };
 }
 
 /** p takes a table-wide marker (from whoever had it). No change if p already has it. */
@@ -406,6 +465,22 @@ export function setBlessing(g: Game, p: number, on: boolean, now = Date.now()): 
     (ps) => {
       if (on) ps[p].blessing = true;
       else delete ps[p].blessing;
+    },
+    now,
+    false,
+  );
+}
+
+/** Give p the Enduring Story, or take it back (a mistap). */
+export function setStory(g: Game, p: number, on: boolean, now = Date.now()): Game {
+  if (on === !!g.players[p].story) return g;
+  return record(
+    g,
+    { p, kind: "story", d: on ? 1 : -1 },
+    [p],
+    (ps) => {
+      if (on) ps[p].story = true;
+      else delete ps[p].story;
     },
     now,
     false,
@@ -488,7 +563,8 @@ export function undo(g: Game): Game {
     if (last.kind === "life" || last.kind === "set") p.life = was.life;
     if (last.kind === "counter" && last.key) p.counters[last.key as CounterKey] = was.counters[last.key as CounterKey] ?? 0;
     if (last.kind === "cmdr" && last.from !== undefined) {
-      p.cmdr[last.from] = was.cmdr[last.from] ?? 0;
+      if (last.second) p.cmdr2 = { ...p.cmdr2, [last.from]: was.cmdr2?.[last.from] ?? 0 };
+      else p.cmdr[last.from] = was.cmdr[last.from] ?? 0;
       p.life = was.life;
     }
     if (last.kind === "dungeon") {
@@ -504,6 +580,10 @@ export function undo(g: Game): Game {
     if (last.kind === "blessing") {
       if (was.blessing) p.blessing = true;
       else delete p.blessing;
+    }
+    if (last.kind === "story") {
+      if (was.story) p.story = true;
+      else delete p.story;
     }
     if (last.kind === "emblem") {
       if (was.emblems) p.emblems = [...was.emblems];

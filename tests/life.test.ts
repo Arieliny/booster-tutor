@@ -9,10 +9,14 @@ import {
   lifeAfter,
   newGame,
   parseGame,
+  playerName,
   removeCounter,
   rollDice,
   setColor,
   setLife,
+  setName,
+  setPartners,
+  setStory,
   toggleMarker,
   undo,
   untouched,
@@ -427,5 +431,55 @@ describe("emblem chips on the life card", () => {
     expect(emblemChips(["Elspeth, Knight-Errant"])).toEqual(["Elspeth emblem"]);
     expect(emblemChips(["Ajani Resolute", "Ajani Resolute", "Elspeth, Knight-Errant"])).toEqual(["Ajani Resolute emblem ×2", "Elspeth emblem"]);
     expect(emblemChips(["Ajani Resolute", "Ajani Resolute", "Elspeth, Knight-Errant", "Venser, the Sojourner"])).toEqual(["Ajani Resolute emblem ×2", "+2 more"]);
+  });
+});
+
+describe("names", () => {
+  it("falls back to the seat's name, trims and caps what was typed, and follows the seat into the next game", () => {
+    const g = newGame(3, 40);
+    expect(playerName(g, 1)).toBe("P2");
+    expect(playerName(newGame(2, 20), 1)).toBe("Opponent");
+    const named = setName(g, 1, "   Dan   the  Man  ");
+    expect(named.players[1].name).toBe("Dan the Man");
+    expect(playerName(named, 1)).toBe("Dan the Man");
+    expect(setName(named, 1, "x".repeat(40)).players[1].name).toHaveLength(16);
+    // Not a game action: nothing to undo.
+    expect(named.history).toHaveLength(0);
+    expect(playerName(newGame(3, 40, named), 1)).toBe("Dan the Man");
+    // Blank goes back to the seat's name.
+    expect(setName(named, 1, "  ").players[1].name).toBeUndefined();
+  });
+});
+
+describe("partner commanders", () => {
+  it("tracks damage from a seat's second commander on its own, undoes it, and never merges it with the first", () => {
+    const g0 = setPartners(newGame(3, 40), 2, true);
+    expect(g0.players[2].partners).toBe(true);
+    expect(setPartners(newGame(3, 40, g0), 2, true).players[2].partners).toBe(true); // kept from game to game
+    const g1 = changeCmdr(g0, 0, 2, 5, T);
+    const g2 = changeCmdr(g1, 0, 2, 7, T + 100, false, true);
+    expect(g2.players[0].cmdr[2]).toBe(5);
+    expect(g2.players[0].cmdr2?.[2]).toBe(7);
+    // Two entries (different commanders), not one merged run.
+    expect(g2.history).toHaveLength(2);
+    expect(g2.history[1].second).toBe(true);
+    const g3 = changeCmdr(g2, 0, 2, 3, T + 200, false, true);
+    expect(g3.history).toHaveLength(2);
+    expect(g3.players[0].cmdr2?.[2]).toBe(10);
+    const back = undo(g3);
+    expect(back.players[0].cmdr2?.[2]).toBe(0);
+    expect(back.players[0].cmdr[2]).toBe(5);
+    expect(setPartners(g0, 2, false).players[2].partners).toBeUndefined();
+  });
+});
+
+describe("the Enduring Story", () => {
+  it("is given, taken back, and undone", () => {
+    const g1 = setStory(newGame(2, 20), 0, true, T);
+    expect(g1.players[0].story).toBe(true);
+    expect(g1.history.at(-1)?.kind).toBe("story");
+    expect(setStory(g1, 0, true, T)).toBe(g1); // already has it
+    expect(undo(g1).players[0].story).toBeUndefined();
+    expect(setStory(g1, 0, false, T + 1).players[0].story).toBeUndefined();
   });
 });

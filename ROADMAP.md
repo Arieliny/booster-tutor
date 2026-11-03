@@ -318,6 +318,24 @@ Ari: the judge is for card interactions at the table, not tournament policy.
 
 ---
 
+## ✅ Life counter: names, partner commanders, the Enduring Story (2026-11-03)
+
+For handing the counter to friends (Ari). All in the player's ⋯ menu:
+
+- **Names.** The menu's header is a name field (blank = the seat's name: You/Opponent or P1-P6).
+  `Player.name`, kept from game to game like the color; `playerName(game, i)` everywhere a seat
+  is named, history lines included. Not a game action (no history entry).
+- **Two commanders.** "My deck has two commanders" on a player's own menu (`Player.partners`,
+  also kept game to game). Every opponent's commander-damage strip then shows a second sword
+  (marked ²) for that seat, with its own count to 21: `Player.cmdr2[from]`, `changeCmdr(...,
+  second)`, history entries carry `second` and never merge with the first commander's.
+- **The Enduring Story** (storied: three permanents that are artifacts, Sagas and/or legendary):
+  a marker like the city's blessing (`Player.story`, `setStory`, the rose book icon above the
+  total, a toggle in the menu, a tracker switch in Settings).
+
+Still wanted (Ari, 2026-11-03): eliminated players; a round timer; 2-3 editable custom counters
+(grey tappable letters with presets like treasures, food, clues).
+
 ## Future / under consideration
 
 ### A. Rotisserie draft mode  *(REMOVED 2026-10-12 at Ari's request; kept below as history)*

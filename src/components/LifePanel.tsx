@@ -5,10 +5,12 @@ import type { TrackerKey } from "../lib/life-settings";
 import {
   COLORS,
   COUNTERS,
+  MAX_NAME,
   colorHex,
   colorInk,
   counterIcon,
   maxTracked,
+  seatName,
   trackedCount,
   tracksCmdr,
   type ColorKey,
@@ -102,8 +104,8 @@ interface Props {
   turn: Turn;
   /** The seat touches the top of the screen (it reaches up behind the camera cutout). */
   topEdge?: boolean;
-  /** The other seats, for commander damage. */
-  others: { index: number; name: string; color: ColorKey }[];
+  /** The other seats, for commander damage (`partners`: that seat has two commanders). */
+  others: { index: number; name: string; color: ColorKey; partners?: boolean }[];
   markers: Partial<Record<MarkerKey, number>>;
   /** The game's chosen counter symbols. */
   icons: Game["icons"];
@@ -133,9 +135,15 @@ interface Props {
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
   /** The ... menu is opening (the tray closes so it doesn't cover the menu). */
   onMenu: () => void;
-  onCmdr: (from: number, by: number) => void;
+  onCmdr: (from: number, by: number, second?: boolean) => void;
   /** Show or hide this card's commander damage strip (every opponent). */
   onCmdrTracking: (on: boolean) => void;
+  /** This player's deck has two commanders (partners), so opponents track damage from each. */
+  onPartners: (on: boolean) => void;
+  /** What this player is called ("" goes back to the seat's name). */
+  onName: (name: string) => void;
+  /** The Enduring Story, on or off. */
+  onStory: (on: boolean) => void;
   onDungeon: () => void;
   /** Tap the crown: pass the monarch (1v1: to the other player; more: pick who). */
   onPassMonarch: () => void;
@@ -218,8 +226,9 @@ function Face(props: Props & { w: number; h: number }) {
   const emblems = player.emblems?.length ?? 0;
   // The city's blessing sits with the crown and the door, above the total, so the other side of the table sees it.
   const blessing = !!player.blessing;
+  const story = !!player.story;
   // The total is as big as the seat allows, after room for the crown, counters and commander damage.
-  const marked = monarch || initiative || ring > 0 || blessing;
+  const marked = monarch || initiative || ring > 0 || blessing || story;
   // Three or more counters sit two to a row so the total stays big.
   const tracked = shown.length;
   const counterRows = tracked > 2 ? Math.ceil(tracked / 2) : tracked;
@@ -237,7 +246,7 @@ function Face(props: Props & { w: number; h: number }) {
   // Emblems are chips under everything, in one row with the dungeon room.
   const otherChips = emblems > 0;
   // The big markers sit in one row above the total; if they'd be wider than the card, they go compact too.
-  const markerLabels = [monarch && "Monarch", ring > 0 && `Ring · ${ring}`, initiative && "Initiative", blessing && "City's blessing"].filter(
+  const markerLabels = [monarch && "Monarch", ring > 0 && `Ring · ${ring}`, initiative && "Initiative", blessing && "City's blessing", story && "Enduring story"].filter(
     (l): l is string => !!l,
   );
   const markersWide = markerLabels.reduce((a, l) => a + Math.max(tall, l.length * 7.5) + 24, 0) + 20 * (markerLabels.length - 1);
@@ -249,7 +258,8 @@ function Face(props: Props & { w: number; h: number }) {
   const slots: MarkerIcon[][] = [monarch ? ["crown"] : [], initiative ? ["door"] : []];
   if (ring) slots[slots[0].length <= slots[1].length ? 0 : 1].push("ring");
   if (blessing) slots[slots[0].length <= slots[1].length ? 0 : 1].push("castle");
-  // The blessing is switched on and off in the menu, so that's where a tap on it goes.
+  if (story) slots[slots[0].length <= slots[1].length ? 0 : 1].push("book");
+  // The blessing and the story are switched on and off in the menu, so that's where a tap on them goes.
   const openMenu = () => (props.onMenu(), setMode("menu"));
   const badge = (icon: MarkerIcon, shared: boolean) =>
     icon === "crown" ? (
@@ -258,6 +268,8 @@ function Face(props: Props & { w: number; h: number }) {
       <Badge key={icon} icon="door" label={shared ? "" : (player.dungeon?.room ?? "Initiative")} onClick={props.onDungeon} title="Open the dungeons" />
     ) : icon === "castle" ? (
       <Badge key={icon} icon="castle" label={shared ? "" : "Blessing"} onClick={openMenu} title="The city's blessing" />
+    ) : icon === "book" ? (
+      <Badge key={icon} icon="book" label={shared ? "" : "Story"} onClick={openMenu} title="The Enduring Story" />
     ) : (
       <Badge key={icon} icon="ring" label={shared ? String(ring) : `Ring ${ring}`} onClick={props.onRing} title="The Ring" />
     );
@@ -316,6 +328,7 @@ function Face(props: Props & { w: number; h: number }) {
               {ring > 0 && <Marker icon="ring" label={`Ring · ${ring}`} size={crown} onClick={props.onRing} title="The Ring" />}
               {initiative && <Marker icon="door" label="Initiative" size={crown} onClick={props.onDungeon} title="Open the dungeons" />}
               {blessing && <Marker icon="castle" label="City's blessing" size={crown} onClick={openMenu} title="The city's blessing" />}
+              {story && <Marker icon="book" label="Enduring story" size={crown} onClick={openMenu} title="The Enduring Story" />}
             </div>
           )}
           {/* − and + right beside the total, so they stay close when counters shrink it. */}
@@ -361,7 +374,7 @@ function Face(props: Props & { w: number; h: number }) {
           </div>
         )}
 
-        {cmdrOn && <CmdrStrip others={others} values={player.cmdr} who={name} onCmdr={props.onCmdr} />}
+        {cmdrOn && <CmdrStrip others={others} values={player.cmdr} values2={player.cmdr2 ?? {}} who={name} onCmdr={props.onCmdr} />}
 
         {((player.dungeon && roomChip) || otherChips) && (
           <div className="relative mt-1 flex max-w-[80%] flex-wrap justify-center gap-1">
@@ -421,10 +434,10 @@ function Face(props: Props & { w: number; h: number }) {
   );
 }
 
-const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF", ring: "#F5C26B", castle: "#8FE8C8" } as const;
+const MARKER_TINT = { crown: "#FFD43B", door: "#C9B8FF", ring: "#F5C26B", castle: "#8FE8C8", book: "#F8B4C8" } as const;
 type MarkerIcon = keyof typeof MARKER_TINT;
 
-/** A big marker above the total: the monarch's gold crown, the initiative's lavender door, the Ring, the city's mint castle. */
+/** A big marker above the total: the monarch's gold crown, the initiative's lavender door, the Ring, the city's mint castle, the story's rose book. */
 function Marker({ icon, label, size, onClick, title }: { icon: MarkerIcon; label: string; size: number; onClick?: () => void; title?: string }) {
   const inner = (
     <>
@@ -563,61 +576,76 @@ const CMDR_OPEN_MS = 3000;
  * tap, or when its sword is tapped again. Opening first means a stray tap never
  * changes anyone's damage.
  */
+/**
+ * One sword per opposing commander, in that seat's color: a seat with partners
+ * gets two (the second marked ²), each counting to 21 on its own.
+ */
 function CmdrStrip({
   others,
   values,
+  values2,
   who,
   onCmdr,
 }: {
-  others: { index: number; name: string; color: ColorKey }[];
+  others: { index: number; name: string; color: ColorKey; partners?: boolean }[];
   values: Partial<Record<number, number>>;
+  /** Damage from each seat's second commander. */
+  values2: Partial<Record<number, number>>;
   who: string;
-  onCmdr: (from: number, by: number) => void;
+  onCmdr: (from: number, by: number, second?: boolean) => void;
 }) {
-  const [open, setOpen] = useState<number | null>(null);
+  type Sword = { index: number; second: boolean };
+  const [open, setOpen] = useState<Sword | null>(null);
   const timer = useRef<number | undefined>(undefined);
   useEffect(() => () => window.clearTimeout(timer.current), []);
-  const keepOpen = (from: number | null) => {
+  const keepOpen = (sw: Sword | null) => {
     window.clearTimeout(timer.current);
-    setOpen(from);
-    if (from !== null) timer.current = window.setTimeout(() => setOpen(null), CMDR_OPEN_MS);
+    setOpen(sw);
+    if (sw) timer.current = window.setTimeout(() => setOpen(null), CMDR_OPEN_MS);
   };
   // Tap = 1; hold = 5, repeating while held (like the counters). Each step keeps the sword open.
   const stepOpen = (by: number) => {
-    if (open === null) return;
-    onCmdr(open, by);
+    if (!open) return;
+    onCmdr(open.index, by, open.second);
     keepOpen(open);
   };
   const down = useHold(stepOpen, -1, 5);
   const up = useHold(stepOpen, 1, 5);
-  const sword = (v: number) => (
+  const valueOf = (sw: Sword) => (sw.second ? values2[sw.index] : values[sw.index]) ?? 0;
+  const label = (x: { name: string }, second: boolean) => `${x.name}${second ? "'s second commander" : ""}`;
+  const sword = (v: number, second: boolean) => (
     <>
-      <Icon name="sword" className="h-3.5 w-3.5" />
+      <span className="relative">
+        <Icon name="sword" className="h-3.5 w-3.5" />
+        {second && <span className="absolute -top-1.5 -right-1.5 text-[9px] font-black leading-none text-white">2</span>}
+      </span>
       <span className="font-life text-[15px] font-black text-white tabular-nums" style={v >= 21 ? { color: "#fca5a5" } : undefined}>
         {v}
       </span>
     </>
   );
   const step = "pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full bg-black/25 select-none touch-manipulation active:bg-black/40";
+  // Every sword on the strip: one per seat, two for a seat with partners.
+  const swords = others.flatMap((x) => [{ ...x, second: false }, ...(x.partners ? [{ ...x, second: true }] : [])]);
 
-  const o = open === null ? undefined : others.find((x) => x.index === open);
-  if (o) {
-    const v = values[o.index] ?? 0;
+  const o = open ? swords.find((x) => x.index === open.index && x.second === open.second) : undefined;
+  if (o && open) {
+    const v = valueOf(open);
     return (
       <div className="relative mt-1 mb-7 flex items-center gap-2">
-        <button type="button" {...down} aria-label={`${who}: commander damage from ${o.name} down (hold for 5)`} className={step}>
+        <button type="button" {...down} aria-label={`${who}: commander damage from ${label(o, o.second)} down (hold for 5)`} className={step}>
           <Icon name="minus" className="h-4 w-4" />
         </button>
         <button
           type="button"
           onClick={() => keepOpen(null)}
-          aria-label={`Commander damage from ${o.name}: ${v}. Done`}
+          aria-label={`Commander damage from ${label(o, o.second)}: ${v}. Done`}
           className="pointer-events-auto flex items-center gap-1 rounded-full bg-black/45 px-2.5 py-1"
           style={{ color: colorHex(o.color) }}
         >
-          {sword(v)}
+          {sword(v, o.second)}
         </button>
-        <button type="button" {...up} aria-label={`${who}: commander damage from ${o.name} up (hold for 5)`} className={step}>
+        <button type="button" {...up} aria-label={`${who}: commander damage from ${label(o, o.second)} up (hold for 5)`} className={step}>
           <Icon name="plus" className="h-4 w-4" />
         </button>
       </div>
@@ -625,18 +653,18 @@ function CmdrStrip({
   }
   return (
     <div className="relative mt-1 mb-7 flex max-w-full flex-wrap justify-center gap-1">
-      {others.map((x) => {
-        const v = values[x.index] ?? 0;
+      {swords.map((x) => {
+        const v = valueOf(x);
         return (
           <button
-            key={x.index}
+            key={`${x.index}${x.second ? "b" : ""}`}
             type="button"
-            onClick={() => keepOpen(x.index)}
-            aria-label={`Commander damage from ${x.name}: ${v}. Tap to change`}
+            onClick={() => keepOpen({ index: x.index, second: x.second })}
+            aria-label={`Commander damage from ${label(x, x.second)}: ${v}. Tap to change`}
             className={"pointer-events-auto flex items-center gap-0.5 rounded-full px-1.5 py-1 " + (v >= 21 ? "bg-black" : "bg-black/35")}
             style={{ color: colorHex(x.color) }}
           >
-            {sword(v)}
+            {sword(v, x.second)}
           </button>
         );
       })}
@@ -645,7 +673,7 @@ function CmdrStrip({
 }
 
 function Menu(props: Props & { onClose: () => void }) {
-  const { name, player, others } = props;
+  const { player, others } = props;
   const head = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
   // A card shows at most `most` rows under the total (fewer at a bigger table); when it's full, only removing is offered.
   const most = maxTracked(others.length + 1);
@@ -655,7 +683,11 @@ function Menu(props: Props & { onClose: () => void }) {
   const manaOn = COUNTERS.some((c) => c.pip && player.counters[c.key] !== undefined);
   const ring = show.ring || !!player.ring;
   const blessing = show.blessing || !!player.blessing;
+  const story = show.story || !!player.story;
   const emblems = show.emblems || !!player.emblems?.length;
+  // The name field: typed here, saved when it's left (or Enter).
+  const [draft, setDraft] = useState(player.name ?? "");
+  const seat = seatName(others.length + 1, props.index);
   const isOffered = (k: CounterKey) => props.counters[k] !== false || player.counters[k] !== undefined;
   // Counters switched off in Settings stay one tap away: "More counters" lists them, and adding one switches it back on.
   const [more, setMore] = useState(false);
@@ -664,8 +696,19 @@ function Menu(props: Props & { onClose: () => void }) {
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-(--color-bg-elev) px-3 pb-3 text-left text-(--color-text)">
       {/* Stays at the top while the menu scrolls, so x is always in reach. */}
-      <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center bg-(--color-bg-elev) px-3 pt-3 pb-2">
-        <span className="flex-1 text-sm font-medium">{name}</span>
+      <div className="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-2 bg-(--color-bg-elev) px-3 pt-3 pb-2">
+        {/* The player's name: tap to type one (blank goes back to the seat's name). */}
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => props.onName(draft)}
+          onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+          placeholder={seat}
+          maxLength={MAX_NAME}
+          aria-label={`${seat}'s name`}
+          enterKeyHint="done"
+          className="min-w-0 flex-1 rounded-lg border border-(--color-border) bg-(--color-bg) px-2.5 py-1.5 text-sm font-medium text-(--color-text) placeholder:text-(--color-text-dim)"
+        />
         <button type="button" onClick={props.onClose} aria-label="Close" className="rounded-full p-1 text-(--color-text-dim) hover:bg-(--color-text)/10">
           <Icon name="close" className="h-5 w-5" />
         </button>
@@ -769,9 +812,29 @@ function Menu(props: Props & { onClose: () => void }) {
         </section>
         )}
 
-        {(show.cmdr || tracksCmdr(player)) && (
+        {(show.cmdr || tracksCmdr(player) || player.partners) && (
         <section className="space-y-1.5">
           <div className={head}>Commander damage</div>
+          {/* This deck runs two commanders: every opponent's strip gets a second sword for this seat. */}
+          <button
+            type="button"
+            onClick={() => props.onPartners(!player.partners)}
+            aria-pressed={!!player.partners}
+            className={
+              "flex w-full items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
+              (player.partners ? "border-(--color-text) bg-(--color-text)/15" : "border-(--color-border) text-(--color-text-dim) hover:bg-(--color-text)/10")
+            }
+          >
+            <span className="relative shrink-0">
+              <Icon name="sword" className="h-5 w-5" />
+              <span className="absolute -top-1 -right-1.5 text-[10px] font-black leading-none">2</span>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">My deck has two commanders</span>
+              <span className="block text-xs text-(--color-text-dim)">Partners, a Background, a companion: each counts to 21 on its own</span>
+            </span>
+            {player.partners && <Icon name="check" className="h-4 w-4 shrink-0" />}
+          </button>
           {/* One strip with every opponent; it doesn't use up counter space. */}
           <button
             type="button"
@@ -794,9 +857,9 @@ function Menu(props: Props & { onClose: () => void }) {
         </section>
         )}
 
-        {(ring || blessing || emblems) && (
+        {(ring || blessing || story || emblems) && (
         <section className="space-y-1.5">
-          <div className={head}>{[ring && "Ring", blessing && "blessing", emblems && "emblems"].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " and $1")}</div>
+          <div className={head}>{[ring && "Ring", blessing && "blessing", story && "story", emblems && "emblems"].filter(Boolean).join(", ").replace(/, ([^,]*)$/, " and $1")}</div>
           <div className="grid grid-cols-1 gap-1.5">
             {ring && (
             <button
@@ -819,6 +882,18 @@ function Menu(props: Props & { onClose: () => void }) {
               <Icon name="castle" className="h-5 w-5 shrink-0" />
               <span className="min-w-0 flex-1 truncate">City's blessing</span>
               {player.blessing && <Icon name="check" className="h-4 w-4 shrink-0" />}
+            </button>
+            )}
+            {story && (
+            <button
+              type="button"
+              onClick={() => props.onStory(!player.story)}
+              aria-pressed={!!player.story}
+              className={"flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " + (player.story ? "border-(--color-text) bg-(--color-text)/15" : off)}
+            >
+              <Icon name="book" className="h-5 w-5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate">Enduring Story</span>
+              {player.story && <Icon name="check" className="h-4 w-4 shrink-0" />}
             </button>
             )}
             {emblems && (
