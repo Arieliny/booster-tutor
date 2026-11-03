@@ -34,7 +34,7 @@ import {
   type Tab,
 } from "./lib/routes";
 import { useAuth } from "./lib/auth-context";
-import { refreshDbIfNewer } from "./lib/card-db";
+import { connection, refreshDbIfNewer } from "./lib/card-db";
 import { AccountMenu } from "./components/AccountMenu";
 import { LifeCounter } from "./components/LifeCounter";
 import { DeckRandomizer } from "./components/DeckRandomizer";
@@ -145,9 +145,18 @@ function App() {
   // Reopen on whichever mode was used last.
   useEffect(() => rememberTab(tab), [tab]);
 
-  // Keep the offline card database current (new sets) on devices that downloaded it.
+  // Keep the offline card database current (new sets) on devices that downloaded it:
+  // on opening, and again when the phone comes back online or joins Wi-Fi.
   useEffect(() => {
-    void refreshDbIfNewer();
+    const check = () => void refreshDbIfNewer();
+    check();
+    const net = connection();
+    window.addEventListener("online", check);
+    net?.addEventListener?.("change", check);
+    return () => {
+      window.removeEventListener("online", check);
+      net?.removeEventListener?.("change", check);
+    };
   }, []);
 
   // Bootstrap on mount.

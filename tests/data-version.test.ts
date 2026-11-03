@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { MAX_AGE_DAYS, staleReasons } from "../api/_data-version";
-import { isNewer } from "../src/lib/card-db";
+import { isNewer, networkAllows } from "../src/lib/card-db";
 
 const now = new Date("2026-11-13T09:00:00Z");
 const built = {
@@ -44,5 +44,25 @@ describe("isNewer", () => {
     expect(isNewer(undefined, "2026-11-10T08:00:00Z")).toBe(false);
     // An unknown local build time (info lost) counts as old.
     expect(isNewer("2026-11-10T08:00:00Z", "")).toBe(true);
+  });
+});
+
+describe("networkAllows", () => {
+  it("Wi-Fi only: downloads on Wi-Fi and wired, never on mobile data", () => {
+    expect(networkAllows(true, "wifi", true)).toBe(true);
+    expect(networkAllows(true, "ethernet", false)).toBe(true);
+    expect(networkAllows(true, "cellular", true)).toBe(false);
+    expect(networkAllows(true, "cellular", false)).toBe(false);
+  });
+
+  it("Wi-Fi only, browser won't say: a phone waits, a computer goes ahead", () => {
+    expect(networkAllows(true, undefined, true)).toBe(false);
+    expect(networkAllows(true, "unknown", true)).toBe(false);
+    expect(networkAllows(true, undefined, false)).toBe(true);
+  });
+
+  it("switched off: any connection", () => {
+    expect(networkAllows(false, "cellular", true)).toBe(true);
+    expect(networkAllows(false, undefined, true)).toBe(true);
   });
 });

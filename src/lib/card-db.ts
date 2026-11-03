@@ -156,6 +156,42 @@ export async function downloadDb(): Promise<CardDb> {
 
 const CHECKED_KEY = "booster-tutor-card-db-checked";
 const CHECK_EVERY_MS = 12 * 60 * 60 * 1000;
+const WIFI_ONLY_KEY = "booster-tutor-card-db-wifi-only";
+
+/** Automatic updates on Wi-Fi only (the default), or on any connection. */
+export function loadWifiOnly(): boolean {
+  try {
+    return localStorage.getItem(WIFI_ONLY_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
+export function saveWifiOnly(on: boolean) {
+  try {
+    if (on) localStorage.removeItem(WIFI_ONLY_KEY);
+    else localStorage.setItem(WIFI_ONLY_KEY, "0");
+  } catch {
+    // Blocked storage: the default (Wi-Fi only) stands.
+  }
+}
+
+type Connection = { type?: string; saveData?: boolean; addEventListener?: (e: "change", f: () => void) => void; removeEventListener?: (e: "change", f: () => void) => void };
+/** Chrome's Network Information API; Safari and Firefox don't have it. */
+export const connection = (): Connection | undefined => (navigator as Navigator & { connection?: Connection }).connection;
+
+/**
+ * May an automatic update download on this connection? `type` is what Chrome
+ * reports ("wifi", "ethernet", "cellular"...). Browsers that don't say (iPhones,
+ * Firefox) are taken as mobile data on a touch device, so Wi-Fi only stays a
+ * promise, and as a home connection on a computer.
+ */
+export function networkAllows(wifiOnly: boolean, type: string | undefined, touch: boolean): boolean {
+  if (!wifiOnly) return true;
+  if (type === "wifi" || type === "ethernet") return true;
+  if (type === "cellular" || type === "bluetooth" || type === "wimax") return false;
+  return !touch;
+}
 
 /** True when the deployed database was built after the one on this device. */
 export function isNewer(deployedBuiltAt: string | undefined, mine: string): boolean {
@@ -166,12 +202,16 @@ export function isNewer(deployedBuiltAt: string | undefined, mine: string): bool
  * If this device keeps the database and the site now has a newer one (a new
  * set, new previews, errata: the site rebuilds itself, see api/_data-refresh.ts),
  * download it in the background. Asks the site at most every 12 hours, only
- * when online, and not when the phone asks to save data. Never throws.
+ * when online, on Wi-Fi unless the person turned that off (Settings), and not
+ * when the phone asks to save data. Never throws.
  */
 export async function refreshDbIfNewer(now = Date.now()): Promise<CardDb | null> {
   try {
     if (!cachesOk() || !navigator.onLine) return null;
-    if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return null;
+    const net = connection();
+    if (net?.saveData) return null;
+    const touch = window.matchMedia("(pointer: coarse)").matches;
+    if (!networkAllows(loadWifiOnly(), net?.type, touch)) return null; // not checked: try again on Wi-Fi
     const mine = await dbInfo();
     if (!mine) return null; // never downloaded here: nothing to keep current
     const last = Number(localStorage.getItem(CHECKED_KEY) ?? 0);

@@ -254,7 +254,10 @@ New sets reach the offline card list and the judge's Comprehensive Rules without
   The cron's JSON answer says what it decided (`current` / `rebuilding` / `waiting` / `no-hook`).
 - Devices that downloaded the offline database check `/data-version.json` when the app opens (at
   most every 12 hours, online, not on Data Saver) and download a newer database in the background
-  (`refreshDbIfNewer` in `lib/card-db.ts`).
+  (`refreshDbIfNewer` in `lib/card-db.ts`), and again when the phone comes back online or changes network.
+  **Wi-Fi only** (Ari, 2026-11-02): on by default, a checkbox under the card database in Settings turns it
+  off. Uses Chrome's `navigator.connection.type`; where the browser won't say (iPhone, Firefox) a touch
+  device waits and a computer goes ahead (`networkAllows`).
 - Not covered: Set grades for a new set are still a manual build (`build-set-review.mjs`).
 
 ---

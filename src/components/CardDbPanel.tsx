@@ -1,4 +1,5 @@
-import { DB_DOWNLOAD_LABEL, type useCardDb } from "../lib/card-db";
+import { useState } from "react";
+import { DB_DOWNLOAD_LABEL, loadWifiOnly, saveWifiOnly, type useCardDb } from "../lib/card-db";
 import { shortDate } from "../lib/short-date";
 
 type CardDbHook = ReturnType<typeof useCardDb>;
@@ -6,6 +7,7 @@ type CardDbHook = ReturnType<typeof useCardDb>;
 /** Download / update / remove the offline card database. */
 export function CardDbPanel({ db }: { db: CardDbHook }) {
   const { state, download, remove } = db;
+  const [wifiOnly, setWifiOnly] = useState(loadWifiOnly);
   if (state.kind === "checking") return null;
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-lg border border-(--color-border) bg-(--color-bg-elev) px-3 py-2 text-xs text-(--color-text-dim)">
@@ -24,6 +26,22 @@ export function CardDbPanel({ db }: { db: CardDbHook }) {
               Remove
             </button>
           </span>
+          {/* New sets download by themselves (lib/card-db.ts refreshDbIfNewer); this keeps that off mobile data. */}
+          <label className="flex basis-full cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              checked={wifiOnly}
+              onChange={(e) => {
+                setWifiOnly(e.target.checked);
+                saveWifiOnly(e.target.checked);
+              }}
+              className="h-4 w-4 accent-(--color-accent)"
+            />
+            <span>
+              Update automatically on Wi-Fi only
+              <span className="block text-[11px]">{wifiOnly ? "New cards wait until you're on Wi-Fi." : "New cards download on any connection, mobile data too."}</span>
+            </span>
+          </label>
         </>
       )}
       {state.kind === "busy" && <span className="text-(--color-text)">Downloading…</span>}
