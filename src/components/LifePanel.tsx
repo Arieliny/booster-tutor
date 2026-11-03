@@ -128,6 +128,8 @@ interface Props {
   onCounter: (key: CounterKey, by: number) => void;
   onAddCounter: (key: CounterKey) => void;
   onRemoveCounter: (key: CounterKey) => void;
+  /** A counter switched off in Settings was added from "More counters": switch it back on. */
+  onOfferCounter: (key: CounterKey) => void;
   onCounterIcon: (key: CounterKey, icon: CounterIcon) => void;
   /** The ... menu is opening (the tray closes so it doesn't cover the menu). */
   onMenu: () => void;
@@ -652,7 +654,11 @@ function Menu(props: Props & { onClose: () => void }) {
   const ring = show.ring || !!player.ring;
   const blessing = show.blessing || !!player.blessing;
   const emblems = show.emblems || !!player.emblems?.length;
-  const offered = COUNTERS.filter((c) => !c.pip && (props.counters[c.key] !== false || player.counters[c.key] !== undefined));
+  const isOffered = (k: CounterKey) => props.counters[k] !== false || player.counters[k] !== undefined;
+  // Counters switched off in Settings stay one tap away: "More counters" lists them, and adding one switches it back on.
+  const [more, setMore] = useState(false);
+  const hidden = COUNTERS.filter((c) => !c.pip && !isOffered(c.key));
+  const listed = COUNTERS.filter((c) => !c.pip && (isOffered(c.key) || more));
   return (
     <div className="absolute inset-0 z-10 overflow-y-auto overscroll-contain bg-(--color-bg-elev) px-3 pb-3 text-left text-(--color-text)">
       {/* Stays at the top while the menu scrolls, so x is always in reach. */}
@@ -669,22 +675,28 @@ function Menu(props: Props & { onClose: () => void }) {
             Your card shows {most}, the most it can with {others.length + 1} players. Remove one to add another.
           </p>
         )}
-        {offered.length > 0 && (
+        {(listed.length > 0 || hidden.length > 0) && (
         <section className="space-y-1.5">
           <div className={head}>Counters on your life card</div>
           <div className="grid grid-cols-2 gap-1.5">
-            {offered.map((c) => {
+            {listed.map((c) => {
               const on = player.counters[c.key] !== undefined;
+              const extra = !isOffered(c.key);
               return (
                 <div key={c.key} className="flex items-stretch gap-1">
                   <button
                     type="button"
-                    onClick={() => (on ? props.onRemoveCounter(c.key) : props.onAddCounter(c.key))}
+                    onClick={() => {
+                      if (on) return props.onRemoveCounter(c.key);
+                      if (extra) props.onOfferCounter(c.key);
+                      props.onAddCounter(c.key);
+                    }}
                     aria-pressed={on}
                     disabled={!on && full}
                     className={
                       "flex min-w-0 flex-1 items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-sm " +
-                      (on ? "border-(--color-text) bg-(--color-text)/15" : off)
+                      (on ? "border-(--color-text) bg-(--color-text)/15" : off) +
+                      (extra ? " border-dashed" : "")
                     }
                   >
                     <Icon name={counterIcon(props, c.key)} className="h-5 w-5 shrink-0" />
@@ -712,6 +724,18 @@ function Menu(props: Props & { onClose: () => void }) {
               );
             })}
           </div>
+          {hidden.length > 0 &&
+            (more ? (
+              <p className="text-xs text-(--color-text-dim)">Adding one of these also switches it on in Settings.</p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setMore(true)}
+                className="w-full rounded-lg border border-dashed border-(--color-border) px-2.5 py-2 text-left text-sm text-(--color-text-dim) hover:bg-(--color-text)/10"
+              >
+                More counters: {hidden.map((c) => c.label).join(", ")}
+              </button>
+            ))}
         </section>
         )}
 

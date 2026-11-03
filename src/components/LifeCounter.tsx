@@ -455,6 +455,7 @@ export function LifeCounter({
                 onCounter={(key, by) => setGame((g) => changeCounter(g, i, key, by))}
                 onAddCounter={(key) => setGame((g) => addCounter(g, i, key))}
                 onRemoveCounter={(key) => setGame((g) => removeCounter(g, i, key))}
+                onOfferCounter={(key) => setSettings((s) => ({ ...s, cardCounters: { ...s.cardCounters, [key]: true } }))}
                 onCounterIcon={(key, icon) => setGame((g) => setCounterIcon(g, key, icon))}
                 onMenu={closeTray}
                 onCmdr={(from, by) => setGame((g) => changeCmdr(g, i, from, by))}
