@@ -172,6 +172,19 @@ export function LifePanel(props: Props) {
         <Turned turn={turn}>{(w, h) => <Face {...props} w={w} h={h} key={name} />}</Turned>
       </div>
       {highlight === "first" && <span className="sr-only">{name} goes first</span>}
+      {/* Picking a player (who becomes the monarch): the frame and the tap target are the whole card,
+          including the strip behind the camera; the label turns to face the player like everything else. */}
+      {props.picking && (
+        <button
+          type="button"
+          onClick={props.onPick}
+          className="absolute inset-0 z-20 rounded-2xl bg-black/25 text-sm font-semibold text-white ring-4 ring-white/80 ring-inset"
+        >
+          <span className="block h-full" style={topEdge ? { paddingTop: "env(safe-area-inset-top)" } : undefined}>
+            <Turned turn={turn}>{() => <span className="flex h-full items-end justify-center pb-3">{props.picking}</span>}</Turned>
+          </span>
+        </button>
+      )}
     </div>
   );
 }
@@ -397,15 +410,6 @@ function Face(props: Props & { w: number; h: number }) {
         </button>
       )}
 
-      {picking && (
-        <button
-          type="button"
-          onClick={props.onPick}
-          className="absolute inset-0 z-20 flex items-end justify-center bg-black/25 pb-3 text-sm font-semibold text-white ring-4 ring-white/80 ring-inset"
-        >
-          {picking}
-        </button>
-      )}
       {mode === "menu" && <Menu {...props} onClose={() => setMode("play")} />}
     </div>
   );
