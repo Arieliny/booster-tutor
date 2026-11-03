@@ -18,6 +18,7 @@ import {
   saveThread,
   type ThreadMessage,
 } from "./_judge-history.js";
+import { readFlag, saveFlag } from "./_judge-flags.js";
 
 /**
  * The rules judge (Claude, billed to the owner's API key).
@@ -26,6 +27,7 @@ import {
  *   GET  /api/judge?history=1 -> { threads }                    your last 50 threads (newest first)
  *   GET  /api/judge?thread=ID -> { thread }                     one thread, to reread or continue
  *   POST /api/judge { action: "deleteThread", id } | { action: "clearHistory" }
+ *   POST /api/judge { action: "flag", messages, cards?, note? }   "Looks wrong?": sends that answer to the owner (_judge-flags.ts)
  *   POST /api/judge { messages: [{role, content}], cards?: string[], threadId? }
  *        -> a stream of JSON lines:
  *           {type:"thread", id}     the thread this question was saved to
@@ -179,6 +181,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   if (body.action === "clearHistory") {
     await clearHistory(me.id);
+    res.status(200).json({ ok: true });
+    return;
+  }
+  if (body.action === "flag") {
+    const flag = readFlag(body);
+    if (!flag) {
+      res.status(400).json({ error: "Nothing to flag." });
+      return;
+    }
+    if (!(await saveFlag(me, flag))) {
+      res.status(429).json({ error: "That's plenty of flags for today. Thanks!" });
+      return;
+    }
     res.status(200).json({ ok: true });
     return;
   }

@@ -15,17 +15,19 @@ import {
   sessionCount,
 } from "./_auth.js";
 import { DEFAULT_GUEST_LIMIT, usageFor } from "./_judge-usage.js";
+import { deleteFlag, listFlags } from "./_judge-flags.js";
 
 /**
  * Admin (owner only): people and what they can use.
  *
- *   GET  /api/admin -> { features, defaultJudgeLimit, users: [{ ...user, devices, lastSeen, pendingLink, judge }] }
+ *   GET  /api/admin -> { features, defaultJudgeLimit, users: [{ ...user, devices, lastSeen, pendingLink, judge }], flags }
  *   POST /api/admin
  *     { action: "create", name, features }  -> { user, token }   new guest + their link
  *     { action: "update", id, name?, features?, judgeLimit? }   judgeLimit null = default
  *     { action: "link", id }                -> { token }         new one-time link (replaces any unused one)
  *     { action: "signOutEverywhere", id }
  *     { action: "remove", id }              guests only
+ *     { action: "dismissFlag", flagId }     a flagged ruling, checked
  *
  * Links are returned as raw tokens; the browser builds the URL, so the link
  * always points at whichever domain the owner is using.
@@ -51,7 +53,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }),
       );
       rows.sort((a, b) => (a.role === b.role ? a.name.localeCompare(b.name) : a.role === "owner" ? -1 : 1));
-      res.status(200).json({ features: FEATURES, defaultJudgeLimit: DEFAULT_GUEST_LIMIT, users: rows });
+      res.status(200).json({ features: FEATURES, defaultJudgeLimit: DEFAULT_GUEST_LIMIT, users: rows, flags: await listFlags() });
       return;
     }
     if (req.method !== "POST") {
@@ -70,6 +72,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const user = await createUser(name, "guest", features ?? []);
       res.status(200).json({ user, token: await createInvite(user.id) });
+      return;
+    }
+
+    if (body.action === "dismissFlag") {
+      if (typeof body.flagId === "string") await deleteFlag(body.flagId);
+      res.status(200).json({ ok: true });
       return;
     }
 

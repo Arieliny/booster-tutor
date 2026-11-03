@@ -228,6 +228,22 @@ export async function clearHistory(): Promise<void> {
   writeHistoryCache({ threads: [], bodies: {} });
 }
 
+/**
+ * "Looks wrong?": send this answer (and the conversation up to it) to the
+ * owner to check. Throws with the server's message when it can't.
+ */
+export async function flagRuling(c: { messages: JudgeMessage[]; cards: string[] }, note: string): Promise<void> {
+  const res = await fetch("/api/judge", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "flag", messages: c.messages.map(({ role, content }) => ({ role, content })), cards: c.cards, note }),
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `Couldn't send it (HTTP ${res.status}).`);
+  }
+}
+
 /** Card-name suggestions from Scryfall, for adding cards to a question. */
 export async function suggestCards(q: string, signal: AbortSignal): Promise<string[]> {
   const res = await fetch(`https://api.scryfall.com/cards/autocomplete?q=${encodeURIComponent(q)}`, { signal });

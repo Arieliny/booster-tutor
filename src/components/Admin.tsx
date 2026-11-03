@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   FEATURE_LABELS,
   adminCreate,
+  adminDismissFlag,
   adminList,
   adminNewLink,
   adminRemove,
@@ -10,6 +11,7 @@ import {
   signInUrl,
   type AdminUser,
   type Feature,
+  type FlaggedRuling,
 } from "../lib/auth";
 
 const FEATURES = Object.keys(FEATURE_LABELS) as Feature[];
@@ -73,6 +75,60 @@ function LinkBox({ name, token, onDone }: { name: string; token: string; onDone:
   );
 }
 
+/**
+ * Rulings someone tapped "Looks wrong?" on: the question, the answer and their
+ * note. "Copy for Claude" copies it whole, to paste into Claude Code and turn
+ * into a judge test question (tests/judge-eval/); Done clears it.
+ */
+function FlaggedRulings({ flags, onDone }: { flags: FlaggedRuling[]; onDone: (id: string) => void }) {
+  const [copied, setCopied] = useState<string | null>(null);
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-semibold text-(--color-text)">Flagged rulings · {flags.length}</h3>
+      {flags.map((f) => {
+        const question = [...f.messages].reverse().find((m) => m.role === "user")?.content ?? "";
+        const answer = f.messages.at(-1)?.content ?? "";
+        return (
+          <div key={f.id} className="space-y-2 rounded-lg border border-amber-500/40 bg-(--color-bg-elev) p-4 text-sm">
+            <div className="text-xs text-(--color-text-dim)">
+              {f.userName} · {ago(f.at)}
+              {f.cards.length > 0 && ` · ${f.cards.join(", ")}`}
+              {f.messages.length > 2 && ` · ${f.messages.filter((m) => m.role === "user").length} questions in the thread`}
+            </div>
+            <p className="whitespace-pre-wrap text-(--color-text)">{question}</p>
+            {f.note && <p className="rounded bg-amber-500/10 px-2 py-1.5 text-amber-100">“{f.note}”</p>}
+            <details>
+              <summary className="cursor-pointer text-xs text-(--color-text-dim) hover:text-(--color-text)">The answer they flagged</summary>
+              <p className="mt-2 whitespace-pre-wrap text-(--color-text-dim)">{answer}</p>
+            </details>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(
+                      `A judge ruling was flagged as looking wrong. Check it against the sources and, if it's a good test, add it to tests/judge-eval/questions.json.\n\n${JSON.stringify({ cards: f.cards, messages: f.messages, note: f.note }, null, 2)}`,
+                    );
+                    setCopied(f.id);
+                  } catch {
+                    // Clipboard blocked: the text is on screen to copy by hand.
+                  }
+                }}
+                className="rounded border border-(--color-border) px-3 py-1.5 text-(--color-text) hover:bg-white/5"
+              >
+                {copied === f.id ? "Copied" : "Copy for Claude"}
+              </button>
+              <button type="button" onClick={() => onDone(f.id)} className="rounded border border-(--color-border) px-3 py-1.5 text-(--color-text-dim) hover:bg-white/5">
+                Done
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
 /** Owner only: the people who can use the app and what each one can use. */
 /** A guest's monthly judge allowance (each ruling is billed to the owner's API key). */
 function JudgeLimit({
@@ -120,12 +176,14 @@ export function Admin() {
   const [newFeatures, setNewFeatures] = useState<Feature[]>(["setReview"]);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [defaultLimit, setDefaultLimit] = useState(50);
+  const [flags, setFlags] = useState<FlaggedRuling[]>([]);
 
   const reload = useCallback(async () => {
     try {
       const d = await adminList();
       setUsers(d.users);
       setDefaultLimit(d.defaultJudgeLimit);
+      setFlags(d.flags);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -139,6 +197,7 @@ export function Admin() {
         if (!live) return;
         setUsers(d.users);
         setDefaultLimit(d.defaultJudgeLimit);
+        setFlags(d.flags);
       })
       .catch((err) => {
         if (live) setError(err instanceof Error ? err.message : String(err));
@@ -180,6 +239,8 @@ export function Admin() {
       </p>
 
       {error && <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">{error}</p>}
+
+      {flags.length > 0 && <FlaggedRulings flags={flags} onDone={(id) => act(() => adminDismissFlag(id))} />}
 
       {owner && (
         <section className="rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-4">

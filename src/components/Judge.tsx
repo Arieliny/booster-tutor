@@ -5,6 +5,7 @@ import {
   clearHistory,
   deleteThread,
   fetchHistory,
+  flagRuling,
   formatCost,
   getAllowance,
   openingConversation,
@@ -32,6 +33,65 @@ const EXAMPLES = [
 ];
 
 type Busy = { status: string | null; draft: string } | null;
+
+/**
+ * "Looks wrong?" under an answer: an optional note, then the conversation up
+ * to that answer goes to the owner to check (Admin, Flagged rulings).
+ */
+function FlagRuling({ convo }: { convo: { messages: JudgeMessage[]; cards: string[] } }) {
+  const [state, setState] = useState<"idle" | "open" | "sending" | "sent">("idle");
+  const [note, setNote] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  if (state === "sent") return <p className="mt-2 text-xs text-(--color-text-dim)">Thanks: sent to be checked.</p>;
+  if (state === "idle") {
+    return (
+      <button type="button" onClick={() => setState("open")} className="mt-2 text-xs text-(--color-text-dim)/80 hover:text-(--color-text) hover:underline">
+        Looks wrong?
+      </button>
+    );
+  }
+  return (
+    <form
+      className="mt-3 space-y-2 border-t border-(--color-border) pt-3"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setState("sending");
+        setError(null);
+        try {
+          await flagRuling(convo, note);
+          setState("sent");
+        } catch (err) {
+          setError(err instanceof Error ? err.message : String(err));
+          setState("open");
+        }
+      }}
+    >
+      <textarea
+        value={note}
+        onChange={(e) => setNote(e.target.value)}
+        rows={2}
+        maxLength={1000}
+        autoFocus
+        placeholder="What looks wrong? (optional)"
+        className="w-full resize-none rounded border border-(--color-border) bg-(--color-bg) px-2 py-1.5 text-sm text-(--color-text) placeholder:text-(--color-text-dim)"
+      />
+      <p className="text-xs text-(--color-text-dim)">Sends this question and answer to the app's owner to check.</p>
+      {error && <p className="text-xs text-red-300">{error}</p>}
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={state === "sending"}
+          className="rounded bg-(--color-accent) px-3 py-1.5 text-xs font-medium text-black hover:bg-(--color-accent-bright) disabled:opacity-50"
+        >
+          {state === "sending" ? "Sending…" : "Send"}
+        </button>
+        <button type="button" onClick={() => setState("idle")} className="rounded border border-(--color-border) px-3 py-1.5 text-xs text-(--color-text-dim) hover:bg-white/5">
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
 
 /**
  * Ask the rules judge. Cards "on the table" go with every question until
@@ -213,11 +273,14 @@ export function Judge({ embedded = false }: { embedded?: boolean } = {}) {
           ) : (
             <div key={i} className="rounded-xl border border-(--color-border) px-3 py-3 text-sm text-(--color-text-dim)">
               <Markdown text={m.content} />
-              {m.cost !== undefined && (
-                <div className="mt-2 text-right text-xs text-(--color-text-dim)/70" title="Estimated from Anthropic's list prices. Only you see this.">
-                  {formatCost(m.cost)}
-                </div>
-              )}
+              <div className="flex items-start justify-between gap-3">
+                <FlagRuling key={`${convo.threadId ?? ""}-${i}`} convo={{ messages: messages.slice(0, i + 1), cards }} />
+                {m.cost !== undefined && (
+                  <div className="mt-2 ml-auto text-right text-xs text-(--color-text-dim)/70" title="Estimated from Anthropic's list prices. Only you see this.">
+                    {formatCost(m.cost)}
+                  </div>
+                )}
+              </div>
             </div>
           ),
         )}

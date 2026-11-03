@@ -211,8 +211,24 @@ async function admin<T>(method: "GET" | "POST", body?: Record<string, unknown>):
   return data;
 }
 
+/** A ruling someone flagged with "Looks wrong?" (api/_judge-flags.ts). */
+export interface FlaggedRuling {
+  id: string;
+  at: string;
+  userName: string;
+  cards: string[];
+  /** The conversation, ending with the flagged answer. */
+  messages: { role: "user" | "assistant"; content: string }[];
+  note: string;
+}
+
 export const adminList = () =>
-  admin<{ users: AdminUser[]; defaultJudgeLimit: number }>("GET").then((d) => ({ users: d.users, defaultJudgeLimit: d.defaultJudgeLimit }));
+  admin<{ users: AdminUser[]; defaultJudgeLimit: number; flags?: FlaggedRuling[] }>("GET").then((d) => ({
+    users: d.users,
+    defaultJudgeLimit: d.defaultJudgeLimit,
+    flags: d.flags ?? [],
+  }));
+export const adminDismissFlag = (flagId: string) => admin("POST", { action: "dismissFlag", flagId });
 export const adminCreate = (name: string, features: Feature[]) =>
   admin<{ token: string; user: { id: string } }>("POST", { action: "create", name, features }).then((d) => ({
     token: d.token,
