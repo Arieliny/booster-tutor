@@ -12,6 +12,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import type { ReviewCard } from "./cube-review";
+import { closestNames, fuzzyIndex, type FuzzyIndex } from "./fuzzy";
 
 export interface DbFace {
   n: string;
@@ -285,27 +286,43 @@ export async function removeDb(): Promise<void> {
 
 /**
  * Name matches first (exact, then starts-with, then contains), then rules-text
- * matches. Skips ids in `exclude` (cards already on screen).
+ * matches. Skips ids in `exclude` (cards already on screen). `named` says
+ * whether any card's name has the text in it, on screen or not: when none
+ * does, the search offers "Did you mean ...?" (didYouMean).
  */
 export function searchDb(
   db: CardDb,
   q: string,
   limit: number,
   exclude: Set<string>,
-): { cards: DbCard[]; total: number } {
+): { cards: DbCard[]; total: number; named: boolean } {
   const needle = q.trim().toLowerCase();
-  if (needle.length < 2) return { cards: [], total: 0 };
+  if (needle.length < 2) return { cards: [], total: 0, named: false };
   const tiers: number[][] = [[], [], [], []];
+  let named = false;
   for (let k = 0; k < db.cards.length; k++) {
-    if (exclude.has(db.cards[k].id)) continue;
     const name = db.names[k];
-    if (name === needle || name.split(" // ").includes(needle)) tiers[0].push(k);
-    else if (name.startsWith(needle)) tiers[1].push(k);
-    else if (name.includes(needle)) tiers[2].push(k);
+    const tier = name === needle || name.split(" // ").includes(needle) ? 0 : name.startsWith(needle) ? 1 : name.includes(needle) ? 2 : -1;
+    if (tier >= 0) named = true;
+    if (exclude.has(db.cards[k].id)) continue;
+    if (tier >= 0) tiers[tier].push(k);
     else if (db.hay[k].includes(needle)) tiers[3].push(k);
   }
   const all = tiers.flat();
-  return { cards: all.slice(0, limit).map((k) => db.cards[k]), total: all.length };
+  return { cards: all.slice(0, limit).map((k) => db.cards[k]), total: all.length, named };
+}
+
+/** Built the first time a search needs it (~0.1 s), then kept with the database. */
+const fuzzyIndexes = new WeakMap<CardDb, FuzzyIndex>();
+
+/** The cards whose names are a few typos from `q`, best first (lib/fuzzy.ts). */
+export function didYouMean(db: CardDb, q: string, limit = 3, exclude?: Set<string>): DbCard[] {
+  let index = fuzzyIndexes.get(db);
+  if (!index) {
+    index = fuzzyIndex(db.cards.map((c) => c.n));
+    fuzzyIndexes.set(db, index);
+  }
+  return closestNames(index, q, limit, exclude?.size ? (k) => exclude.has(db.cards[k].id) : undefined).map((h) => db.cards[h.index]);
 }
 
 const RARITY: Record<string, string> = {

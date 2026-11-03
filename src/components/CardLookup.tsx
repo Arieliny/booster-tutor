@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { searchDb, toReviewCard, type useCardDb } from "../lib/card-db";
+import { didYouMean, searchDb, toReviewCard, type useCardDb } from "../lib/card-db";
 import type { ReviewCard } from "../lib/cube-review";
-import { scryfallSuggest } from "../lib/scryfall";
+import { scryfallFuzzyName, scryfallSuggest } from "../lib/scryfall";
 import { openSettings } from "../lib/routes";
+import { useSettled } from "../lib/use-settled";
 import { CardDbNotice } from "./CardDbPanel";
+import { DidYouMean } from "./DidYouMean";
 import { ManaCost } from "./ManaCost";
 
 type CardDbHook = ReturnType<typeof useCardDb>;
@@ -41,6 +43,12 @@ export function CardLookup({
     () => (state.kind === "ready" && state.db && needle.length >= 2 ? searchDb(state.db, needle, SHOW, exclude) : null),
     [state, needle, exclude],
   );
+  // No card has that in its name, here or in the cube: a few typos away, perhaps? Worked out once typing pauses.
+  const settled = useSettled(needle, 200);
+  const guesses = useMemo(
+    () => (state.kind === "ready" && state.db && results && !results.named && settled === needle ? didYouMean(state.db, needle) : []),
+    [state, results, needle, settled],
+  );
 
   if (needle.length < 2) return null;
 
@@ -51,6 +59,17 @@ export function CardLookup({
         <div className="mb-2 empty:hidden">
           <CardDbNotice db={db} />
         </div>
+        {guesses.length > 0 && (
+          <div className="mb-1.5">
+            <DidYouMean
+              names={guesses.map((d) => d.n)}
+              onPick={(n) => {
+                const d = guesses.find((g) => g.n === n);
+                if (d) onOpenCard(toReviewCard(d));
+              }}
+            />
+          </div>
+        )}
         <div className="mb-1 text-xs text-(--color-text-dim)">
           {results.total === 0
             ? `No other card matches “${needle}”.`
@@ -107,7 +126,7 @@ function Box({ children }: { children: React.ReactNode }) {
 type SuggestState =
   | { q: string; kind: "idle" }
   | { q: string; kind: "loading" }
-  | { q: string; kind: "list"; names: string[] }
+  | { q: string; kind: "list"; names: string[]; guess: string | null }
   | { q: string; kind: "error"; message: string };
 
 /** Online fallback: card-name suggestions from Scryfall. */
@@ -129,7 +148,10 @@ function ScryfallSearch({
   const search = async () => {
     setState({ q, kind: "loading" });
     try {
-      setState({ q, kind: "list", names: (await scryfallSuggest(q)).slice(0, 8) });
+      const names = (await scryfallSuggest(q)).slice(0, 8);
+      // Nothing starts like that: Scryfall's best guess at a typo.
+      const guess = names.length === 0 ? await scryfallFuzzyName(q).catch(() => null) : null;
+      setState({ q, kind: "list", names, guess });
     } catch {
       setState({ q, kind: "error", message: navigator.onLine ? "Scryfall didn't respond. Try again." : offlineMsg });
     }
@@ -164,7 +186,13 @@ function ScryfallSearch({
       </span>
     );
   }
-  if (cur.names.length === 0) return <span className="text-(--color-text-dim)">No card on Scryfall matches “{q}”.</span>;
+  if (cur.names.length === 0) {
+    return cur.guess ? (
+      <DidYouMean names={[cur.guess]} onPick={(n) => void pick(n)} busy={busy} />
+    ) : (
+      <span className="text-(--color-text-dim)">No card on Scryfall matches “{q}”.</span>
+    );
+  }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <span className="text-xs text-(--color-text-dim)">From Scryfall:</span>

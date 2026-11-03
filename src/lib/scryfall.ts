@@ -15,6 +15,18 @@ export async function scryfallSuggest(q: string, signal?: AbortSignal): Promise<
   return j.data ?? [];
 }
 
+/**
+ * Scryfall's best guess at a misspelled card name ("lightnig bolt" -> "Lightning
+ * Bolt"), or null when it has none (or more than one equally good).
+ */
+export async function scryfallFuzzyName(q: string, signal?: AbortSignal): Promise<string | null> {
+  const res = await fetch(`${SCRYFALL}/cards/named?fuzzy=${encodeURIComponent(q)}`, { signal });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Scryfall returned ${res.status}`);
+  const j = (await res.json()) as { name?: string };
+  return j.name ?? null;
+}
+
 /** One card by exact name, in the same shape as the baked data, with its oldest art. */
 export async function scryfallCard(name: string): Promise<ReviewCard> {
   const res = await fetch(`${SCRYFALL}/cards/named?exact=${encodeURIComponent(name)}`);

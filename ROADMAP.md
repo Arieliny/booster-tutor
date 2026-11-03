@@ -267,6 +267,24 @@ New sets reach the offline card list and the judge's Comprehensive Rules without
 
 ---
 
+## ✅ "Did you mean ...?" in card searches (2026-11-02)
+
+When no card's name contains what was typed, the search offers the closest names as a line under
+the box ("Did you mean **Lightning Bolt**? Or ..."); tapping one opens the card.
+
+- Offline database: `lib/fuzzy.ts` (normalize: no accents/apostrophes; edit distance with neighbour
+  swaps; 0 typos up to 3 letters, 1 up to 5, 2 up to 9, then 3; also matched against the START of
+  longer names while typing (+0.5), and each face of split/double-faced cards; reprints whose face
+  repeats a name are de-duplicated). `didYouMean()` in `lib/card-db.ts` builds the index once per
+  database (~25 ms) and runs after a 200 ms typing pause (`useSettled`), ~2-20 ms per search on a PC.
+  `searchDb` now returns `named` (any name contains the text, on screen or not) so an exact cube hit
+  on the Look up tab never triggers a guess.
+- No database: Scryfall's `/cards/named?fuzzy=` when autocomplete returns nothing
+  (`scryfallFuzzyName`).
+- Where: the life counter's Look up a card (both apps) and the Look up tab's other-cards box.
+
+---
+
 ## Future / under consideration
 
 ### A. Rotisserie draft mode  *(REMOVED 2026-10-12 at Ari's request; kept below as history)*

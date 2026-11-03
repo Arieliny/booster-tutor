@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { searchDb, toReviewCard, useCardDb, type DbCard } from "../lib/card-db";
+import { didYouMean, searchDb, toReviewCard, useCardDb, type DbCard } from "../lib/card-db";
 import type { ReviewCard } from "../lib/cube-review";
-import { scryfallCard, scryfallSuggest } from "../lib/scryfall";
+import { scryfallCard, scryfallFuzzyName, scryfallSuggest } from "../lib/scryfall";
 import { useBackToClose } from "../lib/use-back-to-close";
+import { useSettled } from "../lib/use-settled";
 import { CardDbNotice } from "./CardDbPanel";
+import { DidYouMean } from "./DidYouMean";
 import { Icon } from "./Icon";
 import { ManaCost } from "./ManaCost";
 import { Rulings } from "./Rulings";
@@ -11,8 +13,8 @@ import { Rulings } from "./Rulings";
 const SHOW = 30;
 const NONE = new Set<string>();
 
-/** Scryfall's name suggestions, kept with the text they were for. */
-type Suggest = { q: string; names: string[] } | { q: string; error: string };
+/** Scryfall's name suggestions (or, when none, its guess at a typo), kept with the text they were for. */
+type Suggest = { q: string; names: string[]; guess?: string | null } | { q: string; error: string };
 
 /**
  * Card search in the life counter, for everyone: find a card by name and read
@@ -41,6 +43,12 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
     () => (state.kind === "ready" && state.db && needle.length >= 2 ? searchDb(state.db, needle, SHOW, NONE) : null),
     [state, needle],
   );
+  // No card has that in its name: a few typos away, perhaps? Worked out once typing pauses.
+  const settled = useSettled(needle, 200);
+  const guesses = useMemo(
+    () => (state.kind === "ready" && state.db && local && !local.named && settled === needle ? didYouMean(state.db, needle) : []),
+    [state, local, needle, settled],
+  );
 
   // No database: ask Scryfall for names as you type (after a short pause).
   const online = !offline && state.kind !== "checking" && state.kind !== "busy" && needle.length >= 2;
@@ -49,7 +57,11 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
     const ctl = new AbortController();
     const t = window.setTimeout(() => {
       scryfallSuggest(needle, ctl.signal)
-        .then((names) => setSuggest({ q: needle, names: names.slice(0, 12) }))
+        .then(async (names) => {
+          // Nothing starts like that: ask Scryfall for its best guess at a typo.
+          const guess = names.length === 0 ? await scryfallFuzzyName(needle, ctl.signal).catch(() => null) : null;
+          setSuggest({ q: needle, names: names.slice(0, 12), guess });
+        })
         .catch(() => {
           if (!ctl.signal.aborted)
             setSuggest({ q: needle, error: navigator.onLine ? "Scryfall didn't answer. Keep typing to try again." : "You're offline." });
@@ -98,11 +110,21 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
       {openError && <p className="text-sm text-amber-300">{openError}</p>}
 
       {needle.length >= 2 && offline && (
+        <DidYouMean
+          names={guesses.map((d) => d.n)}
+          onPick={(n) => {
+            const d = guesses.find((g) => g.n === n);
+            if (d) setCard(toReviewCard(d));
+          }}
+        />
+      )}
+
+      {needle.length >= 2 && offline && (
         <Results>
           {!local ? (
             <Note>Loading the card database…</Note>
           ) : local.total === 0 ? (
-            <Note>No card matches “{needle}”.</Note>
+            <Note>{guesses.length ? `No card is called “${needle}”.` : `No card matches “${needle}”.`}</Note>
           ) : (
             local.cards.map((d) => <DbRow key={d.id} d={d} onOpen={() => setCard(toReviewCard(d))} />)
           )}
@@ -119,7 +141,13 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
               {!navigator.onLine && " Download the card database in Settings to search with no connection."}
             </Note>
           ) : names.names.length === 0 ? (
-            <Note>No card matches “{needle}”.</Note>
+            names.guess ? (
+              <li className="px-3 py-2.5">
+                <DidYouMean names={[names.guess]} onPick={(n) => void openNamed(n)} busy={opening} />
+              </li>
+            ) : (
+              <Note>No card matches “{needle}”.</Note>
+            )
           ) : (
             names.names.map((n) => (
               <li key={n}>
