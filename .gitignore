@@ -31,3 +31,7 @@ data/cr.json
 
 # Claude Code agent worktrees (local only)
 .claude/worktrees/
+
+# What the build fetched (scripts/write-data-version.mjs), never committed
+public/data-version.json
+data/data-version.json

@@ -154,6 +154,38 @@ export async function downloadDb(): Promise<CardDb> {
   return db;
 }
 
+const CHECKED_KEY = "booster-tutor-card-db-checked";
+const CHECK_EVERY_MS = 12 * 60 * 60 * 1000;
+
+/** True when the deployed database was built after the one on this device. */
+export function isNewer(deployedBuiltAt: string | undefined, mine: string): boolean {
+  return !!deployedBuiltAt && deployedBuiltAt > mine;
+}
+
+/**
+ * If this device keeps the database and the site now has a newer one (a new
+ * set, new previews, errata: the site rebuilds itself, see api/_data-refresh.ts),
+ * download it in the background. Asks the site at most every 12 hours, only
+ * when online, and not when the phone asks to save data. Never throws.
+ */
+export async function refreshDbIfNewer(now = Date.now()): Promise<CardDb | null> {
+  try {
+    if (!cachesOk() || !navigator.onLine) return null;
+    if ((navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData) return null;
+    const mine = await dbInfo();
+    if (!mine) return null; // never downloaded here: nothing to keep current
+    const last = Number(localStorage.getItem(CHECKED_KEY) ?? 0);
+    if (now - last < CHECK_EVERY_MS) return null;
+    localStorage.setItem(CHECKED_KEY, String(now));
+    const res = await fetch("/data-version.json", { cache: "no-store" });
+    if (!res.ok) return null;
+    const deployed = (await res.json()) as { cards?: { builtAt?: string } | null };
+    return isNewer(deployed.cards?.builtAt, mine.builtAt) ? await downloadDb() : null;
+  } catch {
+    return null; // an older site with no version file, offline mid-way: try again later
+  }
+}
+
 export async function removeDb(): Promise<void> {
   loaded = null;
   writeInfo(null);

@@ -34,6 +34,7 @@ import {
   type Tab,
 } from "./lib/routes";
 import { useAuth } from "./lib/auth-context";
+import { refreshDbIfNewer } from "./lib/card-db";
 import { AccountMenu } from "./components/AccountMenu";
 import { LifeCounter } from "./components/LifeCounter";
 import { DeckRandomizer } from "./components/DeckRandomizer";
@@ -143,6 +144,11 @@ function App() {
 
   // Reopen on whichever mode was used last.
   useEffect(() => rememberTab(tab), [tab]);
+
+  // Keep the offline card database current (new sets) on devices that downloaded it.
+  useEffect(() => {
+    void refreshDbIfNewer();
+  }, []);
 
   // Bootstrap on mount.
   useEffect(() => {

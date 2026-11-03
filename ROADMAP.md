@@ -239,6 +239,26 @@ and `boostersPerPlayer: 9` (clamped down for cubes smaller than 198 cards).
 
 ---
 
+## ✅ Cards and rules keep themselves current (2026-11-02)
+
+New sets reach the offline card list and the judge's Comprehensive Rules without a code push.
+
+- Both are fetched at build time (`build-card-db.mjs`, `fetch-cr.mjs`). `write-data-version.mjs`
+  then records what the build got: card-db build time, Scryfall's card count, the CR file URL
+  (`public/data-version.json` for the app, `data/data-version.json` for the function).
+- The daily cron (`api/keepalive.ts`, shares the keep-alive so the Hobby cron limit isn't an issue)
+  runs `api/_data-refresh.ts`: if Wizards' rules page links a new CR file, Scryfall's card count
+  changed (new previews), or the build is over 14 days old, it POSTs the project's Vercel Deploy
+  Hook (env `DEPLOY_HOOK_URL`, one per Vercel project: Booster Tutor and LifeTutor each rebuild
+  themselves). At most one rebuild per project per 20 hours (Redis key per `VERCEL_PROJECT_ID`).
+  The cron's JSON answer says what it decided (`current` / `rebuilding` / `waiting` / `no-hook`).
+- Devices that downloaded the offline database check `/data-version.json` when the app opens (at
+  most every 12 hours, online, not on Data Saver) and download a newer database in the background
+  (`refreshDbIfNewer` in `lib/card-db.ts`).
+- Not covered: Set grades for a new set are still a manual build (`build-set-review.mjs`).
+
+---
+
 ## Future / under consideration
 
 ### A. Rotisserie draft mode  *(REMOVED 2026-10-12 at Ari's request; kept below as history)*

@@ -1,10 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "node scripts/build-card-db.mjs --soft && node scripts/fetch-cr.mjs --soft && node scripts/build-cube-review.mjs --soft && npm run build",
+  "buildCommand": "node scripts/build-card-db.mjs --soft && node scripts/fetch-cr.mjs --soft && node scripts/build-cube-review.mjs --soft && node scripts/write-data-version.mjs && npm run build",
   "functions": {
     "api/judge.ts": {
       "maxDuration": 300,
       "includeFiles": "data/cr.json"
+    },
+    "api/keepalive.ts": {
+      "includeFiles": "data/data-version.json"
     }
   },
   "rewrites": [
