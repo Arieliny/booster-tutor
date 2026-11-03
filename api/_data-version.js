@@ -7,15 +7,24 @@ const COUNT_URL = "https://api.scryfall.com/cards/search?q=" + encodeURIComponen
 /** A rebuild at least this often anyway, for Oracle errata and late fixes. */
 export const MAX_AGE_DAYS = 14;
 
-/** How many distinct cards Scryfall knows right now (new previews push it up). */
-export async function scryfallTotal() {
-  const res = await fetch(COUNT_URL, {
-    headers: { "User-Agent": "BoosterTutor/1.0 (data check)", Accept: "application/json" },
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status} from Scryfall`);
-  const body = await res.json();
-  if (typeof body.total_cards !== "number") throw new Error("Scryfall gave no card count");
-  return body.total_cards;
+/**
+ * How many distinct cards Scryfall knows right now (new previews push it up).
+ * Retries a few times: in the build it runs straight after the card downloads,
+ * and Scryfall can answer 429 (slow down) then.
+ */
+export async function scryfallTotal(waits = [2000, 5000, 10000]) {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(COUNT_URL, {
+      headers: { "User-Agent": "BoosterTutor/1.0 (data check)", Accept: "application/json" },
+    });
+    if (res.ok) {
+      const body = await res.json();
+      if (typeof body.total_cards !== "number") throw new Error("Scryfall gave no card count");
+      return body.total_cards;
+    }
+    if (attempt >= waits.length || !(res.status === 429 || res.status >= 500)) throw new Error(`HTTP ${res.status} from Scryfall`);
+    await new Promise((r) => setTimeout(r, waits[attempt]));
+  }
 }
 
 /**

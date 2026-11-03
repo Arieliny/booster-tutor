@@ -31,9 +31,18 @@ export async function refreshData(now = new Date()): Promise<RefreshResult> {
     // An older deploy, or the build step failed: staleReasons says so.
   }
   const [total, crSource] = await Promise.all([
-    scryfallTotal().catch(() => null),
+    scryfallTotal([1000]).catch(() => null),
     crUrl().catch(() => null),
   ]);
+  // The build couldn't get Scryfall's count (it can be rate-limited right after
+  // the downloads): the first check after the deploy records today's as the
+  // baseline instead of calling the build stale for a count it never had.
+  if (version?.cards && typeof version.cards.total !== "number" && total !== null) {
+    const key = `data-refresh:baseline:${process.env.VERCEL_DEPLOYMENT_ID ?? process.env.VERCEL_URL ?? "local"}`;
+    const saved = await redis.get<number>(key);
+    if (typeof saved !== "number") await redis.set(key, total, { ex: 30 * 86_400 });
+    version = { ...version, cards: { ...version.cards, total: typeof saved === "number" ? saved : total } };
+  }
   const reasons = staleReasons(version, { total, crSource }, now);
   if (reasons.length === 0) return { action: "current", reasons };
 
