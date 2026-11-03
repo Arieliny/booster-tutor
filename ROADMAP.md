@@ -295,6 +295,29 @@ the box ("Did you mean **Lightning Bolt**? Or ..."); tapping one opens the card.
 
 ---
 
+## ✅ Judge: game rules only, and a test set (2026-11-03)
+
+Ari: the judge is for card interactions at the table, not tournament policy.
+
+- **Scope.** The topic check (`api/_judge-guard.ts`) sorts questions into MAGIC / POLICY / OTHER.
+  POLICY (penalties, infractions, MTR/IPG/JAR, REL) gets a fixed reply pointing at the event's
+  judge, uses no ruling and isn't counted as a refusal. The judge's prompt has no tournament
+  section; its web search is limited to magic.wizards.com (new sets' release notes, fresh bans).
+- **Fixed on the way:** Haiku 5.5 thinks by default and used up the check's 5-token reply, so
+  some real questions were refused as off-topic. Thinking off; only an explicit OTHER refuses.
+- **Sources:** every official ruling on a card (was the newest 20), and the CR's table of
+  contents in the prompt (`crIndex` in `api/_cr.ts`: sections plus keyword numbers), since
+  numbers move between versions.
+- **Test set:** `tests/judge-eval/questions.json`, 50 questions (10 marked `hard`: several cards
+  or rules at once, a rule that changed recently, a follow-up that needs a new lookup), each with
+  the facts a right answer must state, checked against the CR and current rulings. Free runs:
+  Claude Code subagents given `scripts/print-judge-prompt.ts` and `scripts/judge-brief.ts`, graded
+  by a separate subagent. Real-judge runs: `scripts/judge-eval.ts` (local handler, key in
+  `.env.local`, `--budget` cap), only a handful at a time (Ari: ~$1). Results in `runs/`.
+  First results: 40/40 free, 10/10 real ($0.57); the set was too easy, hence the hard batch.
+
+---
+
 ## Future / under consideration
 
 ### A. Rotisserie draft mode  *(REMOVED 2026-10-12 at Ari's request; kept below as history)*

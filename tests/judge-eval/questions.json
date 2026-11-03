@@ -1,5 +1,5 @@
 {
-  "about": "The judge test set: questions with known answers, weighted toward the areas rulings commonly go wrong in. Each expected answer was checked against the CR effective with data/cr.json and the cards' current Oracle text and official rulings (scripts/judge-brief.ts), not from memory. mustSay: facts a correct answer has to state (in any wording). mustNotSay: the usual wrong answers. api: one of the few also run through the real judge (scripts/judge-eval.ts).",
+  "about": "The judge test set: questions with known answers, weighted toward the areas rulings commonly go wrong in. Each expected answer was checked against the CR in data/cr.json and the cards' current Oracle text and official rulings (scripts/judge-brief.ts), not from memory. mustSay: facts a correct answer has to state (in any wording). mustNotSay: the usual wrong answers. api: also run through the real judge (scripts/judge-eval.ts). hard: the second batch (2026-11-03), built so no single ruling answers it: several cards or rules at once, a rule that changed recently, or a follow-up that needs a new lookup. history: earlier turns of the conversation, sent before `ask`. The judge covers game rules and card interactions only, not tournament policy (Ari, 2026-11-03).",
   "questions": [
     {
       "id": "saga-blood-moon",
@@ -817,21 +817,20 @@
       ]
     },
     {
-      "id": "missed-trigger-competitive",
-      "area": "Tournament policy",
+      "id": "tournament-out-of-scope",
+      "area": "Scope",
       "cards": [],
       "ask": "Competitive REL. My opponent forgot their own trigger that would have helped them, and I noticed. Do I have to tell them? Is it a penalty?",
-      "ruling": "No, I don't have to point out my opponent's triggers. It's Game Play Error - Missed Trigger for the opponent; no penalty for a trigger that would have benefited them.",
+      "ruling": "Out of scope: the topic check sorts it out as tournament policy and the reply says the judge covers game rules, not tournament policy (no ruling used).",
       "mustSay": [
-        "I'm not required to point out my opponent's missed triggers",
-        "The infraction is Game Play Error - Missed Trigger (IPG 2.1)",
-        "Cites the IPG"
+        "Says it covers the game rules, not tournament policy",
+        "Points to calling a judge at the event"
       ],
       "mustNotSay": [
-        "I get a penalty for not pointing it out"
+        "A penalty or infraction ruling"
       ],
       "sources": [
-        "IPG 2.1 (web search: blogs.magicjudges.org)"
+        "api/_judge-guard.ts POLICY_REPLY"
       ],
       "api": true
     },
@@ -853,6 +852,251 @@
         "Scryfall: NOT FOUND"
       ],
       "api": true
+    },
+    {
+      "id": "urborg-blood-moon-board",
+      "area": "Layers (dependency)",
+      "cards": [
+        "Blood Moon",
+        "Urborg, Tomb of Yawgmoth",
+        "Dryad Arbor"
+      ],
+      "ask": "Blood Moon and Urborg, Tomb of Yawgmoth are both on the battlefield. My opponent has a basic Island; I have Dryad Arbor. What can each of these three lands tap for?",
+      "ruling": "Urborg is a nonbasic land, so it becomes a Mountain and loses its ability: nothing is a Swamp, whatever order they came down in. Urborg taps for {R} (still legendary), the basic Island only for {U}, Dryad Arbor only for {R} (still a green Dryad creature).",
+      "mustSay": [
+        "Urborg loses its ability under Blood Moon, so no land becomes a Swamp",
+        "That holds whichever came first (the Urborg ruling; Urborg's effect depends on Blood Moon's, CR 613.8)",
+        "Urborg taps for {R}",
+        "The basic Island taps for {U} only (Blood Moon doesn't touch basics, and it isn't a Swamp)",
+        "Dryad Arbor taps for {R} only and is still a creature"
+      ],
+      "mustNotSay": [
+        "The Island also taps for {B}",
+        "It depends on timestamps"
+      ],
+      "sources": [
+        "Urborg ruling 2021-03-19 (Magus of the Moon, any order)",
+        "CR 613.8",
+        "CR 305.7"
+      ],
+      "hard": true,
+      "api": true
+    },
+    {
+      "id": "spell-queller-bounce",
+      "area": "Triggered abilities",
+      "cards": [
+        "Spell Queller",
+        "Lightning Helix",
+        "Vapor Snag"
+      ],
+      "ask": "I cast Lightning Helix. My opponent flashes in Spell Queller targeting it. In response to the Queller's enter trigger, I Vapor Snag the Queller. Do I get my Helix back?",
+      "ruling": "No, it's gone for good: the leaves trigger resolves first and does nothing (nothing is exiled yet), then the enter trigger still resolves and exiles Helix with no way back.",
+      "mustSay": [
+        "The leaves-the-battlefield trigger goes on the stack above the enter trigger and resolves first, doing nothing",
+        "The enter trigger still resolves without Queller on the battlefield and exiles Helix",
+        "Helix stays exiled for good"
+      ],
+      "mustNotSay": [
+        "Helix resolves",
+        "I get to cast Helix again"
+      ],
+      "sources": [
+        "Spell Queller ruling 2025-01-24 (leaves before its enters ability resolves)"
+      ],
+      "hard": true,
+      "api": true
+    },
+    {
+      "id": "spark-double-commander",
+      "area": "Commander + copies",
+      "cards": [
+        "Spark Double"
+      ],
+      "ask": "My commander is a legendary 5/5. I cast Spark Double copying it. Do I have to get rid of one? And if the copy hits an opponent for 21 over a few turns, is that commander damage?",
+      "ruling": "Both stay: Spark Double's copy isn't legendary, so the legend rule doesn't apply. But the copy isn't a commander, so its damage doesn't count as commander damage (and it can't go to the command zone).",
+      "mustSay": [
+        "The copy isn't legendary, so both stay (Spark Double's text and ruling)",
+        "A permanent copying a commander isn't a commander (CR 903.3)",
+        "Its combat damage doesn't count toward commander damage"
+      ],
+      "mustNotSay": [
+        "The legend rule applies",
+        "The copy's damage counts as commander damage"
+      ],
+      "sources": [
+        "CR 903.3 (example)",
+        "Spark Double rulings 2019-05-03"
+      ],
+      "hard": true
+    },
+    {
+      "id": "containment-priest-flicker",
+      "area": "Replacement effects",
+      "cards": [
+        "Containment Priest",
+        "Ephemerate"
+      ],
+      "ask": "My opponent has Containment Priest. I Ephemerate my creature in response to removal. Does it come back?",
+      "ruling": "No: it's exiled, then would enter without being cast, so Containment Priest exiles it instead and it stays in exile (its enter abilities don't happen).",
+      "mustSay": [
+        "Returning from exile isn't casting it",
+        "Containment Priest replaces the return: it stays in exile",
+        "It never enters, so no enter triggers"
+      ],
+      "mustNotSay": [
+        "It comes back"
+      ],
+      "sources": [
+        "Containment Priest Oracle text and rulings 2021-03-19",
+        "Ephemerate Oracle text"
+      ],
+      "hard": true
+    },
+    {
+      "id": "no-damage-order",
+      "area": "Combat (changed rule)",
+      "cards": [],
+      "ask": "My 5/5 is blocked by a 2/2 and a 4/4. Do I have to put lethal damage on the first blocker in order before the second gets any? Can I just put all 5 on the 4/4?",
+      "ruling": "Yes, all 5 on the 4/4 is fine. There's no damage assignment order any more: with two or more blockers you divide the damage among them as you choose.",
+      "mustSay": [
+        "With two or more blockers, the attacker's controller divides the damage among them as they choose (CR 510.1c)",
+        "No order and no need to assign lethal to one before the other",
+        "All 5 on the 4/4 is legal"
+      ],
+      "mustNotSay": [
+        "Must assign lethal damage to the first blocker in the damage assignment order"
+      ],
+      "sources": [
+        "CR 510.1c (and its example)"
+      ],
+      "hard": true,
+      "api": true
+    },
+    {
+      "id": "twisted-image-math",
+      "area": "Layers (switching)",
+      "cards": [
+        "Bonesplitter",
+        "Twisted Image",
+        "Giant Growth"
+      ],
+      "ask": "My 1/4 has Bonesplitter on it. I cast Twisted Image on it, and later in the turn Giant Growth. What is it now? And what if Bonesplitter then gets moved to another creature?",
+      "ruling": "7/6: base 1/4, +2/+0 and +3/+3 make 6/7, and the switch always applies last (7d), so 7/6. Without Bonesplitter: 4/7 switched, 7/4.",
+      "mustSay": [
+        "Switching applies after all other P/T effects, whenever they started (layer 7d / Twisted Image ruling)",
+        "It's 7/6",
+        "Without Bonesplitter it's 7/4"
+      ],
+      "mustNotSay": [
+        "It's 6/7",
+        "It's 9/4"
+      ],
+      "sources": [
+        "CR 613.4c-d",
+        "Twisted Image ruling 2021-03-19"
+      ],
+      "hard": true
+    },
+    {
+      "id": "chalice-split-second",
+      "area": "Priority and the stack",
+      "cards": [
+        "Chalice of the Void",
+        "Krosan Grip"
+      ],
+      "ask": "My opponent's Chalice of the Void has 3 charge counters. I cast Krosan Grip targeting it. Split second means the Chalice can't counter it, right?",
+      "ruling": "Wrong: split second stops spells and activated abilities, not triggered abilities. Chalice triggers on the cast and counters Krosan Grip.",
+      "mustSay": [
+        "Split second doesn't stop triggered abilities (Krosan Grip ruling names Chalice)",
+        "Krosan Grip has mana value 3, so Chalice triggers",
+        "Krosan Grip is countered"
+      ],
+      "mustNotSay": [
+        "Chalice can't counter it",
+        "Krosan Grip destroys the Chalice"
+      ],
+      "sources": [
+        "Krosan Grip ruling 2021-03-19 (Chalice of the Void)",
+        "CR 702.61a"
+      ],
+      "hard": true
+    },
+    {
+      "id": "humility-two-opalescence",
+      "area": "Layers",
+      "cards": [
+        "Opalescence",
+        "Humility"
+      ],
+      "ask": "In order: Opalescence came down, then Humility, then a second Opalescence. What are Humility and the two Opalescences now?",
+      "ruling": "Humility and the first Opalescence are 4/4 creatures with no abilities; the second Opalescence is 1/1 with no abilities. (Each Opalescence animates the others; in 7b the later timestamps win.)",
+      "mustSay": [
+        "Each Opalescence animates the other enchantments, including the other Opalescence",
+        "All three are creatures with no abilities (Humility, layer 6)",
+        "Humility and the first Opalescence are 4/4",
+        "The second Opalescence is 1/1"
+      ],
+      "mustNotSay": [
+        "Everything is 1/1",
+        "Everything is 4/4"
+      ],
+      "sources": [
+        "Humility ruling 2006-02-01 (Opalescence, Humility, Opalescence)"
+      ],
+      "hard": true,
+      "api": true
+    },
+    {
+      "id": "follow-up-urborg",
+      "area": "Follow-up",
+      "cards": [],
+      "history": [
+        {
+          "role": "user",
+          "content": "What does Blood Moon do to my Dryad Arbor?"
+        },
+        {
+          "role": "assistant",
+          "content": "**Ruling:** Dryad Arbor is a nonbasic land, so it becomes a Mountain: it loses the Forest type and taps for {R} instead of {G}. It's still a 1/1 green Dryad creature land.\n\n**Why:** Blood Moon: \"Nonbasic lands are Mountains.\" Setting a land's subtype removes its old land types and gives it the new type's mana ability, but doesn't remove card types like creature (CR 305.7).\n\n**Sources:** Blood Moon, Dryad Arbor; CR 305.7."
+        }
+      ],
+      "ask": "What if my opponent also has Urborg, Tomb of Yawgmoth out?",
+      "ruling": "Nothing changes for Dryad Arbor: Urborg is nonbasic too, so under Blood Moon it's a Mountain with no abilities and makes nothing a Swamp. Dryad Arbor still taps for {R} only.",
+      "mustSay": [
+        "Looks up Urborg (a new card in a follow-up)",
+        "Urborg loses its ability under Blood Moon",
+        "Dryad Arbor still taps for {R} only, not {B}"
+      ],
+      "mustNotSay": [
+        "Dryad Arbor taps for {B} too"
+      ],
+      "sources": [
+        "Urborg ruling 2021-03-19",
+        "CR 305.7"
+      ],
+      "hard": true
+    },
+    {
+      "id": "clone-face-down",
+      "area": "Copies",
+      "cards": [
+        "Clone"
+      ],
+      "ask": "I Clone my opponent's face-down morph creature. What does my Clone become? Can I pay the morph cost to turn it face up?",
+      "ruling": "A face-up colorless 2/2 with no name, no types, no abilities and no mana cost. It isn't face down, so it can't be turned face up.",
+      "mustSay": [
+        "It copies the face-down characteristics: a colorless 2/2 with no name, types, abilities or mana cost (CR 707.2 example)",
+        "It's face up, so it can't be turned face up / morph can't be paid"
+      ],
+      "mustNotSay": [
+        "It copies the real card",
+        "You can unmorph it"
+      ],
+      "sources": [
+        "CR 707.2 (Grinning Demon example)"
+      ],
+      "hard": true
     }
   ]
 }

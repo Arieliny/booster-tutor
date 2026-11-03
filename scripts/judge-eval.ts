@@ -6,6 +6,7 @@
  *
  *   npx tsx scripts/judge-eval.ts                    the questions marked "api"
  *   npx tsx scripts/judge-eval.ts saga-blood-moon    just these ids
+ *   npx tsx scripts/judge-eval.ts --hard             the hard ones marked "api"
  *   npx tsx scripts/judge-eval.ts --budget 1         stop once this many dollars are spent (default 1.5)
  *
  * Writes the answers (with cost and what it looked up) to
@@ -31,15 +32,19 @@ interface Question {
   id: string;
   cards: string[];
   ask: string;
+  /** Earlier turns, for follow-up questions. */
+  history?: { role: "user" | "assistant"; content: string }[];
   api?: boolean;
+  hard?: boolean;
 }
 
 const args = process.argv.slice(2);
 const budgetAt = args.indexOf("--budget");
 const budget = budgetAt >= 0 ? Number(args[budgetAt + 1]) : 1.5;
 const ids = args.filter((a, i) => !a.startsWith("--") && i !== budgetAt + 1);
+const hardOnly = args.includes("--hard");
 const all: Question[] = JSON.parse(readFileSync("tests/judge-eval/questions.json", "utf8")).questions;
-const chosen = ids.length ? all.filter((q) => ids.includes(q.id)) : all.filter((q) => q.api);
+const chosen = ids.length ? all.filter((q) => ids.includes(q.id)) : all.filter((q) => q.api && (!hardOnly || q.hard));
 if (!chosen.length) throw new Error(`No questions match ${ids.join(", ") || '"api": true'}.`);
 
 // A throwaway owner (owners have no monthly limit and see each answer's cost).
@@ -65,7 +70,7 @@ async function ask(q: Question) {
       },
       on: () => res,
     };
-    const req = { method: "POST", headers: { cookie }, query: {}, body: { messages: [{ role: "user", content: q.ask }], cards: q.cards } };
+    const req = { method: "POST", headers: { cookie }, query: {}, body: { messages: [...(q.history ?? []), { role: "user", content: q.ask }], cards: q.cards } };
     void handler(req as never, res as never);
   });
   for (const line of buffer.split("\n")) if (line.trim()) events.push(JSON.parse(line));
