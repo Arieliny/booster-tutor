@@ -8,13 +8,15 @@ process.env.BT_FAKE_REDIS = "1"; // no database needed; the check itself is real
 process.loadEnvFile(".env.local");
 const { checkTopic } = await import("../api/_judge-guard.js");
 
-const CASES: { q: string; expect: "MAGIC" | "OTHER"; prev?: string }[] = [
+const CASES: { q: string; expect: "MAGIC" | "POLICY" | "OTHER" | "MAGIC/POLICY"; prev?: string }[] = [
   { q: "If I bounce Spell Queller in response to its trigger, what happens?", expect: "MAGIC" },
   { q: "Blood Moon + Urza's Saga?", expect: "MAGIC" },
   { q: "Ragavan", expect: "MAGIC" },
   { q: "what if it had trample?", expect: "MAGIC", prev: "**Ruling:** The 4/4 blocked by a 2/2 deals all its damage to the blocker." },
   { q: "Is Mana Drain legal in Vintage cube?", expect: "MAGIC" },
-  { q: "What's the penalty for a missed trigger at Competitive REL?", expect: "MAGIC" },
+  { q: "What's the penalty for a missed trigger at Competitive REL?", expect: "POLICY" },
+  { q: "Do I have to remind my opponent about their own triggers at a tournament?", expect: "POLICY" },
+  { q: "At FNM my opponent forgot their Bloodghast trigger. Does it still come back if they remember next turn?", expect: "MAGIC/POLICY" },
   { q: "Write me a poem about Lightning Bolt", expect: "OTHER" },
   { q: "Write Python code that shuffles a Magic deck", expect: "OTHER" },
   { q: "What's the capital of France?", expect: "OTHER" },
@@ -29,8 +31,9 @@ for (const c of CASES) {
     ...(c.prev ? [{ role: "user" as const, content: "earlier question" }, { role: "assistant" as const, content: c.prev }] : []),
     { role: "user" as const, content: c.q },
   ];
-  const got = (await checkTopic(history)).topic ? "OTHER" : "MAGIC";
-  if (got === c.expect) pass++;
-  console.log(`${got === c.expect ? "PASS" : "FAIL"}  ${got.padEnd(5)}  ${c.q}`);
+  const got = ((await checkTopic(history)).topic ?? "magic").toUpperCase();
+  const ok = c.expect.split("/").includes(got);
+  if (ok) pass++;
+  console.log(`${ok ? "PASS" : "FAIL"}  ${got.padEnd(6)}  ${c.q}`);
 }
 console.log(`\n${pass}/${CASES.length} as expected`);

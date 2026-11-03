@@ -8,7 +8,6 @@ import { redis } from "./_redis.js";
 
 const HEADERS = { "User-Agent": "BoosterTutor/1.0 (personal cube tool)", Accept: "application/json" };
 const DAY = 24 * 60 * 60;
-const MAX_RULINGS = 20;
 
 interface Face {
   name?: string;
@@ -153,9 +152,9 @@ function render({ card: c, rulings }: Cached, legality: boolean): string {
   const parts = (c.all_parts ?? []).filter((p) => p.name !== c.name);
   if (parts.length) out.push("Related: " + parts.map((p) => `${p.name} (${p.component})`).join("; "));
   if (rulings.length) {
-    const shown = rulings.slice(-MAX_RULINGS);
-    out.push(`Official rulings (${rulings.length}${shown.length < rulings.length ? `, showing newest ${shown.length}` : ""}):`);
-    out.push(...shown.map((r) => `- ${r.published_at} [${r.source}] ${r.comment}`));
+    // All of them: the older rulings on staples like Blood Moon are often the ones that settle the classic questions.
+    out.push(`Official rulings (${rulings.length}):`);
+    out.push(...rulings.map((r) => `- ${r.published_at} [${r.source}] ${r.comment}`));
   } else out.push("Official rulings: none");
   out.push(`Source: ${(c.scryfall_uri ?? "").split("?")[0]}`);
   return out.join("\n");

@@ -2,12 +2,12 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import Anthropic from "@anthropic-ai/sdk";
 import type { MessageParam, Tool, ToolResultBlockParam, ToolUnion, Usage } from "@anthropic-ai/sdk/resources/messages/messages";
 import { canUse, requireUser } from "./_auth.js";
-import { glossChunks, loadCr, numsList, refsChunks, ruleChunks, searchChunks, type Cr } from "./_cr.js";
+import { crIndex, glossChunks, loadCr, numsList, refsChunks, ruleChunks, searchChunks, type Cr } from "./_cr.js";
 import { lookupCards } from "./_scryfall.js";
 import { claimRuling, recordGuard, recordUsage, refundRuling, usageFor, type TokenUsage } from "./_judge-usage.js";
 import { dollarsFor, tokensOf } from "./_judge-cost.js";
 import { judgePrompt } from "./_judge-prompt.js";
-import { OFF_TOPIC_REPLY, checkTopic, noteRefusal, refusedTooOften } from "./_judge-guard.js";
+import { OFF_TOPIC_REPLY, POLICY_REPLY, checkTopic, noteRefusal, refusedTooOften } from "./_judge-guard.js";
 import {
   clearHistory,
   deleteThread,
@@ -35,8 +35,9 @@ import {
  *           {type:"done", remaining, cost?}   cost: estimated US dollars, sent to the owner only
  *           {type:"error", message}
  *
- * Magic only: a small model screens every question first (_judge-guard.ts);
- * anything else gets a fixed refusal and uses no ruling.
+ * Magic game rules only: a small model screens every question first
+ * (_judge-guard.ts); anything else, tournament policy included, gets a fixed
+ * reply and uses no ruling.
  *
  * Each question uses one of the person's monthly rulings (refunded if it fails
  * before answering). The browser sends the conversation whole; after each
@@ -70,7 +71,8 @@ const WEB_SEARCH: ToolUnion = {
   type: "web_search_20260318",
   name: "web_search",
   max_uses: 3,
-  allowed_domains: ["magic.wizards.com", "blogs.magicjudges.org", "magicjudges.org", "wpn.wizards.com"],
+  // New sets' release notes and Banned and Restricted announcements.
+  allowed_domains: ["magic.wizards.com"],
 };
 
 export interface BriefInput {
@@ -196,7 +198,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   // Costs are shown to the owner only.
   const showCost = me.role === "owner";
-  let topic: "other" | null;
+  let topic: "other" | "policy" | null;
   let guardDollars: number;
   try {
     ({ topic, dollars: guardDollars } = await checkTopic(history));
@@ -207,10 +209,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
   if (topic) {
-    await noteRefusal(me.id);
+    // Tournament policy is out of scope but asked in good faith: not counted as a refusal.
+    if (topic === "other") await noteRefusal(me.id);
     const u = await usageFor(me);
     res.status(200).setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
-    res.write(JSON.stringify({ type: "text", delta: OFF_TOPIC_REPLY }) + "\n");
+    res.write(JSON.stringify({ type: "text", delta: topic === "policy" ? POLICY_REPLY : OFF_TOPIC_REPLY }) + "\n");
     const left = u.limit === null ? null : Math.max(0, u.limit - u.used);
     res.end(JSON.stringify({ type: "done", remaining: left, refused: true, ...(showCost && { cost: guardDollars }) }) + "\n");
     return;
@@ -267,7 +270,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             max_tokens: 16000,
             thinking: { type: "adaptive", display: "omitted" },
             output_config: { effort: "high" },
-            system: [{ type: "text", text: judgePrompt(cr?.effective ?? null), cache_control: { type: "ephemeral" } }],
+            system: [{ type: "text", text: judgePrompt(cr?.effective ?? null, cr ? crIndex(cr) : undefined), cache_control: { type: "ephemeral" } }],
             tools: [BRIEF, WEB_SEARCH],
             // Out of turns: answer with what's been gathered.
             tool_choice: last ? { type: "none" } : { type: "auto" },

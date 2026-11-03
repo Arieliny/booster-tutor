@@ -42,6 +42,26 @@ export function loadCr(): Promise<Cr | null> {
   return loading;
 }
 
+/**
+ * The CR's table of contents: every section, then the keyword actions (701)
+ * and keyword abilities (702) by number. Section numbers shift as sets add
+ * rules (the monarch went from 724 to 725, day and night to 731), so the judge
+ * gets this up front instead of guessing a number and spending a lookup on it.
+ */
+export function crIndex(cr: Cr): string {
+  const sections = Object.keys(cr.sections)
+    .filter((k) => /^\d{3}$/.test(k))
+    .sort(byRule)
+    .map((k) => `${k} ${cr.sections[k]}`);
+  const keywords = (prefix: string) =>
+    Object.keys(cr.rules)
+      .filter((k) => k.startsWith(prefix) && /^\d{3}\.\d+$/.test(k) && cr.rules[k].length < 50)
+      .sort(byRule)
+      .map((k) => `${k.slice(4)} ${cr.rules[k]}`)
+      .join(", ");
+  return `Sections: ${sections.join("; ")}\nKeyword actions (701.N): ${keywords("701.")}\nKeyword abilities (702.N): ${keywords("702.")}`;
+}
+
 /** "603" -> every 603.x; "603.3" -> 603.3, 603.3a, 603.3b... */
 function children(rules: Record<string, string>, num: string): string[] {
   if (/^\d{3}$/.test(num)) return Object.keys(rules).filter((k) => k.startsWith(num + ".")).sort(byRule);
