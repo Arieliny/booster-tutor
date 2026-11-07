@@ -19,7 +19,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { scryfallTotal } from "../api/_data-version.js";
+import { listHash, scryfallTotal } from "../api/_data-version.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const readJson = (p) => {
@@ -32,6 +32,7 @@ const readJson = (p) => {
 
 const db = readJson(join(root, "public", "card-db", "index.json"));
 const cr = readJson(join(root, "data", "cr.json"));
+const review = readJson(join(root, "src", "data", "cube-review.json"));
 let total = null;
 try {
   total = await scryfallTotal();
@@ -43,10 +44,12 @@ const version = {
   builtAt: new Date().toISOString(),
   cards: db ? { builtAt: db.builtAt, count: db.count, total, version: db.version } : null,
   cr: cr ? { source: cr.source, effective: cr.effective } : null,
+  // Which Cube Cobra list "My cube" was built from, so a commit there triggers a rebuild.
+  mine: review?.cubes?.mine ? { cubeId: review.cubes.mine.cubeId, hash: listHash(review.cubes.mine.cards) } : null,
 };
 const text = JSON.stringify(version);
 for (const out of [join(root, "public", "data-version.json"), join(root, "data", "data-version.json")]) {
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, text);
 }
-console.log(`data-version: cards ${version.cards?.count ?? "none"} (Scryfall ${total ?? "?"}), CR ${version.cr?.effective ?? "none"}`);
+console.log(`data-version: cards ${version.cards?.count ?? "none"} (Scryfall ${total ?? "?"}), CR ${version.cr?.effective ?? "none"}, my cube ${version.mine?.hash ?? "none"}`);

@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { crUrl } from "./_cr-parse.js";
-import { type DataVersion, scryfallTotal, staleReasons } from "./_data-version.js";
+import { type DataVersion, cubeCobraOracleIds, listHash, scryfallTotal, staleReasons } from "./_data-version.js";
 import { redis } from "./_redis.js";
 
 /**
@@ -12,8 +12,9 @@ import { redis } from "./_redis.js";
  * Booster Tutor and LifeTutor each rebuild themselves).
  *
  * Out of date = Wizards' rules page links a different CR file, or Scryfall's
- * card count changed (new set previews, new cards), or the build is older than
- * MAX_AGE_DAYS. Runs from the daily cron (api/keepalive.ts); at most one
+ * card count changed (new set previews, new cards), or Ari's Cube Cobra cube
+ * isn't the list "My cube" was built from (a commit from Commit changes; Booster
+ * Tutor only: LifeTutor has no cube), or the build is older than MAX_AGE_DAYS. Runs from the daily cron (api/keepalive.ts); at most one
  * rebuild a day per project, so a build that keeps failing can't loop.
  */
 export interface RefreshResult {
@@ -30,9 +31,11 @@ export async function refreshData(now = new Date()): Promise<RefreshResult> {
   } catch {
     // An older deploy, or the build step failed: staleReasons says so.
   }
-  const [total, crSource] = await Promise.all([
+  const cubeId = process.env.VITE_APP === "table" ? undefined : version?.mine?.cubeId;
+  const [total, crSource, mine] = await Promise.all([
     scryfallTotal([1000]).catch(() => null),
     crUrl().catch(() => null),
+    cubeId ? cubeCobraOracleIds(cubeId).then(listHash, () => null) : Promise.resolve(null),
   ]);
   // The build couldn't get Scryfall's count (it can be rate-limited right after
   // the downloads): the first check after the deploy records today's as the
@@ -43,7 +46,7 @@ export async function refreshData(now = new Date()): Promise<RefreshResult> {
     if (typeof saved !== "number") await redis.set(key, total, { ex: 30 * 86_400 });
     version = { ...version, cards: { ...version.cards, total: typeof saved === "number" ? saved : total } };
   }
-  const reasons = staleReasons(version, { total, crSource }, now);
+  const reasons = staleReasons(version, { total, crSource, mine }, now);
   if (reasons.length === 0) return { action: "current", reasons };
 
   const hook = process.env.DEPLOY_HOOK_URL;

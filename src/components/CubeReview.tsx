@@ -70,6 +70,7 @@ import { PIP_STYLE, SYMBOL_URI } from "../lib/mana";
 import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
 import { CubeShape } from "./CubeShape";
+import { CommitChanges } from "./CommitChanges";
 import { combosFor, comboState, inCubeAfter, type Combo, type ComboState } from "../lib/combos";
 import { ARCHETYPES, ROLES, ROLE_LABEL, ROLE_HELP, parseTag, type Role } from "../lib/archetypes";
 import { CardLookup } from "./CardLookup";
@@ -85,7 +86,7 @@ import { Icon, type IconName } from "./Icon";
 import { PageHeader } from "./PageHeader";
 import { Sheet } from "./Sheet";
 
-type View = "home" | "compare" | "changelog" | "all" | "decisions" | "summary" | "shape" | "bench";
+type View = "home" | "compare" | "changelog" | "all" | "decisions" | "summary" | "shape" | "bench" | "commit";
 type Member = "in" | "out" | "any";
 type LogTag = "all" | "current" | "past" | "tried";
 type Layout = "grid" | "list";
@@ -155,6 +156,7 @@ const VIEW_TITLE: Record<View, string> = {
   summary: "Summary and export",
   shape: "Cube shape",
   bench: "Bench",
+  commit: "Commit changes",
 };
 
 const PRESETS: { label: string; m: Record<CubeKey, Member> }[] = [
@@ -355,7 +357,7 @@ function useReviewState() {
   };
 }
 
-const LIST_VIEWS: View[] = ["compare", "changelog", "all", "decisions", "summary", "shape", "bench"];
+const LIST_VIEWS: View[] = ["compare", "changelog", "all", "decisions", "summary", "shape", "bench", "commit"];
 
 /** /my-cube/changelog -> "changelog"; /my-cube -> home. */
 function viewFromPath(pathname: string): View {
@@ -562,7 +564,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
 
   // Laptop keyboard: arrows move the cursor, Enter opens, K/C/A/M tag.
   useEffect(() => {
-    if (detail || filtersOpen || view === "summary" || view === "shape" || view === "home") return;
+    if (detail || filtersOpen || view === "summary" || view === "shape" || view === "commit" || view === "home") return;
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT")) return;
@@ -718,6 +720,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
               onClick={() => goView("bench")}
             />
             <HomeRow icon="summary" label="Summary and export" onClick={() => goView("summary")} />
+            <HomeRow icon="refresh" label="Commit changes" sub="Put your adds and cuts on Cube Cobra and Moxfield" onClick={() => goView("commit")} />
             {onOpenChecklist && (
               <HomeRow icon="check" label="Checklists" sub="Tick off cards coming in, going out, or received" onClick={onOpenChecklist} />
             )}
@@ -779,6 +782,8 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
           </div>
           <CubeReviewSummary decisions={decisions} onOpenCard={(id) => setDetail({ ids: [id], index: 0 })} />
         </>
+      ) : view === "commit" ? (
+        <CommitChanges decisions={decisions} expectedAfter={live.result} />
       ) : view === "shape" ? (
         <CubeShape decisions={decisions} onOpenCards={(ids) => setDetail({ ids, index: 0 })} onOpenArchetype={openArchetype} />
       ) : (

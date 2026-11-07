@@ -295,6 +295,28 @@ the box ("Did you mean **Lightning Bolt**? Or ..."); tapping one opens the card.
 
 ---
 
+## ✅ Commit changes to Cube Cobra and Moxfield (2026-11-07)
+
+Ari: "a way to commit changes that updates Cube Cobra and Moxfield". Neither site lets an app
+edit a list (Cube Cobra: read-only public JSON; Moxfield: no official API, sign-in bot-gated),
+so My cube → **Commit changes** (`components/CommitChanges.tsx`, `lib/cube-commit.ts`) prepares
+what each site's own import takes:
+
+- **Cube Cobra:** reads the live cube JSON, applies the decisions (every copy of a Cut out, each
+  Add in as its chosen printing, else its default; printing looked up on Scryfall) and downloads
+  a CSV for List → Edit → Import → **Replace with CSV Upload**. From Cube Cobra's source: replace
+  is a diff keyed on set + collector number, so the unchanged rows (written exactly as Cube Cobra
+  has them, from the JSON's `details`) are left alone with their status and tags; a board missing
+  from the file is EMPTIED, so every board goes in (Ari's has `basics`). Its Confirm Import page
+  is the check before saving. Refuses to write if a card has no printing (it would be removed).
+- **The loop closes by itself:** the build records `mine: {cubeId, hash}` (listHash of the
+  mainboard Oracle ids) in data-version.json, and the daily check (`_data-refresh.ts`, Booster
+  Tutor only) compares the live cube's hash and rebuilds when it changed, so the adds then read
+  Keep and the cuts leave.
+- **Moxfield:** a names checklist's cards not ticked (flagged ones count as still to come) as
+  "1 Name (SET) 123" lines for the deck's Bulk Edit; the deck link defaults to the pauper
+  "still missing" list and is remembered per device.
+
 ## ✅ Checklists (2026-11-07)
 
 Ari, receiving the CubeOrdering orders: tick off cards coming in and cards going out, several
