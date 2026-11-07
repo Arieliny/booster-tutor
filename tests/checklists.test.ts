@@ -82,3 +82,61 @@ describe("checklists", () => {
     expect(raw[`m:${a}:x`].t).toBeGreaterThan(raw[`l:${a}`].t);
   });
 });
+
+describe("importing the CubeOrdering files", () => {
+  it("reads the card-by-card order CSV: quoted commas, cube, source, printing, condition, quantity", () => {
+    const csv = [
+      "﻿Cube,Card,Qty,Source,Printing,Condition,Price (CAD),Store ID / link,Note",
+      'Powered,"Bilbo, Luckwearer // Burglar\'s Plot",1,Face to Face (in cart),The Hobbit #32,NM,0.49,variant 1,',
+      'Powered,Blazing Rootwalla,1,Face to Face (in cart),"Retro Frame, Modern Horizons 2 #404",NM,0.49,variant 2,',
+      "Pauper,Giant's Boulder,7,Face to Face (in cart),Foundations #12,NM,0.10,variant 3,",
+      "Powered,Archon of Emeria,1,MPC proxy order #3,,,,Archon of Emeria.png,",
+      "Powered,Geist of Saint Thalia,1,From a friend,,,0.00,,",
+    ].join("\r\n");
+    const rows = cl.parseList(csv);
+    expect(rows).toHaveLength(5);
+    expect(rows[0]).toEqual({ name: "Bilbo, Luckwearer // Burglar's Plot", qty: 1, printing: "The Hobbit #32", condition: "NM", from: "Face to Face", group: "Powered" });
+    expect(rows[1].printing).toBe("Retro Frame, Modern Horizons 2 #404");
+    expect(rows[3]).toEqual({ name: "Archon of Emeria", qty: 1, from: "MPC proxy order #3", group: "Powered" });
+    const { names, details } = cl.mergeRows(rows);
+    expect(names).toHaveLength(5);
+    expect(details[cl.nameKey("Giant's Boulder")]).toEqual({ qty: 7, printing: "Foundations #12", condition: "NM", from: "Face to Face" });
+    // One copy is the default and isn't stored.
+    expect(details[cl.nameKey("Archon of Emeria")]).toEqual({ from: "MPC proxy order #3" });
+  });
+
+  it("reads store cart snapshots", () => {
+    const cart = [
+      "1|Basking Rootwalla [121] [Torment]|PL|0.79|51739379990900",
+      "1|Blazing Rootwalla [404] [Retro Frame] [Modern Horizons 2]|NM|0.49|51735833248116",
+      "1|Young Blue Dragon // Sand Augury [Commander Legends: Battle for Baldur's Gate]|Hero Deal|0.45|8479679|magic_singles/x",
+    ].join("\n");
+    const rows = cl.parseList(cart);
+    expect(rows[0]).toEqual({ name: "Basking Rootwalla", qty: 1, printing: "Torment #121", condition: "PL" });
+    expect(rows[1].printing).toBe("Retro Frame, Modern Horizons 2 #404");
+    // Topdeck Hero's price tier isn't a condition.
+    expect(rows[2]).toEqual({ name: "Young Blue Dragon // Sand Augury", qty: 1, printing: "Commander Legends: Battle for Baldur's Gate" });
+  });
+
+  it("reads an MPC proxy order: fronts only, copies from the slots", () => {
+    const xml = `<order><details><quantity>3</quantity></details><fronts>
+      <card><id>a</id><slots>0,1</slots><name>Bazaar of Baghdad.png</name><query>bazaar of baghdad</query></card>
+      <card><id>b</id><slots>2</slots><name>Jace, the Mind Sculptor (Artist).jpg</name></card>
+    </fronts><backs><card><id>c</id><slots>0</slots><name>Back.png</name></card></backs><cardback>x</cardback></order>`;
+    expect(cl.parseList(xml)).toEqual([
+      { name: "Bazaar of Baghdad", qty: 2, from: "MPC proxy" },
+      { name: "Jace, the Mind Sculptor", from: "MPC proxy" },
+    ]);
+  });
+
+  it("keeps a plain list's set, collector number and foil as the printing", () => {
+    expect(cl.parseList("2x Swords to Plowshares (sta) 10 *F*")).toEqual([{ name: "Swords to Plowshares", qty: 2, printing: "STA #10, foil" }]);
+  });
+
+  it("stores only the details of the cards a checklist keeps", () => {
+    const { names, details } = cl.mergeRows(cl.parseList("2 Lightning Bolt (LEA) 161\nCounterspell"));
+    const id = cl.createChecklist("Order", { kind: "names", names, details });
+    const src = cl.loadChecklists().lists.find((l) => l.id === id)!.source;
+    expect(src).toEqual({ kind: "names", names: ["Lightning Bolt", "Counterspell"], details: { "lightning bolt": { qty: 2, printing: "LEA #161" } } });
+  });
+});

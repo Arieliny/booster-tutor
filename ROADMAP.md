@@ -311,6 +311,15 @@ Collection checklist) lists:
 - Per card: tap = got it, the flag = a problem (wrong printing, damaged, missing). Filters To do /
   Done / Problems / All, search, sort A–Z or by colour. Rename, Start over (clears that list only),
   Delete (a stamped tombstone).
+- **Order files and what to expect** (same day): "Open a file…" reads the CubeOrdering card-by-card
+  CSV (quoted commas; Cube, Qty, Source, Printing, Condition columns), a store cart snapshot
+  (`qty|Name [num] [Set]|cond|...`; Topdeck Hero's price tier isn't a condition) or an MPC order XML
+  (fronts, copies = slots); plain lists keep `(SET) 123` and `*F*` as the printing. A file with
+  several cubes or sources shows chips to drop any (one file -> one checklist per box). Each row
+  shows "×7 · The Hobbit #173 · NM · Face to Face"; search covers it; sort by Source groups by box.
+  Details are stored on the list (`source.details` by nameKey). `scripts/check-checklist-import.ts`
+  parses the real CubeOrdering files as a check (2026-11-07: CSV 289 cards / 305 copies, F2F order
+  218 copies, MPC 72).
 - Stored as one stamped map (`l:<id>` lists, `m:<id>:<card>` marks) and synced per entry by the
   account sync (new kind `checklists` in `user-sync.ts` and `api/userdata.ts`), so ticking on two
   devices at once keeps both.

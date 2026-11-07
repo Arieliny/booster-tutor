@@ -7,13 +7,16 @@ import {
   createChecklist,
   deleteChecklist,
   loadChecklists,
+  mergeRows,
   nameKey,
-  parseNames,
+  parseList,
   renameChecklist,
   resetChecklist,
   setMark,
+  type CardDetail,
   type Checklist,
   type ChecklistSource,
+  type ListRow,
   type Mark,
   type ReviewWhich,
 } from "../lib/checklists";
@@ -26,14 +29,16 @@ import { inCubeAfter } from "../lib/combos";
  * progress, so moving between them never loses any. A checklist's cards come
  * from the Cube review decisions (cards coming in, going out, maybes, the cube
  * before or after the changes; these follow the decisions as they change) or
- * from a pasted list of names. Each uploaded cube's collection checklist (the
- * older received / missing marks) sits alongside.
+ * from a pasted list or an opened file (the CubeOrdering order CSV, a cart
+ * snapshot, an MPC order), which also say which printing and condition to
+ * expect and where each card is coming from. Each uploaded cube's collection
+ * checklist (the older received / missing marks) sits alongside.
  */
 
 const ACTIVE_KEY = "booster-tutor-checklist-active";
 
 type Filter = "all" | "todo" | "done" | "problem";
-type Sort = "name" | "colour";
+type Sort = "name" | "colour" | "source";
 
 /** One card on a checklist, as shown. */
 interface Item {
@@ -42,6 +47,14 @@ interface Item {
   img?: string;
   type?: string;
   colour: string;
+  /** What the list said to expect: printing, condition, copies, where from. */
+  detail?: CardDetail;
+}
+
+/** "×7 · The Hobbit #117 · NM · Face to Face" */
+function detailLine(d: CardDetail | undefined): string {
+  if (!d) return "";
+  return [d.qty && d.qty > 1 && `×${d.qty}`, d.printing, d.condition, d.from].filter(Boolean).join(" · ");
 }
 
 const COLOUR_ORDER = ["W", "U", "B", "R", "G", "M", "C", "?"];
@@ -123,10 +136,11 @@ export function Checklists({ cubes }: { cubes: Cube[] }) {
         return { key: id, name: c.name, img: imageUrl(c, "small") ?? undefined, type: c.type, colour: colorFacet(c) };
       });
     }
+    const details = list.source.details ?? {};
     return list.source.names.map((n) => {
       const k = nameKey(n);
       const known = index.get(k);
-      return { key: k, name: known?.name ?? n, img: known?.img, type: known?.type, colour: known?.colour ?? "?" };
+      return { key: k, name: known?.name ?? n, img: known?.img, type: known?.type, colour: known?.colour ?? "?", detail: details[k] };
     });
   };
 
@@ -210,10 +224,48 @@ function NewChecklist({ decisions, onCancel, onCreate }: { decisions: Decisions;
   const [which, setWhich] = useState<ReviewWhich | "names">("add");
   const [name, setName] = useState("");
   const [text, setText] = useState("");
-  const names = useMemo(() => parseNames(text), [text]);
+  const [fileName, setFileName] = useState("");
+  // Groups switched off (by cube, by where the cards come from), when the list says.
+  const [offGroups, setOffGroups] = useState<Set<string>>(new Set());
+  const [offFrom, setOffFrom] = useState<Set<string>>(new Set());
+  const rows = useMemo(() => parseList(text), [text]);
+  const tally = (pick: (r: ListRow) => string | undefined) => {
+    const out = new Map<string, number>();
+    for (const r of rows) {
+      const k = pick(r);
+      if (k) out.set(k, (out.get(k) ?? 0) + 1);
+    }
+    return out.size > 1 ? [...out] : [];
+  };
+  const groups = useMemo(() => tally((r) => r.group), [rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  const froms = useMemo(() => tally((r) => r.from), [rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  const picked = useMemo(
+    () => mergeRows(rows.filter((r) => !(r.group && offGroups.has(r.group)) && !(r.from && offFrom.has(r.from)))),
+    [rows, offGroups, offFrom],
+  );
+  const names = picked.names;
+  const copies = names.reduce((a, n) => a + (picked.details[nameKey(n)]?.qty ?? 1), 0);
   const counts = useMemo(() => Object.fromEntries(REVIEW_SOURCES.map((s) => [s.which, reviewIds(s.which, decisions).length])), [decisions]);
-  const fallbackName = which === "names" ? "Pasted list" : REVIEW_SOURCES.find((s) => s.which === which)!.label;
+  const fallbackName = which === "names" ? fileName || "Pasted list" : REVIEW_SOURCES.find((s) => s.which === which)!.label;
   const ready = which !== "names" || names.length > 0;
+  // From the latest set, so quick taps on several chips all stick.
+  const toggle = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, k: string) =>
+    setter((set) => {
+      const next = new Set(set);
+      if (next.has(k)) next.delete(k);
+      else next.add(k);
+      return next;
+    });
+  const openFile = async (file: File | undefined) => {
+    if (!file) return;
+    setText(await file.text());
+    setFileName(file.name.replace(/\.[a-z0-9]+$/i, "").slice(0, 40));
+    setOffGroups(new Set());
+    setOffFrom(new Set());
+  };
+  const groupChip = (on: boolean) =>
+    "rounded-full border px-2.5 py-1 text-xs " +
+    (on ? "border-(--color-accent) bg-(--color-accent)/15 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) line-through");
   const option = (on: boolean) =>
     "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left text-sm " +
     (on ? "border-(--color-accent) bg-(--color-accent)/10 text-(--color-text)" : "border-(--color-border) text-(--color-text-dim) hover:bg-white/5");
@@ -246,23 +298,51 @@ function NewChecklist({ decisions, onCancel, onCreate }: { decisions: Decisions;
           ))}
           <button type="button" onClick={() => setWhich("names")} aria-pressed={which === "names"} className={option(which === "names")}>
             <span className="min-w-0 flex-1">
-              <span className="block font-medium">A list of cards</span>
-              <span className="block text-xs text-(--color-text-dim)">Paste names, one per line: an order, a cut list</span>
+              <span className="block font-medium">A list or an order file</span>
+              <span className="block text-xs text-(--color-text-dim)">Paste names, or open an order: the CubeOrdering CSV, a cart, an MPC order</span>
             </span>
           </button>
         </div>
         {which === "names" ? (
-          <div className="space-y-1">
+          <div className="space-y-2">
+            <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-(--color-border) px-3 py-1.5 text-sm text-(--color-text) hover:bg-white/5">
+              <Icon name="list" className="h-4 w-4" /> Open a file…
+              <input type="file" accept=".csv,.txt,.xml,text/csv,text/plain,text/xml" className="hidden" onChange={(e) => void openFile(e.target.files?.[0])} />
+            </label>
+            {fileName && <span className="ml-2 text-xs text-(--color-text-dim)">{fileName}</span>}
             <textarea
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => (setText(e.target.value), setFileName(""))}
               rows={8}
-              placeholder={"Lightning Bolt\n2x Counterspell\nSwords to Plowshares (STA) 10"}
+              placeholder={"Lightning Bolt\n2x Counterspell\nSwords to Plowshares (STA) 10 *F*"}
               aria-label="Card names"
               className="w-full rounded border border-(--color-border) bg-(--color-bg) px-3 py-2 font-mono text-xs text-(--color-text) placeholder:text-(--color-text-dim)"
             />
+            {/* A big order file: keep only one cube, or one box (where the cards come from). */}
+            {groups.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-(--color-text-dim)">Cube:</span>
+                {groups.map(([g, n]) => (
+                  <button key={g} type="button" onClick={() => toggle(setOffGroups, g)} aria-pressed={!offGroups.has(g)} className={groupChip(!offGroups.has(g))}>
+                    {g} · {n}
+                  </button>
+                ))}
+              </div>
+            )}
+            {froms.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-(--color-text-dim)">From:</span>
+                {froms.map(([f, n]) => (
+                  <button key={f} type="button" onClick={() => toggle(setOffFrom, f)} aria-pressed={!offFrom.has(f)} className={groupChip(!offFrom.has(f))}>
+                    {f} · {n}
+                  </button>
+                ))}
+              </div>
+            )}
             <p className="text-xs text-(--color-text-dim)">
-              {names.length ? `${names.length} card${names.length === 1 ? "" : "s"}.` : "Counts and set codes are fine; each card is listed once."}
+              {names.length
+                ? `${names.length} card${names.length === 1 ? "" : "s"}${copies > names.length ? ` (${copies} copies)` : ""}. Printings, conditions and sources are kept.`
+                : "Counts, set codes and foils are fine; each card is listed once."}
             </p>
           </div>
         ) : (
@@ -273,7 +353,7 @@ function NewChecklist({ decisions, onCancel, onCreate }: { decisions: Decisions;
         <button
           type="button"
           disabled={!ready}
-          onClick={() => onCreate(name.trim() || fallbackName, which === "names" ? { kind: "names", names } : { kind: "review", which })}
+          onClick={() => onCreate(name.trim() || fallbackName, which === "names" ? { kind: "names", names, details: picked.details } : { kind: "review", which })}
           className="rounded-lg bg-(--color-accent) px-4 py-2 text-sm font-medium text-black hover:bg-(--color-accent-bright) disabled:opacity-40"
         >
           Make the checklist
@@ -321,12 +401,20 @@ function ChecklistView({
       if (filter === "todo" && m) return false;
       if (filter === "done" && m !== 1) return false;
       if (filter === "problem" && m !== 2) return false;
-      return !q || i.name.toLowerCase().includes(q);
+      return !q || i.name.toLowerCase().includes(q) || detailLine(i.detail).toLowerCase().includes(q);
     });
     const byName = (a: Item, b: Item) => a.name.localeCompare(b.name);
-    return out.sort(sort === "colour" ? (a, b) => COLOUR_ORDER.indexOf(a.colour) - COLOUR_ORDER.indexOf(b.colour) || byName(a, b) : byName);
+    const from = (i: Item) => i.detail?.from ?? "￿"; // unknown sources last
+    return out.sort(
+      sort === "colour"
+        ? (a, b) => COLOUR_ORDER.indexOf(a.colour) - COLOUR_ORDER.indexOf(b.colour) || byName(a, b)
+        : sort === "source"
+          ? (a, b) => from(a).localeCompare(from(b)) || byName(a, b)
+          : byName,
+    );
   }, [items, marks, search, filter, sort]);
 
+  const hasSources = items.some((i) => i.detail?.from);
   const source =
     list.source.kind === "review" ? REVIEW_SOURCES.find((s) => s.which === (list.source as { which: ReviewWhich }).which)?.hint : "A pasted list";
   const chip = (on: boolean) =>
@@ -420,6 +508,7 @@ function ChecklistView({
             [
               ["name", "A–Z"],
               ["colour", "Colour"],
+              ...(hasSources ? ([["source", "Source"]] as [Sort, string][]) : []),
             ] as [Sort, string][]
           ).map(([s, label]) => (
             <button key={s} type="button" role="radio" aria-checked={sort === s} onClick={() => setSort(s)} className={chip(sort === s)}>
@@ -437,10 +526,11 @@ function ChecklistView({
         <ul className="space-y-1">
           {shown.map((item, k) => {
             const m = marks[item.key];
-            const header = sort === "colour" && (k === 0 || shown[k - 1].colour !== item.colour);
+            const groupOf = (i: Item) => (sort === "colour" ? COLOUR_LABEL[i.colour] : sort === "source" ? (i.detail?.from ?? "Not said") : "");
+            const header = sort !== "name" && (k === 0 || groupOf(shown[k - 1]) !== groupOf(item));
             return (
               <li key={item.key}>
-                {header && <div className="mt-3 mb-1 text-xs font-medium tracking-wide text-(--color-text-dim) uppercase">{COLOUR_LABEL[item.colour]}</div>}
+                {header && <div className="mt-3 mb-1 text-xs font-medium tracking-wide text-(--color-text-dim) uppercase">{groupOf(item)}</div>}
                 <div
                   className={
                     "flex items-center gap-1 rounded border transition-colors " +
@@ -470,6 +560,9 @@ function ChecklistView({
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm text-(--color-text)">{item.name}</span>
                       <span className="block truncate text-xs text-(--color-text-dim)">{item.type ?? "Not in your card data"}</span>
+                      {item.detail && detailLine(item.detail) && (
+                        <span className="block truncate text-xs text-(--color-text)/80">{detailLine(item.detail)}</span>
+                      )}
                     </span>
                   </button>
                   {/* A problem with this card: wrong printing, damaged, not in the box. */}
