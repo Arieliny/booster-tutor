@@ -11,7 +11,6 @@ import {
 import { Controls } from "./components/Controls";
 import { CubeManager } from "./components/CubeManager";
 import { CubeSelector } from "./components/CubeSelector";
-import { Inventory } from "./components/Inventory";
 import { CubeCobraStatus } from "./components/CubeCobraStatus";
 import { isCubeCobraCube } from "./lib/cubecobra";
 import { Modal } from "./components/Modal";
@@ -52,6 +51,7 @@ const SetReview = lazy(() =>
 const CubeReview = lazy(() =>
   import("./components/CubeReview").then((m) => ({ default: m.CubeReview })),
 );
+const Checklists = lazy(() => import("./components/Checklists").then((m) => ({ default: m.Checklists })));
 const Admin = lazy(() => import("./components/Admin").then((m) => ({ default: m.Admin })));
 const Judge = lazy(() => import("./components/Judge").then((m) => ({ default: m.Judge })));
 const LookUp = lazy(() => import("./components/CubeReview").then((m) => ({ default: m.LookUp })));
@@ -311,10 +311,6 @@ function App() {
     >
       {tabUsesCube(tab) ? (
         <div className="space-y-4">
-          {!onPacksTab && (
-            <PageHeader title="Collection checklist" onBack={() => setTab("cubeReview")} backLabel="Back to My cube" />
-          )}
-
           {onPacksTab && !inSpotlight && <PlaySwitch value="packs" onChange={setTab} />}
 
           {/* The cube in play, and how much of it is left this match. */}
@@ -406,9 +402,14 @@ function App() {
                 </div>
               )}
             </>
-          ) : (
-            selectedCube && <Inventory cube={selectedCube} />
-          )}
+          ) : null}
+        </div>
+      ) : tab === "inventory" ? (
+        <div className="space-y-4">
+          <PageHeader title="Checklists" onBack={() => setTab("cubeReview")} backLabel="Back to My cube" />
+          <Suspense fallback={loading("checklists")}>
+            <Checklists cubes={visibleCubes} />
+          </Suspense>
         </div>
       ) : tab === "review" ? (
         <Suspense fallback={loading("set grades")}>

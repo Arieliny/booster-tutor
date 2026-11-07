@@ -719,7 +719,7 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
             />
             <HomeRow icon="summary" label="Summary and export" onClick={() => goView("summary")} />
             {onOpenChecklist && (
-              <HomeRow icon="check" label="Collection checklist" sub="Cards you've received" onClick={onOpenChecklist} />
+              <HomeRow icon="check" label="Checklists" sub="Tick off cards coming in, going out, or received" onClick={onOpenChecklist} />
             )}
           </HomeGroup>
         </div>

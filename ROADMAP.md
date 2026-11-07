@@ -295,6 +295,26 @@ the box ("Did you mean **Lightning Bolt**? Or ..."); tapping one opens the card.
 
 ---
 
+## ✅ Checklists (2026-11-07)
+
+Ari, receiving the CubeOrdering orders: tick off cards coming in and cards going out, several
+checklists, each keeping its progress. The My cube → Checklists page (route `/inventory`, was the
+Collection checklist) lists:
+
+- **Each uploaded cube's collection** (the old received/missing marks, `Inventory.tsx`, unchanged).
+- **Checklists made here** (`lib/checklists.ts`, `components/Checklists.tsx`): a name plus where
+  the cards come from. Cube review sources follow the decisions live (Coming in = Add, Going out =
+  Cut, Maybes, The cube after changes, The cube as it is), so a new Add appears by itself and a
+  tick stays with its card; or a pasted list of names (counts, set codes, `*F*` and section
+  headers tolerated; keyed by front-face name, pictures from the Cube review cards, then the
+  uploaded cubes).
+- Per card: tap = got it, the flag = a problem (wrong printing, damaged, missing). Filters To do /
+  Done / Problems / All, search, sort A–Z or by colour. Rename, Start over (clears that list only),
+  Delete (a stamped tombstone).
+- Stored as one stamped map (`l:<id>` lists, `m:<id>:<card>` marks) and synced per entry by the
+  account sync (new kind `checklists` in `user-sync.ts` and `api/userdata.ts`), so ticking on two
+  devices at once keeps both.
+
 ## ✅ Judge: game rules only, and a test set (2026-11-03)
 
 Ari: the judge is for card interactions at the table, not tournament policy.

@@ -9,21 +9,21 @@ import { redis } from "./_redis.js";
  *
  *   GET  /api/userdata?since=<rev>
  *        -> { rev, unchanged: true }               nothing new since <rev>
- *        -> { rev, decisions, extras, art, decks, decklists }  the full set otherwise
- *   POST /api/userdata { decisions?, extras?, art?, decks?, decklists? }   (changed entries only)
+ *        -> { rev, decisions, extras, art, decks, decklists, checklists }  the full set otherwise
+ *   POST /api/userdata { decisions?, extras?, art?, decks?, decklists?, checklists? }   (changed entries only)
  *        -> { rev, applied }
  *
- * Merge rule, per entry: decisions, art, decks and decklists carry an edit time `t` and the
+ * Merge rule, per entry: decisions, art, decks, decklists and checklists carry an edit time `t` and the
  * NEWER edit wins (so the same push twice, or a stale one, changes nothing).
  * A cleared decision / reset printing is still an entry with its own `t`, so
  * clearing travels too. Hand-added cards are add-only. Every real change bumps
  * `rev`, which is what makes the cheap "anything new?" poll possible.
  *
- * Keys: ud:{userId}:decisions | :art | :decks | :decklists | :extras  HASH id -> JSON;  ud:{userId}:rev  INT
+ * Keys: ud:{userId}:decisions | :art | :decks | :decklists | :checklists | :extras  HASH id -> JSON;  ud:{userId}:rev  INT
  */
 
 type Stamped = { t: number } & Record<string, unknown>;
-const KINDS = ["decisions", "art", "decks", "decklists"] as const;
+const KINDS = ["decisions", "art", "decks", "decklists", "checklists"] as const;
 const MAX_ENTRIES = 5000;
 
 const key = (userId: string, part: string) => `ud:${userId}:${part}`;
@@ -55,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // device would then record that rev and never ask for the missing change
       // again. Rev is read first, so the data is at least that new.
       type Hash = Record<string, Stamped> | null;
-      const [rev, decisions, art, extras, decks, decklists] = await redis
+      const [rev, decisions, art, extras, decks, decklists, checklists] = await redis
         .multi()
         .get<number>(key(me.id, "rev"))
         .hgetall<Record<string, Stamped>>(key(me.id, "decisions"))
@@ -63,7 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .hgetall<Record<string, unknown>>(key(me.id, "extras"))
         .hgetall<Record<string, Stamped>>(key(me.id, "decks"))
         .hgetall<Record<string, Stamped>>(key(me.id, "decklists"))
-        .exec<[number | null, Hash, Hash, Record<string, unknown> | null, Hash, Hash]>();
+        .hgetall<Record<string, Stamped>>(key(me.id, "checklists"))
+        .exec<[number | null, Hash, Hash, Record<string, unknown> | null, Hash, Hash, Hash]>();
       res.status(200).json({
         rev: Number(rev ?? 0),
         decisions: decisions ?? {},
@@ -71,6 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         extras: extras ?? {},
         decks: decks ?? {},
         decklists: decklists ?? {},
+        checklists: checklists ?? {},
       });
       return;
     }

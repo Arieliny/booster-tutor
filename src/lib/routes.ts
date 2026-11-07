@@ -173,9 +173,9 @@ export const TAB_TITLES: Record<Tab, string> = {
   admin: "People and access",
 };
 
-/** Tabs that act on the selected cube, so only they show the cube picker. */
+/** Tabs that act on the selected cube, so only they show the cube picker (the checklists list every cube themselves). */
 export function tabUsesCube(tab: Tab): boolean {
-  return tab === "packs" || tab === "inventory";
+  return tab === "packs";
 }
 
 // ---------------------------------------------------------------- who sees what

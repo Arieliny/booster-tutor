@@ -1,7 +1,7 @@
 /**
  * Per-account sync for Cube review data (decisions, hand-added cards, printing
- * choices) and the deck randomizer's decks and lists - see api/userdata.ts for the
- * server half.
+ * choices), the deck randomizer's decks and lists, and the checklists - see
+ * api/userdata.ts for the server half.
  *
  * The device stays the fast copy: every edit lands in localStorage instantly
  * and works offline. This engine runs alongside:
@@ -25,6 +25,7 @@ const KEYS = {
   art: "booster-tutor-cube-review-art-v1",
   decks: "booster-tutor-decks-v1",
   decklists: "booster-tutor-deck-lists-v1",
+  checklists: "booster-tutor-checklists-v1",
 } as const;
 
 /** Fired by lib/cube-review.ts whenever it saves something on this device. */
@@ -43,7 +44,14 @@ interface Meta {
   /** Server revision this device last caught up to (-1 = never). */
   rev: number;
   /** What the server is known to have, so only real changes get pushed. */
-  pushed: { decisions: Record<string, number>; art: Record<string, number>; decks: Record<string, number>; decklists: Record<string, number>; extras: Record<string, 1> };
+  pushed: {
+    decisions: Record<string, number>;
+    art: Record<string, number>;
+    decks: Record<string, number>;
+    decklists: Record<string, number>;
+    checklists: Record<string, number>;
+    extras: Record<string, 1>;
+  };
 }
 
 export type SyncState = "starting" | "synced" | "syncing" | "offline" | "error";
@@ -100,6 +108,7 @@ function loadMeta(userId: string): Meta {
       art: m?.pushed?.art ?? {},
       decks: m?.pushed?.decks ?? {},
       decklists: m?.pushed?.decklists ?? {},
+      checklists: m?.pushed?.checklists ?? {},
       extras: m?.pushed?.extras ?? {},
     },
   };
@@ -113,12 +122,18 @@ function pendingChanges(meta: Meta) {
   const art = pick(read<StampedMap>(KEYS.art, {}), meta.pushed.art);
   const decks = pick(read<StampedMap>(KEYS.decks, {}), meta.pushed.decks);
   const decklists = pick(read<StampedMap>(KEYS.decklists, {}), meta.pushed.decklists);
+  const checklists = pick(read<StampedMap>(KEYS.checklists, {}), meta.pushed.checklists);
   const extras = Object.fromEntries(
     Object.entries(read<CardMap>(KEYS.extras, {})).filter(([id]) => !meta.pushed.extras[id]),
   );
   const count =
-    Object.keys(decisions).length + Object.keys(art).length + Object.keys(decks).length + Object.keys(decklists).length + Object.keys(extras).length;
-  return { decisions, art, decks, decklists, extras, count };
+    Object.keys(decisions).length +
+    Object.keys(art).length +
+    Object.keys(decks).length +
+    Object.keys(decklists).length +
+    Object.keys(checklists).length +
+    Object.keys(extras).length;
+  return { decisions, art, decks, decklists, checklists, extras, count };
 }
 
 /** Newer edit wins, per entry. Returns whether anything local changed. */
@@ -190,12 +205,13 @@ export function startUserSync(userId: string): () => void {
     const p = pendingChanges(meta);
     setStatus({ pending: p.count });
     if (!p.count) return;
-    const sent = { decisions: p.decisions, art: p.art, decks: p.decks, decklists: p.decklists, extras: p.extras };
+    const sent = { decisions: p.decisions, art: p.art, decks: p.decks, decklists: p.decklists, checklists: p.checklists, extras: p.extras };
     const res = await api<{ rev: number; applied: number }>("POST", "/api/userdata", sent);
     for (const [id, v] of Object.entries(p.decisions)) meta.pushed.decisions[id] = (v as Stamped).t;
     for (const [id, v] of Object.entries(p.art)) meta.pushed.art[id] = (v as Stamped).t;
     for (const [id, v] of Object.entries(p.decks)) meta.pushed.decks[id] = (v as Stamped).t;
     for (const [id, v] of Object.entries(p.decklists)) meta.pushed.decklists[id] = (v as Stamped).t;
+    for (const [id, v] of Object.entries(p.checklists)) meta.pushed.checklists[id] = (v as Stamped).t;
     for (const id of Object.keys(p.extras)) meta.pushed.extras[id] = 1;
     // If nobody else wrote in between, we're already at the server's revision.
     if (res.rev === meta.rev + (res.applied ? 1 : 0)) meta.rev = res.rev;
@@ -210,6 +226,7 @@ export function startUserSync(userId: string): () => void {
       art?: StampedMap;
       decks?: StampedMap;
       decklists?: StampedMap;
+      checklists?: StampedMap;
       extras?: CardMap;
     }>("GET", `/api/userdata?since=${everything ? -1 : meta.rev}`);
     if (res.unchanged) return;
@@ -218,6 +235,7 @@ export function startUserSync(userId: string): () => void {
     changed = mergeStamped(KEYS.art, res.art ?? {}, meta.pushed.art) || changed;
     changed = mergeStamped(KEYS.decks, res.decks ?? {}, meta.pushed.decks) || changed;
     changed = mergeStamped(KEYS.decklists, res.decklists ?? {}, meta.pushed.decklists) || changed;
+    changed = mergeStamped(KEYS.checklists, res.checklists ?? {}, meta.pushed.checklists) || changed;
     const localExtras = read<CardMap>(KEYS.extras, {});
     let extrasChanged = false;
     for (const [id, c] of Object.entries(res.extras ?? {})) {
@@ -247,7 +265,7 @@ export function startUserSync(userId: string): () => void {
         if (full) {
           full = false;
           meta.rev = -1;
-          meta.pushed = { decisions: {}, art: {}, decks: {}, decklists: {}, extras: {} };
+          meta.pushed = { decisions: {}, art: {}, decks: {}, decklists: {}, checklists: {}, extras: {} };
           await pull(); // re-learns what the server has, so the push only sends what it lacks
           await push();
         } else {
