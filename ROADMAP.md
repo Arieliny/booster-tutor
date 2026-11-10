@@ -585,8 +585,8 @@ Why: Ari wants to hand the counter to his friend group. Decided 2026-11-02, revi
   the accent standing in for the old lavender on the dungeon map.
 - Shared pieces: `components/SignIn.tsx` (the form, used by Booster Tutor's gate and LifeTutor's
   Settings), `takeLinkToken` in `lib/auth.ts`, `LifeHome` / `LifeSettingsPage` in
-  `components/LifeHome.tsx` (Booster Tutor's Life tab opens on the same home screen, with a
-  back arrow to the rest of the app and no judge section).
+  `components/LifeHome.tsx`. (Booster Tutor had its own Life tab until 2026-11-10; the life
+  counter now lives only in LifeTutor, and /life on Booster Tutor goes to Play.)
 
 Not changing: the Fan Content position (everything stays free), the owner-only cube tools,
 the existing guest/admin screens. Later: store packaging = item C (Capacitor around this

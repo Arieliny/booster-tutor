@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import type { Cube, CubeCard, GenerationMode } from "./types";
 import { DEFAULT_PACK_SIZE, generatePack } from "./lib/pack-generator";
 import {
@@ -35,7 +35,6 @@ import {
 import { useAuth } from "./lib/auth-context";
 import { useCardDbAutoUpdate } from "./lib/card-db";
 import { AccountMenu } from "./components/AccountMenu";
-import { LifeCounter } from "./components/LifeCounter";
 import { DeckRandomizer } from "./components/DeckRandomizer";
 import { PlaySwitch } from "./components/PlaySwitch";
 import { AppShell } from "./components/AppShell";
@@ -100,11 +99,6 @@ function App() {
   // Bumped by every nav tap, so tapping "My cube" from inside one of its lists
   // goes back to its home page.
   const [navCount, setNavCount] = useState(0);
-  // The screen to go back to when the life counter's Exit is tapped.
-  const beforeLife = useRef<Tab>("packs");
-  useEffect(() => {
-    if (tab !== "life") beforeLife.current = tab;
-  }, [tab]);
 
   /** Switch tab and reflect it in the URL so each view is linkable. */
   const setTab = (next: Tab) => {
@@ -428,12 +422,6 @@ function App() {
           <PlaySwitch value="decks" onChange={setTab} />
           <DeckRandomizer />
         </div>
-      ) : tab === "life" ? (
-        // Full screen over the app; Exit (in its middle bar) goes back to the screen before it.
-        <LifeCounter
-          onExit={() => setTab(tabAllowed(beforeLife.current, me) ? beforeLife.current : "packs")}
-          canJudge={tabAllowed("judge", me)}
-        />
       ) : tab === "judge" ? (
         <Suspense fallback={loading("the judge")}>
           <Judge />

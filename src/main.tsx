@@ -1,7 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import { IS_TABLE_APP } from './lib/app-flavor.ts'
 
 /**
  * Recover from a stale build after a deploy.
@@ -61,7 +60,8 @@ if ('serviceWorker' in navigator) {
 // One build, two apps (lib/app-flavor.ts). Each loads only its own root; the
 // flavor is a build-time constant, so the other branch is dropped from the bundle.
 const root = createRoot(document.getElementById('root')!)
-if (IS_TABLE_APP) {
+// Checked inline (not via app-flavor) so the build can see it and drop the other app.
+if (import.meta.env.VITE_APP === 'table') {
   void import('./TableApp.tsx').then(({ TableApp }) =>
     root.render(
       <StrictMode>

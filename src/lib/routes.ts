@@ -12,12 +12,11 @@
 
 import { can, type Me } from "./auth";
 
-export type Tab = "packs" | "decks" | "life" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "judge" | "admin";
+export type Tab = "packs" | "decks" | "inventory" | "review" | "reviewPrint" | "cubeReview" | "lookup" | "judge" | "admin";
 
 export const TAB_PATHS: Record<Tab, string> = {
   packs: "/",
   decks: "/decks",
-  life: "/life",
   inventory: "/inventory",
   review: "/set-review",
   // Not a top-level tab — a condensed, printable view of the set review.
@@ -33,6 +32,8 @@ export const TAB_PATHS: Record<Tab, string> = {
 /** Paths from before the redesign, so old bookmarks still land. */
 const OLD_PATHS: Record<string, Tab> = {
   "/cube-review": "cubeReview",
+  // The life counter moved out to LifeTutor (lifetutorapp.vercel.app).
+  "/life": "packs",
 };
 
 const PATH_TABS = new Map<string, Tab>([
@@ -136,7 +137,7 @@ export function onNavigate(fn: (tab: Tab) => void): () => void {
 
 // ---------------------------------------------------------------- nav sections
 
-export type Section = "play" | "life" | "myCube" | "lookup" | "judge" | "grades";
+export type Section = "play" | "myCube" | "lookup" | "judge" | "grades";
 
 /**
  * The nav, in order. Each section holds one or more screens; the first one
@@ -144,8 +145,6 @@ export type Section = "play" | "life" | "myCube" | "lookup" | "judge" | "grades"
  * account menu instead.
  */
 export const SECTIONS: { id: Section; label: string; tabs: Tab[] }[] = [
-  // The life counter: its own section (anyone who can open Play can use it).
-  { id: "life", label: "Life", tabs: ["life"] },
   // Play: opening packs, or dealing random decks (the Packs | Decks switch).
   { id: "play", label: "Play", tabs: ["packs", "decks"] },
   // The collection checklist (Inventory) opens from My cube's home page.
@@ -163,7 +162,6 @@ export function sectionOf(tab: Tab): Section | null {
 export const TAB_TITLES: Record<Tab, string> = {
   packs: "Play",
   decks: "Play",
-  life: "Life",
   inventory: "My cube",
   cubeReview: "My cube",
   lookup: "Look up",
@@ -187,7 +185,7 @@ export function tabUsesCube(tab: Tab): boolean {
  */
 export function tabAllowed(tab: Tab, me: Me): boolean {
   if (me.role === "owner") return true;
-  if (tab === "packs" || tab === "decks" || tab === "life") return can(me, "play");
+  if (tab === "packs" || tab === "decks") return can(me, "play");
   if (tab === "review" || tab === "reviewPrint") return can(me, "setReview");
   if (tab === "judge") return can(me, "judge");
   return false;

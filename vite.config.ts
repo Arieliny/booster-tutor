@@ -16,7 +16,7 @@ const manifests = {
   booster: {
     name: 'Booster Tutor',
     short_name: 'Booster Tutor',
-    description: 'Magic cube tools, rules judge, set grades and a life counter',
+    description: 'Magic cube tools, rules judge and set grades',
     apple: 'apple-touch-icon.png',
     icon192: '/icon-192.png',
     icon512: '/icon-512.png',
