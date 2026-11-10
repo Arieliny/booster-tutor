@@ -21,6 +21,8 @@ const manifests = {
     icon192: '/icon-192.png',
     icon512: '/icon-512.png',
     maskable: '/icon-512.png',
+    // A normal app window with the phone's status bar (Ari, 2026-11-10, once Life moved out).
+    display: 'standalone' as const,
   },
   table: {
     name: 'LifeTutor',
@@ -30,6 +32,9 @@ const manifests = {
     icon192: '/lifetutor-192.png',
     icon512: '/lifetutor-512.png',
     maskable: '/lifetutor-maskable-512.png',
+    // Full screen (no status bar), so the life counter needs no browser full screen
+    // and Chrome shows no "to exit full screen" banner.
+    display: 'fullscreen' as const,
   },
 }
 
@@ -55,9 +60,7 @@ export default defineConfig(({ mode }) => {
         description: app.description,
         theme_color: '#0b0d12',
         background_color: '#0b0d12',
-        // Installed, the app runs full screen (no status bar), so the life counter needs no
-        // browser full screen and Chrome shows no "to exit full screen" banner.
-        display: 'fullscreen',
+        display: app.display,
         orientation: 'portrait',
         start_url: '/',
         icons: [
