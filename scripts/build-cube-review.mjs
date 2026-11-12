@@ -61,11 +61,29 @@ const SCRY = { "User-Agent": UA, Accept: "application/json" };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const day = (ms) => new Date(Number(ms)).toISOString().slice(0, 10);
 
+// Scryfall allows about 2 requests a second on /cards/search, /cards/named and
+// /cards/collection, and a 429 means "back off for a while". On Vercel this runs
+// straight after the card-database download, so it has to be patient: until
+// 2026-11-12 it gave up after 6 s and the live app kept the Oct 29 cube lists.
+const SCRYFALL_GAP_MS = 600;
+let lastScryfall = 0;
+async function scryfallFetch(url, init = {}) {
+  const wait = lastScryfall + SCRYFALL_GAP_MS - Date.now();
+  if (wait > 0) await sleep(wait);
+  lastScryfall = Date.now();
+  return fetch(url, init);
+}
+
+/** Waits for a 429 / 5xx: Retry-After if Scryfall sends one, else 2, 4, 8, 16, 30, 30 s. */
 async function getJSON(url, init = {}) {
+  const scryfall = url.startsWith("https://api.scryfall.com/");
   for (let attempt = 1; ; attempt++) {
-    const r = await fetch(url, init);
-    if (r.status === 429 && attempt < 4) {
-      await sleep(1000 * attempt);
+    const r = await (scryfall ? scryfallFetch(url, init) : fetch(url, init));
+    if ((r.status === 429 || r.status >= 500) && attempt <= 6) {
+      const after = Number(r.headers.get("retry-after"));
+      const ms = after > 0 ? after * 1000 : Math.min(2000 * 2 ** (attempt - 1), 30000);
+      console.error(`  ${r.status} from ${new URL(url).host}, waiting ${Math.round(ms / 1000)} s (try ${attempt} of 6)`);
+      await sleep(ms);
       continue;
     }
     if (!r.ok) throw new Error(`${r.status} ${r.statusText} - ${url}`);
@@ -136,7 +154,6 @@ async function fetchCollection(sids) {
     });
     for (const c of j.data ?? []) found.set(c.id, c);
     for (const n of j.not_found ?? []) missing.push(n.id);
-    await sleep(100);
   }
   return { found, missing };
 }
@@ -151,7 +168,6 @@ async function fetchSet(code) {
     const j = await getJSON(url, { headers: SCRY });
     prints.push(...j.data);
     url = j.has_more ? j.next_page : null;
-    await sleep(100);
   }
   const limit = set.printed_size ?? Infinity;
   const skipLayouts = ["token", "art_series", "emblem", "double_faced_token"];
@@ -258,8 +274,7 @@ if (existsSync(OWNED)) {
   const unknownNames = [];
   for (const name of Object.keys(owned)) {
     if (names.has(name)) continue;
-    await sleep(150);
-    const r = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`, { headers: SCRY });
+    const r = await scryfallFetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}`, { headers: SCRY });
     if (!r.ok) {
       unknownNames.push(name);
       continue;

@@ -101,4 +101,21 @@ describe("watching Cube Cobra", () => {
     expect(staleReasons(version, { ...live, mine: null }, now)).toEqual([]);
     expect(staleReasons(version, { ...live, mine: "550-y" }, now)).toEqual(["your Cube Cobra cube changed"]);
   });
+
+  it("watches LSV, MTGO and Arena too, by name", () => {
+    const now = new Date("2026-11-12T12:00:00Z");
+    const version = {
+      builtAt: "2026-11-12T00:00:00Z",
+      cards: { total: 100 },
+      cr: { source: "cr" },
+      mine: { hash: "547-x" },
+      cubes: { mine: { hash: "547-x", label: "My cube" }, lsv: { hash: "525-a", label: "LSV" }, mtgo: { hash: "540-m", label: "MTGO Vintage" } },
+    };
+    const live = { total: 100, crSource: "cr" };
+    expect(staleReasons(version, { ...live, cubes: { mine: "547-x", lsv: "525-a", mtgo: null } }, now)).toEqual([]);
+    expect(staleReasons(version, { ...live, cubes: { mine: "547-x", lsv: "528-b", mtgo: "540-m" } }, now)).toEqual([
+      "LSV's cube changed on Cube Cobra",
+    ]);
+    expect(staleReasons(version, { ...live, cubes: { mine: "548-z", lsv: "525-a" } }, now)).toEqual(["your Cube Cobra cube changed"]);
+  });
 });

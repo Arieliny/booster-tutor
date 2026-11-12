@@ -12,7 +12,7 @@ export const MAX_AGE_DAYS = 14;
  * Retries a few times: in the build it runs straight after the card downloads,
  * and Scryfall can answer 429 (slow down) then.
  */
-export async function scryfallTotal(waits = [2000, 5000, 10000]) {
+export async function scryfallTotal(waits = [2000, 5000, 10000, 20000, 30000]) {
   for (let attempt = 0; ; attempt++) {
     const res = await fetch(COUNT_URL, {
       headers: { "User-Agent": "BoosterTutor/1.0 (data check)", Accept: "application/json" },
@@ -23,14 +23,15 @@ export async function scryfallTotal(waits = [2000, 5000, 10000]) {
       return body.total_cards;
     }
     if (attempt >= waits.length || !(res.status === 429 || res.status >= 500)) throw new Error(`HTTP ${res.status} from Scryfall`);
-    await new Promise((r) => setTimeout(r, waits[attempt]));
+    const after = Number(res.headers.get("retry-after"));
+    await new Promise((r) => setTimeout(r, after > 0 ? Math.min(after * 1000, 60000) : waits[attempt]));
   }
 }
 
 /**
  * A short fingerprint of a card list (order and repeats don't matter): which
- * cards "My cube" was built from, so the daily check can tell when the Cube
- * Cobra list has changed (a commit from the Commit changes screen).
+ * cards each cube was built from, so the daily check can tell when a Cube Cobra
+ * list has changed (a commit from Commit changes, or LSV / MTGO / Arena updating theirs).
  * @param {string[]} ids  Oracle ids
  */
 export function listHash(ids) {
@@ -56,9 +57,20 @@ export async function cubeCobraOracleIds(cubeId) {
 }
 
 /**
+ * The cubes a deploy was built from, by key (mine, lsv, mtgo, arena). Deploys
+ * before 2026-11-12 recorded only `mine`.
+ * @param {null | {mine?: {cubeId?: string, hash?: string}|null, cubes?: Record<string, {cubeId?: string, label?: string, hash?: string}>|null}} version
+ * @returns {Record<string, {cubeId?: string, label?: string, hash?: string}>}
+ */
+export function watchedCubes(version) {
+  if (version?.cubes) return version.cubes;
+  return version?.mine ? { mine: version.mine } : {};
+}
+
+/**
  * Why this deploy's data is out of date, or [] if it isn't.
- * @param {null | {builtAt?: string, cards?: {total?: number|null}|null, cr?: {source?: string}|null, mine?: {hash?: string}|null}} version  what the deploy was built from
- * @param {{total: number|null, crSource: string|null, mine?: string|null}} live  what's out there now (null = couldn't tell; never a reason)
+ * @param {null | {builtAt?: string, cards?: {total?: number|null}|null, cr?: {source?: string}|null, mine?: {hash?: string}|null, cubes?: Record<string, {label?: string, hash?: string}>|null}} version  what the deploy was built from
+ * @param {{total: number|null, crSource: string|null, mine?: string|null, cubes?: Record<string, string|null>}} live  what's out there now (null = couldn't tell; never a reason)
  * @param {Date} now
  * @returns {string[]}
  */
@@ -69,7 +81,13 @@ export function staleReasons(version, live, now) {
   if (live.total !== null && live.total !== version.cards?.total)
     reasons.push(`Scryfall has ${live.total} cards, this deploy was built when it had ${version.cards?.total ?? "?"}`);
   const age = version.builtAt ? (now.getTime() - Date.parse(version.builtAt)) / 86_400_000 : Infinity;
-  if (live.mine && version.mine?.hash && live.mine !== version.mine.hash) reasons.push("your Cube Cobra cube changed");
+  const built = watchedCubes(version);
+  const liveCubes = { ...(live.mine ? { mine: live.mine } : {}), ...(live.cubes ?? {}) };
+  for (const [key, hash] of Object.entries(liveCubes)) {
+    const was = built[key];
+    if (!hash || !was?.hash || hash === was.hash) continue;
+    reasons.push(key === "mine" ? "your Cube Cobra cube changed" : `${was.label ?? key}'s cube changed on Cube Cobra`);
+  }
   if (!(age < MAX_AGE_DAYS)) reasons.push(`built more than ${MAX_AGE_DAYS} days ago`);
   return reasons;
 }
