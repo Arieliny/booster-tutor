@@ -96,7 +96,8 @@ function nameIndex(cubes: Cube[]): Map<string, Omit<Item, "key">> {
   return out;
 }
 
-export function Checklists({ cubes }: { cubes: Cube[] }) {
+/** `onCommit` opens Commit changes (My cube), which then commits what's ticked here. */
+export function Checklists({ cubes, onCommit }: { cubes: Cube[]; onCommit?: () => void }) {
   const [state, setState] = useState(loadChecklists);
   const [decisions, setDecisions] = useState<Decisions>(loadDecisions);
   const [active, setActiveRaw] = useState<string>(() => {
@@ -212,6 +213,7 @@ export function Checklists({ cubes }: { cubes: Cube[] }) {
           onRename={(name) => (renameChecklist(list.id, name), reload())}
           onReset={() => (resetChecklist(list.id), reload())}
           onDelete={() => (deleteChecklist(list.id), reload(), setActive(""))}
+          onCommit={onCommit}
         />
       ) : (
         <p className="py-8 text-center text-sm text-(--color-text-dim)">No checklists yet. Make one with New checklist.</p>
@@ -374,6 +376,7 @@ function ChecklistView({
   onRename,
   onReset,
   onDelete,
+  onCommit,
 }: {
   list: Checklist;
   items: Item[];
@@ -382,6 +385,7 @@ function ChecklistView({
   onRename: (name: string) => void;
   onReset: () => void;
   onDelete: () => void;
+  onCommit?: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("todo");
@@ -415,6 +419,8 @@ function ChecklistView({
   }, [items, marks, search, filter, sort]);
 
   const hasSources = items.some((i) => i.detail?.from);
+  // Cards coming in or going out (or an order's cards): what's ticked can go on Cube Cobra and Moxfield.
+  const commits = !!onCommit && (list.source.kind === "names" || list.source.which === "add" || list.source.which === "cut");
   const source =
     list.source.kind === "review" ? REVIEW_SOURCES.find((s) => s.which === (list.source as { which: ReviewWhich }).which)?.hint : "A pasted list";
   const chip = (on: boolean) =>
@@ -466,7 +472,17 @@ function ChecklistView({
         <div className="h-1.5 overflow-hidden rounded-full bg-(--color-bg)">
           <div className="h-full bg-(--color-accent) transition-all" style={{ width: `${pct}%` }} />
         </div>
-        <div className="mt-3 flex flex-wrap justify-end gap-2">
+        <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+          {commits && (
+            <button
+              type="button"
+              onClick={onCommit}
+              disabled={!done}
+              className="mr-auto inline-flex min-h-10 items-center gap-1.5 rounded bg-(--color-accent) px-3 py-1.5 text-xs font-medium text-black hover:bg-(--color-accent-bright) disabled:opacity-40"
+            >
+              <Icon name="refresh" className="h-4 w-4" /> Commit what you've ticked
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setConfirm("reset")}

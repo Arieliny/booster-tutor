@@ -402,7 +402,15 @@ function App() {
         <div className="space-y-4">
           <PageHeader title="Checklists" onBack={() => setTab("cubeReview")} backLabel="Back to My cube" />
           <Suspense fallback={loading("checklists")}>
-            <Checklists cubes={visibleCubes} />
+            <Checklists
+              cubes={visibleCubes}
+              onCommit={() => {
+                // Straight to My cube's Commit changes, which starts on what's ticked.
+                setTabState("cubeReview");
+                window.history.pushState({ fromHome: true }, "", "/my-cube/commit");
+                window.scrollTo(0, 0);
+              }}
+            />
           </Suspense>
         </div>
       ) : tab === "review" ? (

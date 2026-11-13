@@ -1,50 +1,104 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Icon } from "./Icon";
 import { artChoice, card, data, inMyCube, normalizeStatus, type Decisions } from "../lib/cube-review";
 import { downloadText } from "../lib/cube-export";
 import { fetchCardsByIds } from "../lib/scryfall-enrich";
-import { moxfieldLines, planCubeCobraCommit, type CobraCube, type CommitAdd, type CommitPlan } from "../lib/cube-commit";
+import { moxfieldLines, planCubeCobraCommit, type CobraCard, type CobraCube, type CommitAdd, type CommitPlan } from "../lib/cube-commit";
 import { loadChecklists, nameKey } from "../lib/checklists";
+import {
+  POWERED_MOXFIELD,
+  claudeRequest,
+  copyKind,
+  hasCommitChecklist,
+  orderDetail,
+  poweredLine,
+  tickedScope,
+  type CopyTag,
+  type Scope,
+} from "../lib/commit-scope";
+import { REMOTE_CHANGE_EVENT } from "../lib/user-sync";
 
 /**
  * Commit changes (My cube): put the decisions on the sites that hold the lists.
  * Neither site lets an app edit a list, so this prepares what each one's own
  * bulk tool takes (see lib/cube-commit.ts) and says where it goes:
+ *  - What: every Add / Cut decision, or only what's ticked on a checklist
+ *    (Checklists' "Commit what you've ticked" opens this that way).
  *  - Cube Cobra: a replacement CSV with the adds in and the cuts out. Once it's
  *    saved there, the daily check notices the new list and rebuilds Booster
  *    Tutor, after which the adds read Keep and the cuts are gone.
- *  - Moxfield: a checklist's cards still to come, for a deck's Bulk Edit.
+ *  - Moxfield, the powered deck: lines for its Bulk Edit, each tagged #CUBE and
+ *    #REAL or #PROXY (lib/commit-scope.ts guesses which; tap to switch), cuts to
+ *    its Sideboard.
+ *  - Claude: the same changes as a request to paste into the CubeOrdering
+ *    session, which makes them on both sites.
+ *  - Moxfield, a checklist's cards still to come (the pauper still-missing list).
  */
 
 const MOXFIELD_KEY = "booster-tutor-moxfield-deck";
 /** Ari's "Pauper Cube (still missing)" list. */
 const DEFAULT_MOXFIELD = "https://moxfield.com/decks/ucCeAWzJ7ni4_phxDxwWoQ";
+/** Real copy or proxy, where Ari set it by hand (this device only). */
+const COPY_KEY = "booster-tutor-commit-copy-v1";
 
 const btn = "inline-flex items-center gap-1.5 rounded-lg border border-(--color-border) px-3 py-2 text-sm text-(--color-text) hover:bg-white/5 disabled:opacity-40";
 const primary = "inline-flex items-center gap-1.5 rounded-lg bg-(--color-accent) px-3 py-2 text-sm font-medium text-black hover:bg-(--color-accent-bright) disabled:opacity-40";
 const head = "text-xs font-medium tracking-wide text-(--color-text-dim) uppercase";
+const box = "space-y-3 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-4";
+
+type Mode = "ticked" | "all";
 
 type CobraState =
   | { s: "idle" }
   | { s: "working"; what: string }
-  | { s: "ready"; plan: CommitPlan; noPrinting: string[] }
+  | { s: "ready"; plan: CommitPlan; noPrinting: string[]; cutPrint: Record<string, { set?: string; cn?: string }> }
   | { s: "error"; message: string };
+
+function loadCopy(): Record<string, CopyTag> {
+  try {
+    return JSON.parse(localStorage.getItem(COPY_KEY) ?? "{}") as Record<string, CopyTag>;
+  } catch {
+    return {};
+  }
+}
 
 export function CommitChanges({ decisions, expectedAfter }: { decisions: Decisions; expectedAfter: number }) {
   const cubeId = data.cubes.mine.cubeId;
-  const [cobra, setCobra] = useState<CobraState>({ s: "idle" });
+  const [checklists, setChecklists] = useState(loadChecklists);
+  const [mode, setMode] = useState<Mode>(() => (hasCommitChecklist(checklists.lists) ? "ticked" : "all"));
+  // Prepared for one set of cards (scopeKey): a different set needs a fresh file.
+  const [prepared, setPrepared] = useState<{ key: string; state: CobraState }>({ key: "", state: { s: "idle" } });
+  const [copy, setCopy] = useState(loadCopy);
 
-  const { cuts, addIds } = useMemo(() => {
-    const cuts = new Set<string>();
-    const addIds: string[] = [];
+  // Ticks made on another device show up here too.
+  useEffect(() => {
+    const reload = () => setChecklists(loadChecklists());
+    window.addEventListener(REMOTE_CHANGE_EVENT, reload);
+    return () => window.removeEventListener(REMOTE_CHANGE_EVENT, reload);
+  }, []);
+
+  const decided = useMemo(() => {
+    const cuts: string[] = [];
+    const adds: string[] = [];
     for (const id of Object.keys(decisions)) {
       if (!card(id)) continue;
       const s = normalizeStatus(id, decisions[id]?.status);
-      if (s === "cut" && inMyCube(id)) cuts.add(id);
-      if (s === "add" && !inMyCube(id)) addIds.push(id);
+      if (s === "cut" && inMyCube(id)) cuts.push(id);
+      if (s === "add" && !inMyCube(id)) adds.push(id);
     }
-    return { cuts, addIds };
+    return { adds, cuts };
   }, [decisions]);
+
+  const scope: Scope = useMemo(
+    () =>
+      mode === "ticked"
+        ? tickedScope(decided.adds, decided.cuts, checklists.lists, checklists.marks, (id) => card(id).name)
+        : { ...decided, addsWaiting: [], cutsWaiting: [] },
+    [mode, decided, checklists],
+  );
+  const scopeKey = `${mode}|${scope.adds.join()}|${scope.cuts.join()}`;
+  const cobra: CobraState = prepared.key === scopeKey ? prepared.state : { s: "idle" };
+  const setCobra = (state: CobraState) => setPrepared({ key: scopeKey, state });
 
   const prepare = async () => {
     try {
@@ -53,45 +107,101 @@ export function CommitChanges({ decisions, expectedAfter }: { decisions: Decisio
       if (!res.ok) throw new Error(`Cube Cobra answered HTTP ${res.status}.`);
       const cube = (await res.json()) as CobraCube;
       // Each add as the printing chosen for it in Cube review, else its default one.
-      setCobra({ s: "working", what: `Finding the printings of ${addIds.length} added card${addIds.length === 1 ? "" : "s"}` });
-      const sidOf = new Map(addIds.map((id) => [id, artChoice(id)?.sid || card(id).sid]));
+      setCobra({ s: "working", what: `Finding the printings of ${scope.adds.length} added card${scope.adds.length === 1 ? "" : "s"}` });
+      const sidOf = new Map(scope.adds.map((id) => [id, artChoice(id)?.sid || card(id).sid]));
       const { cards } = await fetchCardsByIds([...new Set(sidOf.values())]);
       const bySid = new Map(cards.map((c) => [c.scryfall_id, c]));
       const adds: CommitAdd[] = [];
       const noPrinting: string[] = [];
-      for (const id of addIds) {
+      for (const id of scope.adds) {
         const p = bySid.get(sidOf.get(id)!);
         if (p?.set && p.collector_number) adds.push({ oracleId: id, name: p.name, set: p.set, collectorNumber: p.collector_number });
         else noPrinting.push(card(id).name);
       }
-      setCobra({ s: "ready", plan: planCubeCobraCommit(cube, cuts, adds), noPrinting });
+      // Each cut's printing on Cube Cobra now, for its Moxfield Sideboard line.
+      const main = (Array.isArray(cube.cards.mainboard) ? cube.cards.mainboard : []) as CobraCard[];
+      const cutPrint: Record<string, { set?: string; cn?: string }> = {};
+      for (const c of main) {
+        const id = c.details?.oracle_id;
+        if (id && scope.cuts.includes(id)) cutPrint[id] = { set: c.details?.set, cn: c.details?.collector_number };
+      }
+      setCobra({ s: "ready", plan: planCubeCobraCommit(cube, new Set(scope.cuts), adds), noPrinting, cutPrint });
     } catch (err) {
       setCobra({ s: "error", message: err instanceof Error ? err.message : String(err) });
     }
   };
 
+  /** Real or proxy for a card, and why; tapping flips it and remembers the choice. */
+  const kindOf = (id: string, name: string) => copyKind(card(id)?.owned, orderDetail(name, checklists.lists).from, copy[id]);
+  const flip = (id: string, name: string) => {
+    const now = kindOf(id, name).tag;
+    const auto = copyKind(card(id)?.owned, orderDetail(name, checklists.lists).from, undefined).tag;
+    const next: CopyTag = now === "REAL" ? "PROXY" : "REAL";
+    const out = { ...copy };
+    if (next === auto) delete out[id];
+    else out[id] = next;
+    setCopy(out);
+    try {
+      localStorage.setItem(COPY_KEY, JSON.stringify(out));
+    } catch {
+      // Not remembered; still applies this time.
+    }
+  };
+
+  const waiting = [...scope.addsWaiting, ...scope.cutsWaiting].map((id) => card(id).name).sort((a, b) => a.localeCompare(b));
+  const nothingToDo = !scope.adds.length && !scope.cuts.length;
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <p className="text-sm text-(--color-text-dim)">
         Cube Cobra and Moxfield don't let other apps change your lists, so this gets each one ready for its own import: one upload or one
-        paste, and nothing changes until you save it there.
+        paste, and nothing changes until you save it there. Or copy it as a request for Claude, who makes the changes on both.
       </p>
 
-      <section className="space-y-3 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-4">
+      <section className={box}>
+        <h3 className="font-medium text-(--color-text)">What to commit</h3>
+        <div role="radiogroup" aria-label="What to commit" className="grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              ["ticked", "What you've ticked", "Cards ticked on Coming in, Going out or an order checklist"],
+              ["all", "Every decision", "All your Adds and Cuts, ticked or not"],
+            ] as [Mode, string, string][]
+          ).map(([m, label, sub]) => (
+            <button
+              key={m}
+              type="button"
+              role="radio"
+              aria-checked={mode === m}
+              onClick={() => setMode(m)}
+              className={
+                "min-h-12 rounded-lg border px-3 py-2 text-left " +
+                (mode === m ? "border-(--color-accent) bg-(--color-accent)/15" : "border-(--color-border) hover:bg-white/5")
+              }
+            >
+              <span className="block text-sm font-medium text-(--color-text)">{label}</span>
+              <span className="block text-xs text-(--color-text-dim)">{sub}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-sm text-(--color-text)">
+          {scope.adds.length} to add, {scope.cuts.length} to cut.
+        </p>
+        {waiting.length > 0 && <Names title={`Not ticked yet, so left out: ${waiting.length}`} names={waiting} />}
+      </section>
+
+      <section className={box}>
         <div className="flex items-center gap-2">
           <Icon name="cube" className="h-5 w-5 text-(--color-text-dim)" />
           <h3 className="flex-1 font-medium text-(--color-text)">Cube Cobra · {data.cubes.mine.name}</h3>
         </div>
-        <p className="text-sm text-(--color-text-dim)">
-          Your decisions: {addIds.length} to add, {cuts.size} to cut.
-        </p>
 
         {cobra.s === "idle" || cobra.s === "error" ? (
           <div className="space-y-2">
             {cobra.s === "error" && <p className="rounded border border-red-500/50 bg-red-500/10 px-3 py-2 text-sm text-red-200">{cobra.message}</p>}
-            <button type="button" onClick={() => void prepare()} disabled={!addIds.length && !cuts.size} className={primary}>
-              Prepare the file
+            <button type="button" onClick={() => void prepare()} disabled={nothingToDo} className={primary}>
+              Prepare the changes
             </button>
+            <p className="text-xs text-(--color-text-dim)">Reads your cube on Cube Cobra, then gets the file, the Moxfield lines and the request for Claude ready.</p>
           </div>
         ) : cobra.s === "working" ? (
           <p className="flex items-center gap-2 text-sm text-(--color-text-dim)">
@@ -99,9 +209,36 @@ export function CommitChanges({ decisions, expectedAfter }: { decisions: Decisio
             {cobra.what}…
           </p>
         ) : (
-          <CobraPlan plan={cobra.plan} noPrinting={cobra.noPrinting} expectedAfter={expectedAfter} cubeId={cubeId} onRedo={() => void prepare()} />
+          <CobraPlan
+            plan={cobra.plan}
+            noPrinting={cobra.noPrinting}
+            expectedAfter={mode === "all" ? expectedAfter : undefined}
+            cubeId={cubeId}
+            onRedo={() => void prepare()}
+          />
         )}
       </section>
+
+      {cobra.s === "ready" && (cobra.plan.added.length > 0 || cobra.plan.removed.length > 0) && (
+        <>
+          <PoweredMoxfield plan={cobra.plan} cutPrint={cobra.cutPrint} kindOf={kindOf} onFlip={flip} />
+          <ForClaude
+            text={claudeRequest({
+              cubeId,
+              before: cobra.plan.before,
+              after: cobra.plan.after,
+              adds: cobra.plan.added.map((a) => {
+                const k = kindOf(a.oracleId, a.name);
+                const has = k.tag === "REAL" ? orderDetail(a.name, checklists.lists).printing : undefined;
+                return { name: a.name, set: a.set, collectorNumber: a.collectorNumber, tag: k.tag, why: k.why, ...(has && { has }) };
+              }),
+              cuts: cobra.plan.removed.map((r) => ({ name: r.name, set: cobra.cutPrint[r.oracleId]?.set, collectorNumber: cobra.cutPrint[r.oracleId]?.cn })),
+              waiting,
+              moxfield: POWERED_MOXFIELD,
+            })}
+          />
+        </>
+      )}
 
       <MoxfieldSection />
     </div>
@@ -117,7 +254,8 @@ function CobraPlan({
 }: {
   plan: CommitPlan;
   noPrinting: string[];
-  expectedAfter: number;
+  /** Booster Tutor's count after every decision; only compared when committing every decision. */
+  expectedAfter?: number;
   cubeId: string;
   onRedo: () => void;
 }) {
@@ -128,14 +266,14 @@ function CobraPlan({
       <div className="text-2xl font-semibold text-(--color-text) tabular-nums">
         {plan.before} → {plan.after} <span className="text-sm font-normal text-(--color-text-dim)">cards</span>
       </div>
-      {plan.after !== expectedAfter && !nothing && (
+      {expectedAfter !== undefined && plan.after !== expectedAfter && !nothing && (
         <p className="rounded border border-amber-500/50 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
           Booster Tutor counts {expectedAfter} after your decisions. The difference is usually a card changed on Cube Cobra since the last
           rebuild; check the lists below.
         </p>
       )}
       {nothing ? (
-        <p className="text-sm text-(--color-text)">Cube Cobra already matches your decisions. Nothing to upload.</p>
+        <p className="text-sm text-(--color-text)">Cube Cobra already has these changes. Nothing to upload.</p>
       ) : (
         <>
           {plan.added.length > 0 && (
@@ -188,6 +326,142 @@ function CobraPlan({
   );
 }
 
+/** The powered deck on Moxfield: adds into Main Deck, cuts moved to the Sideboard, every line tagged real or proxy. */
+function PoweredMoxfield({
+  plan,
+  cutPrint,
+  kindOf,
+  onFlip,
+}: {
+  plan: CommitPlan;
+  cutPrint: Record<string, { set?: string; cn?: string }>;
+  kindOf: (id: string, name: string) => { tag: CopyTag; why: string };
+  onFlip: (id: string, name: string) => void;
+}) {
+  const rows = [
+    ...plan.added.map((a) => ({ id: a.oracleId, name: a.name, set: a.set, cn: a.collectorNumber, cut: false })),
+    ...plan.removed.map((r) => ({ id: r.oracleId, name: r.name, set: cutPrint[r.oracleId]?.set, cn: cutPrint[r.oracleId]?.cn, cut: true })),
+  ];
+  const line = (r: (typeof rows)[number]) =>
+    r.set && r.cn ? poweredLine(r.name, r.set, r.cn, kindOf(r.id, r.name).tag) : `1 ${r.name} #CUBE #${kindOf(r.id, r.name).tag}`;
+  const mainAdds = rows.filter((r) => !r.cut).map(line).join("\n");
+  const sideAdds = rows.filter((r) => r.cut).map(line).join("\n");
+  const mainCuts = plan.removed.map((r) => r.name);
+
+  return (
+    <section className={box}>
+      <div className="flex items-center gap-2">
+        <Icon name="list" className="h-5 w-5 text-(--color-text-dim)" />
+        <h3 className="flex-1 font-medium text-(--color-text)">Moxfield · Powered Cube</h3>
+        <a href={`${POWERED_MOXFIELD}/edit`} target="_blank" rel="noopener noreferrer" className={btn}>
+          Open Bulk Edit
+        </a>
+      </div>
+      <p className="text-sm text-(--color-text-dim)">
+        Real copy or proxy is a guess from your orders. Tap a card to switch it; the reason shows under its name.
+      </p>
+      <ul className="divide-y divide-(--color-border) rounded border border-(--color-border)">
+        {rows.map((r) => {
+          const k = kindOf(r.id, r.name);
+          return (
+            <li key={`${r.cut ? "cut" : "add"}-${r.id}`}>
+              <button
+                type="button"
+                onClick={() => onFlip(r.id, r.name)}
+                aria-label={`${r.name}: ${k.tag === "REAL" ? "real copy" : "proxy"}. Switch`}
+                className="flex min-h-12 w-full items-center gap-3 px-3 py-2 text-left hover:bg-white/5"
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm text-(--color-text)">
+                    {r.cut ? "Cut · " : "Add · "}
+                    {r.name}
+                  </span>
+                  <span className="block truncate text-xs text-(--color-text-dim)">
+                    {r.set ? `${r.set.toUpperCase()} #${r.cn} · ` : ""}
+                    {k.why}
+                  </span>
+                </span>
+                <span
+                  className={
+                    "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium " +
+                    (k.tag === "REAL" ? "bg-emerald-500/20 text-emerald-200" : "bg-sky-500/20 text-sky-200")
+                  }
+                >
+                  #{k.tag}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {mainAdds && <Paste label="Add to the end of Main Deck" text={mainAdds} />}
+      {mainCuts.length > 0 && <Names title={`Delete from Main Deck: ${mainCuts.length}`} names={mainCuts} />}
+      {sideAdds && <Paste label="Then add to the end of Sideboard" text={sideAdds} />}
+      <ol className="list-decimal space-y-1 pl-5 text-sm text-(--color-text-dim)">
+        <li>Open Bulk Edit. Main Deck, Sideboard and Considering each have a tab.</li>
+        <li>In Main Deck, paste the new lines at the end and delete the cut cards' lines. Save &amp; Continue Editing.</li>
+        <li>In Sideboard, paste the cut cards' lines at the end. Save.</li>
+        <li>Main Deck should then match Cube Cobra's count. If an added card was in Considering, delete it there too.</li>
+      </ol>
+      <p className="text-xs text-(--color-text-dim)">
+        Real copies use the printing chosen here; if yours is a different one, change it on its line. A cut card keeps the tags it had on
+        Moxfield if you'd rather move its own line.
+      </p>
+    </section>
+  );
+}
+
+/** The same changes as a request for Claude, who makes them on Cube Cobra and Moxfield. */
+function ForClaude({ text }: { text: string }) {
+  return (
+    <section className={box}>
+      <div className="flex items-center gap-2">
+        <Icon name="sparkle" className="h-5 w-5 text-(--color-text-dim)" />
+        <h3 className="flex-1 font-medium text-(--color-text)">Or ask Claude</h3>
+      </div>
+      <p className="text-sm text-(--color-text-dim)">
+        Paste this into the CubeOrdering session. Claude uploads the file to Cube Cobra, edits the Moxfield deck, and checks both.
+      </p>
+      <Paste label="The request" text={text} rows={8} button="Copy for Claude" />
+    </section>
+  );
+}
+
+/** A read-only box with a copy button (the box can be selected by hand if the clipboard is blocked). */
+function Paste({ label, text, rows = 4, button = "Copy" }: { label: string; text: string; rows?: number; button?: string }) {
+  // What was copied last, so changing the text shows the button as "Copy" again.
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const copied = copiedText === text;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className={head}>{label}</span>
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(text);
+              setCopiedText(text);
+            } catch {
+              // Clipboard blocked: select the box and copy by hand.
+            }
+          }}
+          className={primary}
+        >
+          {copied ? "Copied" : button}
+        </button>
+      </div>
+      <textarea
+        readOnly
+        value={text}
+        rows={rows}
+        aria-label={label}
+        className="w-full rounded border border-(--color-border) bg-(--color-bg) px-3 py-2 font-mono text-xs text-(--color-text)"
+      />
+    </div>
+  );
+}
+
 function Names({ title, names }: { title: string; names: string[] }) {
   return (
     <details className="rounded border border-(--color-border)" open={names.length <= 12}>
@@ -232,11 +506,12 @@ function MoxfieldSection() {
   };
 
   return (
-    <section className="space-y-3 rounded-lg border border-(--color-border) bg-(--color-bg-elev) p-4">
+    <section className={box}>
       <div className="flex items-center gap-2">
         <Icon name="list" className="h-5 w-5 text-(--color-text-dim)" />
-        <h3 className="flex-1 font-medium text-(--color-text)">Moxfield · cards still to come</h3>
+        <h3 className="flex-1 font-medium text-(--color-text)">Moxfield · a checklist's cards still to come</h3>
       </div>
+      <p className="text-sm text-(--color-text-dim)">For a "still missing" list like the pauper cube's: what you haven't ticked yet, to paste over the deck.</p>
       {named.length === 0 ? (
         <p className="text-sm text-(--color-text-dim)">
           Make a checklist from a pasted list or an order file first (My cube → Checklists). What you haven't ticked becomes the list to paste
