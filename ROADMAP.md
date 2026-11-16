@@ -600,7 +600,7 @@ a sign-in ("Signed in as Hana. The judge is in the tray..."); the open tray is t
 out", and a judge that finds the phone signed out says what to do and locks itself; the page
 title and link previews say LifeTutor.
 
-### F. A first-time walkthrough of the features  *(Ari, 2026-11-16 — list agreed, not built)*
+### F. A first-time walkthrough of the features  *(built 2026-11-16: components/LifeTour.tsx; install card lib/install.ts + components/InstallCard.tsx)*
 
 The welcome card is four lines of text and most features are behind the round button or a
 seat's ⋯, so a new friend never finds them. A short, skippable walkthrough the first time

@@ -4,6 +4,7 @@ import { LifeCounter } from "./components/LifeCounter";
 import { SignInForm } from "./components/SignIn";
 import { CardDbSettings } from "./components/CardDbPanel";
 import { UpdateBanner } from "./components/UpdateBanner";
+import { InstallCard } from "./components/InstallCard";
 import { Icon } from "./components/Icon";
 import { useCardDbAutoUpdate } from "./lib/card-db";
 import { APPEARANCES, applyAppearance, loadAppearance, saveAppearance, type Appearance } from "./lib/appearance";
@@ -145,7 +146,7 @@ function TableAppInner() {
     <LifeCounter
       title="LifeTutor"
       canJudge={can(me, "judge")}
-      welcome={!introSeen && <Welcome onDismiss={dismissIntro} />}
+      welcome={!introSeen && ((startTour) => <Welcome onTour={() => (dismissIntro(), startTour())} onDismiss={dismissIntro} />)}
       judgeAccess={<JudgeAccess me={me} onMe={setMe} />}
       judgeSignedInAs={me && !can(me, "judge") ? me.name : undefined}
       onJudgeAccessLost={() => {
@@ -157,6 +158,7 @@ function TableAppInner() {
         <>
           {notice && <SignInNotice notice={notice} onDismiss={() => setNotice(null)} />}
           <UpdateBanner className="mb-2 text-left" />
+          <InstallCard className="mb-2" />
         </>
       }
       appearance={<AppearanceSection value={appearance} onChange={setAppearance} />}
@@ -190,19 +192,28 @@ function AppearanceSection({ value, onChange }: { value: Appearance; onChange: (
 }
 
 /** The first visit: what this is and how a game goes, in a few lines. */
-function Welcome({ onDismiss }: { onDismiss: () => void }) {
+/** The first visit: what LifeTutor is, and an offer of the tour (LifeTour) or to go straight in. */
+function Welcome({ onTour, onDismiss }: { onTour: () => void; onDismiss: () => void }) {
   return (
     <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) px-4 py-3.5 text-left">
       <p className="text-base font-semibold text-(--color-text)">A life counter for Magic, for 2 to 6 players around one phone.</p>
-      <ul className="list-disc space-y-1 pl-5 text-sm text-(--color-text-dim)">
-        <li>Pick players and starting life below, then Start.</li>
-        <li>Tap the left half of your card to lose life, the right half to gain it; hold for 10.</li>
-        <li>The ⋯ in your corner adds counters, commander damage and your color.</li>
-        <li>The round button in the middle has the dice, the monarch, history, card lookup and a new game.</li>
-      </ul>
-      <button type="button" onClick={onDismiss} className="w-full rounded-lg border border-(--color-border) py-2 text-sm text-(--color-text) hover:bg-white/5">
-        Got it
-      </button>
+      <p className="text-sm text-(--color-text-dim)">New here? A one-minute tour of the table shows where everything is. It's in Settings too.</p>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="min-h-12 flex-1 rounded-lg border border-(--color-border) text-sm text-(--color-text) hover:bg-(--color-text)/5"
+        >
+          Not now
+        </button>
+        <button
+          type="button"
+          onClick={onTour}
+          className="min-h-12 flex-[2] rounded-lg bg-(--color-accent) text-sm font-semibold text-(--color-accent-ink) hover:bg-(--color-accent-bright)"
+        >
+          Show me around
+        </button>
+      </div>
     </section>
   );
 }

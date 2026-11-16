@@ -55,6 +55,7 @@ import { startQuestionAbout } from "../lib/judge";
 import { COIN_HEAD, COIN_TAIL } from "../lib/coin-art";
 import { loadSettings, saveSettings, type LifeSettings } from "../lib/life-settings";
 import { LifeHome, LifeSettingsPage, NewGameForm } from "./LifeHome";
+import { LifeTour } from "./LifeTour";
 
 // The rules judge, opened over the counter from the tray (loaded only when first opened).
 const Judge = lazy(() => import("./Judge").then((m) => ({ default: m.Judge })));
@@ -273,8 +274,11 @@ export function LifeCounter({
   /** Back to the app around the counter (from the home screen); none in the table app. */
   onExit?: () => void;
   canJudge?: boolean;
-  /** Something above everything on the home screen (LifeTutor's first-visit welcome). */
-  welcome?: React.ReactNode;
+  /**
+   * Something above everything on the home screen (LifeTutor's first-visit welcome). A function
+   * gets `startTour`, so the welcome can offer "Show me around".
+   */
+  welcome?: React.ReactNode | ((startTour: () => void) => React.ReactNode);
   /**
    * The foot of Settings (LifeTutor: signing in for the judge). With this and no
    * judge, the tray still shows the judge, locked, pointing at Settings.
@@ -293,6 +297,8 @@ export function LifeCounter({
 }) {
   const [game, setGame] = useState<Game>(load);
   const [screen, setScreen] = useState<"home" | "settings" | "game">("home");
+  // "Show me around" (LifeTour): walks over the table as it is; it only looks, so the game is untouched.
+  const [touring, setTouring] = useState(false);
   const [settings, setSettings] = useState<LifeSettings>(loadSettings);
   const show = settings.show;
   const [sheet, setSheet] = useState<SheetKind | null>(null);
@@ -437,6 +443,16 @@ export function LifeCounter({
     window.clearInterval(rollTimer.current);
   };
 
+  // No closeTray() here: it touches the dice timer, and the home screen hands this out while rendering.
+  const startTour = () => {
+    setSheet(null);
+    setGiving(null);
+    setBarOpen(false);
+    setDiceTray(false);
+    setScreen("game");
+    setTouring(true);
+  };
+
   /** Someone was picked to become the monarch. */
   const pick = (i: number) => {
     setGiving(null);
@@ -446,7 +462,7 @@ export function LifeCounter({
   if (screen === "settings") {
     return (
       <div className="fixed inset-0 z-[60] bg-(--color-bg)">
-        <LifeSettingsPage settings={settings} onSettings={setSettings} onBack={() => setScreen("home")} appearance={appearance} banner={banner} more={
+        <LifeSettingsPage settings={settings} onSettings={setSettings} onBack={() => setScreen("home")} appearance={appearance} banner={banner} onTour={startTour} more={
             <>
               {cardDbSettings}
               {judgeAccess}
@@ -472,7 +488,7 @@ export function LifeCounter({
           }}
           onOpenSettings={() => setScreen("settings")}
           onExit={onExit}
-          welcome={welcome}
+          welcome={typeof welcome === "function" ? welcome(startTour) : welcome}
           banner={banner}
         />
       </div>
@@ -482,14 +498,18 @@ export function LifeCounter({
   return (
     // The table sits below the camera cutout, so every seat is the same height and the middle button is
     // in the middle of them; the top seats then reach up behind the cutout on their own (LifePanel topEdge).
-    <div className="fixed inset-0 z-[60] flex flex-col bg-(--color-table) p-1.5 select-none" style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}>
+    <div
+      data-life-table
+      className="fixed inset-0 z-[60] flex flex-col bg-(--color-table) p-1.5 select-none"
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingBottom: "max(env(safe-area-inset-bottom), 0.375rem)" }}
+    >
       <div className="relative min-h-0 flex-1">
         <div
           className="grid h-full gap-1.5"
           style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${rows}, minmax(0, 1fr))` }}
         >
           {seats.map(({ i, turn, span }, k) => (
-            <div key={i} className="min-h-0" style={span ? { gridColumn: "1 / -1" } : undefined}>
+            <div key={i} data-life-seat={i} className="min-h-0" style={span ? { gridColumn: "1 / -1" } : undefined}>
               <LifePanel
                 index={i}
                 name={playerName(game, i)}
@@ -769,6 +789,16 @@ export function LifeCounter({
             setBarOpen(false);
           }}
           onClose={() => setSheet(null)}
+        />
+      )}
+      {touring && (
+        <LifeTour
+          canJudge={canJudge}
+          onTray={setBarOpen}
+          onDone={() => {
+            setTouring(false);
+            closeTray();
+          }}
         />
       )}
     </div>

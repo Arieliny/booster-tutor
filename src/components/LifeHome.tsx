@@ -147,10 +147,13 @@ export function LifeSettingsPage({
   appearance,
   more,
   banner,
+  onTour,
 }: {
   settings: LifeSettings;
   onSettings: (update: (s: LifeSettings) => LifeSettings) => void;
   onBack: () => void;
+  /** "Show me around": the tour of the table, again. */
+  onTour?: () => void;
   /** The first section (LifeTutor: light or dark). */
   appearance?: React.ReactNode;
   more?: React.ReactNode;
@@ -214,6 +217,19 @@ export function LifeSettingsPage({
           ))}
         </div>
       </section>
+
+      {onTour && (
+        <section className="space-y-2">
+          <div className={HEAD}>A tour of the table</div>
+          <button
+            type="button"
+            onClick={onTour}
+            className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-(--color-border) bg-(--color-bg-elev) px-4 py-3 text-sm font-medium text-(--color-text) hover:bg-(--color-text)/5"
+          >
+            Show me around
+          </button>
+        </section>
+      )}
 
       {more}
     </Page>
