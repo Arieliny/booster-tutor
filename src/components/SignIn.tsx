@@ -6,7 +6,16 @@ import { AuthError, ownerSignIn, redeemLink, tokenFromLink, type Me } from "../l
  * Just the controls, so a screen (Booster Tutor's gate) or a section
  * (LifeTutor's settings) can put them where they fit.
  */
-export function SignInForm({ message, onSignedIn }: { message?: string; onSignedIn: (me: Me) => void }) {
+/** `errorHelp`: an app's own wording for an error (LifeTutor explains a used-up invite), or undefined to keep it. */
+export function SignInForm({
+  message,
+  errorHelp,
+  onSignedIn,
+}: {
+  message?: string;
+  errorHelp?: (error: string) => string | undefined;
+  onSignedIn: (me: Me) => void;
+}) {
   const [link, setLink] = useState("");
   const [pinOpen, setPinOpen] = useState(false);
   const [pin, setPin] = useState("");
@@ -59,7 +68,7 @@ export function SignInForm({ message, onSignedIn }: { message?: string; onSigned
         </button>
       </form>
 
-      {error && <p className="text-sm text-amber-300">{error}</p>}
+      {error && <p className="text-sm text-amber-300">{errorHelp?.(error) ?? error}</p>}
 
       <div className="border-t border-(--color-border) pt-3">
         {!pinOpen ? (

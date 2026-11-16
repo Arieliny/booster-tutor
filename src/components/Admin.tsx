@@ -12,6 +12,7 @@ import {
   type AdminUser,
   type Feature,
   type FlaggedRuling,
+  type LinkApp,
 } from "../lib/auth";
 
 const FEATURES = Object.keys(FEATURE_LABELS) as Feature[];
@@ -28,8 +29,21 @@ function ago(iso: string | null): string {
 }
 
 /** A freshly made sign-in link, with copy / share. Links work once. */
-function LinkBox({ name, token, onDone }: { name: string; token: string; onDone: () => void }) {
-  const url = signInUrl(token);
+function LinkBox({
+  name,
+  token,
+  features,
+  onDone,
+}: {
+  name: string;
+  token: string;
+  /** The person's features: a judge-only friend is a LifeTutor friend, so default to that app. */
+  features?: Feature[];
+  onDone: () => void;
+}) {
+  const [app, setApp] = useState<LinkApp>(features?.length === 1 && features[0] === "judge" ? "life" : "booster");
+  const url = signInUrl(token, app);
+  const appName = app === "life" ? "LifeTutor" : "Booster Tutor";
   const [copied, setCopied] = useState(false);
   const canShare = typeof navigator.share === "function";
   return (
@@ -37,6 +51,29 @@ function LinkBox({ name, token, onDone }: { name: string; token: string; onDone:
       <div className="text-(--color-text)">
         Sign-in link for <b className="font-medium">{name}</b> · works once, expires in 7 days
       </div>
+      <div className="flex gap-2">
+        {(["life", "booster"] as const).map((a) => (
+          <button
+            key={a}
+            type="button"
+            aria-pressed={app === a}
+            onClick={() => {
+              setApp(a);
+              setCopied(false);
+            }}
+            className={`min-h-12 flex-1 rounded border px-3 font-medium ${
+              app === a
+                ? "border-(--color-accent) bg-(--color-accent) text-black"
+                : "border-(--color-border) text-(--color-text) hover:bg-white/5"
+            }`}
+          >
+            {a === "life" ? "LifeTutor" : "Booster Tutor"}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-(--color-text-dim)">
+        The link works once, in the app it opens, so pick the app they'll use.
+      </p>
       <input
         readOnly
         value={url}
@@ -61,7 +98,7 @@ function LinkBox({ name, token, onDone }: { name: string; token: string; onDone:
         {canShare && (
           <button
             type="button"
-            onClick={() => navigator.share({ title: "Booster Tutor", text: `Your Booster Tutor sign-in link`, url }).catch(() => {})}
+            onClick={() => navigator.share({ title: appName, text: `Your ${appName} sign-in link`, url }).catch(() => {})}
             className="rounded border border-(--color-border) px-3 py-1.5 text-(--color-text) hover:bg-white/5"
           >
             Share…
@@ -345,7 +382,7 @@ export function Admin() {
                 </button>
               )}
             </div>
-            {link?.userId === u.id && <LinkBox name={u.name} token={link.token} onDone={() => setLink(null)} />}
+            {link?.userId === u.id && <LinkBox name={u.name} token={link.token} features={u.features} onDone={() => setLink(null)} />}
           </div>
         ))}
       </section>
@@ -382,6 +419,9 @@ export function Admin() {
           </div>
           <p className="text-xs text-(--color-text-dim)">
             My cube and Look up are just for you.
+          </p>
+          <p className="text-xs text-(--color-text-dim)">
+            For a LifeTutor friend, tick just Judge; the life counter itself needs no invite.
           </p>
           <button
             type="submit"

@@ -265,6 +265,8 @@ export function LifeCounter({
   appearance,
   cardDbSettings,
   banner,
+  judgeSignedInAs,
+  onJudgeAccessLost,
 }: {
   /** The home screen's heading. */
   title?: string;
@@ -284,6 +286,10 @@ export function LifeCounter({
   cardDbSettings?: React.ReactNode;
   /** Under the top bar on the home screen and Settings, never over a game (LifeTutor: "A new version is ready"). */
   banner?: React.ReactNode;
+  /** LifeTutor: who this phone is signed in as, when the invite doesn't include the judge (the locked box says so). */
+  judgeSignedInAs?: string;
+  /** LifeTutor: the judge found this phone signed out (401) or without the judge any more (403). */
+  onJudgeAccessLost?: (status: 401 | 403) => void;
 }) {
   const [game, setGame] = useState<Game>(load);
   const [screen, setScreen] = useState<"home" | "settings" | "game">("home");
@@ -555,10 +561,12 @@ export function LifeCounter({
               <div
                 className="pointer-events-auto flex items-center overflow-hidden border-4 border-(--color-table) bg-(--color-tray) shadow-[0_2px_10px_rgba(0,0,0,0.22)] transition-[width,border-radius] duration-[250ms] ease-out"
                 // A real radius (half the height) rather than "fully round", so the corners square off
-                // in step with the width instead of snapping at the end.
-                style={{ width: barOpen ? "100%" : "3.75rem", height: "3.75rem", borderRadius: barOpen ? 0 : 30 }}
+                // in step with the width instead of snapping at the end. Open, it's two rows tall, so each
+                // side holds its tools in a grid of 48px buttons (3 across; the dice 2 across) and stays
+                // 16px clear of the screen edge.
+                style={{ width: barOpen ? "100%" : "3.75rem", height: barOpen ? "7.25rem" : "3.75rem", borderRadius: barOpen ? 0 : 30 }}
               >
-                <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
+                <div className={sideClass("left", barOpen, diceTray)}>
                   {diceTray ? (
                     <>
                       {/* Back to the tools (the X closes the whole tray). */}
@@ -573,6 +581,8 @@ export function LifeCounter({
                       <Tool icon="history" label="History" onClick={() => setSheet({ kind: "history" })} />
                       <Tool icon="refresh" label="New" hint="New game" onClick={() => setSheet({ kind: "new" })} />
                       <Tool icon="flag" label="Chooser" hint="Choose who goes first" onClick={whoGoesFirst} />
+                      {/* Here rather than on the right, so the two sides hold five each. */}
+                      <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                     </>
                   )}
                 </div>
@@ -585,7 +595,7 @@ export function LifeCounter({
                 >
                   <Icon name={barOpen ? "close" : "menu"} className="h-6 w-6" />
                 </button>
-                <div className={"flex min-w-0 flex-1 items-center gap-0.5 overflow-hidden transition-opacity duration-150 " + (barOpen ? "opacity-100" : "pointer-events-none opacity-0")}>
+                <div className={sideClass("right", barOpen, diceTray)}>
                   {diceTray ? (
                     <>
                       {DICE.slice(3).map((d) => (
@@ -609,11 +619,17 @@ export function LifeCounter({
                       {(show.timer || game.timer?.running) && (
                         <Tool icon="clock" label={timerShown ? clockText : "Timer"} hint="Round timer" tint={timeUp ? "#fca5a5" : undefined} onClick={() => setSheet({ kind: "timer" })} />
                       )}
-                      <Tool icon="dice" label="Dice" onClick={() => setDiceTray(true)} />
                       {canJudge ? (
                         <Tool icon="scales" label="Judge" onClick={() => setSheet({ kind: "judge" })} />
                       ) : (
-                        judgeAccess && <Tool icon="scales" label="Judge" hint="Judge (needs an invite)" onClick={() => setSheet({ kind: "judgeLocked" })} />
+                        judgeAccess && (
+                          <Tool
+                            icon="scales"
+                            label="Judge"
+                            hint={judgeSignedInAs ? "Judge (not in your invite)" : "Judge (needs an invite)"}
+                            onClick={() => setSheet({ kind: "judgeLocked" })}
+                          />
+                        )
                       )}
                       <Tool icon="cardBack" label="Cards" onClick={() => setSheet({ kind: "cards" })} />
                     </>
@@ -651,11 +667,23 @@ export function LifeCounter({
       {sheet?.kind === "history" && <HistorySheet game={game} onUndo={() => setGame(undo)} onClose={() => setSheet(null)} />}
       {sheet?.kind === "judge" && (
         <ToolScreen icon="scales" title="Judge" what="the judge" onClose={() => setSheet(null)}>
-          <Judge embedded />
+          <Judge
+            embedded
+            onAccessLost={onJudgeAccessLost}
+            accessLostMessage={
+              onJudgeAccessLost
+                ? (status) =>
+                    status === 401
+                      ? "This phone has been signed out of the judge. Ask Ari for a new LifeTutor link, then sign in under Settings."
+                      : "Your invite doesn't include the judge any more. Ask Ari if you'd like it back."
+                : undefined
+            }
+          />
         </ToolScreen>
       )}
       {sheet?.kind === "judgeLocked" && (
         <JudgeLockedBox
+          signedInAs={judgeSignedInAs}
           onInvite={() => {
             setSheet(null);
             closeTray();
@@ -749,6 +777,20 @@ export function LifeCounter({
 
 /** A button in the middle bar. */
 /** A tray button: icon and short label; `hint` is the fuller name for tooltips and screen readers. */
+/**
+ * One side of the open tray: a grid of 48px buttons, 3 across (the dice 2 across, so they're bigger).
+ * Padding on the outer side only: with the tray's 4px border and the table's 6px gutter it keeps the
+ * outermost buttons 16px from the screen edge, and it leaves 48px buttons room on a 375px phone.
+ */
+function sideClass(side: "left" | "right", open: boolean, dice: boolean): string {
+  return (
+    "grid min-w-0 flex-1 content-center overflow-hidden transition-opacity duration-150 " +
+    (dice ? "grid-cols-2 " : "grid-cols-3 ") +
+    (side === "left" ? "pl-1.5 " : "pr-1.5 ") +
+    (open ? "opacity-100" : "pointer-events-none opacity-0")
+  );
+}
+
 function Tool({ icon, label, hint, onClick, tint, disabled }: { icon: IconName; label: string; hint?: string; onClick: () => void; tint?: string; disabled?: boolean }) {
   return (
     <button
@@ -757,11 +799,11 @@ function Tool({ icon, label, hint, onClick, tint, disabled }: { icon: IconName; 
       disabled={disabled}
       aria-label={hint ?? label}
       title={hint ?? label}
-      className="flex h-11 min-w-0 flex-1 flex-col items-center justify-center rounded-full text-(--color-tray-ink) hover:bg-(--color-tray-ink)/10 disabled:opacity-30"
+      className="flex h-12 min-w-0 flex-col items-center justify-center rounded-xl text-(--color-tray-ink) hover:bg-(--color-tray-ink)/10 disabled:opacity-30"
       style={tint ? { color: tint } : undefined}
     >
       <Icon name={icon} className="h-5.5 w-5.5" />
-      <span className="mt-0.5 hidden text-[10px] leading-none text-(--color-tray-ink)/70 min-[420px]:block">{label}</span>
+      <span className="mt-0.5 max-w-full truncate px-0.5 text-[10px] leading-none text-(--color-tray-ink)/70">{label}</span>
     </button>
   );
 }
@@ -856,7 +898,7 @@ function DieButton({ label, coin, onClick }: { label: string; coin?: boolean; on
       type="button"
       onClick={onClick}
       aria-label={coin ? "Flip a coin" : `Roll a ${label}`}
-      className="flex h-11 min-w-0 flex-1 items-center justify-center text-(--color-tray-ink)"
+      className="flex h-12 min-w-0 items-center justify-center rounded-xl text-(--color-tray-ink) hover:bg-(--color-tray-ink)/10"
     >
       <span
         className={
@@ -1424,7 +1466,8 @@ function MapLines({ links, state }: { links: MapLink[]; state: (l: MapLink) => L
 }
 
 /** LifeTutor, signed out: what the judge is and that it takes an invite. */
-function JudgeLockedBox({ onInvite, onClose }: { onInvite: () => void; onClose: () => void }) {
+/** `signedInAs`: this phone is signed in, just without the judge, so there's no invite to enter. */
+function JudgeLockedBox({ signedInAs, onInvite, onClose }: { signedInAs?: string; onInvite: () => void; onClose: () => void }) {
   useBackToClose(onClose);
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
@@ -1440,17 +1483,34 @@ function JudgeLockedBox({ onInvite, onClose }: { onInvite: () => void; onClose: 
         <p className="text-sm text-(--color-text-dim)">
           Ask a rules question about the cards on the table and get a ruling with the rules it rests on, without leaving the game.
         </p>
-        <p className="text-sm text-(--color-text-dim)">
-          It needs an invite from Ari, because each ruling costs him a little; you sign in with it under Settings. Looking up a card doesn't: that's the Cards
-          button.
-        </p>
-        <button
-          type="button"
-          onClick={onInvite}
-          className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-(--color-accent-ink) hover:bg-(--color-accent-bright)"
-        >
-          I have an invite
-        </button>
+        {signedInAs ? (
+          <p className="text-sm text-(--color-text-dim)">
+            You're signed in as <strong className="text-(--color-text)">{signedInAs}</strong>, but your invite doesn't include the judge, because each ruling
+            costs Ari a little. Ask him if you'd like it. Looking up a card is free: that's the Cards button.
+          </p>
+        ) : (
+          <p className="text-sm text-(--color-text-dim)">
+            It needs an invite from Ari, because each ruling costs him a little; you sign in with it under Settings. Looking up a card doesn't: that's the Cards
+            button.
+          </p>
+        )}
+        {signedInAs ? (
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-lg border border-(--color-border) py-3 text-base text-(--color-text) hover:bg-(--color-text)/5"
+          >
+            OK
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onInvite}
+            className="w-full rounded-lg bg-(--color-accent) py-3 text-base font-semibold text-(--color-accent-ink) hover:bg-(--color-accent-bright)"
+          >
+            I have an invite
+          </button>
+        )}
       </div>
     </div>
   );

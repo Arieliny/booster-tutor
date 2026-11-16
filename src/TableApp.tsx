@@ -4,6 +4,7 @@ import { LifeCounter } from "./components/LifeCounter";
 import { SignInForm } from "./components/SignIn";
 import { CardDbSettings } from "./components/CardDbPanel";
 import { UpdateBanner } from "./components/UpdateBanner";
+import { Icon } from "./components/Icon";
 import { useCardDbAutoUpdate } from "./lib/card-db";
 import { APPEARANCES, applyAppearance, loadAppearance, saveAppearance, type Appearance } from "./lib/appearance";
 
@@ -82,6 +83,8 @@ function PhoneFrame() {
  */
 function TableAppInner() {
   const [me, setMe] = useState<Me | null>(cachedMe);
+  // What opening an invite link did, said once on the home screen (it otherwise looks the same either way).
+  const [notice, setNotice] = useState<Notice | null>(null);
   const [appearance, setAppearance] = useState<Appearance>(loadAppearance);
   useEffect(() => {
     saveAppearance(appearance);
@@ -118,7 +121,18 @@ function TableAppInner() {
     let live = true;
     const fromServer = () => checkAuth().then((r) => (r.kind === "signedIn" ? r.me : null));
     const token = takeLinkToken();
-    const who = token ? redeemLink(token).catch(fromServer) : fromServer();
+    const who = token
+      ? redeemLink(token).then(
+          (m) => {
+            if (live) setNotice({ kind: "signedIn", name: m.name, judge: can(m, "judge") });
+            return m;
+          },
+          (err: unknown) => {
+            if (live) setNotice({ kind: "linkFailed", message: err instanceof Error ? err.message : String(err) });
+            return fromServer();
+          },
+        )
+      : fromServer();
     void who.then((m) => {
       if (live) setMe(m);
     });
@@ -133,8 +147,18 @@ function TableAppInner() {
       canJudge={can(me, "judge")}
       welcome={!introSeen && <Welcome onDismiss={dismissIntro} />}
       judgeAccess={<JudgeAccess me={me} onMe={setMe} />}
+      judgeSignedInAs={me && !can(me, "judge") ? me.name : undefined}
+      onJudgeAccessLost={() => {
+        // Ask the server who we are now (it also drops the stale profile this phone kept), and lock the judge.
+        void checkAuth().then((r) => setMe(r.kind === "signedIn" ? r.me : null));
+      }}
       cardDbSettings={<CardDbSettings />}
-      banner={<UpdateBanner className="mb-2 text-left" />}
+      banner={
+        <>
+          {notice && <SignInNotice notice={notice} onDismiss={() => setNotice(null)} />}
+          <UpdateBanner className="mb-2 text-left" />
+        </>
+      }
       appearance={<AppearanceSection value={appearance} onChange={setAppearance} />}
     />
   );
@@ -183,6 +207,49 @@ function Welcome({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
+type Notice = { kind: "signedIn"; name: string; judge: boolean } | { kind: "linkFailed"; message: string };
+
+/**
+ * A used or expired invite, said for LifeTutor: the usual way to use one up is tapping a Booster
+ * Tutor link, which signs in there instead. Anything else (no signal, say) keeps its own message.
+ */
+function usedLinkHelp(error: string): string | undefined {
+  if (!/already been used|expired/i.test(error)) return undefined;
+  return "It's been used already, or it's over 7 days old. An invite works once, in the app it opens: if it opened Booster Tutor, it was used there. Ask Ari for a new LifeTutor link.";
+}
+
+/** After an invite link: signed in (and whether the judge came with it), or why the link didn't work. */
+function SignInNotice({ notice, onDismiss }: { notice: Notice; onDismiss: () => void }) {
+  const ok = notice.kind === "signedIn";
+  return (
+    <div
+      role="status"
+      className={
+        "mb-2 flex items-start gap-2 rounded-xl border px-3 py-2 text-left text-sm text-(--color-text) " +
+        (ok ? "border-emerald-500/50 bg-emerald-500/10" : "border-amber-500/50 bg-amber-500/10")
+      }
+    >
+      <p className="min-w-0 flex-1 py-1.5">
+        {ok ? (
+          <>
+            Signed in as <strong>{notice.name}</strong>.{" "}
+            {notice.judge
+              ? "The judge is in the tray during a game: tap the round button in the middle."
+              : "This invite doesn't include the judge; ask Ari if you'd like it."}
+          </>
+        ) : (
+          <>
+            That invite link didn't work. {usedLinkHelp(notice.message) ?? notice.message}
+          </>
+        )}
+      </p>
+      <button type="button" onClick={onDismiss} aria-label="Dismiss" className="-mr-1 flex h-12 w-12 shrink-0 items-center justify-center rounded-lg hover:bg-(--color-text)/10">
+        <Icon name="close" className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
 /** The foot of Settings: the judge needs an invite; sign in here, or see who's signed in and sign out. */
 function JudgeAccess({ me, onMe }: { me: Me | null; onMe: (me: Me | null) => void }) {
   const head = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
@@ -215,7 +282,7 @@ function JudgeAccess({ me, onMe }: { me: Me | null; onMe: (me: Me | null) => voi
           Ask a rules question about the cards on the table and get a ruling with the rules it rests on, without leaving the game. It needs an invite from Ari,
           because each ruling costs him a little: he sends you a personal link, and opening it on this phone (or pasting it here) keeps you signed in.
         </p>
-        <SignInForm onSignedIn={onMe} />
+        <SignInForm onSignedIn={onMe} errorHelp={usedLinkHelp} />
       </div>
     </section>
   );

@@ -9,6 +9,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 // calls simply fail, which the app already treats as "offline".
 const devApi = { '/api': { target: 'http://localhost:5186', changeOrigin: false } }
 
+// Escape a string for use inside an HTML attribute or text node.
+const esc = (v: string) =>
+  v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+
 // The installable app's identity, per flavor (src/lib/app-flavor.ts): Booster Tutor,
 // or LifeTutor when VITE_APP=table (the LifeTutor Vercel project sets it; locally
 // `vite --mode table` reads .env.table).
@@ -17,6 +21,7 @@ const manifests = {
     name: 'Booster Tutor',
     short_name: 'Booster Tutor',
     description: 'Magic cube tools, rules judge and set grades',
+    siteUrl: 'https://booster-tutor.vercel.app',
     apple: 'apple-touch-icon.png',
     icon192: '/icon-192.png',
     icon512: '/icon-512.png',
@@ -28,6 +33,7 @@ const manifests = {
     name: 'LifeTutor',
     short_name: 'LifeTutor',
     description: 'A life counter for Magic, with a rules judge and card search',
+    siteUrl: 'https://lifetutorapp.vercel.app',
     apple: 'lifetutor-apple-touch-icon.png',
     icon192: '/lifetutor-192.png',
     icon512: '/lifetutor-512.png',
@@ -46,6 +52,29 @@ export default defineConfig(({ mode }) => {
   preview: { proxy: devApi },
   plugins: [
     react(),
+    // The page title and link-preview tags per app, so a pasted lifetutorapp link
+    // says LifeTutor (not Booster Tutor) in WhatsApp and the like. Previews want an
+    // absolute image URL, hence siteUrl.
+    {
+      name: 'app-html-meta',
+      transformIndexHtml(html: string) {
+        const tags = [
+          ['name', 'description', app.description],
+          ['property', 'og:title', app.name],
+          ['property', 'og:description', app.description],
+          ['property', 'og:type', 'website'],
+          ['property', 'og:image', `${app.siteUrl}${app.icon512}`],
+          ['name', 'twitter:card', 'summary'],
+        ]
+          // Don't duplicate a tag index.html already has.
+          .filter(([attr, key]) => !new RegExp(`<meta[^>]+${attr}=["']${key}["']`, 'i').test(html))
+          .map(([attr, key, value]) => `    <meta ${attr}="${key}" content="${esc(value)}" />`)
+          .join('\n')
+        return html
+          .replace(/<title>[\s\S]*?<\/title>/i, `<title>${esc(app.name)}</title>`)
+          .replace('</head>', `${tags}\n  </head>`)
+      },
+    },
     tailwindcss(),
     // Installable + offline. The point is the Set review tab at a prerelease,
     // where the venue wifi is usually unusable: the app shell and all card data

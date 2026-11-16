@@ -174,9 +174,28 @@ export async function signOut(): Promise<void> {
   }
 }
 
-/** The link to send someone, built for whichever domain the owner is on. */
-export function signInUrl(token: string): string {
-  return `${location.origin}/join#${token}`;
+/** The two apps share one account database, but each has its own address. */
+export type LinkApp = "booster" | "life";
+
+const BOOSTER_URL = (import.meta.env.VITE_BOOSTER_URL as string | undefined) ?? "https://booster-tutor.vercel.app";
+const LIFETUTOR_URL = (import.meta.env.VITE_LIFETUTOR_URL as string | undefined) ?? "https://lifetutorapp.vercel.app";
+/** Where LifeTutor runs in local dev (see vite.config.ts / launch.json). */
+const LIFETUTOR_DEV_PORT = 5188;
+
+/**
+ * The link to send someone. A link works once, in the app it opens, so it has to
+ * point at the app they will actually use. "booster" uses whichever domain the
+ * owner is on (so local dev links keep working); "life" uses LifeTutor's address,
+ * or the local LifeTutor dev port when the owner is on localhost.
+ */
+export function signInUrl(token: string, app: LinkApp = "booster"): string {
+  if (app === "life") {
+    const h = location.hostname;
+    const local = h === "localhost" || h === "127.0.0.1" || h.endsWith(".localhost");
+    const base = local ? `${location.protocol}//${h}:${LIFETUTOR_DEV_PORT}` : LIFETUTOR_URL;
+    return `${base}/join#${token}`;
+  }
+  return `${location.origin || BOOSTER_URL}/join#${token}`;
 }
 
 // ---------------------------------------------------------------- admin (owner)

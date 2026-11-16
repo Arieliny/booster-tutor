@@ -592,6 +592,38 @@ Not changing: the Fan Content position (everything stays free), the owner-only c
 the existing guest/admin screens. Later: store packaging = item C (Capacitor around this
 entry), only if the friends use it.
 
+**Fixed 2026-11-16 after a fake-friends test (Dana, Ben, Cara, Eli, Gus, Hana, Ivy):** Admin links
+can point at LifeTutor (the default for a judge-only friend), because a Booster Tutor link
+tapped first signs in there and is used up; LifeTutor says so when a link fails, and confirms
+a sign-in ("Signed in as Hana. The judge is in the tray..."); the open tray is two rows of
+48px buttons, 16px off the edges; the locked judge knows "signed in, no judge" from "signed
+out", and a judge that finds the phone signed out says what to do and locks itself; the page
+title and link previews say LifeTutor.
+
+### F. A first-time walkthrough of the features  *(Ari, 2026-11-16 — not started)*
+
+The welcome card is four lines of text and most features are behind the round button or a
+seat's ⋯, so a new friend never finds them. A short, skippable walkthrough the first time
+LifeTutor opens (and again from Settings, "Show me around"):
+
+- Start a game, then point at things on the real table rather than screenshots: tap and hold
+  to change life, the seat's ⋯ (counters, commander damage, colour), the round button and its
+  tray (dice, monarch, history, timer, card lookup, the judge).
+- One step at a time with Next / Skip, a highlight around the thing being explained, and a
+  dimmed table behind it; nothing changes the game.
+- Remember it was seen per phone (like the welcome card); a later version can add a "new
+  since you last looked" step for features added after a friend's first visit.
+- Booster Tutor could get the same for My cube later, but LifeTutor's friends need it most.
+
+### G. LifeTutor polish left from the 2026-11-16 test  *(small, not started)*
+
+- After "That's all your rulings for this month", the judge's header still says "49 of 50 left".
+- "Looks wrong?" flags don't say which app they came from, and nothing tells Ari a flag arrived.
+- Every friend sees "Owner? Sign in with your PIN" in Settings; a few wrong guesses can pause
+  Ari's PIN sign-in for the day (the global limit). Hide it behind the owner's own devices.
+- The welcome card's bullets are centred; "Back to the table" has no accessible name; opening
+  a card from Look up takes 3-6 s on "Opening...".
+
 ---
 
 ## Out of scope (still)

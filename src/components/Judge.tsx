@@ -98,7 +98,15 @@ function FlagRuling({ convo }: { convo: { messages: JudgeMessage[]; cards: strin
  * removed. Every answered thread goes into History (last 50, synced across
  * your devices), where it can be reread or continued.
  */
-export function Judge({ embedded = false }: { embedded?: boolean } = {}) {
+/**
+ * `onAccessLost` (LifeTutor): this phone was signed out (401) or the invite no longer includes the
+ * judge (403), so the app can lock the judge again; `accessLostMessage` then says what to do there.
+ */
+export function Judge({
+  embedded = false,
+  onAccessLost,
+  accessLostMessage,
+}: { embedded?: boolean; onAccessLost?: (status: 401 | 403) => void; accessLostMessage?: (status: 401 | 403) => string } = {}) {
   // Opens on a blank question (or the card from "Ask the judge about this card").
   const [convo, setConvo] = useState<Conversation>(openingConversation);
   const { messages, cards } = convo;
@@ -167,7 +175,9 @@ export function Judge({ embedded = false }: { embedded?: boolean } = {}) {
         setAllowance((a) => (a ? { ...a, remaining: e.remaining } : a));
       } else if (e.type === "error") {
         failed = true;
-        setError(e.message);
+        const lost = e.status === 401 || e.status === 403 ? e.status : null;
+        setError(lost && accessLostMessage ? accessLostMessage(lost) : e.message);
+        if (lost) onAccessLost?.(lost);
       }
     };
     try {

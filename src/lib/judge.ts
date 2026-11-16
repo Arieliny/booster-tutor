@@ -31,7 +31,8 @@ export type JudgeEvent =
   | { type: "text"; delta: string }
   | { type: "reset" }
   | { type: "done"; remaining: number | null; refused?: boolean; cost?: number }
-  | { type: "error"; message: string };
+  /** `status`: the HTTP status when the request itself was refused (401 signed out, 403 no judge). */
+  | { type: "error"; message: string; status?: number };
 
 export interface Conversation {
   messages: JudgeMessage[];
@@ -99,7 +100,7 @@ export async function askJudge(c: Conversation, onEvent: (e: JudgeEvent) => void
   });
   if (!res.ok || !res.body) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;
-    onEvent({ type: "error", message: body?.error ?? `The judge couldn't be reached (HTTP ${res.status}).` });
+    onEvent({ type: "error", message: body?.error ?? `The judge couldn't be reached (HTTP ${res.status}).`, status: res.status });
     return;
   }
   const reader = res.body.getReader();
