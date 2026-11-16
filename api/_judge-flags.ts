@@ -25,13 +25,15 @@ export interface Flag {
   /** The conversation, ending with the flagged answer. */
   messages: ThreadMessage[];
   note: string;
+  /** Which app it was sent from; flags saved before this was added have none. */
+  app?: "life" | "booster";
 }
 
 const KEY = "judge:flags";
 const dayKey = (uid: string) => `judge:flagged:${uid}:${new Date().toISOString().slice(0, 10)}`;
 
 /** The flag as sent, checked and trimmed; null when it doesn't end with an answer. */
-export function readFlag(body: Record<string, unknown>): Pick<Flag, "cards" | "messages" | "note"> | null {
+export function readFlag(body: Record<string, unknown>): Pick<Flag, "cards" | "messages" | "note" | "app"> | null {
   if (!Array.isArray(body.messages)) return null;
   const messages = body.messages
     .filter(
@@ -43,11 +45,13 @@ export function readFlag(body: Record<string, unknown>): Pick<Flag, "cards" | "m
   if (messages.at(-1)?.role !== "assistant" || !messages.some((m) => m.role === "user")) return null;
   const cards = Array.isArray(body.cards) ? body.cards.filter((c): c is string => typeof c === "string").slice(0, 10) : [];
   const note = typeof body.note === "string" ? body.note.trim().slice(0, 1000) : "";
-  return { cards, messages, note };
+  // Only the two known values; anything else is left out rather than stored.
+  const app = body.app === "life" || body.app === "booster" ? body.app : undefined;
+  return { cards, messages, note, ...(app ? { app } : {}) };
 }
 
 /** Save a flag; false when the person has sent today's maximum. */
-export async function saveFlag(user: { id: string; name: string }, flag: Pick<Flag, "cards" | "messages" | "note">): Promise<boolean> {
+export async function saveFlag(user: { id: string; name: string }, flag: Pick<Flag, "cards" | "messages" | "note" | "app">): Promise<boolean> {
   const n = await redis.incr(dayKey(user.id));
   if (n === 1) await redis.expire(dayKey(user.id), 2 * 24 * 60 * 60);
   if (n > DAILY_FLAGS) return false;
@@ -66,6 +70,11 @@ export async function listFlags(): Promise<Flag[]> {
   return Object.values(all)
     .filter((f) => f && typeof f === "object")
     .sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0));
+}
+
+/** How many are waiting, without reading them all (the owner's "something was flagged" notice). */
+export async function countFlags(): Promise<number> {
+  return (await redis.hlen(KEY)) ?? 0;
 }
 
 export async function deleteFlag(id: string): Promise<void> {

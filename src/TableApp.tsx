@@ -192,7 +192,7 @@ function AppearanceSection({ value, onChange }: { value: Appearance; onChange: (
 /** The first visit: what this is and how a game goes, in a few lines. */
 function Welcome({ onDismiss }: { onDismiss: () => void }) {
   return (
-    <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) px-4 py-3.5">
+    <section className="space-y-3 rounded-2xl border border-(--color-border) bg-(--color-bg-elev) px-4 py-3.5 text-left">
       <p className="text-base font-semibold text-(--color-text)">A life counter for Magic, for 2 to 6 players around one phone.</p>
       <ul className="list-disc space-y-1 pl-5 text-sm text-(--color-text-dim)">
         <li>Pick players and starting life below, then Start.</li>
@@ -282,7 +282,7 @@ function JudgeAccess({ me, onMe }: { me: Me | null; onMe: (me: Me | null) => voi
           Ask a rules question about the cards on the table and get a ruling with the rules it rests on, without leaving the game. It needs an invite from Ari,
           because each ruling costs him a little: he sends you a personal link, and opening it on this phone (or pasting it here) keeps you signed in.
         </p>
-        <SignInForm onSignedIn={onMe} errorHelp={usedLinkHelp} />
+        <SignInForm onSignedIn={onMe} errorHelp={usedLinkHelp} ownerPin={false} />
       </div>
     </section>
   );

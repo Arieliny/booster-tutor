@@ -15,12 +15,13 @@ import {
   sessionCount,
 } from "./_auth.js";
 import { DEFAULT_GUEST_LIMIT, usageFor } from "./_judge-usage.js";
-import { deleteFlag, listFlags } from "./_judge-flags.js";
+import { countFlags, deleteFlag, listFlags } from "./_judge-flags.js";
 
 /**
  * Admin (owner only): people and what they can use.
  *
  *   GET  /api/admin -> { features, defaultJudgeLimit, users: [{ ...user, devices, lastSeen, pendingLink, judge }], flags }
+ *   GET  /api/admin?count=flags -> { flags: number }   just how many rulings are flagged (cheap; for the owner's notice)
  *   POST /api/admin
  *     { action: "create", name, features }  -> { user, token }   new guest + their link
  *     { action: "update", id, name?, features?, judgeLimit? }   judgeLimit null = default
@@ -39,6 +40,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!me) return;
 
     if (req.method === "GET") {
+      if (req.query.count === "flags") {
+        res.status(200).json({ flags: await countFlags() });
+        return;
+      }
       const users = await allUsers();
       const rows = await Promise.all(
         users.map(async (u) => {

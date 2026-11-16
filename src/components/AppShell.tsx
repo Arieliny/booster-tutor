@@ -27,6 +27,7 @@ export function AppShell({
   onNavigate,
   title,
   right,
+  notice,
   children,
 }: {
   nav: NavItem[];
@@ -34,6 +35,8 @@ export function AppShell({
   onNavigate: (s: Section) => void;
   title: string;
   right?: React.ReactNode;
+  /** A slim notice under the update banner (e.g. the owner's "rulings flagged"). */
+  notice?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const showNav = nav.length > 1;
@@ -75,6 +78,7 @@ export function AppShell({
             {right}
           </div>
           <UpdateBanner className="mx-auto mb-2 w-[calc(100%-2rem)] max-w-7xl sm:w-[calc(100%-3rem)]" />
+          {notice && <div className="mx-auto mb-2 w-[calc(100%-2rem)] max-w-7xl sm:w-[calc(100%-3rem)]">{notice}</div>}
         </header>
 
         <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 print:max-w-none print:p-0">{children}</main>

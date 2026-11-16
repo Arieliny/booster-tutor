@@ -102,6 +102,7 @@ export function LifeHome({
         <button
           type="button"
           onClick={onResume}
+          aria-label={`${inProgress ? "Resume game" : "Back to the table"}: life ${game.players.map((p) => p.life).join(", ")}`}
           className="flex w-full items-center gap-3 rounded-2xl border border-(--color-accent) bg-(--color-accent)/15 px-4 py-3.5 hover:bg-(--color-accent)/25"
         >
           {/* Balances the play icon, so the words sit in the middle. */}

@@ -29,10 +29,17 @@ export async function scryfallFuzzyName(q: string, signal?: AbortSignal): Promis
 
 /** One card by exact name, in the same shape as the baked data, with its oldest art. */
 export async function scryfallCard(name: string): Promise<ReviewCard> {
+  return withOldestArt(await scryfallCardQuick(name));
+}
+
+/**
+ * The card with Scryfall's default printing, one request: for showing its text at once while
+ * withOldestArt (a second, larger request: every printing) finds the art.
+ */
+export async function scryfallCardQuick(name: string): Promise<ReviewCard> {
   const res = await fetch(`${SCRYFALL}/cards/named?exact=${encodeURIComponent(name)}`);
   if (!res.ok) throw new Error(`Scryfall couldn't find "${name}"`);
-  const c = fromScryfall(await res.json());
-  return withOldestArt(c);
+  return fromScryfall(await res.json());
 }
 
 export interface ScryPrinting {
@@ -52,7 +59,7 @@ export interface ScryPrinting {
  * scripts/lib/oldest-printings.mjs). Best effort: on any failure the card keeps
  * Scryfall's default printing.
  */
-async function withOldestArt(c: ReviewCard): Promise<ReviewCard> {
+export async function withOldestArt(c: ReviewCard): Promise<ReviewCard> {
   try {
     const q = `oracleid:${c.id} game:paper -is:promo -is:oversized`;
     const res = await fetch(`${SCRYFALL}/cards/search?q=${encodeURIComponent(q)}&unique=prints&order=released&dir=asc`);

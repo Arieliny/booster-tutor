@@ -105,6 +105,9 @@ export function fakeRedis() {
       if (!h) return null as T;
       return Object.fromEntries([...h].map(([f, v]) => [f, dec(v)])) as T;
     },
+    async hlen(k: string) {
+      return hashes.get(k)?.size ?? 0;
+    },
     async hdel(k: string, ...fields: string[]) {
       const h = hashes.get(k);
       return fields.filter((f) => h?.delete(f)).length;

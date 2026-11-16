@@ -175,6 +175,8 @@ export function Judge({
         setAllowance((a) => (a ? { ...a, remaining: e.remaining } : a));
       } else if (e.type === "error") {
         failed = true;
+        // 429 = this month's rulings are used up: the header's count says so too.
+        if (e.status === 429) setAllowance((a) => (a ? { ...a, remaining: 0 } : a));
         const lost = e.status === 401 || e.status === 403 ? e.status : null;
         setError(lost && accessLostMessage ? accessLostMessage(lost) : e.message);
         if (lost) onAccessLost?.(lost);
@@ -221,7 +223,9 @@ export function Judge({
           {allowance
             ? allowance.limit === null
               ? "No limit"
-              : `${allowance.remaining} of ${allowance.limit} rulings left this month`
+              : allowance.remaining === 0
+                ? "No rulings left this month"
+                : `${allowance.remaining} of ${allowance.limit} rulings left this month`
             : " "}
         </span>
         {allowance?.cr && <span>· Rules effective {allowance.cr}</span>}

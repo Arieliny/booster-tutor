@@ -615,14 +615,15 @@ LifeTutor opens (and again from Settings, "Show me around"):
   since you last looked" step for features added after a friend's first visit.
 - Booster Tutor could get the same for My cube later, but LifeTutor's friends need it most.
 
-### G. LifeTutor polish left from the 2026-11-16 test  *(small, not started)*
+### G. LifeTutor polish left from the 2026-11-16 test  *(fixed 2026-11-16)*
 
-- After "That's all your rulings for this month", the judge's header still says "49 of 50 left".
-- "Looks wrong?" flags don't say which app they came from, and nothing tells Ari a flag arrived.
-- Every friend sees "Owner? Sign in with your PIN" in Settings; a few wrong guesses can pause
-  Ari's PIN sign-in for the day (the global limit). Hide it behind the owner's own devices.
-- The welcome card's bullets are centred; "Back to the table" has no accessible name; opening
-  a card from Look up takes 3-6 s on "Opening...".
+- Out of rulings: the judge's header says "No rulings left this month" (it kept the old count).
+- "Looks wrong?" flags say which app sent them ("Kim from LifeTutor"), and Booster Tutor shows
+  the owner "N judge rulings flagged" with Review (GET /api/admin?count=flags, FlagNotice).
+- No "Owner? Sign in with your PIN" in LifeTutor (SignInForm ownerPin={false}); Ari signs his
+  phone in with Admin's "Add one of your devices" link, switched to LifeTutor.
+- The welcome card reads left-aligned; the resume button has a name ("Back to the table: life 20, 20");
+  a looked-up card shows its text at once and its oldest art follows (it waited for both, 3-6 s).
 
 ---
 

@@ -6,6 +6,8 @@
  * offline.
  */
 
+import { IS_TABLE_APP } from "./app-flavor";
+
 export interface JudgeMessage {
   role: "user" | "assistant";
   content: string;
@@ -237,7 +239,14 @@ export async function flagRuling(c: { messages: JudgeMessage[]; cards: string[] 
   const res = await fetch("/api/judge", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "flag", messages: c.messages.map(({ role, content }) => ({ role, content })), cards: c.cards, note }),
+    body: JSON.stringify({
+      action: "flag",
+      messages: c.messages.map(({ role, content }) => ({ role, content })),
+      cards: c.cards,
+      note,
+      // So the owner can tell which app the flag came from.
+      app: IS_TABLE_APP ? "life" : "booster",
+    }),
   });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: string } | null;

@@ -38,6 +38,7 @@ import { AccountMenu } from "./components/AccountMenu";
 import { DeckRandomizer } from "./components/DeckRandomizer";
 import { PlaySwitch } from "./components/PlaySwitch";
 import { AppShell } from "./components/AppShell";
+import { FlagNotice } from "./components/FlagNotice";
 import { PageHeader } from "./components/PageHeader";
 import { SyncChip } from "./components/SyncChip";
 import { startUserSync } from "./lib/user-sync";
@@ -293,6 +294,7 @@ function App() {
       active={sectionOf(tab)}
       onNavigate={navigate}
       title={TAB_TITLES[tab]}
+      notice={isOwner && tab !== "admin" ? <FlagNotice onReview={() => setTab("admin")} /> : undefined}
       right={
         <>
           {isOwner && (tab === "cubeReview" || tab === "lookup") && <SyncChip />}

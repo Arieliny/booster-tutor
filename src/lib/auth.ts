@@ -218,8 +218,8 @@ export interface AdminUser extends Me {
   };
 }
 
-async function admin<T>(method: "GET" | "POST", body?: Record<string, unknown>): Promise<T> {
-  const res = await fetch("/api/admin", {
+async function admin<T>(method: "GET" | "POST", body?: Record<string, unknown>, query = ""): Promise<T> {
+  const res = await fetch("/api/admin" + query, {
     method,
     headers: body ? { "Content-Type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined,
@@ -239,7 +239,12 @@ export interface FlaggedRuling {
   /** The conversation, ending with the flagged answer. */
   messages: { role: "user" | "assistant"; content: string }[];
   note: string;
+  /** Which app it was sent from; older flags have none. */
+  app?: "life" | "booster";
 }
+
+/** How many rulings are flagged, for the owner's notice (cheap: no conversations are sent). */
+export const adminFlagCount = () => admin<{ flags: number }>("GET", undefined, "?count=flags").then((d) => d.flags);
 
 export const adminList = () =>
   admin<{ users: AdminUser[]; defaultJudgeLimit: number; flags?: FlaggedRuling[] }>("GET").then((d) => ({

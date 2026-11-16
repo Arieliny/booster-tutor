@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { didYouMean, searchDb, toReviewCard, useCardDb, type DbCard } from "../lib/card-db";
 import type { ReviewCard } from "../lib/cube-review";
-import { scryfallCard, scryfallFuzzyName, scryfallSuggest } from "../lib/scryfall";
+import { scryfallCardQuick, scryfallFuzzyName, scryfallSuggest, withOldestArt } from "../lib/scryfall";
 import { useBackToClose } from "../lib/use-back-to-close";
 import { useSettled } from "../lib/use-settled";
 import { CardDbNotice } from "./CardDbPanel";
@@ -28,6 +28,7 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
   const [q, setQ] = useState("");
   const [card, setCard] = useState<ReviewCard | null>(null);
   const [opening, setOpening] = useState<string | null>(null);
+  const [artPending, setArtPending] = useState(false);
   const [openError, setOpenError] = useState<string | null>(null);
   const [suggest, setSuggest] = useState<Suggest | null>(null);
   const needle = q.trim();
@@ -74,11 +75,19 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
   }, [online, needle]);
   const names = suggest?.q === needle ? suggest : null;
 
+  // The text shows as soon as Scryfall answers; the oldest art (a second, slower request) follows,
+  // with a placeholder where it goes. Until 2026-11-16 the card waited for both, 3-6 s on a phone.
   const openNamed = async (name: string) => {
     setOpening(name);
     setOpenError(null);
     try {
-      setCard(await scryfallCard(name));
+      const quick = await scryfallCardQuick(name);
+      setCard(quick);
+      setArtPending(true);
+      void withOldestArt(quick).then((c) => {
+        setCard((cur) => (cur?.id === quick.id ? c : cur));
+        setArtPending(false);
+      });
     } catch {
       setOpenError(navigator.onLine ? `Couldn't load ${name}.` : "You're offline.");
     } finally {
@@ -86,7 +95,7 @@ export function CardSearch({ onAskJudge }: { onAskJudge?: (name: string) => void
     }
   };
 
-  if (card) return <CardView card={card} onBack={() => setCard(null)} onAskJudge={onAskJudge} />;
+  if (card) return <CardView card={card} artPending={artPending} onBack={() => setCard(null)} onAskJudge={onAskJudge} />;
 
   return (
     <div className="mx-auto max-w-3xl space-y-3 pb-6">
@@ -195,7 +204,18 @@ function DbRow({ d, onOpen }: { d: DbCard; onOpen: () => void }) {
 }
 
 /** One card: its image (when it loads), its text, and the official rulings. */
-function CardView({ card: c, onBack, onAskJudge }: { card: ReviewCard; onBack: () => void; onAskJudge?: (name: string) => void }) {
+function CardView({
+  card: c,
+  artPending,
+  onBack,
+  onAskJudge,
+}: {
+  card: ReviewCard;
+  /** The oldest art is still on its way: hold its place instead of showing the default printing first. */
+  artPending?: boolean;
+  onBack: () => void;
+  onAskJudge?: (name: string) => void;
+}) {
   // The phone's Back goes back to the results first, then closes the search.
   useBackToClose(onBack);
   const [face, setFace] = useState<"front" | "back">("front");
@@ -208,7 +228,11 @@ function CardView({ card: c, onBack, onAskJudge }: { card: ReviewCard; onBack: (
         <Icon name="back" className="h-4 w-4" /> Back to results
       </button>
       <div className="grid gap-4 sm:grid-cols-[260px_minmax(0,1fr)]">
-        {img && !noImage && (
+        {artPending ? (
+          <div className="mx-auto w-full max-w-[300px]">
+            <div className="aspect-[488/680] w-full animate-pulse rounded-[4.5%] bg-(--color-text)/10" aria-label="Loading the card's picture" />
+          </div>
+        ) : img && !noImage && (
           <div className="mx-auto w-full max-w-[300px]">
             <img
               key={img}

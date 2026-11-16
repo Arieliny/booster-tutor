@@ -128,7 +128,8 @@ function FlaggedRulings({ flags, onDone }: { flags: FlaggedRuling[]; onDone: (id
         return (
           <div key={f.id} className="space-y-2 rounded-lg border border-amber-500/40 bg-(--color-bg-elev) p-4 text-sm">
             <div className="text-xs text-(--color-text-dim)">
-              {f.userName} · {ago(f.at)}
+              {f.userName}
+              {f.app && ` from ${f.app === "life" ? "LifeTutor" : "Booster Tutor"}`} · {ago(f.at)}
               {f.cards.length > 0 && ` · ${f.cards.join(", ")}`}
               {f.messages.length > 2 && ` · ${f.messages.filter((m) => m.role === "user").length} questions in the thread`}
             </div>

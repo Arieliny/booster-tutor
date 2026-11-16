@@ -7,13 +7,20 @@ import { AuthError, ownerSignIn, redeemLink, tokenFromLink, type Me } from "../l
  * (LifeTutor's settings) can put them where they fit.
  */
 /** `errorHelp`: an app's own wording for an error (LifeTutor explains a used-up invite), or undefined to keep it. */
+/**
+ * `ownerPin` false: no "Owner? Sign in with your PIN" (LifeTutor, where every friend sees this form
+ * and a few curious wrong guesses could pause PIN sign-in for the day; Ari signs his own phone in
+ * with Admin's "Add one of your devices" link instead).
+ */
 export function SignInForm({
   message,
   errorHelp,
+  ownerPin = true,
   onSignedIn,
 }: {
   message?: string;
   errorHelp?: (error: string) => string | undefined;
+  ownerPin?: boolean;
   onSignedIn: (me: Me) => void;
 }) {
   const [link, setLink] = useState("");
@@ -70,6 +77,7 @@ export function SignInForm({
 
       {error && <p className="text-sm text-amber-300">{errorHelp?.(error) ?? error}</p>}
 
+      {ownerPin && (
       <div className="border-t border-(--color-border) pt-3">
         {!pinOpen ? (
           <button type="button" onClick={() => setPinOpen(true)} className="text-xs text-(--color-text-dim) hover:text-(--color-text)">
@@ -102,6 +110,7 @@ export function SignInForm({
           </form>
         )}
       </div>
+      )}
     </div>
   );
 }
