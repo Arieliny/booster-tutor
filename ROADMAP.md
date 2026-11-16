@@ -600,20 +600,35 @@ a sign-in ("Signed in as Hana. The judge is in the tray..."); the open tray is t
 out", and a judge that finds the phone signed out says what to do and locks itself; the page
 title and link previews say LifeTutor.
 
-### F. A first-time walkthrough of the features  *(Ari, 2026-11-16 — not started)*
+### F. A first-time walkthrough of the features  *(Ari, 2026-11-16 — list agreed, not built)*
 
 The welcome card is four lines of text and most features are behind the round button or a
 seat's ⋯, so a new friend never finds them. A short, skippable walkthrough the first time
-LifeTutor opens (and again from Settings, "Show me around"):
+LifeTutor opens (and again from Settings, "Show me around"): it starts a 2-player table and
+points at the real controls, one step at a time with Next / Skip, a highlight around the
+thing and the table dimmed behind it. Nothing it does changes the game. Seen once per phone
+(like the welcome card); a later version can add "new since you last looked" steps.
 
-- Start a game, then point at things on the real table rather than screenshots: tap and hold
-  to change life, the seat's ⋯ (counters, commander damage, colour), the round button and its
-  tray (dice, monarch, history, timer, card lookup, the judge).
-- One step at a time with Next / Skip, a highlight around the thing being explained, and a
-  dimmed table behind it; nothing changes the game.
-- Remember it was seen per phone (like the welcome card); a later version can add a "new
-  since you last looked" step for features added after a friend's first visit.
-- Booster Tutor could get the same for My cube later, but LifeTutor's friends need it most.
+The steps (Ari, 2026-11-16):
+
+1. **Life:** tap the left half to lose 1, the right half to gain 1, hold for 10; the running
+   "−3" beside the total.
+2. **A seat's ⋯:** counters (poison, energy, commander tax...), commander damage (with
+   partners), the seat's colour.
+3. **The round button:** opens the tray; the X closes it.
+4. **History:** every change, to check or fix a mistake.
+5. **Dice and Chooser:** roll a die or flip a coin; pick who goes first.
+6. **Cards:** look up any card, free (offline with the card database).
+7. **Judge:** ask a rules question mid-game (or: it needs an invite, in Settings).
+8. **Where the extras are** (a pointer, not how each works): Monarch, Day/night and the Timer
+   in the tray; each seat's Dungeons button; the Ring, emblems, the city's blessing and the
+   Enduring Story in a seat's ⋯; and Settings > On the table to switch any of them off.
+9. **Home and Settings:** resume or start a new game; switch off unused trackers, light/dark.
+
+Outside the game: a prompt to add LifeTutor to the home screen (full screen, works offline),
+and a nudge toward the card database download in Settings.
+
+Booster Tutor could get the same for My cube later, but LifeTutor's friends need it most.
 
 ### G. LifeTutor polish left from the 2026-11-16 test  *(fixed 2026-11-16)*
 
