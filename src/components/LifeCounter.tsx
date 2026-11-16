@@ -264,6 +264,7 @@ export function LifeCounter({
   judgeAccess,
   appearance,
   cardDbSettings,
+  banner,
 }: {
   /** The home screen's heading. */
   title?: string;
@@ -281,6 +282,8 @@ export function LifeCounter({
   appearance?: React.ReactNode;
   /** A Settings section above the judge's (LifeTutor: the offline card database). */
   cardDbSettings?: React.ReactNode;
+  /** Under the top bar on the home screen and Settings, never over a game (LifeTutor: "A new version is ready"). */
+  banner?: React.ReactNode;
 }) {
   const [game, setGame] = useState<Game>(load);
   const [screen, setScreen] = useState<"home" | "settings" | "game">("home");
@@ -437,7 +440,7 @@ export function LifeCounter({
   if (screen === "settings") {
     return (
       <div className="fixed inset-0 z-[60] bg-(--color-bg)">
-        <LifeSettingsPage settings={settings} onSettings={setSettings} onBack={() => setScreen("home")} appearance={appearance} more={
+        <LifeSettingsPage settings={settings} onSettings={setSettings} onBack={() => setScreen("home")} appearance={appearance} banner={banner} more={
             <>
               {cardDbSettings}
               {judgeAccess}
@@ -464,6 +467,7 @@ export function LifeCounter({
           onOpenSettings={() => setScreen("settings")}
           onExit={onExit}
           welcome={welcome}
+          banner={banner}
         />
       </div>
     );

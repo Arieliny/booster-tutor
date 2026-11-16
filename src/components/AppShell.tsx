@@ -1,6 +1,7 @@
 import type { Section } from "../lib/routes";
 import { Footer } from "./Footer";
 import { Icon, type IconName } from "./Icon";
+import { UpdateBanner } from "./UpdateBanner";
 
 const SECTION_ICON: Record<Section, IconName> = {
   play: "play",
@@ -73,6 +74,7 @@ export function AppShell({
             <h1 className="min-w-0 flex-1 truncate text-lg font-semibold text-(--color-text)">{title}</h1>
             {right}
           </div>
+          <UpdateBanner className="mx-auto mb-2 w-[calc(100%-2rem)] max-w-7xl sm:w-[calc(100%-3rem)]" />
         </header>
 
         <main className="mx-auto w-full max-w-7xl flex-1 p-4 sm:p-6 print:max-w-none print:p-0">{children}</main>

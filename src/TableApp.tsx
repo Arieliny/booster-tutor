@@ -3,6 +3,7 @@ import { cachedMe, can, checkAuth, redeemLink, signOut, takeLinkToken, type Me }
 import { LifeCounter } from "./components/LifeCounter";
 import { SignInForm } from "./components/SignIn";
 import { CardDbSettings } from "./components/CardDbPanel";
+import { UpdateBanner } from "./components/UpdateBanner";
 import { useCardDbAutoUpdate } from "./lib/card-db";
 import { APPEARANCES, applyAppearance, loadAppearance, saveAppearance, type Appearance } from "./lib/appearance";
 
@@ -133,6 +134,7 @@ function TableAppInner() {
       welcome={!introSeen && <Welcome onDismiss={dismissIntro} />}
       judgeAccess={<JudgeAccess me={me} onMe={setMe} />}
       cardDbSettings={<CardDbSettings />}
+      banner={<UpdateBanner className="mb-2 text-left" />}
       appearance={<AppearanceSection value={appearance} onChange={setAppearance} />}
     />
   );

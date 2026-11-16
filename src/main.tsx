@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import { startUpdates } from './lib/sw-update'
 
 /**
  * Recover from a stale build after a deploy.
@@ -34,28 +35,11 @@ window.addEventListener('vite:preloadError', (event) => {
 })
 
 /**
- * Pick up a new deploy without a manual refresh.
- *
- * The service worker uses skipWaiting + clientsClaim, so a new build activates
- * and claims open tabs immediately — but claiming a page does NOT reload it.
- * The tab keeps running whatever assets the old worker served, which is how a
- * deep link like /set-review could land on a build that predates routing and
- * quietly show the default tab instead.
- *
- * `controllerchange` fires when the new worker takes over, so reload then. It
- * also fires on a first-ever install, where the page was never controlled and
- * its assets are already current — hence the hadController guard, which is
- * what stops this reloading every first visit.
+ * New deploys wait for the person (lib/sw-update.ts): a banner offers Update,
+ * and only that reloads. Until 2026-11-16 the page reloaded itself the moment a
+ * new service worker took over, which could land mid game.
  */
-if ('serviceWorker' in navigator) {
-  const hadController = !!navigator.serviceWorker.controller
-  let reloading = false
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!hadController || reloading) return
-    reloading = true
-    window.location.reload()
-  })
-}
+startUpdates()
 
 // One build, two apps (lib/app-flavor.ts). Each loads only its own root; the
 // flavor is a build-time constant, so the other branch is dropped from the bundle.

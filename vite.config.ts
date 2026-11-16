@@ -52,7 +52,9 @@ export default defineConfig(({ mode }) => {
     // are precached, and card images are cached on demand (see lib/offline.ts,
     // which can pre-warm the whole set in one go while you're still on wifi).
     VitePWA({
-      registerType: 'autoUpdate',
+      // A new deploy waits until the person taps Update on the banner (lib/sw-update.ts),
+      // instead of reloading the page under them.
+      registerType: 'prompt',
       includeAssets: [app.apple],
       manifest: {
         name: app.name,

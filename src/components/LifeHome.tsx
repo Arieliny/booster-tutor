@@ -11,7 +11,8 @@ const HEAD = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppe
  * fan-content line at the foot. `center` puts the column in the middle of the
  * screen, both ways (the home screen); a column taller than the screen just scrolls.
  */
-function Page({ bar, center, children }: { bar: React.ReactNode; center?: boolean; children: React.ReactNode }) {
+/** `banner` sits right under the bar (LifeTutor: "A new version is ready"). */
+function Page({ bar, banner, center, children }: { bar: React.ReactNode; banner?: React.ReactNode; center?: boolean; children: React.ReactNode }) {
   const fan = (
     <p className="text-center text-[11px] text-(--color-text-dim)">
       Unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved/endorsed by Wizards.
@@ -22,12 +23,14 @@ function Page({ bar, center, children }: { bar: React.ReactNode; center?: boolea
       {center ? (
         <div className="mx-auto flex min-h-full w-full max-w-sm flex-col px-4 pb-6">
           <div className="flex h-14 items-center gap-1">{bar}</div>
+          {banner}
           <div className="my-auto space-y-7 py-6 text-center">{children}</div>
           {fan}
         </div>
       ) : (
         <div className="mx-auto w-full max-w-sm px-4 pb-10">
           <div className="flex h-14 items-center gap-1">{bar}</div>
+          {banner}
           <div className="space-y-7 pt-2">
             {children}
             {fan}
@@ -54,6 +57,7 @@ export function LifeHome({
   onOpenSettings,
   onExit,
   welcome,
+  banner,
 }: {
   title: string;
   game: Game;
@@ -67,10 +71,13 @@ export function LifeHome({
   onExit?: () => void;
   /** Shown first, above the table (a first-visit welcome). */
   welcome?: React.ReactNode;
+  /** Under the top bar (LifeTutor: the new-version banner). */
+  banner?: React.ReactNode;
 }) {
   const inProgress = !untouched(game);
   return (
     <Page
+      banner={banner}
       center
       bar={
         <>
@@ -138,6 +145,7 @@ export function LifeSettingsPage({
   onBack,
   appearance,
   more,
+  banner,
 }: {
   settings: LifeSettings;
   onSettings: (update: (s: LifeSettings) => LifeSettings) => void;
@@ -145,9 +153,12 @@ export function LifeSettingsPage({
   /** The first section (LifeTutor: light or dark). */
   appearance?: React.ReactNode;
   more?: React.ReactNode;
+  /** Under the top bar (LifeTutor: the new-version banner). */
+  banner?: React.ReactNode;
 }) {
   return (
     <Page
+      banner={banner}
       bar={
         <>
           <button type="button" onClick={onBack} aria-label="Back" className="-ml-2 rounded-full p-2 text-(--color-text-dim) hover:bg-white/10">
