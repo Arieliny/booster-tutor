@@ -816,7 +816,8 @@ function sideClass(side: "left" | "right", open: boolean, dice: boolean): string
   return (
     "grid min-w-0 flex-1 content-center overflow-hidden transition-opacity duration-150 " +
     (dice ? "grid-cols-2 " : "grid-cols-3 ") +
-    (side === "left" ? "pl-1.5 " : "pr-1.5 ") +
+    // Only while open: shut, the sides are 0 wide and padding would push the middle button off centre.
+    (open ? (side === "left" ? "pl-1.5 " : "pr-1.5 ") : "") +
     (open ? "opacity-100" : "pointer-events-none opacity-0")
   );
 }
