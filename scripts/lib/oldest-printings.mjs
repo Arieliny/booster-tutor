@@ -12,9 +12,7 @@
  * Never chosen: art cards, tokens, oversized cards, memorabilia (gold-bordered
  * World Championship decks, Collectors' Edition), or printings with no image.
  */
-import { createGunzip } from "node:zlib";
-import { Readable } from "node:stream";
-import { createInterface } from "node:readline";
+import { downloadLines } from "./download-lines.mjs";
 
 const SKIP_LAYOUTS = new Set(["art_series", "token", "double_faced_token", "emblem"]);
 const SKIP_SET_TYPES = new Set(["memorabilia", "token", "minigame"]);
@@ -34,11 +32,10 @@ export async function oldestPrintings({ userAgent }) {
   if (!url) throw new Error("Scryfall bulk index has no default_cards file");
   const res = await fetch(url, { headers: { "User-Agent": userAgent } });
   if (!res.ok) throw new Error(`default_cards download: HTTP ${res.status}`);
-  const input = url.endsWith(".gz") ? Readable.fromWeb(res.body).pipe(createGunzip()) : Readable.fromWeb(res.body);
   const jsonl = /\.jsonl(\.gz)?$/.test(url);
 
   const best = new Map(); // oracle id -> { key, value }
-  for await (let line of createInterface({ input, crlfDelay: Infinity })) {
+  for await (let line of downloadLines(res, url)) {
     if (!jsonl) line = line.trim().replace(/^\[|,$|\]$/g, "");
     if (!line.trim()) continue;
     const p = JSON.parse(line);

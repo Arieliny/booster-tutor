@@ -26,9 +26,7 @@
  * on that silently dropped Black Lotus, the Moxen, Time Walk and the dual lands.
  * MTGO-only cards like Gleemox are real cube cards too.
  */
-import { createGunzip } from "node:zlib";
-import { Readable } from "node:stream";
-import { createInterface } from "node:readline";
+import { downloadLines } from "./lib/download-lines.mjs";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -58,9 +56,7 @@ async function build() {
 
   const res = await fetch(url, { headers: { "User-Agent": UA } });
   if (!res.ok) throw new Error(`oracle_cards download: HTTP ${res.status}`);
-  const gz = url.endsWith(".gz");
-  const input = gz ? Readable.fromWeb(res.body).pipe(createGunzip()) : Readable.fromWeb(res.body);
-  const lines = createInterface({ input, crlfDelay: Infinity });
+  const lines = downloadLines(res, url);
   const jsonl = /\.jsonl(\.gz)?$/.test(url);
 
   const pt = (x) => (x.power != null ? `${x.power}/${x.toughness}` : undefined);
@@ -133,10 +129,23 @@ async function build() {
   console.log(`card-db: ${cards.length} cards (of ${seen} Scryfall entries) in ${parts.length} parts, ${mb(raw)} MB (${mb(zipped)} MB gzipped) -> public/card-db/, version ${version}`);
 }
 
-try {
-  await build();
-} catch (err) {
-  console.error(`card-db: FAILED - ${err instanceof Error ? err.message : err}`);
-  if (!SOFT) process.exit(1);
-  console.error("card-db: --soft, continuing the build without a card database");
+// A dropped connection mid-download is usually a blip (Vercel, 2026-11-16: ECONNRESET), so try
+// three times before giving up; --soft then carries on without a card database.
+const TRIES = 3;
+for (let attempt = 1; ; attempt++) {
+  try {
+    await build();
+    break;
+  } catch (err) {
+    const why = err instanceof Error ? err.message : String(err);
+    if (attempt < TRIES) {
+      console.error(`card-db: try ${attempt} of ${TRIES} failed (${why}); trying again in 10 s`);
+      await new Promise((r) => setTimeout(r, 10_000));
+      continue;
+    }
+    console.error(`card-db: FAILED - ${why}`);
+    if (!SOFT) process.exit(1);
+    console.error("card-db: --soft, continuing the build without a card database");
+    break;
+  }
 }
