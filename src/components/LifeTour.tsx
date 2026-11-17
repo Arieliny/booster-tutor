@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useBackToClose } from "../lib/use-back-to-close";
+import { frameHoles, type Hole } from "../lib/tour-frame";
 
 /**
  * "Show me around" (LifeTutor, roadmap F, Ari 2026-11-16): a short walk over the real table,
@@ -119,15 +120,6 @@ function steps(canJudge: boolean): Step[] {
   ];
 }
 
-interface Hole {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-const PAD = 6;
-
 /** The table's tour. `onTray` opens or closes the tools tray for the step; `onDone` ends it (finished or skipped). */
 export function LifeTour({ canJudge, onTray, onDone }: { canJudge: boolean; onTray: (open: boolean) => void; onDone: () => void }) {
   // Built once: the measuring effect below re-runs when the step changes, so it must be the same object.
@@ -150,12 +142,7 @@ export function LifeTour({ canJudge, onTray, onDone }: { canJudge: boolean; onTr
     const measure = () => {
       setView({ w: window.innerWidth, h: window.innerHeight });
       const found = table ? step.find(table) : [];
-      setHoles(
-        found
-          .map((el) => el.getBoundingClientRect())
-          .filter((r) => r.width > 0 && r.height > 0)
-          .map((r) => ({ x: r.left - PAD, y: r.top - PAD, w: r.width + PAD * 2, h: r.height + PAD * 2 })),
-      );
+      setHoles(frameHoles(found.map((el) => el.getBoundingClientRect()), { w: window.innerWidth, h: window.innerHeight }));
     };
     const tick = () => {
       measure();

@@ -46,6 +46,9 @@ export function Turned({ turn, children }: { turn: Turn; children: (w: number, h
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // Measured now, before the first paint: waiting for the observer's first report painted the seats
+    // empty for a frame, so the table flickered in every time it opened (Ari, 2026-11-16: "jumping").
+    setSize({ w: el.clientWidth, h: el.clientHeight });
     const ro = new ResizeObserver(([e]) => setSize({ w: e.contentRect.width, h: e.contentRect.height }));
     ro.observe(el);
     return () => ro.disconnect();
