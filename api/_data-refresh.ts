@@ -61,3 +61,26 @@ export async function refreshData(now = new Date()): Promise<RefreshResult> {
   await redis.set(key, now.toISOString(), { ex: GAP_SECONDS });
   return { action: "rebuilding", reasons };
 }
+
+export interface RebuildResult {
+  action: "rebuilding" | "waiting" | "no-hook" | "hook-failed";
+}
+
+/** How long one "Check Cube Cobra" rebuild blocks the next, so repeated taps start one build. */
+const MANUAL_GAP_SECONDS = 10 * 60;
+
+/**
+ * A fresh build right now, because the owner asked (My cube > Check Cube Cobra found a
+ * followed cube that changed, Ari 2026-11-18). Same Deploy Hook as the daily check, with its
+ * own short gap instead of the daily one.
+ */
+export async function rebuildNow(now = new Date()): Promise<RebuildResult> {
+  const hook = process.env.DEPLOY_HOOK_URL;
+  if (!hook) return { action: "no-hook" };
+  const key = `data-refresh:manual:${process.env.VERCEL_PROJECT_ID ?? "local"}`;
+  if (await redis.get(key)) return { action: "waiting" };
+  const res = await fetch(hook, { method: "POST" });
+  if (!res.ok) return { action: "hook-failed" };
+  await redis.set(key, now.toISOString(), { ex: MANUAL_GAP_SECONDS });
+  return { action: "rebuilding" };
+}

@@ -252,6 +252,9 @@ export const adminList = () =>
     defaultJudgeLimit: d.defaultJudgeLimit,
     flags: d.flags ?? [],
   }));
+/** A fresh build of the app now (its data, cubes included, is fetched at build time). */
+export const adminRebuild = () =>
+  admin<{ action: "rebuilding" | "waiting" | "no-hook" | "hook-failed" }>("POST", { action: "rebuild" }).then((d) => d.action);
 export const adminDismissFlag = (flagId: string) => admin("POST", { action: "dismissFlag", flagId });
 export const adminCreate = (name: string, features: Feature[]) =>
   admin<{ token: string; user: { id: string } }>("POST", { action: "create", name, features }).then((d) => ({

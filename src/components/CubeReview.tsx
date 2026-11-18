@@ -71,6 +71,7 @@ import { OfflinePanel } from "./OfflinePanel";
 import { CubeReviewSummary, DecisionsSync } from "./CubeReviewSummary";
 import { CubeShape } from "./CubeShape";
 import { CommitChanges } from "./CommitChanges";
+import { CubeCobraCheck } from "./CubeCobraCheck";
 import { combosFor, comboState, inCubeAfter, type Combo, type ComboState } from "../lib/combos";
 import { ARCHETYPES, ROLES, ROLE_LABEL, ROLE_HELP, parseTag, type Role } from "../lib/archetypes";
 import { CardLookup } from "./CardLookup";
@@ -743,10 +744,9 @@ export function CubeReview({ onOpenChecklist }: { onOpenChecklist?: () => void }
           </div>
         </HomeGroup>
 
-        <p className="text-xs text-(--color-text-dim)" title="Refresh: node --use-system-ca scripts/build-cube-review.mjs, then deploy">
-          Data from {shortDate(data.builtAt.slice(0, 10))} · {data.cubes.lsv.label} updated {shortDate(data.cubes.lsv.updated)} ·{" "}
-          {data.cubes.mtgo.label} {shortDate(data.cubes.mtgo.updated)} · {data.cubes.arena.label} {shortDate(data.cubes.arena.updated)}
-        </p>
+        <HomeGroup title="Cubes you follow">
+          <CubeCobraCheck />
+        </HomeGroup>
       </div>
     );
   }

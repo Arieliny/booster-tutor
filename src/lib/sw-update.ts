@@ -46,6 +46,22 @@ export function useUpdateState(): UpdateState {
 }
 
 let apply: (() => Promise<void>) | null = null;
+let checkNow: (() => void) | null = null;
+let soonTimer = 0;
+
+/**
+ * Look for a new version every 30 seconds for a while: a rebuild was just started from inside
+ * the app (Check Cube Cobra), so the banner can turn up without leaving the app.
+ */
+export function watchForUpdate(forMs = 8 * 60 * 1000): void {
+  if (!checkNow) return;
+  window.clearInterval(soonTimer);
+  const until = Date.now() + forMs;
+  soonTimer = window.setInterval(() => {
+    if (state.waiting || Date.now() > until) window.clearInterval(soonTimer);
+    else checkNow?.();
+  }, 30_000);
+}
 
 /** "Update": the waiting version takes over and the page reloads into it. */
 export function applyUpdate(): void {
@@ -77,6 +93,7 @@ export function startUpdates(): void {
           // Offline or the server hiccuped: the next check tries again.
         });
       };
+      checkNow = check;
       window.setInterval(check, HOUR);
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") check();

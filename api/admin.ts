@@ -16,6 +16,7 @@ import {
 } from "./_auth.js";
 import { DEFAULT_GUEST_LIMIT, usageFor } from "./_judge-usage.js";
 import { countFlags, deleteFlag, listFlags } from "./_judge-flags.js";
+import { rebuildNow } from "./_data-refresh.js";
 
 /**
  * Admin (owner only): people and what they can use.
@@ -29,6 +30,7 @@ import { countFlags, deleteFlag, listFlags } from "./_judge-flags.js";
  *     { action: "signOutEverywhere", id }
  *     { action: "remove", id }              guests only
  *     { action: "dismissFlag", flagId }     a flagged ruling, checked
+ *     { action: "rebuild" }                 -> { action }      fresh build now (Check Cube Cobra found changes)
  *
  * Links are returned as raw tokens; the browser builds the URL, so the link
  * always points at whichever domain the owner is using.
@@ -83,6 +85,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (body.action === "dismissFlag") {
       if (typeof body.flagId === "string") await deleteFlag(body.flagId);
       res.status(200).json({ ok: true });
+      return;
+    }
+
+    if (body.action === "rebuild") {
+      res.status(200).json(await rebuildNow());
       return;
     }
 
