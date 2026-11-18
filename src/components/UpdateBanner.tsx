@@ -10,6 +10,7 @@ export function UpdateBanner({ className = "" }: { className?: string }) {
   return (
     <div
       role="status"
+      data-checked="2026-11-18"
       className={
         "flex items-center gap-2 rounded-xl border border-(--color-accent)/50 bg-(--color-accent)/15 px-3 py-1.5 text-sm text-(--color-text) " + className
       }
