@@ -3,6 +3,7 @@ import { MAX_PLAYERS, MIN_PLAYERS, STARTING_LIFE, colorHex, untouched, type Game
 import { CARD_COUNTERS, TRACKERS, type LifeSettings, type TrackerKey } from "../lib/life-settings";
 import { Icon, type IconName } from "./Icon";
 import { Pip } from "./ManaCost";
+import { versionLabel } from "../lib/build-info";
 
 const HEAD = "text-[11px] font-medium tracking-wide text-(--color-text-dim) uppercase";
 
@@ -16,6 +17,8 @@ function Page({ bar, banner, center, children }: { bar: React.ReactNode; banner?
   const fan = (
     <p className="text-center text-[11px] text-(--color-text-dim)">
       Unofficial Fan Content permitted under the Wizards of the Coast Fan Content Policy. Not approved/endorsed by Wizards.
+      <br />
+      {versionLabel()}
     </p>
   );
   return (

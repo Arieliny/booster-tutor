@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Sheet } from "./Sheet";
+import { versionLabel } from "../lib/build-info";
 
 const link = "underline hover:text-(--color-accent)";
 
@@ -38,6 +39,7 @@ function AboutNotice() {
         </a>
         .
       </p>
+      <p>{versionLabel()}</p>
     </div>
   );
 }

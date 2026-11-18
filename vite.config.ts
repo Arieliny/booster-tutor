@@ -48,6 +48,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const app = manifests[env.VITE_APP === 'table' ? 'table' : 'booster']
   return {
+  // Shown as "Version <date, time>" (src/lib/build-info.ts).
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   server: { proxy: devApi },
   preview: { proxy: devApi },
   plugins: [
