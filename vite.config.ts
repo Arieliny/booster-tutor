@@ -47,13 +47,23 @@ const manifests = {
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const app = manifests[env.VITE_APP === 'table' ? 'table' : 'booster']
+  const builtAt = new Date().toISOString()
   return {
-  // Shown as "Version <date, time>" (src/lib/build-info.ts).
-  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
+  // Shown as "Version <date, time>" (src/lib/build-info.ts), and compared with
+  // /version.json to find new versions (src/lib/sw-update.ts).
+  define: { __BUILD_TIME__: JSON.stringify(builtAt) },
   server: { proxy: devApi },
   preview: { proxy: devApi },
   plugins: [
     react(),
+    {
+      // /version.json: which build the server has now. Not precached (no .json in
+      // globPatterns), so the app always reads it from the network.
+      name: 'version-file',
+      generateBundle() {
+        this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ builtAt }) })
+      },
+    },
     // The page title and link-preview tags per app, so a pasted lifetutorapp link
     // says LifeTutor (not Booster Tutor) in WhatsApp and the like. Previews want an
     // absolute image URL, hence siteUrl.
@@ -84,7 +94,7 @@ export default defineConfig(({ mode }) => {
     // which can pre-warm the whole set in one go while you're still on wifi).
     VitePWA({
       // A new deploy waits until the person taps Update on the banner (lib/sw-update.ts),
-      // instead of reloading the page under them.
+      // instead of reloading the page under them, and never installs by itself (sw-gate.js).
       registerType: 'prompt',
       includeAssets: [app.apple],
       manifest: {
@@ -108,6 +118,8 @@ export default defineConfig(({ mode }) => {
         ],
       },
       workbox: {
+        // The update gate: a new version installs only after Update is tapped (public/sw-gate.js).
+        importScripts: ['sw-gate.js'],
         // The set-review data ships as a JS chunk, so it precaches with the rest.
         globPatterns: ['**/*.{js,css,html,png,svg,woff2}'],
         // The cube review data chunk is ~750 KB; keep headroom over Workbox's 2 MB default.
